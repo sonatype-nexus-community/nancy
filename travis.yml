@@ -1,0 +1,7 @@
+language: go
+go:
+  - master
+install:
+  - go mod download
+env:
+  - GO111MODULE=on
