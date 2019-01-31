@@ -10,5 +10,4 @@ script:
   - GOOS=darwin GOARCH=amd64 go build -o nancy-darwin.amd64-${VERSION}
   - GOOS=windows GOARCH=amd64 go build -o nancy-windows.amd64-${VERSION}
 env:
-  - GO111MODULE=on
-  - VERSION=0.0.1
+  - GO111MODULE=on VERSION=0.0.1
