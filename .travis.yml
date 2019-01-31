@@ -6,9 +6,9 @@ install:
 - go mod download
 script:
 - go test ./... -v
-- GOOS=linux GOARCH=amd64 go build -o nancy-linux.amd64-${VERSION}
-- GOOS=darwin GOARCH=amd64 go build -o nancy-darwin.amd64-${VERSION}
-- GOOS=windows GOARCH=amd64 go build -o nancy-windows.amd64-${VERSION}.exe
+- GOOS=linux GOARCH=amd64 go build -o nancy-linux.amd64-$VERSION
+- GOOS=darwin GOARCH=amd64 go build -o nancy-darwin.amd64-$VERSION
+- GOOS=windows GOARCH=amd64 go build -o nancy-windows.amd64-$VERSION.exe
 env:
 - GO111MODULE=on VERSION=0.0.1
 
