@@ -15,8 +15,8 @@ package packages
 
 import (
 	"fmt"
-	"github.com/sonatype/nancy/customerrors"
-	"github.com/sonatype/nancy/types"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
 	"strings"
 )
