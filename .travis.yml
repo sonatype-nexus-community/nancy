@@ -22,3 +22,7 @@ deploy:
     - nancy-windows.amd64-${VERSION}.exe
   on:
     repo: sonatype-nexus-community/nancy
+    all_branches: true
+    condition: $TRAVIS_BRANCH = master
+  skip_cleanup: true
+  name: $VERSION
