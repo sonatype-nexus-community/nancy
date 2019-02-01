@@ -5,6 +5,7 @@ go:
   - 1.11.x
 before_install:
   - ./bumpver.sh
+  - export VERSION=$NEW_VERSION
 install:
   - go mod download
 script:
@@ -13,7 +14,7 @@ script:
   - GOOS=darwin GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-darwin.amd64-$VERSION
   - GOOS=windows GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-windows.amd64-$VERSION.exe
 env:
-  - GO111MODULE=on VERSION=0.0.2
+  - GO111MODULE=on
 
 before_deploy:
   - export TRAVIS_TAG=$VERSION
