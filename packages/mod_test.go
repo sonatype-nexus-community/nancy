@@ -11,44 +11,35 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package parse
+package packages
 
 import (
 	"testing"
 )
 
-func TestGopkgLock(t *testing.T) {
-	deps, err := GopkgLock("Gopkg.lock")
+var testGoSumName = "go.sum"
+
+func TestModCheckExistenceOfManifestExists(t *testing.T) {
+	mod := Mod{}
+	mod.GoSumPath = testGoSumName
+	exists := mod.CheckExistenceOfManifest()
+
+	if !exists {
+		t.Errorf("Expected existence of %s", testGoSumName)
+	}
+}
+
+func TestModExtractPurlsFromManifest(t *testing.T) {
+	var err error
+	mod := Mod{}
+	mod.GoSumPath = testGoSumName
+	mod.ProjectList = getProjectList()
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(deps.Projects) != 10 {
-		t.Error(deps)
-	}
-}
-
-func TestGopkgLockError(t *testing.T) {
-	_, err := GopkgLock("Gopkg.not")
-	if err == nil {
-		t.Error(err)
-	}
-}
-
-func TestGoSum(t *testing.T) {
-	deps, err := GoSum("go.sum")
-	if err != nil {
-		t.Error(err)
-	}
-
-	if len(deps.Projects) != 10 {
-		t.Error(deps)
-	}
-}
-
-func TestGoSumError(t *testing.T) {
-	_, err := GoSum("go.notsum")
-	if err == nil {
-		t.Error(err)
+	result := mod.ExtractPurlsFromManifest()
+	if len(result) != 5 {
+		t.Error(result)
 	}
 }

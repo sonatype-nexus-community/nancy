@@ -13,24 +13,19 @@
 // limitations under the License.
 package packages
 
-import (
-	"fmt"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
-	"os"
-	"strings"
-)
+import "strings"
+import "github.com/sonatype-nexus-community/nancy/types"
+import "fmt"
+import "github.com/sonatype-nexus-community/nancy/customerrors"
+import "os"
 
-// Dep is an implementation of Packages interface
-type Dep struct {
+type Mod struct {
 	ProjectList types.ProjectList
-	GopkgPath   string
+	GoSumPath   string
 }
 
-// ExtractPurlsFromManifest will convert Gopkg projects to Package URLs
-func (d Dep) ExtractPurlsFromManifest() []string {
-	var purls []string
-	for _, s := range d.ProjectList.Projects {
+func (m Mod) ExtractPurlsFromManifest() (purls []string) {
+	for _, s := range m.ProjectList.Projects {
 		var version string
 		version = strings.Replace(s.Version, "v", "", -1)
 
@@ -42,10 +37,9 @@ func (d Dep) ExtractPurlsFromManifest() []string {
 	return purls
 }
 
-// CheckExistenceOfManifest will see if a Gopkg exists at the given path
-func (d Dep) CheckExistenceOfManifest() bool {
-	if _, err := os.Stat(d.GopkgPath); os.IsNotExist(err) {
-		customerrors.Check(err, fmt.Sprint("No Gopkg found at path: "+d.GopkgPath))
+func (m Mod) CheckExistenceOfManifest() bool {
+	if _, err := os.Stat(m.GoSumPath); os.IsNotExist(err) {
+		customerrors.Check(err, fmt.Sprint("No go.sum found at path: "+m.GoSumPath))
 	}
 	return true
 }

@@ -14,8 +14,11 @@
 package parse
 
 import (
+	"bufio"
 	"github.com/BurntSushi/toml"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"os"
+	"strings"
 )
 
 // GopkgLock parses the Gopkg file and returns an error if unsuccessful
@@ -24,6 +27,24 @@ func GopkgLock(path string) (deps types.ProjectList, err error) {
 	_, err = toml.DecodeFile(path, &deps)
 	if err != nil {
 		return deps, err
+	}
+	return deps, nil
+}
+
+// GoSum parses the go.sum file and returns an error if unsuccessful
+func GoSum(path string) (deps types.ProjectList, err error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return deps, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		s := strings.Split(scanner.Text(), " ")
+		if !strings.HasSuffix(s[1], "/go.mod") {
+			deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[1]})
+		}
 	}
 	return deps, nil
 }
