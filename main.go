@@ -17,14 +17,13 @@ import (
 	"flag"
 	"fmt"
 	"github.com/sonatype-nexus-community/nancy/audit"
+	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"os"
 )
-
-const AppVersion = "0.0.1"
 
 var noColorPtr *bool
 var path string
@@ -36,7 +35,7 @@ func main() {
 	version := flag.Bool("version", false, "prints current nancy version")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: nancy [options] <Gopkg.lock>\n\nOptions:\n")
+		_, _ = fmt.Fprintf(os.Stderr, "Usage: nancy [options] <Gopkg.lock>\n\nOptions:\n")
 		flag.PrintDefaults()
 		os.Exit(2)
 	}
@@ -50,7 +49,9 @@ func main() {
 	flag.Parse()
 
 	if *version {
-		fmt.Println(AppVersion)
+		fmt.Println(buildversion.BuildVersion)
+		_, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
+		_, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
 		os.Exit(0)
 	}
 
