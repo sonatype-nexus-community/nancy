@@ -1,3 +1,4 @@
+#!/bin/bash
 export LAST_VERSION=$(git describe --abbrev=0 --tags)
 echo $LAST_VERSION
 
