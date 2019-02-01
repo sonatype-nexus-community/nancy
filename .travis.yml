@@ -4,8 +4,8 @@ language: go
 go:
   - 1.11.x
 before_install:
+  - export VERSION=$(git describe --abbrev=0 --tags)
   - ./bumpver.sh
-  - export VERSION=$NEW_VERSION
 install:
   - go mod download
 script:
