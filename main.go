@@ -24,6 +24,8 @@ import (
 	"os"
 )
 
+const AppVersion = "0.0.1"
+
 var noColorPtr *bool
 var path string
 
@@ -31,6 +33,7 @@ func main() {
 	args := os.Args[1:]
 
 	noColorPtr = flag.Bool("noColor", false, "indicate output should not be colorized")
+	version := flag.Bool("version", false, "prints current nancy version")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: nancy [options] <Gopkg.lock>\n\nOptions:\n")
@@ -45,6 +48,11 @@ func main() {
 
 	// Parse flags from the command line output
 	flag.Parse()
+
+	if *version {
+		fmt.Println(AppVersion)
+		os.Exit(0)
+	}
 
 	path = args[len(args)-1]
 
