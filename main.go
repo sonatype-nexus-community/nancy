@@ -23,6 +23,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"os"
+	"strings"
 )
 
 var noColorPtr *bool
@@ -35,7 +36,7 @@ func main() {
 	version := flag.Bool("version", false, "prints current nancy version")
 
 	flag.Usage = func() {
-		_, _ = fmt.Fprintf(os.Stderr, "Usage: nancy [options] <Gopkg.lock>\n\nOptions:\n")
+		_, _ = fmt.Fprintf(os.Stderr, "Usage: \nnancy [options] </path/to/Gopkg.lock>\nnancy [options] </path/to/go.sum>\n\nOptions:\n")
 		flag.PrintDefaults()
 		os.Exit(2)
 	}
@@ -62,14 +63,29 @@ func main() {
 }
 
 func doCheckExistenceAndParse() {
-	dep := packages.Dep{}
-	dep.GopkgPath = path
-	if dep.CheckExistenceOfManifest() {
-		dep.ProjectList, _ = parse.GopkgLock(path)
-		var purls = processPackages(dep)
-		var packageCount = len(purls)
+	switch {
+	case strings.Contains(path, "Gopkg.lock"):
+		dep := packages.Dep{}
+		dep.GopkgPath = path
+		if dep.CheckExistenceOfManifest() {
+			dep.ProjectList, _ = parse.GopkgLock(path)
+			var purls = processPackages(dep)
+			var packageCount = len(purls)
 
-		checkOSSIndex(purls, packageCount)
+			checkOSSIndex(purls, packageCount)
+		}
+	case strings.Contains(path, "go.sum"):
+		mod := packages.Mod{}
+		mod.GoSumPath = path
+		if mod.CheckExistenceOfManifest() {
+			mod.ProjectList, _ = parse.GoSum(path)
+			var purls = processPackages(mod)
+			var packageCount = len(purls)
+
+			checkOSSIndex(purls, packageCount)
+		}
+	default:
+		os.Exit(3)
 	}
 }
 

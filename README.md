@@ -11,9 +11,15 @@
 
 To use `nancy`, assuming you have a built version of it:
 
-`./nancy /path/to/your/Gopkg.lock`
+* `./nancy /path/to/your/Gopkg.lock`
+* `./nancy /path/to/your/go.sum`
 
-`nancy` currently works for projects that use `dep`, but we have plans to support `go mod` projects, as well.
+`nancy` currently works for projects that use `dep` or `go mod` for dependencies.
+
+### DISCLAIMER
+
+A portion of the golang ecosystem doesn't use proper versions, and instead uses a commit hash to resolve your dependency. Dependencies like this will not work with
+`nancy` quite yet, as we don't have a mechanism on OSS Index to lookup vulnerabilities in that manner. 
 
 ## Why Nancy?
 
