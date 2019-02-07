@@ -37,7 +37,7 @@ At current time you have a few options:
 ### Build from source
 
 * Run `go get -u github.com/sonatype-nexus-community/nancy`
-* Nancy should now be available whereever your GOPATH is set
+* Nancy should now be available wherever your GOPATH is set
 * Run `dep ensure` in the root of the project
 * In the root of the project `go test ./...`
 * If tests checkout go ahead and run `go build`.
