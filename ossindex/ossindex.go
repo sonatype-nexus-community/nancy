@@ -31,18 +31,26 @@ import (
 	"time"
 )
 
-// AuditPackages will given a list of Package URLs, run an OSS Index audit
-func AuditPackages(purls []string) ([]types.Coordinate, error) {
-	//
+const dbValueDirName = "golang"
+
+func getDatabaseDirectory() (dbDir string) {
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
-	os.MkdirAll(usr.HomeDir+"/.ossindex", os.ModePerm)
+	return usr.HomeDir + "/.ossindex"
+}
+
+// AuditPackages will given a list of Package URLs, run an OSS Index audit
+func AuditPackages(purls []string) ([]types.Coordinate, error) {
+	dbDir := getDatabaseDirectory()
+	if err := os.MkdirAll(dbDir, os.ModePerm); err != nil {
+		return nil, err
+	}
 
 	// Initialize the cache
 	opts := badger.DefaultOptions
-	opts.Dir = usr.HomeDir + "/.ossindex/golang"
-	opts.ValueDir = usr.HomeDir + "/.ossindex/golang"
+	opts.Dir = dbDir + "/" + dbValueDirName
+	opts.ValueDir = dbDir + "/" + dbValueDirName
 	db, err := badger.Open(opts)
 	customerrors.Check(err, "Error initializing cache")
 
@@ -70,6 +78,9 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	if len(newPurls) > 0 {
 		var request types.AuditRequest
