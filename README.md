@@ -29,11 +29,39 @@ This project is called `nancy` as like the great detective herself, it looks for
 
 ## Installation
 
-TBD
+At current time you have a few options:
+
+* Build from source
+* Download release binary from [here on GitHub](https://github.com/sonatype-nexus-community/nancy/releases)
+
+### Build from source
+
+* Run `go get -u github.com/sonatype-nexus-community/nancy`
+* Nancy should now be available whereever your GOPATH is set
+* Run `dep ensure` in the root of the project
+* In the root of the project `go test ./...`
+* If tests checkout go ahead and run `go build`.
+* Use that binary where ever your heart so desires!
+
+For the adventurous, we have `go.mod` files that enable you to build using [go modules](https://github.com/golang/go/wiki/Modules).
+
+```
+$ export GO111MODULE=on
+$ go test ./...
+$ go build
+```
+
+### Download release binary
+
+Each commit to master creates a new release binary, and if you'd like to skip building from source, you can download a binary similar to:
+
+`curl https://github.com/sonatype-nexus-community/nancy/releases/download/0.0.4/nancy-linux.amd64-0.0.4 > /path/where/you/want/nancy`
 
 ## Development
 
 `nancy` is written using Golang 1.11, so it is best you start there.
+
+This project also uses `dep` for dependencies, so you will need to download `dep`.
 
 Tests can be run like `go test ./... -v`
 
