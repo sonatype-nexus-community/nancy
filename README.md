@@ -39,6 +39,9 @@ At current time you have a few options:
 * Run `go get -u github.com/sonatype-nexus-community/nancy`
 * Nancy should now be available whereever your GOPATH is set
 * Run `dep ensure` in the root of the project
+* In the root of the project `go test ./...`
+* If tests checkout go ahead and run `go build`.
+* Use that binary where ever your heart so desires!
 
 For the adventurous, we have `go.mod` files that enable you to build using [go modules](https://github.com/golang/go/wiki/Modules).
 
@@ -47,10 +50,6 @@ $ export GO111MODULE=on
 $ go test ./...
 $ go build
 ```
-
-* In the root of the project `go test ./...`
-* If tests checkout go ahead and run `go build`.
-* Use that binary where ever your heart so desires!
 
 ### Download release binary
 
