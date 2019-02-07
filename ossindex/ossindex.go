@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	badger "github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"io/ioutil"
@@ -55,12 +55,13 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		for _, purl := range purls {
 			item, err := txn.Get([]byte(strings.ToLower(purl)))
 			if err == nil {
-				val, err := item.Value()
-				if err == nil {
+				err := item.Value(func(val []byte) error {
 					var coordinate types.Coordinate
-					json.Unmarshal(val, &coordinate)
+					err := json.Unmarshal(val, &coordinate)
 					results = append(results, coordinate)
-				} else {
+					return err
+				})
+				if err != nil {
 					newPurls = append(newPurls, purl)
 				}
 			} else {
