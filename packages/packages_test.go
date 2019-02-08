@@ -23,4 +23,10 @@ func TestconvertGopkgNameToPurl(t *testing.T) {
 	if result != "github/sonatype-nexus-community/nancy" {
 		t.Error("Conversion did not work")
 	}
+
+	result = convertGopkgNameToPurl("golang.org/x/net")
+
+	if result != "golang/x/net" {
+		t.Error("Conversion did not work")
+	}
 }
