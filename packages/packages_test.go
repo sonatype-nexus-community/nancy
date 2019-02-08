@@ -17,16 +17,35 @@ import (
 	"testing"
 )
 
-func TestconvertGopkgNameToPurl(t *testing.T) {
+const (
+	GolangResult   = "golang/golang.org/x/net"
+	GitHubResult   = "github/sonatype-nexus-community/nancy"
+	GoPkgIn1Result = "github/go-name/name"
+	GoPkgIn2Result = "github/owner/name"
+)
+
+func TestConvertGopkgNameToPurl(t *testing.T) {
 	result := convertGopkgNameToPurl("github.com/sonatype-nexus-community/nancy")
 
-	if result != "github/sonatype-nexus-community/nancy" {
-		t.Error("Conversion did not work")
+	if result != GitHubResult {
+		t.Errorf("Conversion did not work, got back %s, but expected %s", result, GitHubResult)
 	}
 
 	result = convertGopkgNameToPurl("golang.org/x/net")
 
-	if result != "golang/x/net" {
-		t.Error("Conversion did not work")
+	if result != GolangResult {
+		t.Errorf("Conversion did not work, got back %s, but expected %s", result, GolangResult)
+	}
+
+	result = convertGopkgNameToPurl("gopkg.in/name")
+
+	if result != GoPkgIn1Result {
+		t.Errorf("Conversion did not work, got back %s, but expected %s", result, GoPkgIn1Result)
+	}
+
+	result = convertGopkgNameToPurl("gopkg.in/owner/name")
+
+	if result != GoPkgIn2Result {
+		t.Errorf("Conversion did not work, got back %s, but expected %s", result, GoPkgIn2Result)
 	}
 }
