@@ -16,6 +16,8 @@ To use `nancy`, assuming you have a built version of it:
 
 `nancy` currently works for projects that use `dep` or `go mod` for dependencies.
 
+You can see an example of using `nancy` in Travis-CI at [this intentionally vulnerable repo we made](https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project).
+
 ### DISCLAIMER
 
 A portion of the golang ecosystem doesn't use proper versions, and instead uses a commit hash to resolve your dependency. Dependencies like this will not work with
