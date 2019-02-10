@@ -4,6 +4,7 @@ Sonatype internal people:
 
 * [@ken-duck](https://github.com/ken-duck/) (Ken Duck)
 * [@DarthHater](https://github.com/darthhater/) (Jeffry Hesse)
+* [@ajbrown](https://github.com/ajbrown) (A.J. Brown)
 
 External contributors:
 

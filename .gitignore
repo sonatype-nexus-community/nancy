@@ -1,3 +1,7 @@
 vendor
 nancy
 .DS_Store
+
+#IntelliJ
+.idea
+*.iml
