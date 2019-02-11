@@ -33,11 +33,24 @@ import (
 
 const dbValueDirName = "golang"
 
+const defaultOssIndexUrl = "https://ossindex.sonatype.org/api/v3/component-report"
+
+var (
+	ossIndexUrl string
+)
+
 func getDatabaseDirectory() (dbDir string) {
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
 	return usr.HomeDir + "/.ossindex"
+}
+
+func getOssIndexUrl() string {
+	if ossIndexUrl == "" {
+		ossIndexUrl = defaultOssIndexUrl
+	}
+	return ossIndexUrl
 }
 
 // AuditPackages will given a list of Package URLs, run an OSS Index audit
@@ -87,10 +100,13 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		request.Coordinates = newPurls
 		var jsonStr, _ = json.Marshal(request)
 
-		req, err := http.NewRequest(
+		var req *http.Request
+		if req, err = http.NewRequest(
 			"POST",
-			"https://ossindex.sonatype.org/api/v3/component-report",
-			bytes.NewBuffer(jsonStr))
+			getOssIndexUrl(),
+			bytes.NewBuffer(jsonStr)); err != nil {
+			return nil, err
+		}
 		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
@@ -115,7 +131,9 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 		// Process results
 		var coordinates []types.Coordinate
-		json.Unmarshal([]byte(body), &coordinates)
+		if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
+			return nil, err
+		}
 
 		// Cache the new results
 		db.Update(func(txn *badger.Txn) error {

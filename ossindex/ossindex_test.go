@@ -16,9 +16,17 @@
 package ossindex
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
+	"path"
 	"strings"
 	"testing"
 )
@@ -56,25 +64,118 @@ func setupTestCaseMoveCacheDb(t *testing.T) func(t *testing.T) {
 	}
 }
 
+func TestOssIndexUrlDefault(t *testing.T) {
+	ossIndexUrl = ""
+	assert.Equal(t, defaultOssIndexUrl, getOssIndexUrl())
+}
+
 func TestAuditPackages_Empty(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("No call should occur with empty package. called: %v", r)
+	}))
+	defer ts.Close()
+	ossIndexUrl = ts.URL
+
+	teardownTestCase := setupTestCaseMoveCacheDb(t)
+	defer teardownTestCase(t)
+
 	coordinates, err := AuditPackages([]string{})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	assert.Nil(t, err)
 }
 
 func TestAuditPackages_Nil(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("No call should occur with nil package. called: %v", r)
+	}))
+	defer ts.Close()
+	ossIndexUrl = ts.URL
+
+	teardownTestCase := setupTestCaseMoveCacheDb(t)
+	defer teardownTestCase(t)
+
 	coordinates, err := AuditPackages(nil)
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	assert.Nil(t, err)
 }
 
+func TestAuditPackages_ErrorHttpRequest(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("No call should occur with nil package. called: %v", r)
+	}))
+	defer ts.Close()
+	ossIndexUrl = ts.URL + "\\"
+
+	teardownTestCase := setupTestCaseMoveCacheDb(t)
+	defer teardownTestCase(t)
+
+	coordinates, err := AuditPackages([]string{"nonexistent-purl"})
+	assert.Equal(t, []types.Coordinate(nil), coordinates)
+	parseError := err.(*url.Error)
+	assert.Equal(t, "parse", parseError.Op)
+	assert.Equal(t, "invalid character \"\\\\\" in host name", parseError.Err.Error())
+}
+
 func TestAuditPackages_ErrorNonExistentPurl(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "/", r.URL.EscapedPath())
+
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	defer ts.Close()
+	ossIndexUrl = ts.URL
+
+	teardownTestCase := setupTestCaseMoveCacheDb(t)
+	defer teardownTestCase(t)
+
 	coordinates, err := AuditPackages([]string{"nonexistent-purl"})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	assert.Equal(t, "[400 Bad Request] error accessing OSS Index", err.Error())
 }
 
+func TestAuditPackages_ErrorBadResponseBody(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "/", r.URL.EscapedPath())
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("badStuff"))
+	}))
+	defer ts.Close()
+	ossIndexUrl = ts.URL
+
+	teardownTestCase := setupTestCaseMoveCacheDb(t)
+	defer teardownTestCase(t)
+
+	coordinates, err := AuditPackages([]string{purl})
+
+	assert.Equal(t, []types.Coordinate(nil), coordinates)
+	jsonError := err.(*json.SyntaxError)
+	assert.Equal(t, int64(1), jsonError.Offset)
+	assert.Equal(t, "invalid character 'b' looking for beginning of value", jsonError.Error())
+}
+
 func TestAuditPackages_NewPackage(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "/", r.URL.EscapedPath())
+
+		w.WriteHeader(http.StatusOK)
+
+		coordinates := []types.Coordinate{
+			{
+				Coordinates:     "pkg:github/burntsushi/toml@0.3.1",
+				Reference:       "https://ossindex.sonatype.org/component/pkg:github/burntsushi/toml@0.3.1",
+				Vulnerabilities: []types.Vulnerability{},
+			},
+		}
+		jsonCoordinates, _ := json.Marshal(coordinates)
+		w.Write(jsonCoordinates)
+	}))
+	defer ts.Close()
+	ossIndexUrl = ts.URL
+
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
@@ -90,15 +191,80 @@ func TestAuditPackages_NewPackage(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+// File copies a single file from src to dst
+func copyFile(src, dst string) error {
+	var err error
+	var srcfd *os.File
+	var dstfd *os.File
+	var srcinfo os.FileInfo
+
+	if srcfd, err = os.Open(src); err != nil {
+		return err
+	}
+	defer srcfd.Close()
+
+	if dstfd, err = os.Create(dst); err != nil {
+		return err
+	}
+	defer dstfd.Close()
+
+	if _, err = io.Copy(dstfd, srcfd); err != nil {
+		return err
+	}
+	if srcinfo, err = os.Stat(src); err != nil {
+		return err
+	}
+	return os.Chmod(dst, srcinfo.Mode())
+}
+
+func copyDir(src string, dst string) error {
+	var err error
+	var fds []os.FileInfo
+	var srcinfo os.FileInfo
+
+	if srcinfo, err = os.Stat(src); err != nil {
+		return err
+	}
+
+	if err = os.MkdirAll(dst, srcinfo.Mode()); err != nil {
+		return err
+	}
+
+	if fds, err = ioutil.ReadDir(src); err != nil {
+		return err
+	}
+	for _, fd := range fds {
+		srcfp := path.Join(src, fd.Name())
+		dstfp := path.Join(dst, fd.Name())
+
+		if fd.IsDir() {
+			if err = copyDir(srcfp, dstfp); err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			if err = copyFile(srcfp, dstfp); err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
+	return nil
+}
+
 func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("No call should occur with nil package. called: %v", r)
+	}))
+	defer ts.Close()
+	ossIndexUrl = ts.URL
+
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	// call twice to ensure second call always finds package in local cache
-	coordinates, err := AuditPackages([]string{purl})
-	assert.Nil(t, err)
-	coordinates, err = AuditPackages([]string{purl})
+	// put test db cache dir in expected location
+	cacheValueDir := getDatabaseDirectory() + "/" + dbValueDirName
+	copyDir("testdata/golang", cacheValueDir)
 
+	coordinates, err := AuditPackages([]string{purl})
 	lowerCasePurl := strings.ToLower(purl)
 	expectedCoordinate := types.Coordinate{
 		Coordinates:     lowerCasePurl,
