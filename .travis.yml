@@ -12,6 +12,9 @@ script:
   - GOOS=linux GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-linux.amd64-$VERSION
   - GOOS=darwin GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-darwin.amd64-$VERSION
   - GOOS=windows GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-windows.amd64-$VERSION.exe
+after_script:
+  - nancy-linux.amd64-$VERSION Gopkg.lock
+  - nancy-linux.amd64-$VERSION go.sum
 env:
   - GO111MODULE=on
 
