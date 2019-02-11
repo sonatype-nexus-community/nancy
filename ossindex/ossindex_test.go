@@ -33,6 +33,13 @@ import (
 
 const purl = "pkg:github/BurntSushi/toml@0.3.1"
 
+var lowerCasePurl = strings.ToLower(purl)
+var expectedCoordinate = types.Coordinate{
+	Coordinates:     lowerCasePurl,
+	Reference:       "https://ossindex.sonatype.org/component/" + lowerCasePurl,
+	Vulnerabilities: []types.Vulnerability{},
+}
+
 func exists(filePath string) (exists bool) {
 	exists = true
 
@@ -181,12 +188,6 @@ func TestAuditPackages_NewPackage(t *testing.T) {
 
 	coordinates, err := AuditPackages([]string{purl})
 
-	lowerCasePurl := strings.ToLower(purl)
-	expectedCoordinate := types.Coordinate{
-		Coordinates:     lowerCasePurl,
-		Reference:       "https://ossindex.sonatype.org/component/" + lowerCasePurl,
-		Vulnerabilities: []types.Vulnerability{},
-	}
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
 	assert.Nil(t, err)
 }
@@ -269,12 +270,6 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	assert.Nil(t, copyDir("testdata/golang", cacheValueDir))
 
 	coordinates, err := AuditPackages([]string{purl})
-	lowerCasePurl := strings.ToLower(purl)
-	expectedCoordinate := types.Coordinate{
-		Coordinates:     lowerCasePurl,
-		Reference:       "https://ossindex.sonatype.org/component/" + lowerCasePurl,
-		Vulnerabilities: []types.Vulnerability{},
-	}
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
 	assert.Nil(t, err)
 }
