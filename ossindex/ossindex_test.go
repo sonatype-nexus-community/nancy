@@ -140,7 +140,7 @@ func TestAuditPackages_ErrorBadResponseBody(t *testing.T) {
 		assert.Equal(t, "/", r.URL.EscapedPath())
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("badStuff"))
+		_, _ = w.Write([]byte("badStuff"))
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
@@ -171,7 +171,7 @@ func TestAuditPackages_NewPackage(t *testing.T) {
 			},
 		}
 		jsonCoordinates, _ := json.Marshal(coordinates)
-		w.Write(jsonCoordinates)
+		_, _ = w.Write(jsonCoordinates)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
@@ -201,12 +201,16 @@ func copyFile(src, dst string) error {
 	if srcfd, err = os.Open(src); err != nil {
 		return err
 	}
-	defer srcfd.Close()
+	defer func() {
+		_ = srcfd.Close()
+	}()
 
 	if dstfd, err = os.Create(dst); err != nil {
 		return err
 	}
-	defer dstfd.Close()
+	defer func() {
+		_ = dstfd.Close()
+	}()
 
 	if _, err = io.Copy(dstfd, srcfd); err != nil {
 		return err
@@ -262,7 +266,7 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 
 	// put test db cache dir in expected location
 	cacheValueDir := getDatabaseDirectory() + "/" + dbValueDirName
-	copyDir("testdata/golang", cacheValueDir)
+	assert.Nil(t, copyDir("testdata/golang", cacheValueDir))
 
 	coordinates, err := AuditPackages([]string{purl})
 	lowerCasePurl := strings.ToLower(purl)
