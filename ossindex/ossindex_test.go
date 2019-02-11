@@ -66,8 +66,8 @@ func TestAuditPackages_Nil(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestAuditPackages_ErrorBadPurl(t *testing.T) {
-	coordinates, err := AuditPackages([]string{"bad-purl"})
+func TestAuditPackages_ErrorNonExistentPurl(t *testing.T) {
+	coordinates, err := AuditPackages([]string{"nonexistent-purl"})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	assert.Equal(t, "[400 Bad Request] error accessing OSS Index", err.Error())
 }
