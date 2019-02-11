@@ -23,6 +23,8 @@ import (
 	"testing"
 )
 
+const purl = "pkg:github/BurntSushi/toml@0.3.1"
+
 func exists(filePath string) (exists bool) {
 	exists = true
 
@@ -76,7 +78,6 @@ func TestAuditPackages_NewPackage(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	purl := "pkg:github/BurntSushi/toml@0.3.1"
 	coordinates, err := AuditPackages([]string{purl})
 
 	lowerCasePurl := strings.ToLower(purl)
@@ -93,7 +94,6 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	purl := "pkg:github/BurntSushi/toml@0.3.1"
 	// call twice to ensure second call always finds package in local cache
 	coordinates, err := AuditPackages([]string{purl})
 	assert.Nil(t, err)
