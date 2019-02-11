@@ -23,6 +23,37 @@ import (
 	"testing"
 )
 
+func exists(filePath string) (exists bool) {
+	exists = true
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		exists = false
+	}
+
+	return
+}
+
+func setupTestCaseMoveCacheDb(t *testing.T) func(t *testing.T) {
+	// temporarily move existing cache db
+	cacheValueDir := getDatabaseDirectory() + "/" + dbValueDirName
+	var mustRestoreExistingValueDir = exists(cacheValueDir)
+	backupValueDir := getDatabaseDirectory() + "/" + dbValueDirName + "-NancyOssIndexTestBackup"
+	if mustRestoreExistingValueDir {
+		// move existing valueDir to backup name
+		assert.Nil(t, os.Rename(cacheValueDir, backupValueDir))
+	}
+
+	return func(t *testing.T) {
+		// remove valueDir created during test
+		assert.Nil(t, os.RemoveAll(cacheValueDir))
+
+		if mustRestoreExistingValueDir {
+			// restore existing valueDir from backup name
+			assert.Nil(t, os.Rename(backupValueDir, cacheValueDir))
+		}
+	}
+}
+
 func TestAuditPackages_Empty(t *testing.T) {
 	coordinates, err := AuditPackages([]string{})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
@@ -41,7 +72,10 @@ func TestAuditPackages_ErrorBadPurl(t *testing.T) {
 	assert.Equal(t, "[400 Bad Request] error accessing OSS Index", err.Error())
 }
 
-func TestAuditPackages_SinglePackage(t *testing.T) {
+func TestAuditPackages_NewPackage(t *testing.T) {
+	teardownTestCase := setupTestCaseMoveCacheDb(t)
+	defer teardownTestCase(t)
+
 	purl := "pkg:github/BurntSushi/toml@0.3.1"
 	coordinates, err := AuditPackages([]string{purl})
 
@@ -55,25 +89,15 @@ func TestAuditPackages_SinglePackage(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func exists(filePath string) (exists bool) {
-	exists = true
-
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		exists = false
-	}
-
-	return
-}
-
-func TestAuditPackages_NewPackage(t *testing.T) {
-	// temporarily move existing cache db
-	cacheValueDir := getDatabaseDirectory() + "/" + dbValueDirName
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		exists = false
-	}
+func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
+	teardownTestCase := setupTestCaseMoveCacheDb(t)
+	defer teardownTestCase(t)
 
 	purl := "pkg:github/BurntSushi/toml@0.3.1"
+	// call twice to ensure second call always finds package in local cache
 	coordinates, err := AuditPackages([]string{purl})
+	assert.Nil(t, err)
+	coordinates, err = AuditPackages([]string{purl})
 
 	lowerCasePurl := strings.ToLower(purl)
 	expectedCoordinate := types.Coordinate{
