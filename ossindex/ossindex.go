@@ -24,6 +24,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/user"
@@ -31,22 +32,47 @@ import (
 	"time"
 )
 
-// AuditPackages will given a list of Package URLs, run an OSS Index audit
-func AuditPackages(purls []string) ([]types.Coordinate, error) {
-	//
+const dbValueDirName = "golang"
+
+const defaultOssIndexUrl = "https://ossindex.sonatype.org/api/v3/component-report"
+
+var (
+	ossIndexUrl string
+)
+
+func getDatabaseDirectory() (dbDir string) {
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
-	os.MkdirAll(usr.HomeDir+"/.ossindex", os.ModePerm)
+	return usr.HomeDir + "/.ossindex"
+}
+
+func getOssIndexUrl() string {
+	if ossIndexUrl == "" {
+		ossIndexUrl = defaultOssIndexUrl
+	}
+	return ossIndexUrl
+}
+
+// AuditPackages will given a list of Package URLs, run an OSS Index audit
+func AuditPackages(purls []string) ([]types.Coordinate, error) {
+	dbDir := getDatabaseDirectory()
+	if err := os.MkdirAll(dbDir, os.ModePerm); err != nil {
+		return nil, err
+	}
 
 	// Initialize the cache
 	opts := badger.DefaultOptions
-	opts.Dir = usr.HomeDir + "/.ossindex/golang"
-	opts.ValueDir = usr.HomeDir + "/.ossindex/golang"
+	opts.Dir = dbDir + "/" + dbValueDirName
+	opts.ValueDir = dbDir + "/" + dbValueDirName
 	db, err := badger.Open(opts)
 	customerrors.Check(err, "Error initializing cache")
 
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("error closing db: %s\n", err)
+		}
+	}()
 
 	var newPurls []string
 	var results []types.Coordinate
@@ -70,16 +96,22 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	if len(newPurls) > 0 {
 		var request types.AuditRequest
 		request.Coordinates = newPurls
 		var jsonStr, _ = json.Marshal(request)
 
-		req, err := http.NewRequest(
+		var req *http.Request
+		if req, err = http.NewRequest(
 			"POST",
-			"https://ossindex.sonatype.org/api/v3/component-report",
-			bytes.NewBuffer(jsonStr))
+			getOssIndexUrl(),
+			bytes.NewBuffer(jsonStr)); err != nil {
+			return nil, err
+		}
 		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
@@ -95,7 +127,11 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 			return nil, errors.New("[" + resp.Status + "] error accessing OSS Index")
 		}
 
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				log.Printf("error closing response body: %s\n", err)
+			}
+		}()
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -104,10 +140,12 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 		// Process results
 		var coordinates []types.Coordinate
-		json.Unmarshal([]byte(body), &coordinates)
+		if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
+			return nil, err
+		}
 
 		// Cache the new results
-		db.Update(func(txn *badger.Txn) error {
+		if err := db.Update(func(txn *badger.Txn) error {
 			for i := 0; i < len(coordinates); i++ {
 				var coord = coordinates[i].Coordinates
 				results = append(results, coordinates[i])
@@ -121,7 +159,9 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 			}
 
 			return nil
-		})
+		}); err != nil {
+			return nil, err
+		}
 	}
 	return results, nil
 }
