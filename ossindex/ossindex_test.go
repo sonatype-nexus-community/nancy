@@ -17,17 +17,13 @@ package ossindex
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"path"
 	"strings"
 	"testing"
 	"time"
@@ -196,69 +192,6 @@ func verifyClientCallAndWriteValidPackageResponse(t *testing.T, r *http.Request,
 	_, _ = w.Write(jsonCoordinates)
 }
 
-// File copies a single file from src to dst
-func copyFile(src, dst string) error {
-	var err error
-	var srcfd *os.File
-	var dstfd *os.File
-	var srcinfo os.FileInfo
-
-	if srcfd, err = os.Open(src); err != nil {
-		return err
-	}
-	defer func() {
-		_ = srcfd.Close()
-	}()
-
-	if dstfd, err = os.Create(dst); err != nil {
-		return err
-	}
-	defer func() {
-		_ = dstfd.Close()
-	}()
-
-	if _, err = io.Copy(dstfd, srcfd); err != nil {
-		return err
-	}
-	if srcinfo, err = os.Stat(src); err != nil {
-		return err
-	}
-	return os.Chmod(dst, srcinfo.Mode())
-}
-
-func copyDir(src string, dst string) error {
-	var err error
-	var fds []os.FileInfo
-	var srcinfo os.FileInfo
-
-	if srcinfo, err = os.Stat(src); err != nil {
-		return err
-	}
-
-	if err = os.MkdirAll(dst, srcinfo.Mode()); err != nil {
-		return err
-	}
-
-	if fds, err = ioutil.ReadDir(src); err != nil {
-		return err
-	}
-	for _, fd := range fds {
-		srcfp := path.Join(src, fd.Name())
-		dstfp := path.Join(dst, fd.Name())
-
-		if fd.IsDir() {
-			if err = copyDir(srcfp, dstfp); err != nil {
-				fmt.Println(err)
-			}
-		} else {
-			if err = copyFile(srcfp, dstfp); err != nil {
-				fmt.Println(err)
-			}
-		}
-	}
-	return nil
-}
-
 func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Errorf("No call should occur with previously cached package. called: %v", r)
@@ -269,10 +202,7 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	// put test db cache dir in expected location
-	cacheValueDir := getDatabaseDirectory() + "/" + dbValueDirName
-	assert.Nil(t, copyDir("testdata/golang", cacheValueDir))
-	// need to re-set the cached package to avoid test failures due to expiration of the TTL for the cached item
+	// create the cached package
 	db, err := openDb(getDatabaseDirectory())
 	assert.Nil(t, err)
 	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
@@ -300,10 +230,7 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	// put test db cache dir in expected location
-	cacheValueDir := getDatabaseDirectory() + "/" + dbValueDirName
-	assert.Nil(t, copyDir("testdata/golang", cacheValueDir))
-	// need to re-set the cached package with short TTL for the cached item to ensure it expires before we read it
+	// create the cached package with short TTL for the cached item to ensure item TTL expires before we read it
 	db, err := openDb(getDatabaseDirectory())
 	assert.Nil(t, err)
 	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
