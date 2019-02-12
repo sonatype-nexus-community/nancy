@@ -315,7 +315,7 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 		return nil
 	}))
 	assert.Nil(t, db.Close())
-	//time.Sleep(2 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	coordinates, err := AuditPackages([]string{purl})
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
