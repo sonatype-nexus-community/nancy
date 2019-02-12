@@ -54,6 +54,14 @@ func getOssIndexUrl() string {
 	return ossIndexUrl
 }
 
+func openDb(dbDir string) (db *badger.DB, err error) {
+	opts := badger.DefaultOptions
+	opts.Dir = dbDir + "/" + dbValueDirName
+	opts.ValueDir = dbDir + "/" + dbValueDirName
+	db, err = badger.Open(opts)
+	return
+}
+
 // AuditPackages will given a list of Package URLs, run an OSS Index audit
 func AuditPackages(purls []string) ([]types.Coordinate, error) {
 	dbDir := getDatabaseDirectory()
@@ -62,10 +70,7 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 	}
 
 	// Initialize the cache
-	opts := badger.DefaultOptions
-	opts.Dir = dbDir + "/" + dbValueDirName
-	opts.ValueDir = dbDir + "/" + dbValueDirName
-	db, err := badger.Open(opts)
+	db, err := openDb(dbDir)
 	customerrors.Check(err, "Error initializing cache")
 
 	defer func() {
