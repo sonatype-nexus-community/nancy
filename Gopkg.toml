@@ -31,7 +31,8 @@
 
 [[constraint]]
   name = "github.com/dgraph-io/badger"
-  version = "1.5.4"
+  # update to v1.5.5+ when possible
+  revision = "439fd464b155d419201a5c195c70d40618376776"
 
 [[constraint]]
   branch = "master"
