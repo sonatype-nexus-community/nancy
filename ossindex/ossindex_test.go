@@ -18,6 +18,7 @@ package ossindex
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -29,6 +30,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 )
 
 const purl = "pkg:github/BurntSushi/toml@0.3.1"
@@ -165,20 +167,7 @@ func TestAuditPackages_ErrorBadResponseBody(t *testing.T) {
 
 func TestAuditPackages_NewPackage(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, http.MethodPost, r.Method)
-		assert.Equal(t, "/", r.URL.EscapedPath())
-
-		w.WriteHeader(http.StatusOK)
-
-		coordinates := []types.Coordinate{
-			{
-				Coordinates:     "pkg:github/burntsushi/toml@0.3.1",
-				Reference:       "https://ossindex.sonatype.org/component/pkg:github/burntsushi/toml@0.3.1",
-				Vulnerabilities: []types.Vulnerability{},
-			},
-		}
-		jsonCoordinates, _ := json.Marshal(coordinates)
-		_, _ = w.Write(jsonCoordinates)
+		verifyClientCallAndWriteValidPackageResponse(t, r, w)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
@@ -190,6 +179,21 @@ func TestAuditPackages_NewPackage(t *testing.T) {
 
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
 	assert.Nil(t, err)
+}
+
+func verifyClientCallAndWriteValidPackageResponse(t *testing.T, r *http.Request, w http.ResponseWriter) {
+	assert.Equal(t, http.MethodPost, r.Method)
+	assert.Equal(t, "/", r.URL.EscapedPath())
+	w.WriteHeader(http.StatusOK)
+	coordinates := []types.Coordinate{
+		{
+			Coordinates:     "pkg:github/burntsushi/toml@0.3.1",
+			Reference:       "https://ossindex.sonatype.org/component/pkg:github/burntsushi/toml@0.3.1",
+			Vulnerabilities: []types.Vulnerability{},
+		},
+	}
+	jsonCoordinates, _ := json.Marshal(coordinates)
+	_, _ = w.Write(jsonCoordinates)
 }
 
 // File copies a single file from src to dst
@@ -257,7 +261,7 @@ func copyDir(src string, dst string) error {
 
 func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Errorf("No call should occur with nil package. called: %v", r)
+		t.Errorf("No call should occur with previously cached package. called: %v", r)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
@@ -268,6 +272,50 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	// put test db cache dir in expected location
 	cacheValueDir := getDatabaseDirectory() + "/" + dbValueDirName
 	assert.Nil(t, copyDir("testdata/golang", cacheValueDir))
+	// need to re-set the cached package to avoid test failures due to expiration of the TTL for the cached item
+	db, err := openDb(getDatabaseDirectory())
+	assert.Nil(t, err)
+	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
+		var coordJson, _ = json.Marshal(expectedCoordinate)
+		err := txn.SetWithTTL([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson), time.Hour*12)
+		if err != nil {
+			return err
+		}
+		return nil
+	}))
+	assert.Nil(t, db.Close())
+
+	coordinates, err := AuditPackages([]string{purl})
+	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
+	assert.Nil(t, err)
+}
+
+func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		verifyClientCallAndWriteValidPackageResponse(t, r, w)
+	}))
+	defer ts.Close()
+	ossIndexUrl = ts.URL
+
+	teardownTestCase := setupTestCaseMoveCacheDb(t)
+	defer teardownTestCase(t)
+
+	// put test db cache dir in expected location
+	cacheValueDir := getDatabaseDirectory() + "/" + dbValueDirName
+	assert.Nil(t, copyDir("testdata/golang", cacheValueDir))
+	// need to re-set the cached package with short TTL for the cached item to ensure it expires before we read it
+	db, err := openDb(getDatabaseDirectory())
+	assert.Nil(t, err)
+	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
+		var coordJson, _ = json.Marshal(expectedCoordinate)
+		err := txn.SetWithTTL([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson), time.Second*1)
+		if err != nil {
+			return err
+		}
+		return nil
+	}))
+	assert.Nil(t, db.Close())
+	time.Sleep(2 * time.Second)
 
 	coordinates, err := AuditPackages([]string{purl})
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
