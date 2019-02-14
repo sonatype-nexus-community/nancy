@@ -15,6 +15,7 @@ package customerrors
 
 import (
 	"fmt"
+	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"os"
 )
 
@@ -35,6 +36,7 @@ func Check(err error, message string) {
 	if err != nil {
 		myErr := SwError{Message: message, Err: err}
 		fmt.Println(myErr.Error())
+		fmt.Println("nancy version:", buildversion.BuildVersion)
 		myErr.Exit()
 	}
 }

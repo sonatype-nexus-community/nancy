@@ -1,8 +1,9 @@
 package buildversion
 
+
 var (
-	// these are populated via build CLI
-	BuildVersion = ""
+	// these are overwritten/populated via build CLI
+	BuildVersion = "development"
 	BuildTime    = ""
 	BuildCommit  = ""
 )
