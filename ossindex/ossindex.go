@@ -176,7 +176,7 @@ func setupRequest(jsonStr []byte) (req *http.Request, err error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
+	req.Header.Set("User-Agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
 	req.Header.Set("Content-Type", "application/json")
 
 	return req, nil

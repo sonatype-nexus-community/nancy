@@ -253,7 +253,7 @@ func TestSetupRequest(t *testing.T) {
 	coordJson, _ := setupJson(t)
 	req, err := setupRequest(coordJson)
 
-	assert.Equal(t, req.Header.Get("User-agent"), "nancy-client/development")
+	assert.Equal(t, req.Header.Get("User-Agent"), "nancy-client/development")
 	assert.Equal(t, req.Header.Get("Content-Type"), "application/json")
 	assert.Equal(t, req.Method, "POST")
 	assert.Nil(t, err)
