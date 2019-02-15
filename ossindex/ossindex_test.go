@@ -248,3 +248,23 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
 	assert.Nil(t, err)
 }
+
+func TestSetupRequest(t *testing.T) {
+	coordJson, _ := setupJson(t)
+	req, err := setupRequest(coordJson)
+
+	assert.Equal(t, req.Header.Get("User-agent"), "nancy-client/development")
+	assert.Equal(t, req.Header.Get("Content-Type"), "application/json")
+	assert.Equal(t, req.Method, "POST")
+	assert.Nil(t, err)
+}
+
+// TODO: Use this for more than just TestSetupRequest
+func setupJson(t *testing.T) (coordJson []byte, err error) {
+	coordJson, err = json.Marshal(expectedCoordinate)
+	if err != nil {
+		t.Errorf("Couldn't setup json")
+	}
+
+	return
+}
