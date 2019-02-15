@@ -14,8 +14,12 @@
 package packages
 
 import (
-	"strings"
+	"regexp"
 )
+
+var githubPattern = regexp.MustCompile("^github.com/([^/]+)/([^/]+).*")
+var gopkg1Pattern = regexp.MustCompile("^gopkg.in/([^.]+).*")
+var gopkg2Pattern = regexp.MustCompile("^gopkg.in/([^/]+)/([^.]+).*")
 
 // Packages is meant to be implemented for any package format such as dep, go mod, etc..
 type Packages interface {
@@ -28,12 +32,22 @@ type Packages interface {
 // FIXME: Research the various Gopkg name formats and convert them correctly
 func convertGopkgNameToPurl(name string) string {
 	switch {
-	case strings.Contains(name, "github.com"):
-		name = strings.Replace(name, "github.com", "github", 1)
-	case strings.Contains(name, "gopkg.in"):
-		name = strings.Replace(name, "gopkg.in", "github", 1)
-	case strings.Contains(name, "golang.org"):
-		name = strings.Replace(name, "golang.org", "golang", 1)
+	case githubPattern.MatchString(name):
+		// Currently OSS Index's github format support is based on repository
+		// owner/name, so restrict the PURL name path.
+		//
+		// Once golang format support is improved we can switch to that and get
+		// more precise and refined results on repository sub-paths
+		name = githubPattern.ReplaceAllString(name, "github/$1/$2")
+
+	case gopkg2Pattern.MatchString(name):
+		name = gopkg2Pattern.ReplaceAllString(name, "github/$1/$2")
+
+	case gopkg1Pattern.MatchString(name):
+		name = gopkg1Pattern.ReplaceAllString(name, "github/go-$1/$1")
+
+	default:
+		name = "golang/" + name
 	}
 	return name
 }
