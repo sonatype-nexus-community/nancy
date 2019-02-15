@@ -169,10 +169,12 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 }
 
 func setupRequest(jsonStr []byte) (req *http.Request, err error) {
-	if req, err = http.NewRequest(
+	req, err = http.NewRequest(
 		"POST",
 		getOssIndexUrl(),
-		bytes.NewBuffer(jsonStr)); err != nil {
+		bytes.NewBuffer(jsonStr),
+	)
+	if err != nil {
 		return nil, err
 	}
 
