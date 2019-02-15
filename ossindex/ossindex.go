@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgraph-io/badger"
+	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"io/ioutil"
@@ -110,14 +111,10 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		request.Coordinates = newPurls
 		var jsonStr, _ = json.Marshal(request)
 
-		var req *http.Request
-		if req, err = http.NewRequest(
-			"POST",
-			getOssIndexUrl(),
-			bytes.NewBuffer(jsonStr)); err != nil {
+		req, err := setupRequest(jsonStr)
+		if err != nil {
 			return nil, err
 		}
-		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -169,4 +166,20 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		}
 	}
 	return results, nil
+}
+
+func setupRequest(jsonStr []byte) (req *http.Request, err error) {
+	req, err = http.NewRequest(
+		"POST",
+		getOssIndexUrl(),
+		bytes.NewBuffer(jsonStr),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("User-Agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
+	req.Header.Set("Content-Type", "application/json")
+
+	return req, nil
 }
