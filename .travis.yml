@@ -12,7 +12,6 @@ script:
   - GOOS=linux GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-linux.amd64-$VERSION
   - GOOS=darwin GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-darwin.amd64-$VERSION
   - GOOS=windows GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-windows.amd64-$VERSION.exe
-  - ./nancy-linux.amd64-$VERSION Gopkg.lock
   - ./nancy-linux.amd64-$VERSION go.sum
 env:
   - GO111MODULE=on
@@ -24,7 +23,7 @@ deploy:
   provider: releases
   api_key:
     secure: ikkwLQWekiGiAuz4Pcstec3WeklFh7qf+abf8F11BVHMcLGrdTfqDAJQ5l45KNZeaLedsj4bK6ILk99Y6VGqHIJulGpVdzQLx7F+sOPuEpZ02DBaMT0Ku/jV8Mj7C6etFQhy+HrK7hrHNKXAmR6RgdI12cp5igQMEhmNR5WeNXtnVp8+9B/No8wfdfP1EmetHtnhLgF0p62KLwAUhgXHRioptfj1eMGjIMxF7MoIclQdFYieptTJx/+HdQCMKmD3O5F4lszZa65S5FxMfOBo31M+yE/+/8CXk2wvrBoprGBTGcKwQB58ZafqQY3LVp0ahFWcaVxJcRbRFdw3K4ccU8YSjnX1dfLlfEyyPklHm0YT7yPeAb0vWppliT+zXngcuknImHKVBkfYWCgutYAuEzMKqc8ZQMz5d2Sp64k7+Z23KXSYLKiN0S1Ckv9/5pQ8naa9eED87VEfnSitjCFjEQaGx7zVt4M1raZx8g0/cs+ZMjQpYNsChYFkj6Tt4Es/m1FT5jX5/GFame+7B4RPX13cWqck6FAWvwbkcdog8dddASEtyo6QHujopmPnQefNs6hrO+biKeWLewbTqG8LMd10INifiVm2Y9HZVi+vKTiVQPg7+pz/6LWU9oexnJjzRgMN7CTI6L+ffr8/gdvTXoKlev3ASh56muzPjGsbsZw=
-  file: 
+  file:
     - nancy-linux.amd64-$VERSION
     - nancy-darwin.amd64-$VERSION
     - nancy-windows.amd64-$VERSION.exe
