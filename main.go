@@ -58,7 +58,6 @@ func main() {
 
 	path = args[len(args)-1]
 
-	// Currently only checks Dep, can eventually check for go mod, etc...
 	doCheckExistenceAndParse()
 }
 

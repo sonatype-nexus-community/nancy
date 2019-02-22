@@ -21,7 +21,7 @@ You can see an example of using `nancy` in Travis-CI at [this intentionally vuln
 ### DISCLAIMER
 
 A portion of the golang ecosystem doesn't use proper versions, and instead uses a commit hash to resolve your dependency. Dependencies like this will not work with
-`nancy` quite yet, as we don't have a mechanism on OSS Index to lookup vulnerabilities in that manner. 
+`nancy` quite yet, as we don't have a mechanism on OSS Index to lookup vulnerabilities in that manner.
 
 ## Why Nancy?
 
@@ -38,19 +38,16 @@ At current time you have a few options:
 
 ### Build from source
 
-* Run `go get -u github.com/sonatype-nexus-community/nancy`
-* Nancy should now be available wherever your GOPATH is set
-* Run `dep ensure` in the root of the project
-* In the root of the project `go test ./...`
-* If tests checkout go ahead and run `go build`.
-* Use that binary where ever your heart so desires!
-
-For the adventurous, we have `go.mod` files that enable you to build using [go modules](https://github.com/golang/go/wiki/Modules).
+`nancy` is built with Go 1.11 and supports Go modules. The easiest way to get started is to clone Nancy into a directory outside of the `$GOPATH`.
+ For example:
 
 ```
-$ export GO111MODULE=on
-$ go test ./...
-$ go build
+mkdir $HOME/code
+cd $HOME/code
+git clone https://github.com/sonatype-nexus-community/nancy.git
+cd nancy
+go install
+
 ```
 
 ### Download release binary
@@ -61,11 +58,18 @@ Each commit to master creates a new release binary, and if you'd like to skip bu
 
 ## Development
 
-`nancy` is written using Golang 1.11, so it is best you start there.
+`nancy` is built with Go 1.11 and supports Go modules. The easiest way to get started is to clone Nancy into a directory outside of the `$GOPATH`.
+ For example:
 
-This project also uses `dep` for dependencies, so you will need to download `dep`.
+```
+mkdir $HOME/code
+cd $HOME/code
+git clone https://github.com/sonatype-nexus-community/nancy.git
+cd nancy
+go test ./... -v
+go build
 
-Tests can be run like `go test ./... -v`
+```
 
 ## Contributing
 
@@ -75,7 +79,7 @@ a new issue, or comment on an existing issue, to let others know you are!
 
 ## Acknowledgements
 
-The `nancy` logo was created using a combo of [Gopherize.me](https://gopherize.me/) and good ole Photoshop. Thanks to the creators of 
+The `nancy` logo was created using a combo of [Gopherize.me](https://gopherize.me/) and good ole Photoshop. Thanks to the creators of
 Gopherize for an easy way to make a fun Gopher :)
 
 Original Gopher designed by Renee French.
