@@ -15,10 +15,11 @@ package audit
 
 import (
 	"fmt"
-	aurora "github.com/logrusorgru/aurora"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"strconv"
 	"strings"
+
+	aurora "github.com/logrusorgru/aurora"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
@@ -33,7 +34,7 @@ func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordi
 	}
 }
 
-func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
+func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate, detailed bool) {
 	if noColor {
 		fmt.Println("------------------------------------------------------------")
 		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
@@ -45,7 +46,9 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 			fmt.Println()
 			vulnerability := coordinate.Vulnerabilities[j]
 			fmt.Println(vulnerability.Title)
-			fmt.Println(vulnerability.Description)
+			if detailed {
+				fmt.Println(vulnerability.Description)
+			}
 			fmt.Println()
 			fmt.Println("ID:", vulnerability.Id)
 			fmt.Println("Details:", vulnerability.Reference)
@@ -61,7 +64,9 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 			fmt.Println()
 			vulnerability := coordinate.Vulnerabilities[j]
 			fmt.Println(aurora.Bold(aurora.Red(vulnerability.Title)))
-			fmt.Println(vulnerability.Description)
+			if detailed {
+				fmt.Println(vulnerability.Description)
+			}
 			fmt.Println()
 			fmt.Println(aurora.Bold("ID:"), vulnerability.Id)
 			fmt.Println(aurora.Bold("Details:"), vulnerability.Reference)
@@ -70,8 +75,20 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 }
 
 // LogResults will given a number of expected results and the results themselves, log the
-// results.
+// results, defaults detailed to true
 func LogResults(noColor bool, packageCount int, coordinates []types.Coordinate) int {
+	return doLogResults(noColor, packageCount, coordinates, true)
+}
+
+// LogResultsDetailLevel will given a number of expected results and the results themselves, log the
+// results, allows you to turn off the description of a CVE
+func LogResultsDetailLevel(noColor bool, packageCount int, coordinates []types.Coordinate, detailed bool) int {
+	return doLogResults(noColor, packageCount, coordinates, detailed)
+}
+
+// LogResults will given a number of expected results and the results themselves, log the
+// results.
+func doLogResults(noColor bool, packageCount int, coordinates []types.Coordinate, detailed bool) int {
 	vulnerableCount := 0
 
 	for i := 0; i < len(coordinates); i++ {
@@ -81,7 +98,7 @@ func LogResults(noColor bool, packageCount int, coordinates []types.Coordinate) 
 		if len(coordinate.Vulnerabilities) == 0 {
 			logPackage(noColor, idx, packageCount, coordinate)
 		} else {
-			logVulnerablePackage(noColor, idx, packageCount, coordinate)
+			logVulnerablePackage(noColor, idx, packageCount, coordinate, detailed)
 			vulnerableCount++
 		}
 	}
