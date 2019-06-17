@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/sonatype-nexus-community/nancy/blob/master/docs/images/nancy_withoutlogo.png" width="300"/>
+    <img src="https://github.com/sonatype-nexus-community/nancy/blob/master/docs/images/nancy.png" width="300"/>
 </p>
 <p align="center">
     <a href="https://travis-ci.org/sonatype-nexus-community/nancy"><img src="https://travis-ci.org/sonatype-nexus-community/nancy.svg?branch=master" alt="Build Status"></img></a>
