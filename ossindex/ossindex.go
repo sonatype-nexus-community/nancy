@@ -18,12 +18,7 @@ package ossindex
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/dgraph-io/badger"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -31,6 +26,11 @@ import (
 	"os/user"
 	"strings"
 	"time"
+
+	"github.com/dgraph-io/badger"
+	"github.com/sonatype-nexus-community/nancy/buildversion"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 const dbValueDirName = "golang"
@@ -127,11 +127,10 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 				return nil, err
 			}
 
-			switch {
-			case strings.Contains(resp.Status, "200"):
-				fmt.Println(resp)
-			default:
-				return nil, errors.New("[" + resp.Status + "] error accessing OSS Index")
+			if resp.StatusCode == http.StatusOK {
+				log.Printf("Response: %+v\n", resp)
+			} else {
+				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
 			defer func() {
@@ -174,17 +173,17 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 	return results, nil
 }
 
-func chunk(purls []string, chunkSize int) ([][]string) {
+func chunk(purls []string, chunkSize int) [][]string {
 	var divided [][]string
 
 	for i := 0; i < len(purls); i += chunkSize {
-	    end := i + chunkSize
+		end := i + chunkSize
 
-	    if end > len(purls) {
-	        end = len(purls)
-	    }
+		if end > len(purls) {
+			end = len(purls)
+		}
 
-	    divided = append(divided, purls[i:end])
+		divided = append(divided, purls[i:end])
 	}
 
 	return divided
