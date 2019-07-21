@@ -18,12 +18,7 @@ package ossindex
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/dgraph-io/badger"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -31,11 +26,18 @@ import (
 	"os/user"
 	"strings"
 	"time"
+
+	"github.com/dgraph-io/badger"
+	"github.com/sonatype-nexus-community/nancy/buildversion"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 const dbValueDirName = "golang"
 
 const defaultOssIndexUrl = "https://ossindex.sonatype.org/api/v3/component-report"
+
+const MAX_COORDS = 128
 
 var (
 	ossIndexUrl string
@@ -106,66 +108,85 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		return nil, err
 	}
 
-	if len(newPurls) > 0 {
-		var request types.AuditRequest
-		request.Coordinates = newPurls
-		var jsonStr, _ = json.Marshal(request)
+	var chunks = chunk(newPurls, MAX_COORDS)
 
-		req, err := setupRequest(jsonStr)
-		if err != nil {
-			return nil, err
-		}
+	for _, chunk := range chunks {
+		if len(chunk) > 0 {
+			var request types.AuditRequest
+			request.Coordinates = chunk
+			var jsonStr, _ = json.Marshal(request)
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			return nil, err
-		}
-
-		switch {
-		case strings.Contains(resp.Status, "200"):
-			fmt.Println(resp)
-		default:
-			return nil, errors.New("[" + resp.Status + "] error accessing OSS Index")
-		}
-
-		defer func() {
-			if err := resp.Body.Close(); err != nil {
-				log.Printf("error closing response body: %s\n", err)
+			req, err := setupRequest(jsonStr)
+			if err != nil {
+				return nil, err
 			}
-		}()
 
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				return nil, err
+			}
 
-		// Process results
-		var coordinates []types.Coordinate
-		if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
-			return nil, err
-		}
+			if resp.StatusCode == http.StatusOK {
+				log.Printf("Response: %+v\n", resp)
+			} else {
+				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
+			}
 
-		// Cache the new results
-		if err := db.Update(func(txn *badger.Txn) error {
-			for i := 0; i < len(coordinates); i++ {
-				var coord = coordinates[i].Coordinates
-				results = append(results, coordinates[i])
-
-				var coordJson, _ = json.Marshal(coordinates[i])
-
-				err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJson), time.Hour*12)
-				if err != nil {
-					return err
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					log.Printf("error closing response body: %s\n", err)
 				}
+			}()
+
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
 			}
 
-			return nil
-		}); err != nil {
-			return nil, err
+			// Process results
+			var coordinates []types.Coordinate
+			if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
+				return nil, err
+			}
+
+			// Cache the new results
+			if err := db.Update(func(txn *badger.Txn) error {
+				for i := 0; i < len(coordinates); i++ {
+					var coord = coordinates[i].Coordinates
+					results = append(results, coordinates[i])
+
+					var coordJson, _ = json.Marshal(coordinates[i])
+
+					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJson), time.Hour*12)
+					if err != nil {
+						return err
+					}
+				}
+
+				return nil
+			}); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return results, nil
+}
+
+func chunk(purls []string, chunkSize int) [][]string {
+	var divided [][]string
+
+	for i := 0; i < len(purls); i += chunkSize {
+		end := i + chunkSize
+
+		if end > len(purls) {
+			end = len(purls)
+		}
+
+		divided = append(divided, purls[i:end])
+	}
+
+	return divided
 }
 
 func setupRequest(jsonStr []byte) (req *http.Request, err error) {
