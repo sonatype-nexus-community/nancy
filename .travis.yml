@@ -5,7 +5,7 @@ go:
   - 1.11.x
 before_install:
   - export VERSION=$(git describe --abbrev=0 --tags) && export LAST_PREFIX=$(cut -d'.' -f1,2 <<< $VERSION) && export LAST_SUFFIX=$(cut -d'.' -f3 <<< $VERSION) && export NEW_SUFFIX=$(expr "$LAST_SUFFIX" + 1) && export VERSION="$LAST_PREFIX.$NEW_SUFFIX"
-  - export VERSION="v$VERSION"
+  - export VERSION="$VERSION"
 install:
   - go mod download
 script:
