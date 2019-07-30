@@ -47,7 +47,7 @@ At current time you have a few options:
 
 For the adventurous, we have `go.mod` files that enable you to build using [go modules](https://github.com/golang/go/wiki/Modules).
 
-```
+```console
 $ export GO111MODULE=on
 $ go test ./...
 $ go build
@@ -57,7 +57,10 @@ $ go build
 
 Each commit to master creates a new release binary, and if you'd like to skip building from source, you can download a binary similar to:
 
-`curl https://github.com/sonatype-nexus-community/nancy/releases/download/0.0.4/nancy-linux.amd64-0.0.4 > /path/where/you/want/nancy`
+```console
+$ curl -O /path/where/you/want/nancy \
+  https://github.com/sonatype-nexus-community/nancy/releases/download/0.0.4/nancy-linux.amd64-0.0.4
+```
 
 ## Development
 
