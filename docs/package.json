@@ -1,0 +1,71 @@
+{
+  "_from": "bulma-start",
+  "_id": "bulma-start@0.0.3",
+  "_inBundle": false,
+  "_integrity": "sha512-LJchFdLKUAavS4c8qELN+5FoOicttX8fi1+M2mLZQyf+ru8tcooqQ3j9kdJq1p/FeVyfOLi4vtXP1b3k4tQdtA==",
+  "_location": "/bulma-start",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "bulma-start",
+    "name": "bulma-start",
+    "escapedName": "bulma-start",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/bulma-start/-/bulma-start-0.0.3.tgz",
+  "_shasum": "cca27a954506fe59df137ea676045173aac54894",
+  "_spec": "bulma-start",
+  "_where": "/Users/jthomas/Desktop",
+  "author": {
+    "name": "Jeremy Thomas",
+    "email": "bbxdesign@gmail.com",
+    "url": "http://jgthms.com"
+  },
+  "bugs": {
+    "url": "https://github.com/jgthms/bulma-start/issues"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "Start package for Bulma",
+  "devDependencies": {
+    "autoprefixer": "^9.4.7",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-es2015-ie": "^6.7.0",
+    "bulma": "^0.7.5",
+    "node-sass": "^4.11.0",
+    "npm-run-all": "^4.1.5",
+    "postcss-cli": "^6.1.1"
+  },
+  "homepage": "https://github.com/jgthms/bulma-start#readme",
+  "keywords": [
+    "sass",
+    "bulma",
+    "css",
+    "start"
+  ],
+  "license": "MIT",
+  "name": "bulma-start",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jgthms/bulma-start.git"
+  },
+  "scripts": {
+    "css-build": "node-sass _sass/main.scss css/main.css",
+    "css-deploy": "npm run css-build && npm run css-postcss",
+    "css-postcss": "postcss --use autoprefixer --output css/main.css css/main.css",
+    "css-watch": "npm run css-build -- --watch",
+    "deploy": "npm run css-deploy && npm run js-build",
+    "js-build": "babel _javascript --out-dir lib",
+    "js-watch": "npm run js-build -- --watch",
+    "start": "npm-run-all --parallel css-watch js-watch"
+  },
+  "version": "0.0.3"
+}

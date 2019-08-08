@@ -1,5 +1,6 @@
 vendor
 nancy
+node_modules
 .DS_Store
 
 #IntelliJ

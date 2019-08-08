@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nancy</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png" />
+    <link rel="stylesheet" href="css/main.css" />
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  </head>
+
+  <body>
+    <!-- Top Navigation -->
+    <nav class="navbar is-fixed-top">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-item" href="#top">
+            <img src="images/logos/navbar-logo.png" alt="Nancy" />
+          </a>
+          <span class="navbar-burger burger" data-target="navbarMenuHeroA">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </div>
+        <div id="navbarMenuHeroA" class="navbar-menu">
+          <div class="navbar-end">
+            <a class=" navbar-item" href="#who-is-nancy">
+              Introduction
+            </a>
+            <a class="navbar-item" href="#installation">
+              Install
+            </a>
+            <span class="navbar-item">
+              <a
+                class="button is-white is-inverted is-outlined"
+                target="_blank"
+                href="https://github.com/sonatype-nexus-community/nancy"
+              >
+                <span class="icon">
+                  <i class="fab fa-github"></i>
+                </span>
+                <span>Github</span>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section id="top" class="hero bg-img is-dark is-large is-fullheight-with-navbar">
+      <!-- Hero head: will stick at the top -->
+      <div class="hero-head"></div>
+
+      <!-- Hero content: will be in the middle -->
+      <div class="hero-body">
+        <div class="container has-text-centered">
+          <div class="columns is-vcentered">
+            <div class="column">
+              <img class="" src="images/hero-text.svg" alt="Nancy" />
+              <!-- <h1 class="title">
+              Nancy
+            </h1>
+            <h2 class="subtitle">
+              Check for vulnerabilities in your Go dependencies
+            </h2> -->
+            </div>
+
+            <div class="column">
+              <img class="hero-logo" src="images/logos/nancy.png" alt="Nancy" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="who-is-nancy" class="title">Introduction</h2>
+          <p>
+            Nancy is a tool to check for vulnerabilities in your Go dependencies, powered by
+            <a href="https://ossindex.sonatype.org/">Sonatype OSS Index</a>. Nancy currently works for projects that use
+            dep or go mod for dependencies.
+          </p>
+          <p>
+            You can see an example of using nancy in Travis-CI at
+            <a href="https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project"
+              >this intentionally vulnerable repo we made</a
+            >.
+          </p>
+          <article class="message is-info">
+            <div class="message-header">
+              <p>DISCLAIMER</p>
+            </div>
+            <div class="message-body">
+              A portion of the Go ecosystem doesn't use proper versions, and instead uses a commit hash to resolve your
+              dependency. Dependencies like this will not work with Nancy quite yet, as we don't have a mechanism on
+              <a href="https://ossindex.sonatype.org/">Sonatype OSS Index</a> to lookup vulnerabilities in that manner.
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 class="title" id="installation">Install</h2>
+          <p>You can install the pre-compiled binary (in several different ways) or compile from source.</p>
+          <div>
+            <h3 class="is-size-3">
+              Download release binary
+            </h3>
+            <div class="option">
+              <h4>Homebrew (macOS)</h4>
+              <pre
+                style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"
+              ><code class="language-sh" data-lang="sh">$ brew tap sonatype-nexus-community/tap
+$ brew install nancy</code></pre>
+            </div>
+
+            <div class="option">
+              <h4>Manual Download</h4>
+              <p>
+                Download the pre-compiled binaries from the
+                <a href="https://github.com/sonatype-nexus-community/nancy/releases">releases page</a> and copy to the
+                desired location.
+              </p>
+            </div>
+          </div>
+          <div>
+            <h3 class="is-size-3 option">
+              Build from source
+            </h3>
+            <div class="highlight">
+              <pre
+                style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"
+              ><code class="language-sh" data-lang="sh"><span style="color:#6272a4"># clone it outside GOPATH</span>
+git clone https://github.com/sonatype-nexus-community/nancy.git
+<span style="color:#8be9fd;font-style:italic">cd</span> nancy
+
+<span style="color:#6272a4"># get dependencies using go modules (needs go 1.11+)</span>
+go get ./...
+
+<span style="color:#6272a4"># build</span>
+go build -o nancy .
+
+<span style="color:#6272a4"># check it works</span>
+./nancy -version</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 class="title">About Nancy</h2>
+          <a href="https://en.wikipedia.org/wiki/Nancy_Drew">Nancy Drew</a> was the first female detective used
+          extensively in literature, and gave women across the world a new hero. This project is called Nancy as like
+          the great detective herself, it looks for problems you might not be aware of, and gives you the information to
+          help put them to an end!
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer has-text-centered">
+      <div class="container">
+        <div class="columns">
+          <div class="column is-8-desktop is-offset-2-desktop">
+            <a href="#top">
+              <img class="footer-logo" src="images/logos/navbar-logo.png" alt="Nancy" />
+            </a>
+            <p>
+              <small> Made for the community by <a href="https://sonatype.com">Sonatype</a> </small>
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script type="text/javascript" src="lib/main.js"></script>
+  </body>
+</html>
