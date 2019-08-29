@@ -15,21 +15,21 @@ package audit
 
 import (
 	"fmt"
+	"strconv"
+
 	aurora "github.com/logrusorgru/aurora"
 	"github.com/sonatype-nexus-community/nancy/types"
-	"strconv"
-	"strings"
 )
 
 func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	if noColor {
 		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
-			strings.Replace(coordinate.Coordinates, "pkg:", "", 1),
-			"   No known vulnerabilities against package/version...")
+			coordinate.Coordinates,
+			"   No known vulnerabilities against package/version")
 	} else {
 		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
-			aurora.Bold(strings.Replace(coordinate.Coordinates, "pkg:", "", 1)),
-			aurora.Gray("   No known vulnerabilities against package/version..."))
+			aurora.Bold(coordinate.Coordinates),
+			aurora.Gray("   No known vulnerabilities against package/version"))
 	}
 }
 
@@ -37,7 +37,7 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 	if noColor {
 		fmt.Println("------------------------------------------------------------")
 		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
-			strings.Replace(coordinate.Coordinates, "pkg:", "", 1)+"  [Vulnerable]",
+			coordinate.Coordinates+"  [Vulnerable]",
 			"   "+strconv.Itoa(len(coordinate.Vulnerabilities)),
 			"known vulnerabilities affecting installed version")
 
@@ -53,7 +53,7 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 	} else {
 		fmt.Println("------------------------------------------------------------")
 		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
-			aurora.Bold(aurora.Red(strings.Replace(coordinate.Coordinates, "pkg:", "", 1)+"  [Vulnerable]")),
+			aurora.Bold(aurora.Red(coordinate.Coordinates+"  [Vulnerable]")),
 			"   "+strconv.Itoa(len(coordinate.Vulnerabilities)),
 			"known vulnerabilities affecting installed version")
 
