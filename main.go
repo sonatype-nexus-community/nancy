@@ -27,12 +27,14 @@ import (
 )
 
 var noColorPtr *bool
+var quietPtr *bool
 var path string
 
 func main() {
 	args := os.Args[1:]
 
 	noColorPtr = flag.Bool("noColor", false, "indicate output should not be colorized")
+	quietPtr = flag.Bool("quiet", false, "indicate output should contain only packages with vulnerabilities")
 	version := flag.Bool("version", false, "prints current nancy version")
 
 	flag.Usage = func() {
@@ -93,7 +95,7 @@ func checkOSSIndex(purls []string, packageCount int) {
 	coordinates, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "Error auditing packages")
 
-	if count := audit.LogResults(*noColorPtr, packageCount, coordinates); count > 0 {
+	if count := audit.LogResults(*noColorPtr, *quietPtr, packageCount, coordinates); count > 0 {
 		os.Exit(count)
 	}
 }
