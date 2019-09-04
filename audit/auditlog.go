@@ -71,7 +71,7 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
-func LogResults(noColor bool, packageCount int, coordinates []types.Coordinate) int {
+func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate) int {
 	vulnerableCount := 0
 
 	for i := 0; i < len(coordinates); i++ {
@@ -79,7 +79,9 @@ func LogResults(noColor bool, packageCount int, coordinates []types.Coordinate) 
 		idx := i + 1
 
 		if len(coordinate.Vulnerabilities) == 0 {
-			logPackage(noColor, idx, packageCount, coordinate)
+			if !quiet {
+				logPackage(noColor, idx, packageCount, coordinate)
+			}
 		} else {
 			logVulnerablePackage(noColor, idx, packageCount, coordinate)
 			vulnerableCount++
