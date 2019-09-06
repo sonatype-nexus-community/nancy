@@ -18,10 +18,11 @@ import (
 )
 
 const (
-	GolangResult   = "golang/golang.org/x/net"
-	GitHubResult   = "golang/sonatype-nexus-community/nancy"
-	GoPkgIn1Result = "golang/go-name/name"
-	GoPkgIn2Result = "golang/owner/name"
+	GolangResult        = "golang/golang.org/x/net"
+	GitHubResult        = "golang/github.com/sonatype-nexus-community/nancy"
+	GitHubSubPathResult = "golang/github.com/subutai-io/base/agent/lib/net/p2p"
+	GoPkgIn1Result      = "golang/github.com/go-name/name"
+	GoPkgIn2Result      = "golang/github.com/owner/name"
 )
 
 func TestConvertGopkgNameToPurl(t *testing.T) {
@@ -48,4 +49,10 @@ func TestConvertGopkgNameToPurl(t *testing.T) {
 	if result != GoPkgIn2Result {
 		t.Errorf("Conversion did not work, got back %s, but expected %s", result, GoPkgIn2Result)
 	}
+
+	result = convertGopkgNameToPurl("github.com/subutai-io/base/agent/lib/net/p2p")
+	if result != GitHubSubPathResult {
+		t.Errorf("Conversion did not work, got back %s, but expected %s", result, GoPkgIn2Result)
+	}
+
 }
