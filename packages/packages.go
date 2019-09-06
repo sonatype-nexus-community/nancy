@@ -13,6 +13,11 @@
 // limitations under the License.
 package packages
 
+import "regexp"
+
+var gopkg1Pattern = regexp.MustCompile("^gopkg.in/([^.]+).*")
+var gopkg2Pattern = regexp.MustCompile("^gopkg.in/([^/]+)/([^.]+).*")
+
 // Packages is meant to be implemented for any package format such as dep, go mod, etc..
 type Packages interface {
 	ExtractPurlsFromManifest() []string
@@ -23,6 +28,13 @@ type Packages interface {
 //
 // FIXME: Research the various Gopkg name formats and convert them correctly
 func convertGopkgNameToPurl(name string) (rename string) {
-	rename = "golang/" + name
+	switch {
+	case gopkg2Pattern.MatchString(name):
+		rename = gopkg2Pattern.ReplaceAllString(name, "github/$1/$2")
+	case gopkg1Pattern.MatchString(name):
+		rename = gopkg1Pattern.ReplaceAllString(name, "github/go-$1/$1")
+	default:
+		rename = "golang/" + name
+	}
 	return
 }
