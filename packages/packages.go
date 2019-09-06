@@ -30,9 +30,9 @@ type Packages interface {
 func convertGopkgNameToPurl(name string) (rename string) {
 	switch {
 	case gopkg2Pattern.MatchString(name):
-		rename = gopkg2Pattern.ReplaceAllString(name, "github/$1/$2")
+		rename = gopkg2Pattern.ReplaceAllString(name, "golang/$1/$2")
 	case gopkg1Pattern.MatchString(name):
-		rename = gopkg1Pattern.ReplaceAllString(name, "github/go-$1/$1")
+		rename = gopkg1Pattern.ReplaceAllString(name, "golang/go-$1/$1")
 	default:
 		rename = "golang/" + name
 	}
