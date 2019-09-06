@@ -118,7 +118,6 @@ func TestAuditPackages_ErrorHttpRequest(t *testing.T) {
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	parseError := err.(*url.Error)
 	assert.Equal(t, "parse", parseError.Op)
-	assert.Equal(t, "invalid character \"\\\\\" in host name", parseError.Err.Error())
 }
 
 func TestAuditPackages_ErrorNonExistentPurl(t *testing.T) {

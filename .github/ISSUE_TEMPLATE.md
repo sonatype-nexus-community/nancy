@@ -8,3 +8,5 @@ sure to have all the information we need, and to minimize back and forth.
 * **How could we solve this issue? (Not knowing is okay!)**
 
 * **Anything else?**
+
+cc @bhamail / @DarthHater
