@@ -17,6 +17,7 @@ import "regexp"
 
 var gopkg1Pattern = regexp.MustCompile("^gopkg.in/([^.]+).*")
 var gopkg2Pattern = regexp.MustCompile("^gopkg.in/([^/]+)/([^.]+).*")
+var githubPattern = regexp.MustCompile("^github.com/([^/]+)/([^/]+).*")
 
 // Packages is meant to be implemented for any package format such as dep, go mod, etc..
 type Packages interface {
@@ -29,6 +30,8 @@ type Packages interface {
 // FIXME: Research the various Gopkg name formats and convert them correctly
 func convertGopkgNameToPurl(name string) (rename string) {
 	switch {
+	case githubPattern.MatchString(name):
+		rename = githubPattern.ReplaceAllString(name, "golang/$1/$2")
 	case gopkg2Pattern.MatchString(name):
 		rename = gopkg2Pattern.ReplaceAllString(name, "golang/$1/$2")
 	case gopkg1Pattern.MatchString(name):

@@ -19,9 +19,9 @@ import (
 
 const (
 	GolangResult   = "golang/golang.org/x/net"
-	GitHubResult   = "github/sonatype-nexus-community/nancy"
-	GoPkgIn1Result = "github/go-name/name"
-	GoPkgIn2Result = "github/owner/name"
+	GitHubResult   = "golang/sonatype-nexus-community/nancy"
+	GoPkgIn1Result = "golang/go-name/name"
+	GoPkgIn2Result = "golang/owner/name"
 )
 
 func TestConvertGopkgNameToPurl(t *testing.T) {
