@@ -9,12 +9,24 @@
 
 `nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype OSS Index](https://ossindex.sonatype.org/).
 
-## Usage
+### Usage
 
-To use `nancy`, assuming you have a built version of it:
+```
+ ~ > nancy
+Usage:
+nancy [options] </path/to/Gopkg.lock>
+nancy [options] </path/to/go.sum>
 
-* `./nancy /path/to/your/Gopkg.lock`
-* `./nancy /path/to/your/go.sum`
+Options:
+  -exclude-vulnerability value
+    	Comma seperated list of CVEs to exclude
+  -noColor
+    	indicate output should not be colorized
+  -quiet
+    	indicate output should contain only packages with vulnerabilities
+  -version
+    	prints current nancy version
+```
 
 `nancy` currently works for projects that use `dep` or `go mod` for dependencies.
 
