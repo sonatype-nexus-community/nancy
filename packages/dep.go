@@ -15,6 +15,7 @@ package packages
 
 import (
 	"fmt"
+	"github.com/golang/dep"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
@@ -48,4 +49,23 @@ func (d Dep) CheckExistenceOfManifest() bool {
 		customerrors.Check(err, fmt.Sprint("No Gopkg found at path: "+d.GopkgPath))
 	}
 	return true
+}
+
+// ExtractPurlsFromManifest will convert Gopkg projects to Package URLs
+func ExtractPurlsUsingDep(project dep.Project) []string {
+	lockedProjects := project.Lock.P;
+	var purls []string
+	for _, lockedProject := range lockedProjects {
+		var version string
+		i := lockedProject.Version().String()
+		version = strings.Replace(i, "v", "", -1)
+
+		if len(version) > 0 { // There must be a version we can use
+			name := lockedProject.Ident().String()
+			packageName := convertGopkgNameToPurl(string(name))
+			var purl = "pkg:" + packageName + "@" + version
+			purls = append(purls, purl)
+		}
+	}
+	return purls
 }
