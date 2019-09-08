@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
+	"github.com/golang/dep"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
@@ -79,21 +79,27 @@ func main() {
 func doCheckExistenceAndParse() {
 	switch {
 	case strings.Contains(path, "Gopkg.lock"):
-		dep := packages.Dep{}
-		dep.GopkgPath = path
-		if dep.CheckExistenceOfManifest() {
-			dep.ProjectList, _ = parse.GopkgLock(path)
-			var purls = processPackages(dep)
-			var packageCount = len(purls)
-
-			checkOSSIndex(purls, packageCount)
+		slices := strings.Split(path, "/Gopkg.lock")
+		getenv := os.Getenv("GOPATH")
+		ctx := dep.Ctx{
+			WorkingDir: slices[0],
+			GOPATH:     getenv,
+			GOPATHs:    []string{getenv},
 		}
+		project, err := ctx.LoadProject()
+		if err != nil {
+			customerrors.Check(err, fmt.Sprint("could not read lock at path "+path))
+		}
+
+		var purls = packages.ExtractPurlsUsingDep(*project)
+		var packageCount = len(purls)
+		checkOSSIndex(purls, packageCount)
 	case strings.Contains(path, "go.sum"):
 		mod := packages.Mod{}
 		mod.GoSumPath = path
 		if mod.CheckExistenceOfManifest() {
 			mod.ProjectList, _ = parse.GoSum(path)
-			var purls = processPackages(mod)
+			var purls = mod.ExtractPurlsFromManifest()
 			var packageCount = len(purls)
 
 			checkOSSIndex(purls, packageCount)
@@ -110,8 +116,4 @@ func checkOSSIndex(purls []string, packageCount int) {
 	if count := audit.LogResults(*noColorPtr, *quietPtr, packageCount, coordinates, cveList.Cves); count > 0 {
 		os.Exit(count)
 	}
-}
-
-func processPackages(p packages.Packages) []string {
-	return p.ExtractPurlsFromManifest()
 }
