@@ -15,21 +15,10 @@ package parse
 
 import (
 	"bufio"
-	"github.com/BurntSushi/toml"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
 	"strings"
 )
-
-// GopkgLock parses the Gopkg file and returns an error if unsuccessful
-func GopkgLock(path string) (deps types.ProjectList, err error) {
-	// Load the dependency data
-	_, err = toml.DecodeFile(path, &deps)
-	if err != nil {
-		return deps, err
-	}
-	return deps, nil
-}
 
 // GoSum parses the go.sum file and returns an error if unsuccessful
 func GoSum(path string) (deps types.ProjectList, err error) {

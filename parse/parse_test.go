@@ -17,24 +17,6 @@ import (
 	"testing"
 )
 
-func TestGopkgLock(t *testing.T) {
-	deps, err := GopkgLock("Gopkg.lock")
-	if err != nil {
-		t.Error(err)
-	}
-
-	if len(deps.Projects) != 10 {
-		t.Error(deps)
-	}
-}
-
-func TestGopkgLockError(t *testing.T) {
-	_, err := GopkgLock("Gopkg.not")
-	if err == nil {
-		t.Error(err)
-	}
-}
-
 func TestGoSum(t *testing.T) {
 	deps, err := GoSum("go.sum")
 	if err != nil {

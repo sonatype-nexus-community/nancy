@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"github.com/Flaque/filet"
 	"github.com/golang/dep"
-	"github.com/sonatype-nexus-community/nancy/parse"
 	"io/ioutil"
 	"log"
 	"os"
@@ -60,32 +59,6 @@ func TestExtractPurlsFromManifestUsingDep(t *testing.T) {
 		assertPurlFound("pkg:golang/golang.org/x/sys@master", result, t)
 		assertPurlFound("pkg:golang/github.com/go-yaml/yaml@2", result, t)
 	}
-}
-
-func TestExtractPurlsFromManifestCurrent(t *testing.T) {
-	_, projectDir, _ := doGoPathSimulatedSetup(t)
-	defer filet.CleanUp(t)
-	lockFile := fmt.Sprint(projectDir, "/Gopkg.lock")
-
-	var err error
-	dep := Dep{}
-	dep.GopkgPath = lockFile
-	projectList, err := parse.GopkgLock(lockFile)
-	dep.ProjectList = projectList
-	if err != nil {
-		t.Error(err)
-	}
-
-	result := dep.ExtractPurlsFromManifest()
-	if len(result) != 6 {
-		t.Errorf("Number of purls not as expected. Expected : %d, Got %d", 6, len(result))
-	}
-
-	assertPurlFound("pkg:golang/github.com/Masterminds/vcs@1.11.1", result, t)
-	assertPurlFound("pkg:golang/github.com/boltdb/bolt@1.3.1", result, t)
-	assertPurlFound("pkg:golang/github.com/golang/protobuf@1.0.0", result, t)
-	assertPurlFound("pkg:golang/github.com/jmank88/nuts@0.3.0", result, t)
-	assertPurlFound("pkg:golang/github.com/pkg/errors@0.8.0", result, t)
 }
 
 func assertPurlFound(expectedPurl string, result []string, t *testing.T) {

@@ -14,42 +14,9 @@
 package packages
 
 import (
-	"fmt"
 	"github.com/golang/dep"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
-	"os"
 	"strings"
 )
-
-// Dep is an implementation of Packages interface
-type Dep struct {
-	ProjectList types.ProjectList
-	GopkgPath   string
-}
-
-// ExtractPurlsFromManifest will convert Gopkg projects to Package URLs
-func (d Dep) ExtractPurlsFromManifest() []string {
-	var purls []string
-	for _, s := range d.ProjectList.Projects {
-		var version string
-		version = strings.Replace(s.Version, "v", "", -1)
-
-		if len(version) > 0 { // There must be a version we can use
-			var purl = "pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version
-			purls = append(purls, purl)
-		}
-	}
-	return purls
-}
-
-// CheckExistenceOfManifest will see if a Gopkg exists at the given path
-func (d Dep) CheckExistenceOfManifest() bool {
-	if _, err := os.Stat(d.GopkgPath); os.IsNotExist(err) {
-		customerrors.Check(err, fmt.Sprint("No Gopkg found at path: "+d.GopkgPath))
-	}
-	return true
-}
 
 // ExtractPurlsFromManifest will convert Gopkg projects to Package URLs
 func ExtractPurlsUsingDep(project dep.Project) []string {
