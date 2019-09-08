@@ -1,0 +1,104 @@
+// Copyright 2018 Sonatype Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+package packages
+
+import (
+	"fmt"
+	"github.com/Flaque/filet"
+	"github.com/sonatype-nexus-community/nancy/parse"
+	"io/ioutil"
+	"os"
+	"testing"
+)
+
+func TestExtractPurlsFromManifestCurrent(t *testing.T) {
+	_, projectDir, _ := doGoPathSimulatedSetup(t)
+	defer filet.CleanUp(t)
+	lockFile := fmt.Sprint(projectDir, "/Gopkg.lock")
+
+	var err error
+	dep := Dep{}
+	dep.GopkgPath = lockFile
+	projectList, err := parse.GopkgLock(lockFile)
+	dep.ProjectList = projectList
+	if err != nil {
+		t.Error(err)
+	}
+
+	result := dep.ExtractPurlsFromManifest()
+	if len(result) != 6 {
+		t.Error(result)
+	}
+
+	assertPurlFound("pkg:golang/github.com/Masterminds/vcs@1.11.1", result, t)
+	assertPurlFound("pkg:golang/github.com/boltdb/bolt@1.3.1", result, t)
+	assertPurlFound("pkg:golang/github.com/golang/protobuf@1.0.0", result, t)
+	assertPurlFound("pkg:golang/github.com/jmank88/nuts@0.3.0", result, t)
+	assertPurlFound("pkg:golang/github.com/pkg/errors@0.8.0", result, t)
+}
+
+func assertPurlFound(expectedPurl string, result []string, t *testing.T) {
+	if !inArray(expectedPurl, result) {
+		t.Errorf("Expected purl %s not found. List of purls was %s", expectedPurl, result)
+	}
+}
+
+func doGoPathSimulatedSetup(t *testing.T) (string, string, error) {
+	dir, _ := os.Getwd()
+	path := filet.TmpDir(t, dir)
+	fakeGoPath := fmt.Sprint(path, "/src")
+	e := os.Mkdir(fakeGoPath, os.ModePerm)
+	if e != nil{
+		t.Error(e)
+	}
+	projectDir := fmt.Sprint(fakeGoPath, "/projectname")
+	e = os.Mkdir(projectDir, os.ModePerm)
+	if e != nil{
+		t.Error(e)
+	}
+	lockBytes, _ := ioutil.ReadFile("../testdata/dep/Gopkg.lock")
+	e = ioutil.WriteFile(fmt.Sprint(projectDir, "/Gopkg.lock"), lockBytes, 0644)
+	if e != nil {
+		t.Error(e)
+	}
+
+	tomlBytes, _ := ioutil.ReadFile("../testdata/dep/Gopkg.toml")
+	e = ioutil.WriteFile(fmt.Sprint(projectDir, "/Gopkg.toml"), tomlBytes, 0644)
+	if e != nil {
+		t.Error(e)
+	}
+
+	files, e := ioutil.ReadDir(projectDir)
+	if e != nil {
+		t.Error(e)
+	}
+	for _, file := range files {
+		fmt.Println(file.Name())
+	}
+	return path, projectDir, e
+}
+
+
+func inArray(val string, array []string) (exists bool) {
+	exists = false
+
+	for _, v := range array {
+		if val == v {
+			exists = true
+			return
+		}
+	}
+
+	return
+}
