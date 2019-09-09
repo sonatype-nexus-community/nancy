@@ -30,7 +30,6 @@ func TestExtractPurlsFromManifestUsingDep(t *testing.T) {
 
 	ctx := dep.Ctx{
 		WorkingDir: projectDir,
-		GOPATH:     path,
 		GOPATHs:    []string{path},
 		Out:        log.New(os.Stdout, "", 0),
 		Err:        log.New(os.Stderr, "", 0),

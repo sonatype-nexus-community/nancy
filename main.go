@@ -82,13 +82,12 @@ func doCheckExistenceAndParse() {
 		slices := strings.Split(path, "/Gopkg.lock")
 
 		workingDir := slices[0]
-		if(workingDir == "Gopkg.lock"){
+		if workingDir == "Gopkg.lock" {
 			workingDir, _ = os.Getwd()
 		}
 		getenv := os.Getenv("GOPATH")
 		ctx := dep.Ctx{
 			WorkingDir: workingDir,
-			GOPATH:     getenv,
 			GOPATHs:    []string{getenv},
 		}
 		project, err := ctx.LoadProject()
