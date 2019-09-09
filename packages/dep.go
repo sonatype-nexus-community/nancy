@@ -18,7 +18,6 @@ import (
 	"strings"
 )
 
-// ExtractPurlsFromManifest will convert Gopkg projects to Package URLs
 func ExtractPurlsUsingDep(project dep.Project) []string {
 	lockedProjects := project.Lock.P;
 	var purls []string
