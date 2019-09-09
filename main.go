@@ -26,6 +26,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"path/filepath"
 )
 
 var noColorPtr *bool
@@ -79,10 +80,8 @@ func main() {
 func doCheckExistenceAndParse() {
 	switch {
 	case strings.Contains(path, "Gopkg.lock"):
-		slices := strings.Split(path, "/Gopkg.lock")
-
-		workingDir := slices[0]
-		if workingDir == "Gopkg.lock" {
+		workingDir := filepath.Dir(path)
+		if workingDir == "." {
 			workingDir, _ = os.Getwd()
 		}
 		getenv := os.Getenv("GOPATH")
