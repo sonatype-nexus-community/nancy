@@ -34,7 +34,7 @@ func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordi
 	}
 }
 
-func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
+func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) (vulnerableCount bool) {
 	if noColor {
 		fmt.Println("------------------------------------------------------------")
 		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
@@ -43,13 +43,16 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 			"known vulnerabilities affecting installed version")
 
 		for j := 0; j < len(coordinate.Vulnerabilities); j++ {
-			fmt.Println()
-			vulnerability := coordinate.Vulnerabilities[j]
-			fmt.Println(vulnerability.Title)
-			fmt.Println(vulnerability.Description)
-			fmt.Println()
-			fmt.Println("ID:", vulnerability.Id)
-			fmt.Println("Details:", vulnerability.Reference)
+			if !coordinate.Vulnerabilities[j].Excluded {
+				fmt.Println()
+				vulnerability := coordinate.Vulnerabilities[j]
+				fmt.Println(vulnerability.Title)
+				fmt.Println(vulnerability.Description)
+				fmt.Println()
+				fmt.Println("ID:", vulnerability.Id)
+				fmt.Println("Details:", vulnerability.Reference)
+				vulnerableCount = true
+			}
 		}
 	} else {
 		fmt.Println("------------------------------------------------------------")
@@ -59,15 +62,20 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 			"known vulnerabilities affecting installed version")
 
 		for j := 0; j < len(coordinate.Vulnerabilities); j++ {
-			fmt.Println()
-			vulnerability := coordinate.Vulnerabilities[j]
-			fmt.Println(aurora.Bold(aurora.Red(vulnerability.Title)))
-			fmt.Println(vulnerability.Description)
-			fmt.Println()
-			fmt.Println(aurora.Bold("ID:"), vulnerability.Id)
-			fmt.Println(aurora.Bold("Details:"), vulnerability.Reference)
+			if !coordinate.Vulnerabilities[j].Excluded {
+				fmt.Println()
+				vulnerability := coordinate.Vulnerabilities[j]
+				fmt.Println(aurora.Bold(aurora.Red(vulnerability.Title)))
+				fmt.Println(vulnerability.Description)
+				fmt.Println()
+				fmt.Println(aurora.Bold("ID:"), vulnerability.Id)
+				fmt.Println(aurora.Bold("Details:"), vulnerability.Reference)
+				vulnerableCount = true
+			}
 		}
 	}
+
+	return
 }
 
 // LogResults will given a number of expected results and the results themselves, log the
@@ -75,13 +83,13 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
 
-	removeVulnerabilitiesIfExcluded(exclusions, coordinates)
+	list := removeVulnerabilitiesIfExcluded(exclusions, coordinates)
 
-	for i := 0; i < len(coordinates); i++ {
-		coordinate := coordinates[i]
+	for i := 0; i < len(list); i++ {
+		coordinate := list[i]
 		idx := i + 1
 
-		if len(coordinate.Vulnerabilities) == 0 {
+		if !coordinate.Vulnerable {
 			if !quiet {
 				logPackage(noColor, idx, packageCount, coordinate)
 			}
@@ -103,20 +111,35 @@ func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.
 	return vulnerableCount
 }
 
-func removeVulnerabilitiesIfExcluded(exclusions []string, coordinates []types.Coordinate) {
+func removeVulnerabilitiesIfExcluded(exclusions []string, coordinates []types.Coordinate) (list []types.Coordinate) {
 	if len(exclusions) == 0 {
 		return
 	}
 
 	for i, val := range coordinates {
-		filteredVulnerabilities := make([]types.Vulnerability, 0)
-		for _, vuln := range val.Vulnerabilities {
-			for _, exclusion := range exclusions {
-				if !strings.Contains(vuln.Title, exclusion) {
-					filteredVulnerabilities = append(filteredVulnerabilities, vuln)
-				}
+		list = append(list, val)
+		count := 0
+		list[i].Vulnerabilities, count = markVulnerabilitesAsExcluded(exclusions, val.Vulnerabilities)
+		if count > 0 {
+			list[i].Vulnerable = true
+		}
+	}
+
+	return
+}
+
+func markVulnerabilitesAsExcluded(exclusions []string, vulnerabilities []types.Vulnerability) (list []types.Vulnerability, vulnerableCount int) {
+	for i, vuln := range vulnerabilities {
+		list = append(list, vuln)
+		list[i].Excluded = false
+		vulnerableCount++
+		for _, exclusion := range exclusions {
+			if strings.Contains(vuln.Title, exclusion) {
+				list[i].Excluded = true
+				vulnerableCount--
 			}
 		}
-		coordinates[i].Vulnerabilities = filteredVulnerabilities
 	}
+
+	return
 }

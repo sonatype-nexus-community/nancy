@@ -28,12 +28,14 @@ type Vulnerability struct {
 	CvssVector  string
 	Cve         string
 	Reference   string
+	Excluded    bool
 }
 
 type Coordinate struct {
 	Coordinates     string
 	Reference       string
 	Vulnerabilities []Vulnerability
+	Vulnerable      bool
 }
 
 type AuditRequest struct {
