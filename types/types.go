@@ -14,6 +14,9 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	decimal "github.com/shopspring/decimal"
 )
 
@@ -43,4 +46,21 @@ type Projects struct {
 }
 type ProjectList struct {
 	Projects []Projects
+}
+
+type CveListFlag struct {
+	cves []string
+}
+
+func (cve *CveListFlag) String() string {
+	return fmt.Sprint(cve.cves)
+}
+
+func (cve *CveListFlag) Set(value string) error {
+	if len(cve.cves) > 0 {
+		return fmt.Errorf("The CVE Exclude Flag is already set")
+	}
+	cve.cves = strings.Split(value, ",")
+
+	return nil
 }

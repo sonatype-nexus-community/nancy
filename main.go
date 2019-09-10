@@ -16,19 +16,22 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
-	"os"
-	"strings"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 var noColorPtr *bool
 var quietPtr *bool
 var path string
+var cveList types.CveListFlag
 
 func main() {
 	args := os.Args[1:]
@@ -36,6 +39,7 @@ func main() {
 	noColorPtr = flag.Bool("noColor", false, "indicate output should not be colorized")
 	quietPtr = flag.Bool("quiet", false, "indicate output should contain only packages with vulnerabilities")
 	version := flag.Bool("version", false, "prints current nancy version")
+	flag.Var(&cveList, "exclude", "Comma seperated list of CVEs to exclude")
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, "Usage: \nnancy [options] </path/to/Gopkg.lock>\nnancy [options] </path/to/go.sum>\n\nOptions:\n")
