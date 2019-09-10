@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"strings"
 
-	aurora "github.com/logrusorgru/aurora"
+	"github.com/logrusorgru/aurora"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -75,7 +75,7 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
 
-	removeVulnerabilitesIfExcluded(exclusions, coordinates)
+	removeVulnerabilitiesIfExcluded(exclusions, coordinates)
 
 	for i := 0; i < len(coordinates); i++ {
 		coordinate := coordinates[i]
@@ -103,22 +103,20 @@ func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.
 	return vulnerableCount
 }
 
-func removeVulnerabilitesIfExcluded(exclusions []string, coordinates []types.Coordinate) {
-	for _, val := range coordinates {
-		for i, vuln := range val.Vulnerabilities {
+func removeVulnerabilitiesIfExcluded(exclusions []string, coordinates []types.Coordinate) {
+	if len(exclusions) == 0 {
+		return
+	}
+
+	for i, val := range coordinates {
+		filteredVulnerabilities := make([]types.Vulnerability, 0)
+		for _, vuln := range val.Vulnerabilities {
 			for _, exclusion := range exclusions {
-				if strings.Contains(vuln.Title, exclusion) {
-					val.Vulnerabilities = remove(val.Vulnerabilities, i)
+				if !strings.Contains(vuln.Title, exclusion) {
+					filteredVulnerabilities = append(filteredVulnerabilities, vuln)
 				}
 			}
 		}
+		coordinates[i].Vulnerabilities = filteredVulnerabilities
 	}
-}
-
-func remove(s []types.Vulnerability, i int) []types.Vulnerability {
-	if i == len(s) {
-		return s[:len(s)-1]
-	}
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
 }
