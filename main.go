@@ -99,7 +99,7 @@ func checkOSSIndex(purls []string, packageCount int) {
 	coordinates, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "Error auditing packages")
 
-	if count := audit.LogResults(*noColorPtr, *quietPtr, packageCount, coordinates); count > 0 {
+	if count := audit.LogResults(*noColorPtr, *quietPtr, packageCount, coordinates, cveList.Cves); count > 0 {
 		os.Exit(count)
 	}
 }

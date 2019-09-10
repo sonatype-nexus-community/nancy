@@ -16,6 +16,7 @@ package audit
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	aurora "github.com/logrusorgru/aurora"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -71,8 +72,10 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
-func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate) int {
+func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
+
+	removeVulnerabilitesIfExcluded(exclusions, coordinates)
 
 	for i := 0; i < len(coordinates); i++ {
 		coordinate := coordinates[i]
@@ -98,4 +101,24 @@ func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.
 	}
 
 	return vulnerableCount
+}
+
+func removeVulnerabilitesIfExcluded(exclusions []string, coordinates []types.Coordinate) {
+	for _, val := range coordinates {
+		for i, vuln := range val.Vulnerabilities {
+			for _, exclusion := range exclusions {
+				if strings.Contains(vuln.Title, exclusion) {
+					val.Vulnerabilities = remove(val.Vulnerabilities, i)
+				}
+			}
+		}
+	}
+}
+
+func remove(s []types.Vulnerability, i int) []types.Vulnerability {
+	if i == len(s) {
+		return s[:len(s)-1]
+	}
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
 }

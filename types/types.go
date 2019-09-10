@@ -49,18 +49,18 @@ type ProjectList struct {
 }
 
 type CveListFlag struct {
-	cves []string
+	Cves []string
 }
 
 func (cve *CveListFlag) String() string {
-	return fmt.Sprint(cve.cves)
+	return fmt.Sprint(cve.Cves)
 }
 
 func (cve *CveListFlag) Set(value string) error {
-	if len(cve.cves) > 0 {
+	if len(cve.Cves) > 0 {
 		return fmt.Errorf("The CVE Exclude Flag is already set")
 	}
-	cve.cves = strings.Split(value, ",")
+	cve.Cves = strings.Split(value, ",")
 
 	return nil
 }
