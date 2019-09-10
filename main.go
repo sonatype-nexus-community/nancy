@@ -39,7 +39,7 @@ func main() {
 	noColorPtr = flag.Bool("noColor", false, "indicate output should not be colorized")
 	quietPtr = flag.Bool("quiet", false, "indicate output should contain only packages with vulnerabilities")
 	version := flag.Bool("version", false, "prints current nancy version")
-	flag.Var(&cveList, "exclude", "Comma seperated list of CVEs to exclude")
+	flag.Var(&cveList, "exclude-vulnerability", "Comma seperated list of CVEs to exclude")
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, "Usage: \nnancy [options] </path/to/Gopkg.lock>\nnancy [options] </path/to/go.sum>\n\nOptions:\n")
