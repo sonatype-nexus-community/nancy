@@ -14,10 +14,11 @@
 package audit
 
 import (
+	"testing"
+
 	"github.com/shopspring/decimal"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func createCoordinates(num int, vulnerable bool) (coordinates []types.Coordinate) {
@@ -51,7 +52,8 @@ func createVulnerabilities(num int) (vulnerabilities []types.Vulnerability) {
 }
 
 func createVulnerability() (vulnerability types.Vulnerability) {
-	vulnerability.Cve = "7.8"
+	vulnerability.Cve = "nerabil"
+	vulnerability.Cwe = "nerabil"
 	vulnerability.CvssScore, _ = decimal.NewFromString("7.88")
 	vulnerability.CvssVector = "What"
 	vulnerability.Description = "Description"

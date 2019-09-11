@@ -15,9 +15,10 @@ package audit
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/logrusorgru/aurora"
 	"github.com/sonatype-nexus-community/nancy/types"
-	"strconv"
 )
 
 func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
@@ -81,7 +82,7 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
 
-	for _, c := range coordinates{
+	for _, c := range coordinates {
 		c.ExcludeVulnerabilities(exclusions)
 	}
 
