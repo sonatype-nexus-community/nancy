@@ -33,7 +33,7 @@ func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordi
 	}
 }
 
-func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) (vulnerableCount bool) {
+func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	if noColor {
 		fmt.Println("------------------------------------------------------------")
 		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
@@ -50,7 +50,6 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 				fmt.Println()
 				fmt.Println("ID:", vulnerability.Id)
 				fmt.Println("Details:", vulnerability.Reference)
-				vulnerableCount = true
 			}
 		}
 	} else {
@@ -69,7 +68,6 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 				fmt.Println()
 				fmt.Println(aurora.Bold("ID:"), vulnerability.Id)
 				fmt.Println(aurora.Bold("Details:"), vulnerability.Reference)
-				vulnerableCount = true
 			}
 		}
 	}
