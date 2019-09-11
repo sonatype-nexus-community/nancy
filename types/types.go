@@ -27,6 +27,7 @@ type Vulnerability struct {
 	CvssScore   decimal.Decimal
 	CvssVector  string
 	Cve         string
+	Cwe         string
 	Reference   string
 	Excluded    bool
 }
@@ -34,7 +35,7 @@ type Vulnerability struct {
 //Mark the given vulnerability as excluded if it appears in the exclusion list
 func (v *Vulnerability) maybeExcludeVulnerability(exclusions []string) {
 	for _, ex := range exclusions {
-		if strings.Contains(v.Title, ex) {
+		if v.Cve == ex || v.Cwe == ex{
 			v.Excluded = true
 		}
 	}
