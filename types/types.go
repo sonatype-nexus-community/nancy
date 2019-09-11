@@ -31,6 +31,15 @@ type Vulnerability struct {
 	Excluded    bool
 }
 
+//Mark the given vulnerability as excluded if it appears in the exclusion list
+func (v *Vulnerability) maybeExcludeVulnerability(exclusions []string) {
+	for _, ex := range exclusions {
+		if strings.Contains(v.Title, ex) {
+			v.Excluded = true
+		}
+	}
+}
+
 type Coordinate struct {
 	Coordinates     string
 	Reference       string
@@ -44,6 +53,13 @@ func (c Coordinate) IsVulnerable() bool {
 		}
 	}
 	return false
+}
+
+//Mark Excluded=true for all Vulnerabilities of the given Coordinate if their Title is in the list of exclusions
+func (c *Coordinate) ExcludeVulnerabilities(exclusions []string) {
+	for i, _ := range c.Vulnerabilities {
+		c.Vulnerabilities[i].maybeExcludeVulnerability(exclusions)
+	}
 }
 
 type AuditRequest struct {
