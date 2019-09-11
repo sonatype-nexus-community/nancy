@@ -35,7 +35,15 @@ type Coordinate struct {
 	Coordinates     string
 	Reference       string
 	Vulnerabilities []Vulnerability
-	Vulnerable      bool
+}
+
+func (c Coordinate) IsVulnerable() bool {
+	for _, v := range c.Vulnerabilities {
+		if ! v.Excluded {
+			return true
+		}
+	}
+	return false
 }
 
 type AuditRequest struct {

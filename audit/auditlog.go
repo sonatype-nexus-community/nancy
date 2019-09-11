@@ -89,7 +89,7 @@ func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.
 		coordinate := list[i]
 		idx := i + 1
 
-		if !coordinate.Vulnerable {
+		if !coordinate.IsVulnerable() {
 			if !quiet {
 				logPackage(noColor, idx, packageCount, coordinate)
 			}
@@ -118,25 +118,19 @@ func removeVulnerabilitiesIfExcluded(exclusions []string, coordinates []types.Co
 
 	for i, val := range coordinates {
 		list = append(list, val)
-		count := 0
-		list[i].Vulnerabilities, count = markVulnerabilitesAsExcluded(exclusions, val.Vulnerabilities)
-		if count > 0 {
-			list[i].Vulnerable = true
-		}
+		list[i].Vulnerabilities = markVulnerabilitesAsExcluded(exclusions, val.Vulnerabilities)
 	}
 
 	return
 }
 
-func markVulnerabilitesAsExcluded(exclusions []string, vulnerabilities []types.Vulnerability) (list []types.Vulnerability, vulnerableCount int) {
+func markVulnerabilitesAsExcluded(exclusions []string, vulnerabilities []types.Vulnerability) (list []types.Vulnerability) {
 	for i, vuln := range vulnerabilities {
 		list = append(list, vuln)
 		list[i].Excluded = false
-		vulnerableCount++
 		for _, exclusion := range exclusions {
 			if strings.Contains(vuln.Title, exclusion) {
 				list[i].Excluded = true
-				vulnerableCount--
 			}
 		}
 	}
