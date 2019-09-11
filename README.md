@@ -32,10 +32,12 @@ You can run `nancy` in a quiet manner, only getting back a list of vulnerable co
 Sometimes you'll run into a dependency that after taking a look at, you either aren't affected by, or cannot resolve for some reason. Nancy understands, and will let you 
 exclude these vulnerabilities so you can get back to a passing build:
 
-* `./nancy -exclude-vulnerability CWE-123,CWE-456,CVE-789 /path/to/your/Gopkg.lock`
-* `./nancy -exclude-vulnerability CWE-123,CWE-456,CVE-789 /path/to/your/go.sum`
+* `./nancy -exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 /path/to/your/Gopkg.lock`
+* `./nancy -exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 /path/to/your/go.sum`
 
 Vulnerabiliites excluded will then be silenced and not show up in the output or fail your build.
+
+We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or via the OSS Index ID (ex: `a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14`) as not all vulnerabilities have a CVE-ID.
 
 ### Usage in CI
 

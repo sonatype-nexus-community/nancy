@@ -35,7 +35,7 @@ type Vulnerability struct {
 //Mark the given vulnerability as excluded if it appears in the exclusion list
 func (v *Vulnerability) maybeExcludeVulnerability(exclusions []string) {
 	for _, ex := range exclusions {
-		if v.Cve == ex || v.Cwe == ex{
+		if v.Cve == ex || v.Id == ex {
 			v.Excluded = true
 		}
 	}
@@ -49,7 +49,7 @@ type Coordinate struct {
 
 func (c Coordinate) IsVulnerable() bool {
 	for _, v := range c.Vulnerabilities {
-		if ! v.Excluded {
+		if !v.Excluded {
 			return true
 		}
 	}
