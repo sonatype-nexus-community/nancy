@@ -15,11 +15,9 @@ package audit
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/logrusorgru/aurora"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"strconv"
 )
 
 func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
@@ -83,10 +81,12 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
 
-	list := removeVulnerabilitiesIfExcluded(exclusions, coordinates)
+	for _, c := range coordinates{
+		c.ExcludeVulnerabilities(exclusions)
+	}
 
-	for i := 0; i < len(list); i++ {
-		coordinate := list[i]
+	for i := 0; i < len(coordinates); i++ {
+		coordinate := coordinates[i]
 		idx := i + 1
 
 		if !coordinate.IsVulnerable() {
@@ -109,31 +109,4 @@ func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.
 	}
 
 	return vulnerableCount
-}
-
-func removeVulnerabilitiesIfExcluded(exclusions []string, coordinates []types.Coordinate) (list []types.Coordinate) {
-	if len(exclusions) == 0 {
-		return
-	}
-
-	for i, val := range coordinates {
-		list = append(list, val)
-		list[i].Vulnerabilities = markVulnerabilitesAsExcluded(exclusions, val.Vulnerabilities)
-	}
-
-	return
-}
-
-func markVulnerabilitesAsExcluded(exclusions []string, vulnerabilities []types.Vulnerability) (list []types.Vulnerability) {
-	for i, vuln := range vulnerabilities {
-		list = append(list, vuln)
-		list[i].Excluded = false
-		for _, exclusion := range exclusions {
-			if strings.Contains(vuln.Title, exclusion) {
-				list[i].Excluded = true
-			}
-		}
-	}
-
-	return
 }
