@@ -27,7 +27,6 @@ type Vulnerability struct {
 	CvssScore   decimal.Decimal
 	CvssVector  string
 	Cve         string
-	Cwe         string
 	Reference   string
 	Excluded    bool
 }

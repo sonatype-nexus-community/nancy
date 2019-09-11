@@ -53,7 +53,6 @@ func createVulnerabilities(num int) (vulnerabilities []types.Vulnerability) {
 
 func createVulnerability() (vulnerability types.Vulnerability) {
 	vulnerability.Cve = "nerabil"
-	vulnerability.Cwe = "nerabil"
 	vulnerability.CvssScore, _ = decimal.NewFromString("7.88")
 	vulnerability.CvssVector = "What"
 	vulnerability.Description = "Description"
