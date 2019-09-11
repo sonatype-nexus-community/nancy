@@ -94,7 +94,11 @@ func doCheckExistenceAndParse() {
 			customerrors.Check(err, fmt.Sprint("could not read lock at path "+path))
 		}
 
-		var purls = packages.ExtractPurlsUsingDep(*project)
+		purls, invalidPurls := packages.ExtractPurlsUsingDep(*project)
+		if len(invalidPurls) > 0 {
+			audit.LogInvalidSemVerWarning(*noColorPtr, *quietPtr, invalidPurls)
+		}
+
 		var packageCount = len(purls)
 		checkOSSIndex(purls, packageCount)
 	case strings.Contains(path, "go.sum"):
