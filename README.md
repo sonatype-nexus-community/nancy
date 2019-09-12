@@ -89,7 +89,7 @@ $ curl -O /path/where/you/want/nancy \
 
 ## Development
 
-`nancy` is written using Golang 1.11, so it is best you start there.
+`nancy` is written using Golang 1.13, so it is best you start there.
 
 This project also uses `dep` for dependencies, so you will need to download `dep`.
 
