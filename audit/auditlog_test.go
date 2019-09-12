@@ -14,9 +14,11 @@
 package audit
 
 import (
+	"testing"
+
 	"github.com/shopspring/decimal"
 	"github.com/sonatype-nexus-community/nancy/types"
-	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
 func createCoordinates(num int, vulnerable bool) (coordinates []types.Coordinate) {
@@ -50,7 +52,7 @@ func createVulnerabilities(num int) (vulnerabilities []types.Vulnerability) {
 }
 
 func createVulnerability() (vulnerability types.Vulnerability) {
-	vulnerability.Cve = "7.8"
+	vulnerability.Cve = "CVE-123"
 	vulnerability.CvssScore, _ = decimal.NewFromString("7.88")
 	vulnerability.CvssVector = "What"
 	vulnerability.Description = "Description"
@@ -64,7 +66,7 @@ func createVulnerability() (vulnerability types.Vulnerability) {
 func TestLogResultsWithVulnerabilitiesNoColor(t *testing.T) {
 	projects := 20
 	coordinates := createCoordinates(projects, true)
-	i := LogResults(false, false, 20, coordinates)
+	i := LogResults(false, false, 20, coordinates, []string{})
 
 	if i != projects {
 		t.Errorf("Expected %d vulnerabilites but found %d", projects, i)
@@ -74,7 +76,7 @@ func TestLogResultsWithVulnerabilitiesNoColor(t *testing.T) {
 func TestLogResultsWithoutVulnerabilitiesNoColor(t *testing.T) {
 	projects := 20
 	coordinates := createCoordinates(projects, false)
-	i := LogResults(false, false, 20, coordinates)
+	i := LogResults(false, false, 20, coordinates, []string{})
 
 	if i != 0 {
 		t.Errorf("Expected %d vulnerabilites but found %d", 0, i)
@@ -84,7 +86,7 @@ func TestLogResultsWithoutVulnerabilitiesNoColor(t *testing.T) {
 func TestLogResultsWithVulnerabilitiesColor(t *testing.T) {
 	projects := 20
 	coordinates := createCoordinates(projects, true)
-	i := LogResults(true, false, 20, coordinates)
+	i := LogResults(true, false, 20, coordinates, []string{})
 
 	if i != projects {
 		t.Errorf("Expected %d vulnerabilites but found %d", projects, i)
@@ -94,9 +96,23 @@ func TestLogResultsWithVulnerabilitiesColor(t *testing.T) {
 func TestLogResultsWithoutVulnerabilitiesColor(t *testing.T) {
 	projects := 20
 	coordinates := createCoordinates(projects, false)
-	i := LogResults(true, false, 20, coordinates)
+	i := LogResults(true, false, 20, coordinates, []string{})
 
 	if i != 0 {
 		t.Errorf("Expected %d vulnerabilites but found %d", 0, i)
 	}
+}
+
+func TestLogResultsWithAllVulnerabilitiesExcluded(t *testing.T) {
+	projects := 20
+	coordinates := createCoordinates(projects, true)
+	i := LogResults(false, false, 20, coordinates, []string{"CVE-123"})
+	assert.Equal(t, 0, i)
+}
+
+func TestLogResultsWithNoVulnerabilitiesExcluded(t *testing.T) {
+	projects := 20
+	coordinates := createCoordinates(projects, true)
+	i := LogResults(false, false, 20, coordinates, []string{"CVE-456"})
+	assert.Equal(t, projects, i)
 }

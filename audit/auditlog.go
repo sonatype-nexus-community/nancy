@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strconv"
 
-	aurora "github.com/logrusorgru/aurora"
+	"github.com/logrusorgru/aurora"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -42,13 +42,13 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 			"known vulnerabilities affecting installed version")
 
 		for j := 0; j < len(coordinate.Vulnerabilities); j++ {
-			fmt.Println()
-			vulnerability := coordinate.Vulnerabilities[j]
-			fmt.Println(vulnerability.Title)
-			fmt.Println(vulnerability.Description)
-			fmt.Println()
-			fmt.Println("ID:", vulnerability.Id)
-			fmt.Println("Details:", vulnerability.Reference)
+			if !coordinate.Vulnerabilities[j].Excluded {
+				fmt.Printf("\n%s\n%s\n\nID:%s\nDetails:%s",
+					coordinate.Vulnerabilities[j].Title,
+					coordinate.Vulnerabilities[j].Description,
+					coordinate.Vulnerabilities[j].Id,
+					coordinate.Vulnerabilities[j].Reference)
+			}
 		}
 	} else {
 		fmt.Println("------------------------------------------------------------")
@@ -58,27 +58,33 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 			"known vulnerabilities affecting installed version")
 
 		for j := 0; j < len(coordinate.Vulnerabilities); j++ {
-			fmt.Println()
-			vulnerability := coordinate.Vulnerabilities[j]
-			fmt.Println(aurora.Bold(aurora.Red(vulnerability.Title)))
-			fmt.Println(vulnerability.Description)
-			fmt.Println()
-			fmt.Println(aurora.Bold("ID:"), vulnerability.Id)
-			fmt.Println(aurora.Bold("Details:"), vulnerability.Reference)
+			if !coordinate.Vulnerabilities[j].Excluded {
+				fmt.Printf("\n%s\n%s\n\nID:%s\nDetails:%s",
+					coordinate.Vulnerabilities[j].Title,
+					coordinate.Vulnerabilities[j].Description,
+					coordinate.Vulnerabilities[j].Id,
+					coordinate.Vulnerabilities[j].Reference)
+			}
 		}
 	}
+
+	return
 }
 
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
-func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate) int {
+func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
+
+	for _, c := range coordinates {
+		c.ExcludeVulnerabilities(exclusions)
+	}
 
 	for i := 0; i < len(coordinates); i++ {
 		coordinate := coordinates[i]
 		idx := i + 1
 
-		if len(coordinate.Vulnerabilities) == 0 {
+		if !coordinate.IsVulnerable() {
 			if !quiet {
 				logPackage(noColor, idx, packageCount, coordinate)
 			}

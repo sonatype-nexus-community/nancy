@@ -14,6 +14,9 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	decimal "github.com/shopspring/decimal"
 )
 
@@ -25,12 +28,38 @@ type Vulnerability struct {
 	CvssVector  string
 	Cve         string
 	Reference   string
+	Excluded    bool
+}
+
+//Mark the given vulnerability as excluded if it appears in the exclusion list
+func (v *Vulnerability) maybeExcludeVulnerability(exclusions []string) {
+	for _, ex := range exclusions {
+		if v.Cve == ex || v.Id == ex {
+			v.Excluded = true
+		}
+	}
 }
 
 type Coordinate struct {
 	Coordinates     string
 	Reference       string
 	Vulnerabilities []Vulnerability
+}
+
+func (c Coordinate) IsVulnerable() bool {
+	for _, v := range c.Vulnerabilities {
+		if !v.Excluded {
+			return true
+		}
+	}
+	return false
+}
+
+//Mark Excluded=true for all Vulnerabilities of the given Coordinate if their Title is in the list of exclusions
+func (c *Coordinate) ExcludeVulnerabilities(exclusions []string) {
+	for i, _ := range c.Vulnerabilities {
+		c.Vulnerabilities[i].maybeExcludeVulnerability(exclusions)
+	}
 }
 
 type AuditRequest struct {
@@ -43,4 +72,21 @@ type Projects struct {
 }
 type ProjectList struct {
 	Projects []Projects
+}
+
+type CveListFlag struct {
+	Cves []string
+}
+
+func (cve *CveListFlag) String() string {
+	return fmt.Sprint(cve.Cves)
+}
+
+func (cve *CveListFlag) Set(value string) error {
+	if len(cve.Cves) > 0 {
+		return fmt.Errorf("The CVE Exclude Flag is already set")
+	}
+	cve.Cves = strings.Split(strings.ReplaceAll(value, " ", ""), ",")
+
+	return nil
 }

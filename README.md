@@ -9,12 +9,37 @@
 
 `nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype OSS Index](https://ossindex.sonatype.org/).
 
+## Usage
+
 To use `nancy`, assuming you have a built version of it:
 
 * `./nancy /path/to/your/Gopkg.lock`
 * `./nancy /path/to/your/go.sum`
 
 `nancy` currently works for projects that use `dep` or `go mod` for dependencies.
+
+### Options
+
+#### Quiet mode
+
+You can run `nancy` in a quiet manner, only getting back a list of vulnerable components by running:
+
+* `./nancy -quiet /path/to/your/Gopkg.lock `
+* `./nancy -quiet /path/to/your/go.sum `
+
+#### Exclude vulnerabilities
+
+Sometimes you'll run into a dependency that after taking a look at, you either aren't affected by, or cannot resolve for some reason. Nancy understands, and will let you 
+exclude these vulnerabilities so you can get back to a passing build:
+
+* `./nancy -exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 /path/to/your/Gopkg.lock`
+* `./nancy -exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 /path/to/your/go.sum`
+
+Vulnerabiliites excluded will then be silenced and not show up in the output or fail your build.
+
+We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or via the OSS Index ID (ex: `a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14`) as not all vulnerabilities have a CVE-ID.
+
+### Usage in CI
 
 You can see an example of using `nancy` in Travis-CI at [this intentionally vulnerable repo we made](https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project).
 
@@ -64,7 +89,7 @@ $ curl -O /path/where/you/want/nancy \
 
 ## Development
 
-`nancy` is written using Golang 1.11, so it is best you start there.
+`nancy` is written using Golang 1.13, so it is best you start there.
 
 This project also uses `dep` for dependencies, so you will need to download `dep`.
 
