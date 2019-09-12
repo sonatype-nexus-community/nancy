@@ -52,7 +52,7 @@ func createVulnerabilities(num int) (vulnerabilities []types.Vulnerability) {
 }
 
 func createVulnerability() (vulnerability types.Vulnerability) {
-	vulnerability.Cve = "nerabil"
+	vulnerability.Cve = "CVE-123"
 	vulnerability.CvssScore, _ = decimal.NewFromString("7.88")
 	vulnerability.CvssVector = "What"
 	vulnerability.Description = "Description"
@@ -106,13 +106,13 @@ func TestLogResultsWithoutVulnerabilitiesColor(t *testing.T) {
 func TestLogResultsWithAllVulnerabilitiesExcluded(t *testing.T) {
 	projects := 20
 	coordinates := createCoordinates(projects, true)
-	i := LogResults(false, false, 20, coordinates, []string{"nerabil"})
+	i := LogResults(false, false, 20, coordinates, []string{"CVE-123"})
 	assert.Equal(t, 0, i)
 }
 
 func TestLogResultsWithNoVulnerabilitiesExcluded(t *testing.T) {
 	projects := 20
 	coordinates := createCoordinates(projects, true)
-	i := LogResults(false, false, 20, coordinates, []string{"yadda"})
+	i := LogResults(false, false, 20, coordinates, []string{"CVE-456"})
 	assert.Equal(t, projects, i)
 }
