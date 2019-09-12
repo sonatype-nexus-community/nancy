@@ -43,13 +43,11 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 
 		for j := 0; j < len(coordinate.Vulnerabilities); j++ {
 			if !coordinate.Vulnerabilities[j].Excluded {
-				fmt.Println()
-				vulnerability := coordinate.Vulnerabilities[j]
-				fmt.Println(vulnerability.Title)
-				fmt.Println(vulnerability.Description)
-				fmt.Println()
-				fmt.Println("ID:", vulnerability.Id)
-				fmt.Println("Details:", vulnerability.Reference)
+				fmt.Printf("\n%s\n%s\n\nID:%s\nDetails:%s",
+					coordinate.Vulnerabilities[j].Title,
+					coordinate.Vulnerabilities[j].Description,
+					coordinate.Vulnerabilities[j].Id,
+					coordinate.Vulnerabilities[j].Reference)
 			}
 		}
 	} else {
@@ -61,13 +59,11 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 
 		for j := 0; j < len(coordinate.Vulnerabilities); j++ {
 			if !coordinate.Vulnerabilities[j].Excluded {
-				fmt.Println()
-				vulnerability := coordinate.Vulnerabilities[j]
-				fmt.Println(aurora.Bold(aurora.Red(vulnerability.Title)))
-				fmt.Println(vulnerability.Description)
-				fmt.Println()
-				fmt.Println(aurora.Bold("ID:"), vulnerability.Id)
-				fmt.Println(aurora.Bold("Details:"), vulnerability.Reference)
+				fmt.Printf("\n%s\n%s\n\nID:%s\nDetails:%s",
+					coordinate.Vulnerabilities[j].Title,
+					coordinate.Vulnerabilities[j].Description,
+					coordinate.Vulnerabilities[j].Id,
+					coordinate.Vulnerabilities[j].Reference)
 			}
 		}
 	}
