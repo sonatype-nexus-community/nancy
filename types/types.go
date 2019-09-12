@@ -86,7 +86,7 @@ func (cve *CveListFlag) Set(value string) error {
 	if len(cve.Cves) > 0 {
 		return fmt.Errorf("The CVE Exclude Flag is already set")
 	}
-	cve.Cves = strings.Split(value, ",")
+	cve.Cves = strings.Split(strings.ReplaceAll(value, " ", ""), ",")
 
 	return nil
 }
