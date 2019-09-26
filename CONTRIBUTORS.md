@@ -9,4 +9,6 @@ Sonatype internal people:
 
 External contributors:
 
+* [@s-spindler](https://github.com/s-spindler) (Stephan Spindler)
+
 Possibly You!
