@@ -4,7 +4,7 @@
 
 * Make sure to fill out an issue for your PR, so that we have traceability as to what you are trying to fix,
 versus how you fixed it.
-* Sign a CLA!
+* Sign the [Sonatype CLA](https://sonatypecla.herokuapp.com/sign-cla)
 * Try to fix one thing per pull request! Many people work on this code, so the more focused your changes are, the less
 of a headache other people will have when they merge their work in.
 * Ensure your Pull Request passes tests either locally or via TravisCI (it will run automatically on your PR)
