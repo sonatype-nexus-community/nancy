@@ -22,49 +22,27 @@ import (
 )
 
 func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
-	if noColor {
-		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
-			coordinate.Coordinates,
-			"   No known vulnerabilities against package/version")
-	} else {
-		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
-			aurora.Bold(coordinate.Coordinates),
-			aurora.Gray(20-1,"   No known vulnerabilities against package/version"))
-	}
+	au := aurora.NewAurora(!noColor)
+	fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
+		au.Bold(coordinate.Coordinates),
+		au.Gray(20-1,"   No known vulnerabilities against package/version"))
 }
 
 func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
-	if noColor {
-		fmt.Println("------------------------------------------------------------")
-		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
-			coordinate.Coordinates+"  [Vulnerable]",
-			"   "+strconv.Itoa(len(coordinate.Vulnerabilities)),
-			"known vulnerabilities affecting installed version")
+	au := aurora.NewAurora(!noColor)
+	fmt.Println("------------------------------------------------------------")
+	fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
+		au.Bold(au.Red(coordinate.Coordinates+"  [Vulnerable]")),
+		"   "+strconv.Itoa(len(coordinate.Vulnerabilities)),
+		"known vulnerabilities affecting installed version")
 
-		for j := 0; j < len(coordinate.Vulnerabilities); j++ {
-			if !coordinate.Vulnerabilities[j].Excluded {
-				fmt.Printf("\n%s\n%s\n\nID:%s\nDetails:%s",
-					coordinate.Vulnerabilities[j].Title,
-					coordinate.Vulnerabilities[j].Description,
-					coordinate.Vulnerabilities[j].Id,
-					coordinate.Vulnerabilities[j].Reference)
-			}
-		}
-	} else {
-		fmt.Println("------------------------------------------------------------")
-		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
-			aurora.Bold(aurora.Red(coordinate.Coordinates+"  [Vulnerable]")),
-			"   "+strconv.Itoa(len(coordinate.Vulnerabilities)),
-			"known vulnerabilities affecting installed version")
-
-		for j := 0; j < len(coordinate.Vulnerabilities); j++ {
-			if !coordinate.Vulnerabilities[j].Excluded {
-				fmt.Printf("\n%s\n%s\n\nID:%s\nDetails:%s",
-					coordinate.Vulnerabilities[j].Title,
-					coordinate.Vulnerabilities[j].Description,
-					coordinate.Vulnerabilities[j].Id,
-					coordinate.Vulnerabilities[j].Reference)
-			}
+	for j := 0; j < len(coordinate.Vulnerabilities); j++ {
+		if !coordinate.Vulnerabilities[j].Excluded {
+			fmt.Printf("\n%s\n%s\n\nID:%s\nDetails:%s",
+				coordinate.Vulnerabilities[j].Title,
+				coordinate.Vulnerabilities[j].Description,
+				coordinate.Vulnerabilities[j].Id,
+				coordinate.Vulnerabilities[j].Reference)
 		}
 	}
 
@@ -95,13 +73,9 @@ func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.
 	}
 
 	fmt.Println()
-	if noColor {
-		fmt.Println("Audited dependencies:", strconv.Itoa(packageCount)+",",
-			"Vulnerable:", strconv.Itoa(vulnerableCount))
-	} else {
-		fmt.Println("Audited dependencies:", strconv.Itoa(packageCount)+",",
-			"Vulnerable:", aurora.Bold(aurora.Red(strconv.Itoa(vulnerableCount))))
-	}
+	au := aurora.NewAurora(!noColor)
+	fmt.Println("Audited dependencies:", strconv.Itoa(packageCount)+",",
+		"Vulnerable:", au.Bold(au.Red(strconv.Itoa(vulnerableCount))))
 
 	return vulnerableCount
 }
