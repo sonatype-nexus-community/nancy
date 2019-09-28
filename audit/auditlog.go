@@ -25,19 +25,13 @@ func LogInvalidSemVerWarning(noColor bool, quiet bool, invalidPurls []string) {
 	if !quiet {
 		packageCount := len(invalidPurls)
 		warningMessage := "!!!!! WARNING !!!!!\nScanning cannot be completed on the following package(s) since they do not use semver."
-		if noColor {
-			fmt.Println(warningMessage)
-		} else {
-			fmt.Println(aurora.Red(warningMessage))
-		}
+		au := aurora.NewAurora(!noColor)
+		fmt.Println(au.Red(warningMessage))
+
 		for i := 0; i < len(invalidPurls); i++ {
 			idx := i + 1
 			purl := invalidPurls[i]
-			if noColor {
-				fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]", purl)
-			} else {
-				fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]", aurora.Bold(purl))
-			}
+			fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]", au.Bold(purl))
 		}
 		fmt.Println()
 	}
