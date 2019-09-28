@@ -57,11 +57,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:be40f095cd741773905744f16c1f7a21fd9226ccd0529f019deb7da6d667f71c"
+  digest = "1:9aaab932241543f719cd66e365a499956772e1f419a27aee2bb7bc3bf35af24a"
   name = "github.com/logrusorgru/aurora"
   packages = ["."]
   pruneopts = "UT"
-  revision = "a7b3b318ed4e1ae5b80602b08627267303c68572"
+  revision = "94edacc10f9bc12e9ac613b16125c6c68a8f7626"
 
 [[projects]]
   digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
