@@ -16,10 +16,12 @@
 package ossindex
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -84,7 +86,7 @@ func TestAuditPackages_Empty(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	coordinates, err := AuditPackages([]string{})
+	coordinates, err := AuditPackages([]string{}, false)
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	assert.Nil(t, err)
 }
@@ -99,7 +101,7 @@ func TestAuditPackages_Nil(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	coordinates, err := AuditPackages(nil)
+	coordinates, err := AuditPackages(nil, false)
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	assert.Nil(t, err)
 }
@@ -114,7 +116,7 @@ func TestAuditPackages_ErrorHttpRequest(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	coordinates, err := AuditPackages([]string{"nonexistent-purl"})
+	coordinates, err := AuditPackages([]string{"nonexistent-purl"}, false)
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	parseError := err.(*url.Error)
 	assert.Equal(t, "parse", parseError.Op)
@@ -133,7 +135,7 @@ func TestAuditPackages_ErrorNonExistentPurl(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	coordinates, err := AuditPackages([]string{"nonexistent-purl"})
+	coordinates, err := AuditPackages([]string{"nonexistent-purl"}, false)
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	assert.Equal(t, "[400 Bad Request] error accessing OSS Index", err.Error())
 }
@@ -152,12 +154,35 @@ func TestAuditPackages_ErrorBadResponseBody(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	coordinates, err := AuditPackages([]string{purl})
+	coordinates, err := AuditPackages([]string{purl}, false)
 
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	jsonError := err.(*json.SyntaxError)
 	assert.Equal(t, int64(1), jsonError.Offset)
 	assert.Equal(t, "invalid character 'b' looking for beginning of value", jsonError.Error())
+}
+
+func TestAuditPackages_DoesntLogIfQuietEnabled(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		verifyClientCallAndWriteValidPackageResponse(t, r, w)
+	}))
+	defer ts.Close()
+	ossIndexUrl = ts.URL
+
+	teardownTestCase := setupTestCaseMoveCacheDb(t)
+	defer teardownTestCase(t)
+
+	var mockLog bytes.Buffer
+	log.SetOutput(&mockLog)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+
+	coordinates, err := AuditPackages([]string{purl}, true)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, coordinates)
+	assert.Empty(t, string(mockLog.Bytes()))
 }
 
 func TestAuditPackages_NewPackage(t *testing.T) {
@@ -170,7 +195,7 @@ func TestAuditPackages_NewPackage(t *testing.T) {
 	teardownTestCase := setupTestCaseMoveCacheDb(t)
 	defer teardownTestCase(t)
 
-	coordinates, err := AuditPackages([]string{purl})
+	coordinates, err := AuditPackages([]string{purl}, false)
 
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
 	assert.Nil(t, err)
@@ -214,7 +239,7 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	}))
 	assert.Nil(t, db.Close())
 
-	coordinates, err := AuditPackages([]string{purl})
+	coordinates, err := AuditPackages([]string{purl}, false)
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
 	assert.Nil(t, err)
 }
@@ -243,7 +268,7 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 	assert.Nil(t, db.Close())
 	time.Sleep(2 * time.Second)
 
-	coordinates, err := AuditPackages([]string{purl})
+	coordinates, err := AuditPackages([]string{purl}, false)
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
 	assert.Nil(t, err)
 }

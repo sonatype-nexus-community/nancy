@@ -66,7 +66,7 @@ func openDb(dbDir string) (db *badger.DB, err error) {
 }
 
 // AuditPackages will given a list of Package URLs, run an OSS Index audit
-func AuditPackages(purls []string) ([]types.Coordinate, error) {
+func AuditPackages(purls []string, quiet bool) ([]types.Coordinate, error) {
 	dbDir := getDatabaseDirectory()
 	if err := os.MkdirAll(dbDir, os.ModePerm); err != nil {
 		return nil, err
@@ -78,7 +78,9 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 	defer func() {
 		if err := db.Close(); err != nil {
-			log.Printf("error closing db: %s\n", err)
+			if !quiet {
+				log.Printf("error closing db: %s\n", err)
+			}
 		}
 	}()
 
@@ -128,14 +130,18 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 			}
 
 			if resp.StatusCode == http.StatusOK {
-				log.Printf("Response: %+v\n", resp)
+				if !quiet {
+					log.Printf("Response: %+v\n", resp)
+				}
 			} else {
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					log.Printf("error closing response body: %s\n", err)
+					if !quiet {
+						log.Printf("error closing response body: %s\n", err)
+					}
 				}
 			}()
 

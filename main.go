@@ -122,7 +122,7 @@ func doCheckExistenceAndParse() {
 }
 
 func checkOSSIndex(purls []string, packageCount int) {
-	coordinates, err := ossindex.AuditPackages(purls)
+	coordinates, err := ossindex.AuditPackages(purls, *quietPtr)
 	customerrors.Check(err, "Error auditing packages")
 
 	if count := audit.LogResults(config.NoColor, config.Quiet, packageCount, coordinates, config.CveList.Cves); count > 0 {
