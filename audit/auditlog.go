@@ -29,7 +29,7 @@ func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordi
 	} else {
 		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
 			aurora.Bold(coordinate.Coordinates),
-			aurora.Gray("   No known vulnerabilities against package/version"))
+			aurora.Gray(20-1,"   No known vulnerabilities against package/version"))
 	}
 }
 
