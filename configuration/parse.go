@@ -2,7 +2,6 @@ package configuration
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -11,6 +10,8 @@ import (
 )
 
 type Configuration struct {
+	UseStdIn bool
+	Help bool
 	NoColor bool
 	Quiet bool
 	Version bool
@@ -23,6 +24,7 @@ func Parse(args []string) (Configuration, error) {
 	var excludeVulnerabilityFilePath string
 	var noColorDeprecated bool
 
+	flag.BoolVar(&config.Help, "help", false, "provides help text on how to use nancy")
 	flag.BoolVar(&config.NoColor, "no-color", false, "indicate output should not be colorized")
 	flag.BoolVar(&noColorDeprecated, "noColor", false, "indicate output should not be colorized (deprecated: please use no-color)")
 	flag.BoolVar(&config.Quiet, "quiet", false, "indicate output should contain only packages with vulnerabilities")
@@ -36,16 +38,17 @@ func Parse(args []string) (Configuration, error) {
 		os.Exit(2)
 	}
 
-	if len(args) < 1 {
-		return config, errors.New("no arguments passed")
-	}
-
 	// Parse config from the command line output
 	err := flag.CommandLine.Parse(args)
 	if err != nil {
 		return config, err
 	}
-	config.Path = args[len(args)-1]
+
+	if len(flag.Args()) == 0 {
+		config.UseStdIn = true
+	}else{
+		config.Path = args[len(args)-1]
+	}
 
 	if noColorDeprecated == true {
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
