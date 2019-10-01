@@ -14,6 +14,7 @@
 ```
  ~ > nancy
 Usage:
+go list -m all | nancy [options]
 nancy [options] </path/to/Gopkg.lock>
 nancy [options] </path/to/go.sum>
 
