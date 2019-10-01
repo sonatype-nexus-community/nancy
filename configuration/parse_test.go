@@ -48,7 +48,7 @@ func TestConfigParse(t *testing.T) {
 			setup()
 
 			if name == "exclude vulnerabilities doesn't need to be passed if default value is used" {
-				defaultFileName := "exclude_vulnerabilities"
+				defaultFileName := ".nancy-ignore"
 				err := ioutil.WriteFile(defaultFileName, []byte("DEF-111\nDEF-222"), 0644)
 				if err != nil {
 					t.Fatal(err)

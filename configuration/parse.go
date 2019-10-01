@@ -28,7 +28,7 @@ func Parse(args []string) (Configuration, error) {
 	flag.BoolVar(&config.Quiet, "quiet", false, "indicate output should contain only packages with vulnerabilities")
 	flag.BoolVar(&config.Version, "version", false, "prints current nancy version")
 	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
-	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./exclude_vulnerabilities", "Path to a file containing newline separated CVEs to be excluded")
+	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, "Usage: \nnancy [options] </path/to/Gopkg.lock>\nnancy [options] </path/to/go.sum>\n\nOptions:\n")

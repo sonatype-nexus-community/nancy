@@ -55,7 +55,7 @@ We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or
 * `./nancy -exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 /path/to/your/go.sum`
 
 ##### Via file
-By default if a file named `exclude_vulnerabilities` exists in the same directory that nancy is run it will use it, will no other options need to be passed.
+By default if a file named `.nancy-ignore` exists in the same directory that nancy is run it will use it, will no other options need to be passed.
 
 If you would like to define the path to the file you can use the following
 * `./nancy -exclude-vulnerability-file=/path/to/your/exclude-file /path/to/your/Gopkg.lock`
