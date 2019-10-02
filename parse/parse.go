@@ -22,7 +22,7 @@ import (
 
 func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
 	for stdIn.Scan() {
-		parseDep(stdIn, &deps)
+		parseGoModFormattedDependency(stdIn, &deps)
 	}
 	return deps, nil
 }
@@ -37,12 +37,13 @@ func GoSum(path string) (deps types.ProjectList, err error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		parseDep(scanner, &deps)
+		parseGoModFormattedDependency(scanner, &deps)
 	}
 	return deps, nil
 }
 
-func parseDep(scanner *bufio.Scanner, deps *types.ProjectList) {
+// Parses a line of text that is in go.sum/go list -m all format. Which is basically just `<dep name> <version number>`
+func parseGoModFormattedDependency(scanner *bufio.Scanner, deps *types.ProjectList) {
 	text := scanner.Text()
 	s := strings.Split(text, " ")
 	if len(s) > 1 && !strings.HasSuffix(s[1], "/go.mod") {
