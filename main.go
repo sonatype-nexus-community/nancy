@@ -17,6 +17,8 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,9 +55,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	if !config.Quiet {
-		fmt.Println("Nancy version: " + buildversion.BuildVersion)
+	if config.Quiet {
+		log.SetOutput(ioutil.Discard)
 	}
+
+	log.Println("Nancy version: " + buildversion.BuildVersion)
 
 	if config.UseStdIn == true {
 		doStdInAndParse()
@@ -122,10 +126,10 @@ func doCheckExistenceAndParse() {
 }
 
 func checkOSSIndex(purls []string, packageCount int) {
-	coordinates, err := ossindex.AuditPackages(purls, *quietPtr)
+	coordinates, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "Error auditing packages")
 
-	if count := audit.LogResults(config.NoColor, config.Quiet, packageCount, coordinates, config.CveList.Cves); count > 0 {
+	if count := audit.LogResults(config.NoColor, packageCount, coordinates, config.CveList.Cves); count > 0 {
 		os.Exit(count)
 	}
 }
