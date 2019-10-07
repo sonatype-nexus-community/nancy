@@ -36,7 +36,8 @@ var cveList types.CveListFlag
 func main() {
 	args := os.Args[1:]
 
-	noColorPtr = flag.Bool("noColor", false, "indicate output should not be colorized")
+	noColorDepPtr := flag.Bool("noColor", false, "indicate output should not be colorized (deprecated: please use no-color)")
+	noColorPtr = flag.Bool("no-color", false, "indicate output should not be colorized")
 	quietPtr = flag.Bool("quiet", false, "indicate output should contain only packages with vulnerabilities")
 	version := flag.Bool("version", false, "prints current nancy version")
 	flag.Var(&cveList, "exclude-vulnerability", "Comma seperated list of CVEs to exclude")
@@ -54,6 +55,13 @@ func main() {
 
 	// Parse flags from the command line output
 	flag.Parse()
+
+	if *noColorDepPtr == true {
+		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		fmt.Println("!!!! DEPRECATION WARNING : Please change 'noColor' param to be 'no-color'. This one will be removed in a future release. !!!!")
+		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		noColorPtr = noColorDepPtr
+	}
 
 	if *version {
 		fmt.Println(buildversion.BuildVersion)

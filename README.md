@@ -20,8 +20,10 @@ nancy [options] </path/to/go.sum>
 Options:
   -exclude-vulnerability value
     	Comma seperated list of CVEs to exclude
-  -noColor
+  -no-color
     	indicate output should not be colorized
+  -noColor
+    	indicate output should not be colorized (deprecated: please use no-color)
   -quiet
     	indicate output should contain only packages with vulnerabilities
   -version
