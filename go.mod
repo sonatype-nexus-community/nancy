@@ -4,7 +4,7 @@ require (
 	github.com/AndreasBriese/bbloom v0.0.0-20180913140656-343706a395b7 // indirect
 	github.com/BurntSushi/toml v0.3.1
 	github.com/Flaque/filet v0.0.0-20190209224823-fc4d33cfcf93
-	github.com/Masterminds/semver v0.0.0-20180403130225-3c92f33da7a8 // indirect
+	github.com/Masterminds/semver v0.0.0-20180403130225-3c92f33da7a8
 	github.com/Masterminds/vcs v1.13.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
