@@ -12,7 +12,6 @@ import (
 
 type Configuration struct {
 	NoColor bool
-	NoColorDeprecated bool
 	Quiet bool
 	Version bool
 	CveList types.CveListFlag
@@ -22,9 +21,10 @@ type Configuration struct {
 func Parse(args []string) (Configuration, error) {
 	config := Configuration{}
 	var excludeVulnerabilityFilePath string
+	var noColorDeprecated bool
 
 	flag.BoolVar(&config.NoColor, "no-color", false, "indicate output should not be colorized")
-	flag.BoolVar(&config.NoColorDeprecated, "noColor", false, "indicate output should not be colorized (deprecated: please use no-color)")
+	flag.BoolVar(&noColorDeprecated, "noColor", false, "indicate output should not be colorized (deprecated: please use no-color)")
 	flag.BoolVar(&config.Quiet, "quiet", false, "indicate output should contain only packages with vulnerabilities")
 	flag.BoolVar(&config.Version, "version", false, "prints current nancy version")
 	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
@@ -46,6 +46,13 @@ func Parse(args []string) (Configuration, error) {
 		return config, err
 	}
 	config.Path = args[len(args)-1]
+
+	if noColorDeprecated == true {
+		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		fmt.Println("!!!! DEPRECATION WARNING : Please change 'noColor' param to be 'no-color'. This one will be removed in a future release. !!!!")
+		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		config.NoColor = noColorDeprecated
+	}
 
 	err = getCVEExcludesFromFile(&config, excludeVulnerabilityFilePath)
 	if err != nil {
