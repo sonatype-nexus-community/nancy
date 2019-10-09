@@ -21,6 +21,22 @@ import (
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
+func LogInvalidSemVerWarning(noColor bool, quiet bool, invalidPurls []string) {
+	if !quiet {
+		packageCount := len(invalidPurls)
+		warningMessage := "!!!!! WARNING !!!!!\nScanning cannot be completed on the following package(s) since they do not use semver."
+		au := aurora.NewAurora(!noColor)
+		fmt.Println(au.Red(warningMessage))
+
+		for i := 0; i < len(invalidPurls); i++ {
+			idx := i + 1
+			purl := invalidPurls[i]
+			fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]", au.Bold(purl))
+		}
+		fmt.Println()
+	}
+}
+
 func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	if noColor {
 		fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",

@@ -10,5 +10,6 @@ Sonatype internal people:
 External contributors:
 
 * [@s-spindler](https://github.com/s-spindler) (Stephan Spindler)
+* [@zendern](https://github.com/zendern) (Nathan Zender)
 
 Possibly You!

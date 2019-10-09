@@ -14,10 +14,32 @@
 package packages
 
 import (
+	"github.com/sonatype-nexus-community/nancy/types"
 	"testing"
 )
 
 var testGoSumName = "go.sum"
+
+
+// Simulate calling parse.GopkgLock()
+func getProjectList() (projectList types.ProjectList) {
+	appendProject("github.com/AndreasBriese/bbloom", "", &projectList)
+	appendProject("gopkg.in/BurntSushi/toml", "v0.3.1", &projectList)
+	appendProject("github.com/dgraph-io/badger", "v1.5.4", &projectList)
+	appendProject("github.com/dgryski/go-farm", "", &projectList)
+	appendProject("github.com/golang/protobuf", "v1.2.0", &projectList)
+	appendProject("github.com/logrusorgru/aurora", "", &projectList)
+	appendProject("github.com/pkg/errors", "v0.8.0", &projectList)
+	appendProject("github.com/shopspring/decimal", "1.1.0", &projectList)
+	appendProject("golang.org/x/net", "", &projectList)
+	appendProject("golang.org/x/sys", "", &projectList)
+
+	return projectList
+}
+
+func appendProject(name string, version string, projectList *types.ProjectList) {
+	projectList.Projects = append(projectList.Projects, types.Projects{Name: name, Version: version})
+}
 
 func TestModCheckExistenceOfManifestExists(t *testing.T) {
 	mod := Mod{}
