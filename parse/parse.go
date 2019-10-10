@@ -20,9 +20,16 @@ import (
 	"strings"
 )
 
+var goModDependencyCriteria = func(s []string) bool {
+	return len(s) > 1 && !strings.HasSuffix(s[1], "/go.mod")
+}
+var goListDependencyCriteria = func(s []string) bool {
+	return len(s) > 1
+}
+
 func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
 	for stdIn.Scan() {
-		parseGoModFormattedDependency(stdIn, &deps)
+		parseSpaceSeparatedDependency(stdIn, &deps, goListDependencyCriteria)
 	}
 	return deps, nil
 }
@@ -37,16 +44,15 @@ func GoSum(path string) (deps types.ProjectList, err error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		parseGoModFormattedDependency(scanner, &deps)
+		parseSpaceSeparatedDependency(scanner, &deps, goModDependencyCriteria)
 	}
 	return deps, nil
 }
 
-// Parses a line of text that is in go.sum/go list -m all format. Which is basically just `<dep name> <version number>`
-func parseGoModFormattedDependency(scanner *bufio.Scanner, deps *types.ProjectList) {
+func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectList, criteria func(s []string) bool) {
 	text := scanner.Text()
 	s := strings.Split(text, " ")
-	if len(s) > 1 && !strings.HasSuffix(s[1], "/go.mod") {
+	if criteria(s) {
 		deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[1]})
 	}
 }
