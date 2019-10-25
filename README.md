@@ -13,21 +13,23 @@
 
 ```
  ~ > nancy
-Usage:
+Usage: 
 nancy [options] </path/to/Gopkg.lock>
 nancy [options] </path/to/go.sum>
 
 Options:
   -exclude-vulnerability value
-    	Comma seperated list of CVEs to exclude
+        Comma separated list of CVEs to exclude
+  -exclude-vulnerability-file string
+        Path to a file containing newline separated CVEs to be excluded (default "./.nancy-ignore")
   -no-color
-    	indicate output should not be colorized
+        indicate output should not be colorized
   -noColor
-    	indicate output should not be colorized (deprecated: please use no-color)
+        indicate output should not be colorized (deprecated: please use no-color)
   -quiet
-    	indicate output should contain only packages with vulnerabilities
+        indicate output should contain only packages with vulnerabilities
   -version
-    	prints current nancy version
+        prints current nancy version
 ```
 
 `nancy` currently works for projects that use `dep` or `go mod` for dependencies.
