@@ -14,6 +14,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"github.com/golang/dep"
@@ -39,6 +40,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if config.Help {
+		flag.Usage()
+		os.Exit(0)
+	}
+
 	if config.Version {
 		fmt.Println(buildversion.BuildVersion)
 		_, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
@@ -46,8 +52,29 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Currently only checks Dep, can eventually check for go mod, etc...
-	doCheckExistenceAndParse()
+	if config.UseStdIn == true {
+		doStdInAndParse()
+	} else {
+		doCheckExistenceAndParse()
+	}
+}
+
+func doStdInAndParse() {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		panic(err)
+	}
+	if (fi.Mode() & os.ModeNamedPipe) == 0 {
+		flag.Usage()
+		os.Exit(1)
+	} else {
+		mod := packages.Mod{}
+		scanner := bufio.NewScanner(os.Stdin)
+		mod.ProjectList, _ = parse.GoList(scanner)
+		var purls = mod.ExtractPurlsFromManifest()
+		var packageCount = len(purls)
+		checkOSSIndex(purls, packageCount)
+	}
 }
 
 func doCheckExistenceAndParse() {

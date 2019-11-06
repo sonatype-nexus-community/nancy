@@ -14,6 +14,7 @@ script:
   - GOOS=windows GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-windows.amd64-$VERSION.exe
   - ./nancy-linux.amd64-$VERSION Gopkg.lock
   - ./nancy-linux.amd64-$VERSION go.sum
+  - go list -m all | ./nancy-linux.amd64-$VERSION
 env:
   - GO111MODULE=on
   - CGO_ENABLED=0

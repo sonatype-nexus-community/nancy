@@ -20,6 +20,20 @@ import (
 	"strings"
 )
 
+var goModDependencyCriteria = func(s []string) bool {
+	return len(s) > 1 && !strings.HasSuffix(s[1], "/go.mod")
+}
+var goListDependencyCriteria = func(s []string) bool {
+	return len(s) > 1
+}
+
+func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
+	for stdIn.Scan() {
+		parseSpaceSeparatedDependency(stdIn, &deps, goListDependencyCriteria)
+	}
+	return deps, nil
+}
+
 // GoSum parses the go.sum file and returns an error if unsuccessful
 func GoSum(path string) (deps types.ProjectList, err error) {
 	file, err := os.Open(path)
@@ -30,10 +44,15 @@ func GoSum(path string) (deps types.ProjectList, err error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		s := strings.Split(scanner.Text(), " ")
-		if !strings.HasSuffix(s[1], "/go.mod") {
-			deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[1]})
-		}
+		parseSpaceSeparatedDependency(scanner, &deps, goModDependencyCriteria)
 	}
 	return deps, nil
+}
+
+func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectList, criteria func(s []string) bool) {
+	text := scanner.Text()
+	s := strings.Split(text, " ")
+	if criteria(s) {
+		deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[1]})
+	}
 }
