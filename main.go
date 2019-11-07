@@ -53,7 +53,9 @@ func main() {
 		os.Exit(0)
 	}
 
-	fmt.Println("Nancy version: " + buildversion.BuildVersion)
+	if !config.Quiet {
+		fmt.Println("Nancy version: " + buildversion.BuildVersion)
+	}
 
 	if config.UseStdIn == true {
 		doStdInAndParse()
