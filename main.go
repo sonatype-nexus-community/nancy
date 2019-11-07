@@ -17,6 +17,10 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/golang/dep"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
@@ -25,9 +29,6 @@ import (
 	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 var config configuration.Configuration
@@ -51,6 +52,8 @@ func main() {
 		_, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
 		os.Exit(0)
 	}
+
+	fmt.Println("Nancy version: " + buildversion.BuildVersion)
 
 	if config.UseStdIn == true {
 		doStdInAndParse()
