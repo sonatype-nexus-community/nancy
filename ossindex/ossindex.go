@@ -58,9 +58,8 @@ func getOssIndexUrl() string {
 }
 
 func openDb(dbDir string) (db *badger.DB, err error) {
-	opts := badger.DefaultOptions
-	opts.Dir = dbDir + "/" + dbValueDirName
-	opts.ValueDir = dbDir + "/" + dbValueDirName
+	dbPath := dbDir + "/" + dbValueDirName
+	opts := badger.DefaultOptions(dbPath)
 	db, err = badger.Open(opts)
 	return
 }
@@ -158,7 +157,10 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 					var coordJson, _ = json.Marshal(coordinates[i])
 
-					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJson), time.Hour*12)
+					entry := badger.NewEntry([]byte(strings.ToLower(coord)), []byte(coordJson))
+					entry.WithTTL(time.Hour * 12)
+					err := txn.SetEntry(entry)
+
 					if err != nil {
 						return err
 					}
