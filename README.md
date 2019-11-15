@@ -64,7 +64,14 @@ If you would like to define the path to the file you can use the following
 * `./nancy -exclude-vulnerability-file=/path/to/your/exclude-file /path/to/your/Gopkg.lock`
 * `./nancy -exclude-vulnerability-file=/path/to/your/exclude-file /path/to/your/go.sum`  
 
-The file format requires each vulnerability that you want to exclude to be on a separate line. 
+The file format requires each vulnerability that you want to exclude to be on a separate line. Comments are allowed in the file as well to help provide context when needed. See an example file below.
+
+```
+# This vulnerability is coming from package xyz, we are ok with this for now
+CVN-111 
+CVN-123 # Mitigated the risk of this since we only use one method in this package and the affected code doesn't matter
+CVN-543
+``` 
 
 ### Usage in CI
 
