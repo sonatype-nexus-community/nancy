@@ -12,9 +12,21 @@ import (
 )
 
 func TestConfigParse(t *testing.T) {
-	file := setupCVEExcludeFile(t, "CVF-000\nCVF-123\nCVF-9999")
+	file := setupCVEExcludeFile(t, `CVF-000
+CVF-123
+CVF-9999`)
 	emptyFile := setupCVEExcludeFile(t, "")
-	lotsOfRandomNewlinesFile := setupCVEExcludeFile(t, "\n\nCVN-111\n\n\nCVN-123\nCVN-543\n\n")
+	lotsOfRandomNewlinesFile := setupCVEExcludeFile(t, `
+
+
+CVN-111
+
+
+
+
+CVN-123
+CVN-543
+`)
 	commentedFile := setupCVEExcludeFile(t, `
 # Comment about this one
 CVN-111 
