@@ -18,6 +18,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"os"
 )
 
 // LogResults will given a number of expected results and the results themselves, log the
@@ -51,6 +52,7 @@ func LogResults(formatter logrus.Formatter, noColor bool, quiet bool, packageCou
 		vulnerableCoordinates = make([]types.Coordinate, 0)
 	}
 	log.SetFormatter(formatter)
+	log.SetOutput(os.Stdout)
 	log.WithFields(log.Fields{
 		"exclusions":     exclusions,
 		"num_audited":    packageCount,
