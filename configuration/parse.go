@@ -6,20 +6,31 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"reflect"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 type Configuration struct {
-	UseStdIn   bool
-	Help       bool
-	NoColor    bool
-	Quiet      bool
-	Version    bool
+	UseStdIn bool
+	Help bool
+	NoColor bool
+	Quiet bool
+	Version bool
 	CleanCache bool
-	CveList    types.CveListFlag
-	Path       string
+	CveList types.CveListFlag
+	Path    string
+	Formatter logrus.Formatter
+}
+
+var outputFormats = map[string]logrus.Formatter{
+	"json":        &audit.JsonFormatter{},
+	"json-pretty": &audit.JsonFormatter{PrettyPrint: true},
+	"text":        &audit.AuditLogTextFormatter{},
+	"csv":         &audit.CsvFormatter{},
 }
 
 var unixComments = regexp.MustCompile(`#.*$`)
@@ -27,6 +38,7 @@ var unixComments = regexp.MustCompile(`#.*$`)
 func Parse(args []string) (Configuration, error) {
 	config := Configuration{}
 	var excludeVulnerabilityFilePath string
+	var outputFormat string
 	var noColorDeprecated bool
 
 	flag.BoolVar(&config.Help, "help", false, "provides help text on how to use nancy")
@@ -37,6 +49,7 @@ func Parse(args []string) (Configuration, error) {
 	flag.BoolVar(&config.CleanCache, "clean-cache", false, "Deletes local cache directory")
 	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
 	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
+	flag.StringVar(&outputFormat, "output", "text", "Styling for output format. "+ fmt.Sprintf("%+q", reflect.ValueOf(outputFormats).MapKeys()))
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, "Usage: \nnancy [options] </path/to/Gopkg.lock>\nnancy [options] </path/to/go.sum>\n\nOptions:\n")
@@ -61,6 +74,15 @@ func Parse(args []string) (Configuration, error) {
 		fmt.Println("!!!! DEPRECATION WARNING : Please change 'noColor' param to be 'no-color'. This one will be removed in a future release. !!!!")
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		config.NoColor = noColorDeprecated
+	}
+
+	if outputFormats[outputFormat] != nil{
+		config.Formatter = outputFormats[outputFormat]
+	} else{
+		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		fmt.Println("!!! Output format of", strings.TrimSpace(outputFormat), "is not valid. Defaulting to text output")
+		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		config.Formatter = outputFormats["text"]
 	}
 
 	err = getCVEExcludesFromFile(&config, excludeVulnerabilityFilePath)
