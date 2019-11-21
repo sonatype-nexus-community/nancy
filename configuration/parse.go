@@ -52,7 +52,7 @@ func Parse(args []string) (Configuration, error) {
 	flag.StringVar(&outputFormat, "output", "text", "Styling for output format. "+fmt.Sprintf("%+q", reflect.ValueOf(outputFormats).MapKeys()))
 
 	flag.Usage = func() {
-		_, _ = fmt.Fprintf(os.Stderr, "Usage: \nnancy [options] </path/to/Gopkg.lock>\nnancy [options] </path/to/go.sum>\n\nOptions:\n")
+		_, _ = fmt.Fprintf(os.Stderr, "Usage: \ngo list -m all | nancy [options]\nnancy [options] </path/to/Gopkg.lock>\nnancy [options] </path/to/go.sum>\n\nOptions:\n")
 		flag.PrintDefaults()
 		os.Exit(2)
 	}
