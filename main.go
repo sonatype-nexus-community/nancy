@@ -18,6 +18,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/sonatype-nexus-community/nancy/types"
 	"io/ioutil"
 	"log"
 	"os"
@@ -90,8 +91,7 @@ func doStdInAndParse() {
 		scanner := bufio.NewScanner(os.Stdin)
 		mod.ProjectList, _ = parse.GoList(scanner)
 		var purls = mod.ExtractPurlsFromManifest()
-		var packageCount = len(purls)
-		checkOSSIndex(purls, packageCount)
+		checkOSSIndex(purls, []string{})
 	}
 }
 
@@ -116,32 +116,33 @@ func doCheckExistenceAndParse() {
 		}
 
 		purls, invalidPurls := packages.ExtractPurlsUsingDep(*project)
-		if len(invalidPurls) > 0 {
-			audit.LogInvalidSemVerWarning(config.NoColor, config.Quiet, invalidPurls)
-		}
 
-		var packageCount = len(purls)
-		checkOSSIndex(purls, packageCount)
+		checkOSSIndex(purls, invalidPurls)
 	case strings.Contains(config.Path, "go.sum"):
 		mod := packages.Mod{}
 		mod.GoSumPath = config.Path
 		if mod.CheckExistenceOfManifest() {
 			mod.ProjectList, _ = parse.GoSum(config.Path)
 			var purls = mod.ExtractPurlsFromManifest()
-			var packageCount = len(purls)
 
-			checkOSSIndex(purls, packageCount)
+			checkOSSIndex(purls, []string{})
 		}
 	default:
 		os.Exit(3)
 	}
 }
 
-func checkOSSIndex(purls []string, packageCount int) {
+func checkOSSIndex(purls []string, invalidpurls []string) {
+	var packageCount = len(purls)
 	coordinates, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "Error auditing packages")
 
-	if count := audit.LogResults(config.NoColor, packageCount, coordinates, config.CveList.Cves); count > 0 {
+	var invalidCoordinates []types.Coordinate
+	for _, invalidpurl := range invalidpurls {
+		invalidCoordinates = append(invalidCoordinates, types.Coordinate{Coordinates: invalidpurl, InvalidSemVer: true})
+	}
+
+	if count := audit.LogResults(config.NoColor, config.Quiet, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
 		os.Exit(count)
 	}
 }

@@ -44,6 +44,7 @@ type Coordinate struct {
 	Coordinates     string
 	Reference       string
 	Vulnerabilities []Vulnerability
+	InvalidSemVer    bool
 }
 
 func (c Coordinate) IsVulnerable() bool {
