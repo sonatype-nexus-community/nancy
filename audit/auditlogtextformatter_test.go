@@ -1,4 +1,4 @@
-package audit;
+package audit
 
 import (
 	"errors"
@@ -7,10 +7,9 @@ import (
 	"testing"
 )
 
-
 func TestFormatterErrorsIfEntryNotValid(t *testing.T) {
 	data := map[string]interface{}{
-		"stuff": 1,
+		"stuff":   1,
 		"another": "me",
 	}
 	entry := Entry{Data: data}

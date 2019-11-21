@@ -66,7 +66,7 @@ func createVulnerability() (vulnerability types.Vulnerability) {
 func TestLogResultsWithVulnerabilitiesNoColor(t *testing.T) {
 	projects := 20
 	coordinates := createCoordinates(projects, true)
-	i := LogResults(&AuditLogTextFormatter{}, false, false, 20, coordinates, []types.Coordinate{},[]string{})
+	i := LogResults(&AuditLogTextFormatter{}, false, false, 20, coordinates, []types.Coordinate{}, []string{})
 
 	if i != projects {
 		t.Errorf("Expected %d vulnerabilites but found %d", projects, i)

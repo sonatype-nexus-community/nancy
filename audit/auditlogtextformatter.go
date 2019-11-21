@@ -1,4 +1,4 @@
-package audit;
+package audit
 
 import (
 	"errors"
@@ -89,17 +89,17 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		for idx := 0; idx < len(auditedEntries); idx++ {
 			coordinate := auditedEntries[idx]
 			if !coordinate.IsVulnerable() && !coordinate.InvalidSemVer {
-				logPackage(&sb, f.NoColor, f.Quiet, idx + 1, packageCount, coordinate)
+				logPackage(&sb, f.NoColor, f.Quiet, idx+1, packageCount, coordinate)
 			}
 			if coordinate.IsVulnerable() {
-				logVulnerablePackage(&sb, f.NoColor, idx + 1, packageCount, coordinate)
+				logVulnerablePackage(&sb, f.NoColor, idx+1, packageCount, coordinate)
 			}
 		}
 
 		sb.WriteString("\n")
 		au := aurora.NewAurora(!f.NoColor)
-		sb.WriteString("Audited dependencies:"+ strconv.Itoa(packageCount)+","+
-			"Vulnerable:"+ au.Bold(au.Red(strconv.Itoa(numVulnerable))).String() + "\n")
+		sb.WriteString("Audited dependencies:" + strconv.Itoa(packageCount) + "," +
+			"Vulnerable:" + au.Bold(au.Red(strconv.Itoa(numVulnerable))).String() + "\n")
 
 		return []byte(sb.String()), nil
 	} else {

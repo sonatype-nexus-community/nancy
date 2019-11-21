@@ -1,4 +1,4 @@
-package audit;
+package audit
 
 import (
 	. "github.com/sirupsen/logrus"
@@ -6,10 +6,9 @@ import (
 	"testing"
 )
 
-
 func TestCsvOutpu(t *testing.T) {
 	data := map[string]interface{}{
-		"stuff": 1,
+		"stuff":   1,
 		"another": "me",
 	}
 	entry := Entry{Data: data}

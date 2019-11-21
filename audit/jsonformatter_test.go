@@ -1,4 +1,4 @@
-package audit;
+package audit
 
 import (
 	. "github.com/sirupsen/logrus"
@@ -6,10 +6,9 @@ import (
 	"testing"
 )
 
-
 func TestJsonOutpu(t *testing.T) {
 	data := map[string]interface{}{
-		"stuff": 1,
+		"stuff":   1,
 		"another": "me",
 	}
 	entry := Entry{Data: data}
@@ -24,12 +23,12 @@ func TestJsonOutpu(t *testing.T) {
 
 func TestJsonPrettyPrintOutpu(t *testing.T) {
 	data := map[string]interface{}{
-		"stuff": 1,
+		"stuff":   1,
 		"another": "me",
 	}
 	entry := Entry{Data: data}
 
-	formatter := JsonFormatter{PrettyPrint:true}
+	formatter := JsonFormatter{PrettyPrint: true}
 	logMessage, e := formatter.Format(&entry)
 
 	assert.Nil(t, e)

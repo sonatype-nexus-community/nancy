@@ -52,15 +52,14 @@ func LogResults(formatter logrus.Formatter, noColor bool, quiet bool, packageCou
 	}
 	log.SetFormatter(formatter)
 	log.WithFields(log.Fields{
-		"exclusions" : exclusions,
-		"num_audited": packageCount,
-		"num_vulnerable" : vulnerableCount,
-		"audited": auditedCoordinates,
-		"vulnerable": vulnerableCoordinates,
-		"invalid" : invalidCoordinates,
-		"version" : buildversion.BuildVersion,
+		"exclusions":     exclusions,
+		"num_audited":    packageCount,
+		"num_vulnerable": vulnerableCount,
+		"audited":        auditedCoordinates,
+		"vulnerable":     vulnerableCoordinates,
+		"invalid":        invalidCoordinates,
+		"version":        buildversion.BuildVersion,
 	}).Info("")
-
 
 	return vulnerableCount
 }

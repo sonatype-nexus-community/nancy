@@ -49,7 +49,7 @@ func Parse(args []string) (Configuration, error) {
 	flag.BoolVar(&config.CleanCache, "clean-cache", false, "Deletes local cache directory")
 	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
 	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
-	flag.StringVar(&outputFormat, "output", "text", "Styling for output format. "+ fmt.Sprintf("%+q", reflect.ValueOf(outputFormats).MapKeys()))
+	flag.StringVar(&outputFormat, "output", "text", "Styling for output format. "+fmt.Sprintf("%+q", reflect.ValueOf(outputFormats).MapKeys()))
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, "Usage: \nnancy [options] </path/to/Gopkg.lock>\nnancy [options] </path/to/go.sum>\n\nOptions:\n")
@@ -76,9 +76,9 @@ func Parse(args []string) (Configuration, error) {
 		config.NoColor = noColorDeprecated
 	}
 
-	if outputFormats[outputFormat] != nil{
+	if outputFormats[outputFormat] != nil {
 		config.Formatter = outputFormats[outputFormat]
-	} else{
+	} else {
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		fmt.Println("!!! Output format of", strings.TrimSpace(outputFormat), "is not valid. Defaulting to text output")
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
