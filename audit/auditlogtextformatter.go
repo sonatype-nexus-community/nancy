@@ -11,8 +11,8 @@ import (
 )
 
 type AuditLogTextFormatter struct {
-	Quiet   bool
-	NoColor bool
+	Quiet   *bool
+	NoColor *bool
 }
 
 func logPackage(sb *strings.Builder, noColor bool, quiet bool, idx int, packageCount int, coordinate types.Coordinate) {
@@ -81,23 +81,23 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 
 		var sb strings.Builder
 
-		if !f.Quiet {
+		if !*f.Quiet {
 			sb.WriteString("Nancy version: " + buildVersion + "\n")
 		}
 
-		logInvalidSemVerWarning(&sb, f.NoColor, f.Quiet, invalidEntries)
+		logInvalidSemVerWarning(&sb, *f.NoColor, *f.Quiet, invalidEntries)
 		for idx := 0; idx < len(auditedEntries); idx++ {
 			coordinate := auditedEntries[idx]
 			if !coordinate.IsVulnerable() && !coordinate.InvalidSemVer {
-				logPackage(&sb, f.NoColor, f.Quiet, idx+1, packageCount, coordinate)
+				logPackage(&sb, *f.NoColor, *f.Quiet, idx+1, packageCount, coordinate)
 			}
 			if coordinate.IsVulnerable() {
-				logVulnerablePackage(&sb, f.NoColor, idx+1, packageCount, coordinate)
+				logVulnerablePackage(&sb, *f.NoColor, idx+1, packageCount, coordinate)
 			}
 		}
 
 		sb.WriteString("\n")
-		au := aurora.NewAurora(!f.NoColor)
+		au := aurora.NewAurora(!*f.NoColor)
 		sb.WriteString("Audited dependencies:" + strconv.Itoa(packageCount) + "," +
 			"Vulnerable:" + au.Bold(au.Red(strconv.Itoa(numVulnerable))).String() + "\n")
 

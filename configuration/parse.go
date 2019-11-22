@@ -26,13 +26,6 @@ type Configuration struct {
 	Formatter logrus.Formatter
 }
 
-var outputFormats = map[string]logrus.Formatter{
-	"json":        &audit.JsonFormatter{},
-	"json-pretty": &audit.JsonFormatter{PrettyPrint: true},
-	"text":        &audit.AuditLogTextFormatter{},
-	"csv":         &audit.CsvFormatter{},
-}
-
 var unixComments = regexp.MustCompile(`#.*$`)
 
 func Parse(args []string) (Configuration, error) {
@@ -40,6 +33,13 @@ func Parse(args []string) (Configuration, error) {
 	var excludeVulnerabilityFilePath string
 	var outputFormat string
 	var noColorDeprecated bool
+
+	var outputFormats = map[string]logrus.Formatter{
+		"json":        &audit.JsonFormatter{},
+		"json-pretty": &audit.JsonFormatter{PrettyPrint: true},
+		"text":        &audit.AuditLogTextFormatter{Quiet: &config.Quiet, NoColor: &config.NoColor},
+		"csv":         &audit.CsvFormatter{},
+	}
 
 	flag.BoolVar(&config.Help, "help", false, "provides help text on how to use nancy")
 	flag.BoolVar(&config.NoColor, "no-color", false, "indicate output should not be colorized")
