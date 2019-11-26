@@ -14,7 +14,6 @@
 package audit
 
 import (
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -23,7 +22,7 @@ import (
 
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
-func LogResults(formatter logrus.Formatter, noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate, invalidCoordinates []types.Coordinate, exclusions []string) int {
+func LogResults(formatter log.Formatter, packageCount int, coordinates []types.Coordinate, invalidCoordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
 
 	for _, c := range coordinates {

@@ -142,7 +142,7 @@ func checkOSSIndex(purls []string, invalidpurls []string) {
 		invalidCoordinates = append(invalidCoordinates, types.Coordinate{Coordinates: invalidpurl, InvalidSemVer: true})
 	}
 
-	if count := audit.LogResults(config.Formatter, config.NoColor, config.Quiet, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
+	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
 		os.Exit(count)
 	}
 }

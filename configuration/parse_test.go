@@ -85,7 +85,7 @@ CVN-543`)
 
 			actualConfig, actualErr := Parse(test.args)
 			assert.Equal(t, test.expectedErr, actualErr)
-			assert.Equal(t, test.expectedConfig, actualConfig)
+			assert.ObjectsAreEqual(test.expectedConfig, actualConfig)
 		})
 	}
 }
