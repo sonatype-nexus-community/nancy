@@ -12,7 +12,6 @@ import (
 
 type CsvFormatter struct {
 	Quiet   *bool
-	NoColor *bool
 }
 
 func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
