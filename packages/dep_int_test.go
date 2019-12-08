@@ -38,7 +38,7 @@ func TestExtractPurlsFromManifestUsingDep(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	} else {
-		purls, invalidPurls := ExtractPurlsUsingDep(*project)
+		purls, invalidPurls := ExtractPurlsUsingDep(project)
 		if len(invalidPurls) != 7 {
 			t.Errorf("Number of invalid purls not as expected. Expected : %d, Got %d", 7, len(purls))
 		}

@@ -19,8 +19,8 @@ import (
 	"strings"
 )
 
-func ExtractPurlsUsingDep(project dep.Project) ([]string, []string) {
-	lockedProjects := project.Lock.P;
+func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
+	lockedProjects := project.Lock.P
 	var purls []string
 	var invalidPurls []string
 	for _, lockedProject := range lockedProjects {

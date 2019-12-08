@@ -99,7 +99,7 @@ func doCheckExistenceAndParse() {
 			customerrors.Check(err, fmt.Sprint("could not read lock at path "+config.Path))
 		}
 
-		purls, invalidPurls := packages.ExtractPurlsUsingDep(*project)
+		purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
 		if len(invalidPurls) > 0 {
 			audit.LogInvalidSemVerWarning(config.NoColor, config.Quiet, invalidPurls)
 		}
