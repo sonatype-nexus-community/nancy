@@ -15,6 +15,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -96,7 +97,10 @@ func doCheckExistenceAndParse() {
 		}
 		project, err := ctx.LoadProject()
 		if err != nil {
-			customerrors.Check(err, fmt.Sprint("could not read lock at path "+config.Path))
+			customerrors.Check(err, fmt.Sprint("could not read lock at path " + config.Path))
+		}
+		if project.Lock == nil {
+			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
 		}
 
 		purls, invalidPurls := packages.ExtractPurlsUsingDep(*project)
