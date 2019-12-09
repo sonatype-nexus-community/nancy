@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -18,6 +19,8 @@ type Configuration struct {
 	CveList types.CveListFlag
 	Path    string
 }
+
+var unixComments = regexp.MustCompile(`#.*$`)
 
 func Parse(args []string) (Configuration, error) {
 	config := Configuration{}
@@ -78,7 +81,10 @@ func getCVEExcludesFromFile(config *Configuration, excludeVulnerabilityFilePath 
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
+		line := scanner.Text()
+		line = unixComments.ReplaceAllString(line, "")
+		line = strings.TrimSpace(line)
+
 		if len(line) > 0 {
 			config.CveList.Cves = append(config.CveList.Cves, line)
 		}

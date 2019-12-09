@@ -12,9 +12,27 @@ import (
 )
 
 func TestConfigParse(t *testing.T) {
-	file := setupCVEExcludeFile(t, "CVF-000\nCVF-123\nCVF-9999")
+	file := setupCVEExcludeFile(t, `CVF-000
+CVF-123
+CVF-9999`)
 	emptyFile := setupCVEExcludeFile(t, "")
-	lotsOfRandomNewlinesFile := setupCVEExcludeFile(t, "\n\nCVN-111\n\n\nCVN-123\nCVN-543\n\n")
+	lotsOfRandomNewlinesFile := setupCVEExcludeFile(t, `
+
+
+CVN-111
+
+
+
+
+CVN-123
+CVN-543
+`)
+	commentedFile := setupCVEExcludeFile(t, `
+# Comment about this one
+CVN-111 
+CVN-123 #and maybe we put it here too
+# or here
+CVN-543`)
 	dir, _ := ioutil.TempDir("", "prefix")
 
 	defer os.Remove(file.Name())
@@ -43,6 +61,7 @@ func TestConfigParse(t *testing.T) {
 		"exclude vulnerabilities file not found doesn't matter":                      {args: []string{"-exclude-vulnerability-file=/blah-blah-doesnt-exists", "/tmp/go11.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go11.sum"}, expectedErr: nil},
 		"exclude vulnerabilities passed as directory doesn't matter":                 {args: []string{"-exclude-vulnerability-file=" + dir, "/tmp/go12.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go12.sum"}, expectedErr: nil},
 		"exclude vulnerabilities doesn't need to be passed if default value is used": {args: []string{"/tmp/go13.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Path: "/tmp/go13.sum"}, expectedErr: nil},
+		"exclude vulnerabilities when has comments":                                  {args: []string{"-exclude-vulnerability-file=" + commentedFile.Name(), "/tmp/go14.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Path: "/tmp/go14.sum"}, expectedErr: nil},
 	}
 
 	for name, test := range tests {
