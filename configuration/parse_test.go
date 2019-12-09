@@ -27,46 +27,18 @@ import (
 )
 
 func TestConfigParse(t *testing.T) {
-	file := setupCVEExcludeFile(t, `CVF-000
-CVF-123
-CVF-9999`)
-	emptyFile := setupCVEExcludeFile(t, "")
-	lotsOfRandomNewlinesFile := setupCVEExcludeFile(t, `
+	file, _ := os.Open("../testdata/nancyignores/normalIgnore")
+	emptyFile , _ := os.Open("../testdata/nancyignores/emptyFile")
+	lotsOfRandomNewlinesFile, _ := os.Open("../testdata/nancyignores/lotsOfRandomWhitespace")
+	commentedFile, _ := os.Open("../testdata/nancyignores/commented")
+	untilsFile, _ := os.Open("../testdata/nancyignores/untilsAndComments")
+	invalidUntilsFile, _ := os.Open("../testdata/nancyignores/untilsInvaild")
+	invalidUntilLine, _ := bufio.NewReader(invalidUntilsFile).ReadString('\n')
 
-
-CVN-111
-
-
-
-
-CVN-123
-CVN-543
-`)
-	commentedFile := setupCVEExcludeFile(t, `
-	# Comment about this one
-	CVN-111
-	CVN-123 #and maybe we put it here too
-	# or here
-	CVN-543`)
-	untilsFile := setupCVEExcludeFile(t, `
-NO-UNTIL-888
-CVN-111      until=2012-12-01     #is anyone looking at these
-CVN-123until=2017-12-01 #wow we are long past this date 
-MUST-BE-IGNORED-999 until=2099-12-01 #forever to be excluded from nancy run
-CVN-543                      until=2018-12-01#we should fix this by then
-MUST-BE-IGNORED-1999until=2999-12-01#forever to be excluded from nancy run`)
-
-	const invalidUntilLine = "CVN-111 until=somenonedatevalue"
-	const invalidDateUntilLine = "CVN-111 until=12/12/1222"
-	invalidUntilsFile := setupCVEExcludeFile(t, invalidUntilLine)
-	invalidDateUntilsFile := setupCVEExcludeFile(t, invalidDateUntilLine)
+	invalidDateUntilsFile, _ := os.Open("../testdata/nancyignores/untilsBadDateFormat")
+	invalidDateUntilLine, _ := bufio.NewReader(invalidDateUntilsFile).ReadString('\n')
 
 	dir, _ := ioutil.TempDir("", "prefix")
-
-	defer os.Remove(file.Name())
-	defer os.Remove(emptyFile.Name())
-	defer os.Remove(lotsOfRandomNewlinesFile.Name())
-	defer os.Remove(dir)
 
 	tests := map[string]struct {
 		args           []string
@@ -142,23 +114,6 @@ func TestConfigParseIQ(t *testing.T) {
 			assert.Equal(t, test.expectedConfig, actualConfig)
 		})
 	}
-}
-
-func setupCVEExcludeFile(t *testing.T, fileContents string) (file *os.File) {
-	file, err := ioutil.TempFile("", "prefix")
-	if err != nil {
-		t.Fatal(err)
-	}
-	w := bufio.NewWriter(file)
-	_, err = w.WriteString(fileContents)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = w.Flush()
-	if err != nil {
-		t.Fatal(err)
-	}
-	return file
 }
 
 func setup() {
