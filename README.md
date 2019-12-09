@@ -110,7 +110,7 @@ $ go build
 Each commit to master creates a new release binary, and if you'd like to skip building from source, you can download a binary similar to:
 
 ```console
-$ curl -O /path/where/you/want/nancy \
+$ curl -o /path/where/you/want/nancy \
   https://github.com/sonatype-nexus-community/nancy/releases/download/0.0.4/nancy-linux.amd64-0.0.4
 ```
 
