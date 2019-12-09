@@ -43,11 +43,24 @@ CVN-123
 CVN-543
 `)
 	commentedFile := setupCVEExcludeFile(t, `
-# Comment about this one
-CVN-111 
-CVN-123 #and maybe we put it here too
-# or here
-CVN-543`)
+	# Comment about this one
+	CVN-111
+	CVN-123 #and maybe we put it here too
+	# or here
+	CVN-543`)
+	untilsFile := setupCVEExcludeFile(t, `
+NO-UNTIL-888
+CVN-111      until=2012-12-01     #is anyone looking at these
+CVN-123until=2017-12-01 #wow we are long past this date 
+MUST-BE-IGNORED-999 until=2099-12-01 #forever to be excluded from nancy run
+CVN-543                      until=2018-12-01#we should fix this by then
+MUST-BE-IGNORED-1999until=2999-12-01#forever to be excluded from nancy run`)
+
+	const invalidUntilLine = "CVN-111 until=somenonedatevalue"
+	const invalidDateUntilLine = "CVN-111 until=12/12/1222"
+	invalidUntilsFile := setupCVEExcludeFile(t, invalidUntilLine)
+	invalidDateUntilsFile := setupCVEExcludeFile(t, invalidDateUntilLine)
+
 	dir, _ := ioutil.TempDir("", "prefix")
 
 	defer os.Remove(file.Name())
@@ -60,22 +73,25 @@ CVN-543`)
 		expectedConfig Configuration
 		expectedErr    error
 	}{
-		"defaults":                {args: []string{"/tmp/go.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go.sum"}, expectedErr: nil},
-		"help":                    {args: []string{"-help", "/tmp/go2.sum"}, expectedConfig: Configuration{Help: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum"}, expectedErr: nil},
-		"no color":                {args: []string{"-no-color", "/tmp/go2.sum"}, expectedConfig: Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum"}, expectedErr: nil},
-		"quiet":                   {args: []string{"-quiet", "/tmp/go3.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go3.sum"}, expectedErr: nil},
-		"version":                 {args: []string{"-version", "/tmp/go4.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Path: "/tmp/go4.sum"}, expectedErr: nil},
-		"exclude vulnerabilities": {args: []string{"-exclude-vulnerability=CVE123,CVE988", "/tmp/go5.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Path: "/tmp/go5.sum"}, expectedErr: nil},
-		"std in as input":         {args: []string{}, expectedConfig: Configuration{UseStdIn: true}, expectedErr: nil},
-		"path but invalid arg":    {args: []string{"-invalid", "/tmp/go6.sum"}, expectedConfig: Configuration{}, expectedErr: errors.New("flag provided but not defined: -invalid")},
-		"exclude vulnerabilities when has comments":                                  {args: []string{"-exclude-vulnerability-file=" + commentedFile.Name(), "/tmp/go14.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: &audit.AuditLogTextFormatter{}, Path: "/tmp/go14.sum"}, expectedErr: nil},
-		"exclude vulnerabilities with sane file":                                     {args: []string{"-exclude-vulnerability-file=" + file.Name(), "/tmp/go7.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: &audit.AuditLogTextFormatter{}, Path: "/tmp/go7.sum"}, expectedErr: nil},
+		"defaults":                               {args: []string{"/tmp/go.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go.sum"}, expectedErr: nil},
+		"help":                                   {args: []string{"-help", "/tmp/go2.sum"}, expectedConfig: Configuration{Help: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum"}, expectedErr: nil},
+		"no color":                               {args: []string{"-no-color", "/tmp/go2.sum"}, expectedConfig: Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum"}, expectedErr: nil},
+		"quiet":                                  {args: []string{"-quiet", "/tmp/go3.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go3.sum"}, expectedErr: nil},
+		"version":                                {args: []string{"-version", "/tmp/go4.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Path: "/tmp/go4.sum"}, expectedErr: nil},
+		"exclude vulnerabilities":                {args: []string{"-exclude-vulnerability=CVE123,CVE988", "/tmp/go5.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Path: "/tmp/go5.sum"}, expectedErr: nil},
+		"std in as input":                        {args: []string{}, expectedConfig: Configuration{UseStdIn: true}, expectedErr: nil},
+		"path but invalid arg":                   {args: []string{"-invalid", "/tmp/go6.sum"}, expectedConfig: Configuration{}, expectedErr: errors.New("flag provided but not defined: -invalid")},
+		"exclude vulnerabilities with sane file": {args: []string{"-exclude-vulnerability-file=" + file.Name(), "/tmp/go7.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: &audit.AuditLogTextFormatter{}, Path: "/tmp/go7.sum"}, expectedErr: nil},
 		"exclude vulnerabilities when file empty":                                    {args: []string{"-exclude-vulnerability-file=" + emptyFile.Name(), "/tmp/go8.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{}, Formatter: &audit.AuditLogTextFormatter{}, Path: "/tmp/go8.sum"}, expectedErr: nil},
 		"exclude vulnerabilities when file has tons of newlines":                     {args: []string{"-exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name(), "/tmp/go9.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: &audit.AuditLogTextFormatter{}, Path: "/tmp/go9.sum"}, expectedErr: nil},
 		"exclude vulnerabilities are combined with file and args values":             {args: []string{"-exclude-vulnerability=CVE123,CVE988", "-exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name(), "/tmp/go10.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: &audit.AuditLogTextFormatter{}, Path: "/tmp/go10.sum"}, expectedErr: nil},
 		"exclude vulnerabilities file not found doesn't matter":                      {args: []string{"-exclude-vulnerability-file=/blah-blah-doesnt-exists", "/tmp/go11.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{}, Formatter: &audit.AuditLogTextFormatter{}, Path: "/tmp/go11.sum"}, expectedErr: nil},
 		"exclude vulnerabilities passed as directory doesn't matter":                 {args: []string{"-exclude-vulnerability-file=" + dir, "/tmp/go12.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{}, Formatter: &audit.AuditLogTextFormatter{}, Path: "/tmp/go12.sum"}, expectedErr: nil},
 		"exclude vulnerabilities doesn't need to be passed if default value is used": {args: []string{"/tmp/go13.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: &audit.AuditLogTextFormatter{}, Path: "/tmp/go13.sum"}, expectedErr: nil},
+		"exclude vulnerabilities when has comments":                                  {args: []string{"-exclude-vulnerability-file=" + commentedFile.Name(), "/tmp/go14.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Path: "/tmp/go14.sum"}, expectedErr: nil},
+		"exclude vulnerabilities when has untils":                                    {args: []string{"-exclude-vulnerability-file=" + untilsFile.Name(), "/tmp/go15.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Path: "/tmp/go15.sum"}, expectedErr: nil},
+		"exclude vulnerabilities when has invalid value in untils":                   {args: []string{"-exclude-vulnerability-file=" + invalidUntilsFile.Name(), "/tmp/go16.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go16.sum"}, expectedErr: errors.New("failed to parse until at line '" + invalidUntilLine + "'. Expected format is 'until=yyyy-MM-dd'")},
+		"exclude vulnerabilities when has invalid date in untils":                    {args: []string{"-exclude-vulnerability-file=" + invalidDateUntilsFile.Name(), "/tmp/go17.sum"}, expectedConfig: Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go17.sum"}, expectedErr: errors.New("failed to parse until at line '" + invalidDateUntilLine + "'. Expected format is 'until=yyyy-MM-dd'")},
 		"output of json":              {args: []string{"-output=json", "/tmp/go14.sum"}, expectedConfig: Configuration{Formatter: &audit.JsonFormatter{}, Path: "/tmp/go14.sum"}, expectedErr: nil},
 		"output of json pretty print": {args: []string{"-output=json-pretty", "/tmp/go15.sum"}, expectedConfig: Configuration{Formatter: &audit.JsonFormatter{PrettyPrint: true}, Path: "/tmp/go15.sum"}, expectedErr: nil},
 		"output of csv":               {args: []string{"-output=csv", "/tmp/go16.sum"}, expectedConfig: Configuration{Formatter: &audit.CsvFormatter{}, Path: "/tmp/go16.sum"}, expectedErr: nil},
