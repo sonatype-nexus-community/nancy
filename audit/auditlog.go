@@ -15,6 +15,7 @@ package audit
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/logrusorgru/aurora"
@@ -39,7 +40,7 @@ func LogInvalidSemVerWarning(noColor bool, quiet bool, invalidPurls []string) {
 
 func logPackage(noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	au := aurora.NewAurora(!noColor)
-	fmt.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
+	log.Println("["+strconv.Itoa(idx)+"/"+strconv.Itoa(packageCount)+"]",
 		au.Bold(coordinate.Coordinates),
 		au.Gray(20-1,"   No known vulnerabilities against package/version"))
 }
@@ -67,7 +68,7 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
-func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.Coordinate, exclusions []string) int {
+func LogResults(noColor bool, packageCount int, coordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
 
 	for _, c := range coordinates {
@@ -79,9 +80,7 @@ func LogResults(noColor bool, quiet bool, packageCount int, coordinates []types.
 		idx := i + 1
 
 		if !coordinate.IsVulnerable() {
-			if !quiet {
-				logPackage(noColor, idx, packageCount, coordinate)
-			}
+			logPackage(noColor, idx, packageCount, coordinate)
 		} else {
 			logVulnerablePackage(noColor, idx, packageCount, coordinate)
 			vulnerableCount++
