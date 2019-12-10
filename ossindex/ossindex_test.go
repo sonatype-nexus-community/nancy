@@ -17,6 +17,9 @@ package ossindex
 
 import (
 	"encoding/json"
+	"github.com/dgraph-io/badger/v2"
+	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -24,10 +27,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/dgraph-io/badger"
-	"github.com/sonatype-nexus-community/nancy/types"
-	"github.com/stretchr/testify/assert"
 )
 
 const purl = "pkg:github/BurntSushi/toml@0.3.1"
@@ -207,9 +206,9 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
 		var coordJson, _ = json.Marshal(expectedCoordinate)
-		entry := badger.NewEntry([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson))
-		entry.WithTTL(time.Hour * 12)
-		err := txn.SetEntry(entry)
+		e := badger.NewEntry([]byte(strings.ToLower(lowerCasePurl)), coordJson)
+		e = e.WithTTL(time.Hour * 12)
+		err := txn.SetEntry(e)
 		if err != nil {
 			return err
 		}
@@ -237,9 +236,11 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
 		var coordJson, _ = json.Marshal(expectedCoordinate)
-		entry := badger.NewEntry([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson))
+
+		entry := badger.NewEntry([]byte(strings.ToLower(lowerCasePurl)), coordJson)
 		entry.WithTTL(time.Second * 1)
 		err := txn.SetEntry(entry)
+
 		if err != nil {
 			return err
 		}
