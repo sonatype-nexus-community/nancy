@@ -158,23 +158,9 @@ func getCVEExcludesFromFile(config *Configuration, excludeVulnerabilityFilePath 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		ogLine := scanner.Text()
-		line := unixComments.ReplaceAllString(ogLine, "")
-		until := untilComment.FindStringSubmatch(line)
-		line = untilComment.ReplaceAllString(line, "")
-		cveOnly := strings.TrimSpace(line)
-
-		if len(cveOnly) > 0 {
-			if until != nil {
-				parseDate, err := time.Parse("2006-01-02", strings.TrimSpace(until[2]))
-				if err != nil {
-					return errors.New(fmt.Sprintf("failed to parse until at line '%s'. Expected format is 'until=yyyy-MM-dd'", ogLine))
-				}
-				if parseDate.After(time.Now()) {
-					config.CveList.Cves = append(config.CveList.Cves, cveOnly)
-				}
-			} else {
-				config.CveList.Cves = append(config.CveList.Cves, cveOnly)
-			}
+		err := determineIfLineIsExclusion(ogLine, config)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -182,5 +168,26 @@ func getCVEExcludesFromFile(config *Configuration, excludeVulnerabilityFilePath 
 		return err
 	}
 
+	return nil
+}
+
+func determineIfLineIsExclusion(ogLine string, config *Configuration) error {
+	line := unixComments.ReplaceAllString(ogLine, "")
+	until := untilComment.FindStringSubmatch(line)
+	line = untilComment.ReplaceAllString(line, "")
+	cveOnly := strings.TrimSpace(line)
+	if len(cveOnly) > 0 {
+		if until != nil {
+			parseDate, err := time.Parse("2006-01-02", strings.TrimSpace(until[2]))
+			if err != nil {
+				return errors.New(fmt.Sprintf("failed to parse until at line '%s'. Expected format is 'until=yyyy-MM-dd'", ogLine))
+			}
+			if parseDate.After(time.Now()) {
+				config.CveList.Cves = append(config.CveList.Cves, cveOnly)
+			}
+		} else {
+			config.CveList.Cves = append(config.CveList.Cves, cveOnly)
+		}
+	}
 	return nil
 }
