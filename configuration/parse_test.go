@@ -19,6 +19,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/sonatype-nexus-community/nancy/audit"
@@ -34,9 +35,11 @@ func TestConfigParse(t *testing.T) {
 	untilsFile, _ := os.Open("../testdata/nancyignores/untilsAndComments")
 	invalidUntilsFile, _ := os.Open("../testdata/nancyignores/untilsInvaild")
 	invalidUntilLine, _ := bufio.NewReader(invalidUntilsFile).ReadString('\n')
+	invalidUntilLine = strings.TrimSpace(invalidUntilLine)
 
 	invalidDateUntilsFile, _ := os.Open("../testdata/nancyignores/untilsBadDateFormat")
 	invalidDateUntilLine, _ := bufio.NewReader(invalidDateUntilsFile).ReadString('\n')
+	invalidDateUntilLine = strings.TrimSpace(invalidDateUntilLine)
 
 	dir, _ := ioutil.TempDir("", "prefix")
 
