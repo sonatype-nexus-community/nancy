@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Definitions and functions for processing golang purls into a CycloneDX Sbom
+// Package cyclonedx has definitions and functions for processing golang purls into a minimal CycloneDX 1.1 Sbom
 package cyclonedx
 
 import (
@@ -22,18 +22,18 @@ import (
 	"github.com/package-url/packageurl-go"
 )
 
-type Sbom struct {
+type sbom struct {
 	XMLName    xml.Name   `xml:"bom"`
 	Xmlns      string     `xml:"xmlns,attr"`
 	Version    string     `xml:"version,attr"`
-	Components Components `xml:"components"`
+	Components components `xml:"components"`
 }
 
-type Components struct {
-	Component []Component `xml:"component"`
+type components struct {
+	Component []component `xml:"component"`
 }
 
-type Component struct {
+type component struct {
 	Type    string `xml:"type,attr"`
 	BomRef  string `xml:"bom-ref,attr"`
 	Name    string `xml:"name"`
@@ -41,12 +41,22 @@ type Component struct {
 	Purl    string `xml:"purl"`
 }
 
+const cycloneDXBomXmlns1_1 = "http://cyclonedx.org/schema/bom/1.1"
+
+const version = "1"
+
+// ProcessPurlsIntoSBOM will take a slice of packageurl.PackageURL and convert them
+// into a minimal 1.1 CycloneDX sbom
 func ProcessPurlsIntoSBOM(purls []packageurl.PackageURL) string {
-	sbom := Sbom{}
-	sbom.Xmlns = "http://cyclonedx.org/schema/bom/1.1"
-	sbom.Version = "1"
+	return processPurlsIntoSBOMSchema1_1(purls)
+}
+
+func processPurlsIntoSBOMSchema1_1(purls []packageurl.PackageURL) string {
+	sbom := sbom{}
+	sbom.Xmlns = cycloneDXBomXmlns1_1
+	sbom.Version = version
 	for _, v := range purls {
-		component := Component{Type: "library", BomRef: v.String(), Purl: v.String(), Name: v.Name, Version: v.Version}
+		component := component{Type: "library", BomRef: v.String(), Purl: v.String(), Name: v.Name, Version: v.Version}
 		sbom.Components.Component = append(sbom.Components.Component, component)
 	}
 

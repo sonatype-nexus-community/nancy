@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -40,18 +41,19 @@ const (
 	pollInterval = 1 * time.Second
 )
 
-type ApplicationResponse struct {
-	Applications []Application `json:"applications"`
+type applicationResponse struct {
+	Applications []application `json:"applications"`
 }
 
-type Application struct {
+type application struct {
 	ID string `json:"id"`
 }
 
-type ThirdPartyAPIResult struct {
+type thirdPartyAPIResult struct {
 	StatusURL string `json:"statusUrl"`
 }
 
+// StatusURLResult is a struct to let the consumer know what the response from Nexus IQ Server was
 type StatusURLResult struct {
 	PolicyAction  string `json:"policyAction"`
 	ReportHTMLURL string `json:"reportHtmlUrl"`
@@ -59,9 +61,9 @@ type StatusURLResult struct {
 	ErrorMessage  string `json:"errorMessage"`
 }
 
-var LOCAL_CONFIG configuration.Configuration
+var localConfig configuration.Configuration
 
-var statusUrlResp StatusURLResult
+var statusURLResp StatusURLResult
 
 func getPurls(purls []string) (result []packageurl.PackageURL) {
 	for _, v := range purls {
@@ -83,7 +85,7 @@ func splitPurlIntoNameAndVersion(purl string) (name string, version string) {
 }
 
 func AuditPackages(purls []string, applicationID string, config configuration.Configuration) StatusURLResult {
-	LOCAL_CONFIG = config
+	localConfig = config
 	internalID := getInternalApplicationID(applicationID)
 	newPurls := getPurls(purls)
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(newPurls)
@@ -91,7 +93,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Co
 
 	finished := make(chan bool)
 
-	statusUrlResp = StatusURLResult{}
+	statusURLResp = StatusURLResult{}
 
 	go func() {
 		for {
@@ -99,14 +101,14 @@ func AuditPackages(purls []string, applicationID string, config configuration.Co
 			case <-finished:
 				return
 			default:
-				pollIQServer(fmt.Sprintf("%s/%s", LOCAL_CONFIG.Server, statusURL), finished)
+				pollIQServer(fmt.Sprintf("%s/%s", localConfig.Server, statusURL), finished)
 				time.Sleep(pollInterval)
 			}
 		}
 	}()
 
 	<-finished
-	return statusUrlResp
+	return statusURLResp
 }
 
 func getInternalApplicationID(applicationID string) (internalID string) {
@@ -114,15 +116,16 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 
 	req, err := http.NewRequest(
 		"GET",
-		fmt.Sprintf("%s%s%s", LOCAL_CONFIG.Server, INTERNAL_APPLICATION_ID_URL, applicationID),
+		fmt.Sprintf("%s%s%s", localConfig.Server, INTERNAL_APPLICATION_ID_URL, applicationID),
 		nil,
 	)
 
-	req.SetBasicAuth(LOCAL_CONFIG.User, LOCAL_CONFIG.Token)
+	req.SetBasicAuth(localConfig.User, localConfig.Token)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	defer resp.Body.Close()
@@ -130,9 +133,10 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 	if resp.StatusCode == http.StatusOK {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Print(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
-		var response ApplicationResponse
+		var response applicationResponse
 		json.Unmarshal(bodyBytes, &response)
 		return response.Applications[0].ID
 	}
@@ -142,7 +146,7 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 func submitToThirdPartyAPI(sbom string, internalID string) string {
 	client := &http.Client{}
 
-	url := fmt.Sprintf("%s%s", LOCAL_CONFIG.Server, fmt.Sprintf("%s%s%s%s", THIRD_PARTY_API_LEFT, internalID, THIRD_PARTY_API_RIGHT, LOCAL_CONFIG.Stage))
+	url := fmt.Sprintf("%s%s", localConfig.Server, fmt.Sprintf("%s%s%s%s", THIRD_PARTY_API_LEFT, internalID, THIRD_PARTY_API_RIGHT, localConfig.Stage))
 
 	req, err := http.NewRequest(
 		"POST",
@@ -150,14 +154,15 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 		bytes.NewBuffer([]byte(sbom)),
 	)
 
-	req.SetBasicAuth(LOCAL_CONFIG.User, LOCAL_CONFIG.Token)
+	req.SetBasicAuth(localConfig.User, localConfig.Token)
 
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("User-Agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	defer resp.Body.Close()
@@ -165,9 +170,10 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 	if resp.StatusCode == http.StatusAccepted {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Print(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
-		var response ThirdPartyAPIResult
+		var response thirdPartyAPIResult
 		json.Unmarshal(bodyBytes, &response)
 		return response.StatusURL
 	}
@@ -179,7 +185,7 @@ func pollIQServer(statusURL string, finished chan bool) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", statusURL, nil)
 
-	req.SetBasicAuth(LOCAL_CONFIG.User, LOCAL_CONFIG.Token)
+	req.SetBasicAuth(localConfig.User, localConfig.Token)
 
 	req.Header.Set("User-Agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
 
@@ -187,7 +193,8 @@ func pollIQServer(statusURL string, finished chan bool) {
 
 	if err != nil {
 		finished <- true
-		fmt.Print(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	defer resp.Body.Close()
@@ -199,7 +206,7 @@ func pollIQServer(statusURL string, finished chan bool) {
 		}
 		var response StatusURLResult
 		json.Unmarshal(bodyBytes, &response)
-		statusUrlResp = response
+		statusURLResp = response
 		if response.IsError {
 			finished <- true
 		}

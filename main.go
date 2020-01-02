@@ -172,11 +172,11 @@ func auditWithIQServer(purls []string, applicationID string, config configuratio
 
 	if res.PolicyAction != "Failure" {
 		fmt.Println("Wonderbar! No policy violations reported for this audit!")
-		fmt.Println("Report URL: ", res.ReportHtmlURL)
+		fmt.Println("Report URL: ", res.ReportHTMLURL)
 		os.Exit(0)
 	} else {
 		fmt.Println("Sonabot here, you have some policy violations to clean up!")
-		fmt.Println("Report URL: ", res.ReportHtmlURL)
+		fmt.Println("Report URL: ", res.ReportHTMLURL)
 		os.Exit(1)
 	}
 }
