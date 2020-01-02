@@ -22,7 +22,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/package-url/packageurl-go"
@@ -67,19 +66,9 @@ var statusURLResp StatusURLResult
 
 func getPurls(purls []string) (result []packageurl.PackageURL) {
 	for _, v := range purls {
-		name, version := splitPurlIntoNameAndVersion(v)
-		purl := *packageurl.NewPackageURL("golang", "", name, version, nil, "")
+		purl, _ := packageurl.FromString(v)
 		result = append(result, purl)
 	}
-
-	return
-}
-
-func splitPurlIntoNameAndVersion(purl string) (name string, version string) {
-	first := strings.Split(purl, ":")
-	second := strings.Split(first[1], "@")
-	name = second[0][7:len(second[0])]
-	version = second[1]
 
 	return
 }
@@ -88,9 +77,11 @@ func splitPurlIntoNameAndVersion(purl string) (name string, version string) {
 // Nexus IQ Server for audit, and return a struct of StatusURLResult
 func AuditPackages(purls []string, applicationID string, config configuration.Configuration) StatusURLResult {
 	localConfig = config
+
 	if localConfig.User == "admin" && localConfig.Token == "admin123" {
 		warnUserOfBadLifeChoices()
 	}
+
 	internalID := getInternalApplicationID(applicationID)
 	newPurls := getPurls(purls)
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(newPurls)
