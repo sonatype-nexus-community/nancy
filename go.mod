@@ -8,6 +8,7 @@ require (
 	github.com/Masterminds/vcs v1.13.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
+	github.com/coreos/etcd v3.3.18+incompatible // indirect
 	github.com/dgraph-io/badger v1.5.5-0.20181004181505-439fd464b155
 	github.com/dgryski/go-farm v0.0.0-20180109070241-2de33835d102 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect

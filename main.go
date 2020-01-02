@@ -29,6 +29,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/iq"
 	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
@@ -62,9 +63,14 @@ func main() {
 
 	log.Println("Nancy version: " + buildversion.BuildVersion)
 
-	if config.UseStdIn == true {
+	if config.UseStdIn && config.IQ {
+		doStdInAndParseForIQ(config)
+	}
+
+	if config.UseStdIn && !config.IQ {
 		doStdInAndParse()
-	} else {
+	}
+	if !config.UseStdIn && !config.IQ {
 		doCheckExistenceAndParse()
 	}
 }
@@ -87,6 +93,23 @@ func doStdInAndParse() {
 	}
 }
 
+func doStdInAndParseForIQ(config configuration.Configuration) {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		panic(err)
+	}
+	if (fi.Mode() & os.ModeNamedPipe) == 0 {
+		flag.Usage()
+		os.Exit(1)
+	} else {
+		mod := packages.Mod{}
+		scanner := bufio.NewScanner(os.Stdin)
+		mod.ProjectList, _ = parse.GoList(scanner)
+		var purls = mod.ExtractPurlsFromManifest()
+		auditWithIQServer(purls, config.Application, config)
+	}
+}
+
 func doCheckExistenceAndParse() {
 	switch {
 	case strings.Contains(config.Path, "Gopkg.lock"):
@@ -101,7 +124,7 @@ func doCheckExistenceAndParse() {
 		}
 		project, err := ctx.LoadProject()
 		if err != nil {
-			customerrors.Check(err, fmt.Sprint("could not read lock at path " + config.Path))
+			customerrors.Check(err, fmt.Sprint("could not read lock at path "+config.Path))
 		}
 		if project.Lock == nil {
 			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
@@ -135,5 +158,25 @@ func checkOSSIndex(purls []string, packageCount int) {
 
 	if count := audit.LogResults(config.NoColor, packageCount, coordinates, config.CveList.Cves); count > 0 {
 		os.Exit(count)
+	}
+}
+
+func auditWithIQServer(purls []string, applicationID string, config configuration.Configuration) {
+	res := iq.AuditPackages(purls, applicationID, config)
+
+	fmt.Println()
+	if res.IsError {
+		fmt.Println("There was an error with your request to Nexus IQ Server", res.ErrorMessage)
+		os.Exit(1)
+	}
+
+	if res.PolicyAction != "Failure" {
+		fmt.Println("Wonderbar! No policy violations reported for this audit!")
+		fmt.Println("Report URL: ", res.ReportHtmlURL)
+		os.Exit(0)
+	} else {
+		fmt.Println("Sonabot here, you have some policy violations to clean up!")
+		fmt.Println("Report URL: ", res.ReportHtmlURL)
+		os.Exit(1)
 	}
 }

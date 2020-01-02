@@ -4,20 +4,27 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 type Configuration struct {
-	UseStdIn bool
-	Help bool
-	NoColor bool
-	Quiet bool
-	Version bool
-	CveList types.CveListFlag
-	Path    string
+	UseStdIn    bool
+	Help        bool
+	NoColor     bool
+	Quiet       bool
+	Version     bool
+	CveList     types.CveListFlag
+	IQ          bool
+	Path        string
+	User        string
+	Token       string
+	Stage       string
+	Application string
+	Server      string
 }
 
 var unixComments = regexp.MustCompile(`#.*$`)
@@ -35,22 +42,51 @@ func Parse(args []string) (Configuration, error) {
 	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
 	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
 
+	iqCommand := flag.NewFlagSet("iq", flag.ExitOnError)
+	iqCommand.StringVar(&config.User, "user", "admin", "Specify username for request")
+	iqCommand.StringVar(&config.Token, "token", "admin123", "Specify token/password for request")
+	iqCommand.StringVar(&config.Server, "server", "http://localhost:8070", "Specify Nexus IQ Server URL/port")
+	iqCommand.StringVar(&config.Application, "application", "", "Specify application ID for request")
+	iqCommand.StringVar(&config.Stage, "stage", "build", "Specify stage for application")
+
 	flag.Usage = func() {
-		_, _ = fmt.Fprintf(os.Stderr, "Usage: \nnancy [options] </path/to/Gopkg.lock>\nnancy [options] </path/to/go.sum>\n\nOptions:\n")
+		_, _ = fmt.Fprintf(os.Stderr, `Usage:
+	nancy [options] </path/to/Gopkg.lock>
+	nancy [options] </path/to/go.sum>
+	nancy iq [options]
+			
+Options:
+`)
 		flag.PrintDefaults()
+		_, _ = fmt.Fprintf(os.Stderr, `
+IQ Options:
+`)
+		iqCommand.PrintDefaults()
 		os.Exit(2)
 	}
 
 	// Parse config from the command line output
-	err := flag.CommandLine.Parse(args)
-	if err != nil {
-		return config, err
+	if len(os.Args) > 1 {
+		if os.Args[1] == "iq" {
+			err := iqCommand.Parse(os.Args[2:])
+			if err != nil {
+				return config, err
+			}
+			config.IQ = true
+			config.UseStdIn = true
+			return config, nil
+		}
 	}
 
 	if len(flag.Args()) == 0 {
 		config.UseStdIn = true
-	}else{
+	} else {
 		config.Path = args[len(args)-1]
+	}
+
+	err := flag.CommandLine.Parse(args)
+	if err != nil {
+		return config, err
 	}
 
 	if noColorDeprecated == true {
