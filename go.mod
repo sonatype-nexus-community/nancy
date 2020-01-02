@@ -17,6 +17,7 @@ require (
 	github.com/jmank88/nuts v0.3.0 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
 	github.com/nightlyone/lockfile v0.0.0-20180618180623-0ad87eef1443 // indirect
+	github.com/package-url/packageurl-go v0.1.0
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect

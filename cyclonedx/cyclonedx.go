@@ -18,7 +18,8 @@ package cyclonedx
 import (
 	"encoding/xml"
 	"fmt"
-	"strings"
+
+	"github.com/package-url/packageurl-go"
 )
 
 type Sbom struct {
@@ -40,13 +41,12 @@ type Component struct {
 	Purl    string `xml:"purl"`
 }
 
-func ProcessPurlsIntoSBOM(purls []string) string {
+func ProcessPurlsIntoSBOM(purls []packageurl.PackageURL) string {
 	sbom := Sbom{}
 	sbom.Xmlns = "http://cyclonedx.org/schema/bom/1.1"
 	sbom.Version = "1"
 	for _, v := range purls {
-		name, version := splitPurlIntoNameAndVersion(v)
-		component := Component{Type: "library", BomRef: v, Purl: v, Name: name, Version: version}
+		component := Component{Type: "library", BomRef: v.String(), Purl: v.String(), Name: v.Name, Version: v.Version}
 		sbom.Components.Component = append(sbom.Components.Component, component)
 	}
 
@@ -58,13 +58,4 @@ func ProcessPurlsIntoSBOM(purls []string) string {
 	output = []byte(xml.Header + string(output))
 
 	return string(output)
-}
-
-func splitPurlIntoNameAndVersion(purl string) (name string, version string) {
-	first := strings.Split(purl, ":")
-	second := strings.Split(first[1], "@")
-	name = second[0][7:len(second[0])]
-	version = second[1]
-
-	return
 }

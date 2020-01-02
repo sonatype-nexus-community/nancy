@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Definitions and functions for processing golang purls with Nexus IQ Server
+// Package iq has definitions and functions for processing golang purls with Nexus IQ Server
 package iq
 
 import (
@@ -21,8 +21,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/cyclonedx"
@@ -52,7 +54,7 @@ type ThirdPartyAPIResult struct {
 
 type StatusURLResult struct {
 	PolicyAction  string `json:"policyAction"`
-	ReportHtmlURL string `json:"reportHtmlUrl"`
+	ReportHTMLURL string `json:"reportHtmlUrl"`
 	IsError       bool   `json:"isError"`
 	ErrorMessage  string `json:"errorMessage"`
 }
@@ -61,12 +63,30 @@ var LOCAL_CONFIG configuration.Configuration
 
 var statusUrlResp StatusURLResult
 
-var stillPolling bool = true
+func getPurls(purls []string) (result []packageurl.PackageURL) {
+	for _, v := range purls {
+		name, version := splitPurlIntoNameAndVersion(v)
+		purl := *packageurl.NewPackageURL("golang", "", name, version, nil, "")
+		result = append(result, purl)
+	}
+
+	return
+}
+
+func splitPurlIntoNameAndVersion(purl string) (name string, version string) {
+	first := strings.Split(purl, ":")
+	second := strings.Split(first[1], "@")
+	name = second[0][7:len(second[0])]
+	version = second[1]
+
+	return
+}
 
 func AuditPackages(purls []string, applicationID string, config configuration.Configuration) StatusURLResult {
 	LOCAL_CONFIG = config
 	internalID := getInternalApplicationID(applicationID)
-	sbom := cyclonedx.ProcessPurlsIntoSBOM(purls)
+	newPurls := getPurls(purls)
+	sbom := cyclonedx.ProcessPurlsIntoSBOM(newPurls)
 	statusURL := submitToThirdPartyAPI(sbom, internalID)
 
 	finished := make(chan bool)
