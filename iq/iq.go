@@ -28,8 +28,6 @@ import (
 	"github.com/sonatype-nexus-community/nancy/cyclonedx"
 )
 
-var IQ_SERVER_BASE_URL = "http://localhost:8070"
-
 const INTERNAL_APPLICATION_ID_URL = "/api/v2/applications?publicId="
 
 const THIRD_PARTY_API_LEFT = "/api/v2/scan/applications/"
@@ -81,8 +79,8 @@ func AuditPackages(purls []string, applicationID string, config configuration.Co
 			case <-finished:
 				return
 			default:
-				pollIQServer(fmt.Sprintf("%s/%s", IQ_SERVER_BASE_URL, statusURL), finished)
-				time.Sleep(time.Second * 1)
+				pollIQServer(fmt.Sprintf("%s/%s", LOCAL_CONFIG.Server, statusURL), finished)
+				time.Sleep(pollInterval)
 			}
 		}
 	}()
@@ -96,7 +94,7 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 
 	req, err := http.NewRequest(
 		"GET",
-		fmt.Sprintf("%s%s%s", IQ_SERVER_BASE_URL, INTERNAL_APPLICATION_ID_URL, applicationID),
+		fmt.Sprintf("%s%s%s", LOCAL_CONFIG.Server, INTERNAL_APPLICATION_ID_URL, applicationID),
 		nil,
 	)
 
@@ -124,7 +122,7 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 func submitToThirdPartyAPI(sbom string, internalID string) string {
 	client := &http.Client{}
 
-	url := fmt.Sprintf("%s%s", IQ_SERVER_BASE_URL, fmt.Sprintf("%s%s%s%s", THIRD_PARTY_API_LEFT, internalID, THIRD_PARTY_API_RIGHT, LOCAL_CONFIG.Stage))
+	url := fmt.Sprintf("%s%s", LOCAL_CONFIG.Server, fmt.Sprintf("%s%s%s%s", THIRD_PARTY_API_LEFT, internalID, THIRD_PARTY_API_RIGHT, LOCAL_CONFIG.Stage))
 
 	req, err := http.NewRequest(
 		"POST",
