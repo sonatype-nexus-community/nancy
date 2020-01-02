@@ -47,7 +47,7 @@ func Parse(args []string) (Configuration, error) {
 	iqCommand.StringVar(&config.Token, "token", "admin123", "Specify token/password for request")
 	iqCommand.StringVar(&config.Server, "server-url", "http://localhost:8070", "Specify Nexus IQ Server URL/port")
 	iqCommand.StringVar(&config.Application, "application", "", "Specify application ID for request")
-	iqCommand.StringVar(&config.Stage, "stage", "build", "Specify stage for application")
+	iqCommand.StringVar(&config.Stage, "stage", "develop", "Specify stage for application")
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, `Usage:
