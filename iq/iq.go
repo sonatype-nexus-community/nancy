@@ -31,11 +31,11 @@ import (
 	"github.com/sonatype-nexus-community/nancy/cyclonedx"
 )
 
-const INTERNAL_APPLICATION_ID_URL = "/api/v2/applications?publicId="
+const internalApplicationIDURL = "/api/v2/applications?publicId="
 
-const THIRD_PARTY_API_LEFT = "/api/v2/scan/applications/"
+const thirdPartyAPILeft = "/api/v2/scan/applications/"
 
-const THIRD_PARTY_API_RIGHT = "/sources/nancy?stageId="
+const thirdPartyAPIRight = "/sources/nancy?stageId="
 
 const (
 	pollInterval = 1 * time.Second
@@ -84,8 +84,13 @@ func splitPurlIntoNameAndVersion(purl string) (name string, version string) {
 	return
 }
 
+// AuditPackages accepts a slice of purls, public application ID, and configuration, and will submit these to
+// Nexus IQ Server for audit, and return a struct of StatusURLResult
 func AuditPackages(purls []string, applicationID string, config configuration.Configuration) StatusURLResult {
 	localConfig = config
+	if localConfig.User == "admin" && localConfig.Token == "admin123" {
+		warnUserOfBadLifeChoices()
+	}
 	internalID := getInternalApplicationID(applicationID)
 	newPurls := getPurls(purls)
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(newPurls)
@@ -116,7 +121,7 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 
 	req, err := http.NewRequest(
 		"GET",
-		fmt.Sprintf("%s%s%s", localConfig.Server, INTERNAL_APPLICATION_ID_URL, applicationID),
+		fmt.Sprintf("%s%s%s", localConfig.Server, internalApplicationIDURL, applicationID),
 		nil,
 	)
 
@@ -146,7 +151,7 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 func submitToThirdPartyAPI(sbom string, internalID string) string {
 	client := &http.Client{}
 
-	url := fmt.Sprintf("%s%s", localConfig.Server, fmt.Sprintf("%s%s%s%s", THIRD_PARTY_API_LEFT, internalID, THIRD_PARTY_API_RIGHT, localConfig.Stage))
+	url := fmt.Sprintf("%s%s", localConfig.Server, fmt.Sprintf("%s%s%s%s", thirdPartyAPILeft, internalID, thirdPartyAPIRight, localConfig.Stage))
 
 	req, err := http.NewRequest(
 		"POST",
@@ -213,4 +218,10 @@ func pollIQServer(statusURL string, finished chan bool) {
 		finished <- true
 	}
 	fmt.Print(".")
+}
+
+func warnUserOfBadLifeChoices() {
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	fmt.Println("!!!! WARNING : You are using the default username and password for Nexus IQ, you should likely change these, and use a token. !!!!")
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 }
