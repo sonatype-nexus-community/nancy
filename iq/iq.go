@@ -27,6 +27,7 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/configuration"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/cyclonedx"
 )
 
@@ -197,9 +198,8 @@ func pollIQServer(statusURL string, finished chan bool) {
 
 	if resp.StatusCode == http.StatusOK {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Print(err)
-		}
+		customerrors.Check(err, "There was an error polling Nexus IQ Server")
+
 		var response StatusURLResult
 		json.Unmarshal(bodyBytes, &response)
 		statusURLResp = response
