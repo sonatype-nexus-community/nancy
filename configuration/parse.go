@@ -51,9 +51,10 @@ func Parse(args []string) (Configuration, error) {
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, `Usage:
+	go list -m all | nancy [options]
+	go list -m all | nancy iq [options]
 	nancy [options] </path/to/Gopkg.lock>
 	nancy [options] </path/to/go.sum>
-	nancy iq [options]
 			
 Options:
 `)
