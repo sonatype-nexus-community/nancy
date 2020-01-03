@@ -37,6 +37,18 @@ func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 	return purls
 }
 
+func (m Mod) ExtractPurlsFromManifestForIQ() (purls []string) {
+	for _, s := range m.ProjectList.Projects {
+		if len(s.Version) > 0 { // There must be a version we can use
+			var version = s.Version
+			version = strings.Replace(version, "+incompatible", "", -1)
+			var purl = "pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version
+			purls = append(purls, purl)
+		}
+	}
+	return purls
+}
+
 func (m Mod) CheckExistenceOfManifest() bool {
 	if _, err := os.Stat(m.GoSumPath); os.IsNotExist(err) {
 		customerrors.Check(err, fmt.Sprint("No go.sum found at path: "+m.GoSumPath))

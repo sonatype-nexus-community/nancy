@@ -114,6 +114,19 @@ Report URL:  http://reportURL
 
 Failed submissions will either indicate failure because of an issue with processing the request, or a policy violation. Both will exit with a code of 1, allowing you to fail your build in CI. Policy Violation failures will include a report URL where you can learn more about why you encountered a failure.
 
+Policy violations will look like:
+
+```
+Sonabot here, you have some policy violations to clean up!
+Report URL:  http://reportURL
+```
+
+Errors processing in Nexus IQ Server will look like:
+
+```
+There was an error with your request to Nexus IQ Server <error>
+```
+
 ### Usage in CI
 
 You can see an example of using `nancy` in Travis-CI at [this intentionally vulnerable repo we made](https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project).

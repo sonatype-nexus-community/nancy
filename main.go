@@ -105,7 +105,7 @@ func doStdInAndParseForIQ(config configuration.Configuration) {
 		mod := packages.Mod{}
 		scanner := bufio.NewScanner(os.Stdin)
 		mod.ProjectList, _ = parse.GoList(scanner)
-		var purls = mod.ExtractPurlsFromManifest()
+		var purls = mod.ExtractPurlsFromManifestForIQ()
 		auditWithIQServer(purls, config.Application, config)
 	}
 }
