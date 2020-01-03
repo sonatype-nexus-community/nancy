@@ -117,14 +117,14 @@ Failed submissions will either indicate failure because of an issue with process
 Policy violations will look like:
 
 ```
-Sonabot here, you have some policy violations to clean up!
+Hi, Nancy here, you have some policy violations to clean up!
 Report URL:  http://reportURL
 ```
 
 Errors processing in Nexus IQ Server will look like:
 
 ```
-There was an error with your request to Nexus IQ Server <error>
+Uh oh! There was an error with your request to Nexus IQ Server: <error>
 ```
 
 ### Usage in CI

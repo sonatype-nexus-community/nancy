@@ -166,7 +166,7 @@ func auditWithIQServer(purls []string, applicationID string, config configuratio
 
 	fmt.Println()
 	if res.IsError {
-		fmt.Println("There was an error with your request to Nexus IQ Server", res.ErrorMessage)
+		fmt.Println(fmt.Sprintf("Uh oh! There was an error with your request to Nexus IQ Server: %s", res.ErrorMessage))
 		os.Exit(1)
 	}
 
@@ -175,7 +175,7 @@ func auditWithIQServer(purls []string, applicationID string, config configuratio
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
 		os.Exit(0)
 	} else {
-		fmt.Println("Sonabot here, you have some policy violations to clean up!")
+		fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
 		os.Exit(1)
 	}
