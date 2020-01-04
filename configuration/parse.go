@@ -1,3 +1,16 @@
+// Copyright 2020 Sonatype Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package configuration
 
 import (
@@ -66,10 +79,14 @@ IQ Options:
 		os.Exit(2)
 	}
 
-	// Parse config from the command line output
-	if len(os.Args) > 1 {
-		if os.Args[1] == "iq" {
-			err := iqCommand.Parse(os.Args[2:])
+	err := flag.CommandLine.Parse(args)
+	if err != nil {
+		return config, err
+	}
+
+	if len(args) > 0 {
+		if args[0] == "iq" {
+			err := iqCommand.Parse(args[1:])
 			if err != nil {
 				return config, err
 			}
@@ -77,17 +94,9 @@ IQ Options:
 			config.UseStdIn = true
 			return config, nil
 		}
-		flag.CommandLine.Parse(args)
-		err := flag.CommandLine.Parse(args)
-		if err != nil {
-			return config, err
-		}
-	}
-
-	if len(flag.Args()) == 0 {
-		config.UseStdIn = true
-	} else {
 		config.Path = args[len(args)-1]
+	} else {
+		config.UseStdIn = true
 	}
 
 	if noColorDeprecated == true {
@@ -97,7 +106,7 @@ IQ Options:
 		config.NoColor = noColorDeprecated
 	}
 
-	err := getCVEExcludesFromFile(&config, excludeVulnerabilityFilePath)
+	err = getCVEExcludesFromFile(&config, excludeVulnerabilityFilePath)
 	if err != nil {
 		return config, err
 	}
