@@ -77,17 +77,17 @@ IQ Options:
 			config.UseStdIn = true
 			return config, nil
 		}
+		flag.CommandLine.Parse(args)
+		err := flag.CommandLine.Parse(args)
+		if err != nil {
+			return config, err
+		}
 	}
 
 	if len(flag.Args()) == 0 {
 		config.UseStdIn = true
 	} else {
 		config.Path = args[len(args)-1]
-	}
-
-	err := flag.CommandLine.Parse(args)
-	if err != nil {
-		return config, err
 	}
 
 	if noColorDeprecated == true {
@@ -97,7 +97,7 @@ IQ Options:
 		config.NoColor = noColorDeprecated
 	}
 
-	err = getCVEExcludesFromFile(&config, excludeVulnerabilityFilePath)
+	err := getCVEExcludesFromFile(&config, excludeVulnerabilityFilePath)
 	if err != nil {
 		return config, err
 	}

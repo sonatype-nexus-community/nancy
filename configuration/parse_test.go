@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"errors"
 	"flag"
-	"github.com/sonatype-nexus-community/nancy/types"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConfigParse(t *testing.T) {
