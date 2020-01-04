@@ -29,6 +29,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/cyclonedx"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 const internalApplicationIDURL = "/api/v2/applications?publicId="
@@ -41,6 +42,9 @@ const (
 	pollInterval = 1 * time.Second
 )
 
+var localConfig configuration.Configuration
+
+// Internal types for use by this package, don't need to expose them
 type applicationResponse struct {
 	Applications []application `json:"applications"`
 }
@@ -53,17 +57,7 @@ type thirdPartyAPIResult struct {
 	StatusURL string `json:"statusUrl"`
 }
 
-// StatusURLResult is a struct to let the consumer know what the response from Nexus IQ Server was
-type StatusURLResult struct {
-	PolicyAction  string `json:"policyAction"`
-	ReportHTMLURL string `json:"reportHtmlUrl"`
-	IsError       bool   `json:"isError"`
-	ErrorMessage  string `json:"errorMessage"`
-}
-
-var localConfig configuration.Configuration
-
-var statusURLResp StatusURLResult
+var statusURLResp types.StatusURLResult
 
 func getPurls(purls []string) (result []packageurl.PackageURL) {
 	for _, v := range purls {
@@ -76,7 +70,7 @@ func getPurls(purls []string) (result []packageurl.PackageURL) {
 
 // AuditPackages accepts a slice of purls, public application ID, and configuration, and will submit these to
 // Nexus IQ Server for audit, and return a struct of StatusURLResult
-func AuditPackages(purls []string, applicationID string, config configuration.Configuration) StatusURLResult {
+func AuditPackages(purls []string, applicationID string, config configuration.Configuration) types.StatusURLResult {
 	localConfig = config
 
 	if localConfig.User == "admin" && localConfig.Token == "admin123" {
@@ -90,7 +84,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Co
 
 	finished := make(chan bool)
 
-	statusURLResp = StatusURLResult{}
+	statusURLResp = types.StatusURLResult{}
 
 	go func() {
 		for {
@@ -200,7 +194,7 @@ func pollIQServer(statusURL string, finished chan bool) {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		customerrors.Check(err, "There was an error polling Nexus IQ Server")
 
-		var response StatusURLResult
+		var response types.StatusURLResult
 		json.Unmarshal(bodyBytes, &response)
 		statusURLResp = response
 		if response.IsError {

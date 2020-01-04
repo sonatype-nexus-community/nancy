@@ -14,6 +14,7 @@
 package types
 
 import (
+	"encoding/xml"
 	"fmt"
 	"strings"
 
@@ -89,4 +90,38 @@ func (cve *CveListFlag) Set(value string) error {
 	cve.Cves = strings.Split(strings.ReplaceAll(value, " ", ""), ",")
 
 	return nil
+}
+
+// IQ Types
+
+// StatusURLResult is a struct to let the consumer know what the response from Nexus IQ Server was
+type StatusURLResult struct {
+	PolicyAction  string `json:"policyAction"`
+	ReportHTMLURL string `json:"reportHtmlUrl"`
+	IsError       bool   `json:"isError"`
+	ErrorMessage  string `json:"errorMessage"`
+}
+
+// CycloneDX Types
+
+// Sbom is a struct to begin assembling a minimal SBOM
+type Sbom struct {
+	XMLName    xml.Name   `xml:"bom"`
+	Xmlns      string     `xml:"xmlns,attr"`
+	Version    string     `xml:"version,attr"`
+	Components Components `xml:"components"`
+}
+
+// Components is a struct to list the components in a SBOM
+type Components struct {
+	Component []Component `xml:"component"`
+}
+
+// Component is a struct to list the properties of a component in a SBOM
+type Component struct {
+	Type    string `xml:"type,attr"`
+	BomRef  string `xml:"bom-ref,attr"`
+	Name    string `xml:"name"`
+	Version string `xml:"version"`
+	Purl    string `xml:"purl"`
 }

@@ -20,26 +20,8 @@ import (
 	"fmt"
 
 	"github.com/package-url/packageurl-go"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
-
-type sbom struct {
-	XMLName    xml.Name   `xml:"bom"`
-	Xmlns      string     `xml:"xmlns,attr"`
-	Version    string     `xml:"version,attr"`
-	Components components `xml:"components"`
-}
-
-type components struct {
-	Component []component `xml:"component"`
-}
-
-type component struct {
-	Type    string `xml:"type,attr"`
-	BomRef  string `xml:"bom-ref,attr"`
-	Name    string `xml:"name"`
-	Version string `xml:"version"`
-	Purl    string `xml:"purl"`
-}
 
 const cycloneDXBomXmlns1_1 = "http://cyclonedx.org/schema/bom/1.1"
 
@@ -52,11 +34,11 @@ func ProcessPurlsIntoSBOM(purls []packageurl.PackageURL) string {
 }
 
 func processPurlsIntoSBOMSchema1_1(purls []packageurl.PackageURL) string {
-	sbom := sbom{}
+	sbom := types.Sbom{}
 	sbom.Xmlns = cycloneDXBomXmlns1_1
 	sbom.Version = version
 	for _, v := range purls {
-		component := component{Type: "library", BomRef: v.String(), Purl: v.String(), Name: v.Name, Version: v.Version}
+		component := types.Component{Type: "library", BomRef: v.String(), Purl: v.String(), Name: v.Name, Version: v.Version}
 		sbom.Components.Component = append(sbom.Components.Component, component)
 	}
 
