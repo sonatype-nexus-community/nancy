@@ -42,7 +42,7 @@ const (
 	pollInterval = 1 * time.Second
 )
 
-var localConfig configuration.Configuration
+var localConfig configuration.IqConfiguration
 
 // Internal types for use by this package, don't need to expose them
 type applicationResponse struct {
@@ -70,7 +70,7 @@ func getPurls(purls []string) (result []packageurl.PackageURL) {
 
 // AuditPackages accepts a slice of purls, public application ID, and configuration, and will submit these to
 // Nexus IQ Server for audit, and return a struct of StatusURLResult
-func AuditPackages(purls []string, applicationID string, config configuration.Configuration) types.StatusURLResult {
+func AuditPackages(purls []string, applicationID string, config configuration.IqConfiguration) types.StatusURLResult {
 	localConfig = config
 
 	if localConfig.User == "admin" && localConfig.Token == "admin123" {

@@ -35,16 +35,27 @@ import (
 	"github.com/sonatype-nexus-community/nancy/parse"
 )
 
-var config configuration.Configuration
+var ossIndexConfig configuration.Configuration
 
 func main() {
-	var err error
-	config, err = configuration.Parse(os.Args[1:])
-	if err != nil {
-		flag.Usage()
-		os.Exit(1)
+	if len(os.Args) > 1 && os.Args[1] == "iq" {
+		config, err := configuration.ParseIQ(os.Args[2:])
+		if err != nil {
+			flag.Usage()
+			os.Exit(1)
+		}
+		processIQConfig(config)
+	} else {
+		ossIndexConfig, err := configuration.Parse(os.Args[1:])
+		if err != nil {
+			flag.Usage()
+			os.Exit(1)
+		}
+		processConfig(ossIndexConfig)
 	}
+}
 
+func processConfig(config configuration.Configuration) {
 	if config.Help {
 		flag.Usage()
 		os.Exit(0)
@@ -63,16 +74,34 @@ func main() {
 
 	log.Println("Nancy version: " + buildversion.BuildVersion)
 
-	if config.UseStdIn && config.IQ {
-		doStdInAndParseForIQ(config)
-	}
-
-	if config.UseStdIn && !config.IQ {
+	if config.UseStdIn {
 		doStdInAndParse()
 	}
-	if !config.UseStdIn && !config.IQ {
+	if !config.UseStdIn {
 		doCheckExistenceAndParse()
 	}
+}
+
+func processIQConfig(config configuration.IqConfiguration) {
+	if config.Help {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	if config.Version {
+		fmt.Println(buildversion.BuildVersion)
+		_, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
+		_, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
+		os.Exit(0)
+	}
+
+	if config.Application == "" {
+		flag.Usage()
+	}
+
+	log.Println("Nancy version: " + buildversion.BuildVersion)
+
+	doStdInAndParseForIQ(config)
 }
 
 func doStdInAndParse() {
@@ -93,7 +122,7 @@ func doStdInAndParse() {
 	}
 }
 
-func doStdInAndParseForIQ(config configuration.Configuration) {
+func doStdInAndParseForIQ(config configuration.IqConfiguration) {
 	fi, err := os.Stdin.Stat()
 	if err != nil {
 		panic(err)
@@ -112,8 +141,8 @@ func doStdInAndParseForIQ(config configuration.Configuration) {
 
 func doCheckExistenceAndParse() {
 	switch {
-	case strings.Contains(config.Path, "Gopkg.lock"):
-		workingDir := filepath.Dir(config.Path)
+	case strings.Contains(ossIndexConfig.Path, "Gopkg.lock"):
+		workingDir := filepath.Dir(ossIndexConfig.Path)
 		if workingDir == "." {
 			workingDir, _ = os.Getwd()
 		}
@@ -124,7 +153,7 @@ func doCheckExistenceAndParse() {
 		}
 		project, err := ctx.LoadProject()
 		if err != nil {
-			customerrors.Check(err, fmt.Sprint("could not read lock at path "+config.Path))
+			customerrors.Check(err, fmt.Sprint("could not read lock at path "+ossIndexConfig.Path))
 		}
 		if project.Lock == nil {
 			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
@@ -132,16 +161,16 @@ func doCheckExistenceAndParse() {
 
 		purls, invalidPurls := packages.ExtractPurlsUsingDep(*project)
 		if len(invalidPurls) > 0 {
-			audit.LogInvalidSemVerWarning(config.NoColor, config.Quiet, invalidPurls)
+			audit.LogInvalidSemVerWarning(ossIndexConfig.NoColor, ossIndexConfig.Quiet, invalidPurls)
 		}
 
 		var packageCount = len(purls)
 		checkOSSIndex(purls, packageCount)
-	case strings.Contains(config.Path, "go.sum"):
+	case strings.Contains(ossIndexConfig.Path, "go.sum"):
 		mod := packages.Mod{}
-		mod.GoSumPath = config.Path
+		mod.GoSumPath = ossIndexConfig.Path
 		if mod.CheckExistenceOfManifest() {
-			mod.ProjectList, _ = parse.GoSum(config.Path)
+			mod.ProjectList, _ = parse.GoSum(ossIndexConfig.Path)
 			var purls = mod.ExtractPurlsFromManifest()
 			var packageCount = len(purls)
 
@@ -156,12 +185,12 @@ func checkOSSIndex(purls []string, packageCount int) {
 	coordinates, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "Error auditing packages")
 
-	if count := audit.LogResults(config.NoColor, packageCount, coordinates, config.CveList.Cves); count > 0 {
+	if count := audit.LogResults(ossIndexConfig.NoColor, packageCount, coordinates, ossIndexConfig.CveList.Cves); count > 0 {
 		os.Exit(count)
 	}
 }
 
-func auditWithIQServer(purls []string, applicationID string, config configuration.Configuration) {
+func auditWithIQServer(purls []string, applicationID string, config configuration.IqConfiguration) {
 	res := iq.AuditPackages(purls, applicationID, config)
 
 	fmt.Println()
