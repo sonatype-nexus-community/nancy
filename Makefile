@@ -6,7 +6,10 @@ GOTEST=$(GOCMD) test
 BINARY_NAME=nancy
 BUILD_VERSION_LOCATION=github.com/sonatype-nexus-community/nancy/buildversion
 
-all: deps build test
+all: deps test lint build
+
+lint:
+	docker run --rm -v $$(pwd):/app -w /app golangci/golangci-lint:v1.23.1 golangci-lint run
 
 clean:
 	$(GOCLEAN)
