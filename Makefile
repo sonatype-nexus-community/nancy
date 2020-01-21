@@ -9,6 +9,8 @@ GOLANGCI_LINT_DOCKER=golangci/golangci-lint:v1.23.1
 
 all: deps test lint build
 
+.PHONY: lint clean deps env-setup build test integration-test package
+
 lint:
 	docker run --rm -v $$(pwd):/app -v $$(pwd)/.cache:/root/.cache -w /app $(GOLANGCI_LINT_DOCKER) /bin/sh -c "golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v"
 
