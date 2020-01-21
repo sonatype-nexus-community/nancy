@@ -9,7 +9,7 @@ BUILD_VERSION_LOCATION=github.com/sonatype-nexus-community/nancy/buildversion
 all: deps test lint build
 
 lint:
-	docker run --rm -v $$(pwd):/app -w /app golangci/golangci-lint:v1.23.1 golangci-lint run
+	docker run --rm -v $$(pwd):/app -w /app golangci/golangci-lint:v1.23.1 golangci-lint cache status --color always && golangci-lint run --color always -v
 
 clean:
 	$(GOCLEAN)
