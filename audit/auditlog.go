@@ -55,7 +55,7 @@ func logVulnerablePackage(noColor bool, idx int, packageCount int, coordinate ty
 
 	for j := 0; j < len(coordinate.Vulnerabilities); j++ {
 		if !coordinate.Vulnerabilities[j].Excluded {
-			fmt.Printf("\n%s\n%s\n\nID:%s\nDetails:%s",
+			fmt.Printf("\n%s\n%s\n\nID:%s\nDetails:%s\n",
 				coordinate.Vulnerabilities[j].Title,
 				coordinate.Vulnerabilities[j].Description,
 				coordinate.Vulnerabilities[j].Id,
