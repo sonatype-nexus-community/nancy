@@ -16,6 +16,7 @@
 package iq
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -43,7 +44,9 @@ const applicationsResponse = `{
 	]
 }`
 
-const thirdPartyAPIResultJson = `{"statusUrl": "api/v2/scan/applications/4bb67dcfc86344e3a483832f8c496419/status/9cee2b6366fc4d328edc318eae46b2cb"}`
+const thirdPartyAPIResultJson = `{
+		"statusUrl": "api/v2/scan/applications/4bb67dcfc86344e3a483832f8c496419/status/9cee2b6366fc4d328edc318eae46b2cb"
+}`
 
 const pollingResult = `{
 	"policyAction": "None",
@@ -63,6 +66,22 @@ func setupIqConfiguration() (config configuration.IqConfiguration) {
 func TestAuditPackages(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
+
+	jsonCoordinates, _ := json.Marshal([]types.Coordinate{
+		{
+			Coordinates:     "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+			Reference:       "https://ossindex.sonatype.org/component/pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+			Vulnerabilities: []types.Vulnerability{},
+		},
+		{
+			Coordinates:     "pkg:golang/github.com/go-yaml/yaml@v2.2.2",
+			Reference:       "https://ossindex.sonatype.org/component/pkg:golang/github.com/go-yaml/yaml@v2.2.2",
+			Vulnerabilities: []types.Vulnerability{},
+		},
+	})
+
+	httpmock.RegisterResponder("POST", "https://ossindex.sonatype.org/api/v3/component-report",
+		httpmock.NewStringResponder(200, string(jsonCoordinates)))
 
 	httpmock.RegisterResponder("GET", "http://sillyplace.com:8090/api/v2/applications?publicId=testapp",
 		httpmock.NewStringResponder(200, applicationsResponse))
