@@ -18,6 +18,7 @@ package ossindex
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -59,8 +60,13 @@ func getOssIndexUrl() string {
 
 func openDb(dbDir string) (db *badger.DB, err error) {
 	opts := badger.DefaultOptions
-	opts.Dir = dbDir + "/" + dbValueDirName
-	opts.ValueDir = dbDir + "/" + dbValueDirName
+	if flag.Lookup("test.v") == nil {
+		opts.Dir = dbDir + "/" + dbValueDirName
+		opts.ValueDir = dbDir + "/" + dbValueDirName
+	} else {
+		opts.Dir = dbDir + "/" + "test-nancy"
+		opts.ValueDir = dbDir + "/" + "test-nancy"
+	}
 	db, err = badger.Open(opts)
 	return
 }
