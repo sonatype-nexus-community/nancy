@@ -105,6 +105,8 @@ func processIQConfig(config configuration.IqConfiguration) {
 		flag.Usage()
 	}
 
+	printHeader()
+
 	log.Println("Nancy version: " + buildversion.BuildVersion)
 
 	doStdInAndParseForIQ(config)
