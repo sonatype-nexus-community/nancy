@@ -21,10 +21,12 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/golang/dep"
+	"github.com/mbndr/figlet4go"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/configuration"
@@ -53,6 +55,23 @@ func main() {
 	}
 }
 
+func printHeader() {
+	ascii := figlet4go.NewAsciiRender()
+	options := figlet4go.NewRenderOptions()
+	options.FontColor = []figlet4go.Color{
+		figlet4go.ColorGreen,
+	}
+	fontsPath, _ := os.Getwd()
+	fontsPath = path.Join(fontsPath, "fonts")
+	ascii.LoadFont(fontsPath)
+	options.FontName = "3D-ASCII"
+	renderStr, _ := ascii.RenderOpts("Nancy", options)
+	fmt.Print(renderStr)
+	options.FontName = "Small Slant"
+	renderStr, _ = ascii.RenderOpts("By Sonatype", options)
+	fmt.Print(renderStr)
+}
+
 func processConfig(config configuration.Configuration) {
 	if config.Help {
 		flag.Usage()
@@ -69,6 +88,8 @@ func processConfig(config configuration.Configuration) {
 	if config.Quiet {
 		log.SetOutput(ioutil.Discard)
 	}
+
+	printHeader()
 
 	log.Println("Nancy version: " + buildversion.BuildVersion)
 
@@ -191,10 +212,8 @@ func checkOSSIndex(purls []string, packageCount int, config configuration.Config
 func auditWithIQServer(purls []string, applicationID string, config configuration.IqConfiguration) {
 	res := iq.AuditPackages(purls, applicationID, config)
 
-	fmt.Println()
 	if res.IsError {
-		fmt.Println(fmt.Sprintf("Uh oh! There was an error with your request to Nexus IQ Server: %s", res.ErrorMessage))
-		os.Exit(1)
+		customerrors.Check(errors.New(res.ErrorMessage), "Uh oh! There was an error with your request to Nexus IQ Server")
 	}
 
 	if res.PolicyAction != "Failure" {

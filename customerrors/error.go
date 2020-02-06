@@ -15,8 +15,9 @@ package customerrors
 
 import (
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"os"
+
+	"github.com/sonatype-nexus-community/nancy/buildversion"
 )
 
 type SwError struct {

@@ -80,10 +80,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 
 	internalID := getInternalApplicationID(applicationID)
 	resultsFromOssIndex, err := ossindex.AuditPackages(purls)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	customerrors.Check(err, "There was an issue auditing packages using OSS Index")
 
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
 	statusURL := submitToThirdPartyAPI(sbom, internalID)
@@ -157,19 +154,14 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 	req.Header.Set("User-Agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
 
 	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	customerrors.Check(err, "There was an issue communicating with the Nexus IQ Third Party API")
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusAccepted {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		customerrors.Check(err, "There was an issue submitting your sbom to the Nexus IQ Third Party API")
+
 		var response thirdPartyAPIResult
 		json.Unmarshal(bodyBytes, &response)
 		return response.StatusURL
@@ -190,15 +182,14 @@ func pollIQServer(statusURL string, finished chan bool) {
 
 	if err != nil {
 		finished <- true
-		fmt.Println(err)
-		os.Exit(1)
+		customerrors.Check(err, "There was an error polling Nexus IQ Server")
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		customerrors.Check(err, "There was an error polling Nexus IQ Server")
+		customerrors.Check(err, "There was an error with processing the response from polling Nexus IQ Server")
 
 		var response types.StatusURLResult
 		json.Unmarshal(bodyBytes, &response)
