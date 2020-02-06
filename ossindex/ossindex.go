@@ -112,7 +112,6 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		return nil
 	})
 	if err != nil {
-		db.Close()
 		return nil, err
 	}
 
