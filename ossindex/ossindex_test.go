@@ -17,9 +17,6 @@ package ossindex
 
 import (
 	"encoding/json"
-	"github.com/dgraph-io/badger"
-	"github.com/sonatype-nexus-community/nancy/types"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -27,6 +24,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/dgraph-io/badger"
+	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/stretchr/testify/assert"
 )
 
 const purl = "pkg:github/BurntSushi/toml@0.3.1"

@@ -108,6 +108,7 @@ type StatusURLResult struct {
 type Sbom struct {
 	XMLName    xml.Name   `xml:"bom"`
 	Xmlns      string     `xml:"xmlns,attr"`
+	XMLNSV     string     `xml:"xmlns:v,attr"`
 	Version    string     `xml:"version,attr"`
 	Components Components `xml:"components"`
 }
@@ -119,9 +120,44 @@ type Components struct {
 
 // Component is a struct to list the properties of a component in a SBOM
 type Component struct {
-	Type    string `xml:"type,attr"`
-	BomRef  string `xml:"bom-ref,attr"`
-	Name    string `xml:"name"`
-	Version string `xml:"version"`
-	Purl    string `xml:"purl"`
+	Type            string          `xml:"type,attr"`
+	BomRef          string          `xml:"bom-ref,attr"`
+	Name            string          `xml:"name"`
+	Version         string          `xml:"version"`
+	Purl            string          `xml:"purl"`
+	Vulnerabilities Vulnerabilities `xml:"v:vulnerabilities,omitempty"`
+}
+
+type Vulnerabilities struct {
+	Vulnerability []SbomVulnerability `xml:"v:vulnerability,omitempty"`
+}
+
+type SbomVulnerability struct {
+	Ref         string    `xml:"ref,attr,omitempty"`
+	ID          string    `xml:"v:id"`
+	Source      Source    `xml:"v:source"`
+	Ratings     []Ratings `xml:"v:ratings"`
+	Description string    `xml:"v:description"`
+}
+
+type Ratings struct {
+	Rating Rating `xml:"v:rating"`
+}
+
+type Rating struct {
+	Score    Score  `xml:"v:score,omitempty"`
+	Severity string `xml:"v:severity,omitempty"`
+	Method   string `xml:"v:method,omitempty"`
+	Vector   string `xml:"v:vector,omitempty"`
+}
+
+type Score struct {
+	Base           decimal.Decimal `xml:"v:base,omitempty"`
+	Impact         string          `xml:"v:impact,omitempty"`
+	Exploitability string          `xml:"v:exploitability,omitempty"`
+}
+
+type Source struct {
+	Name string `xml:"name,attr"`
+	URL  string `xml:"v:url"`
 }

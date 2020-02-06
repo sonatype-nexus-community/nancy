@@ -29,6 +29,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/cyclonedx"
+	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -78,8 +79,14 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 	}
 
 	internalID := getInternalApplicationID(applicationID)
-	newPurls := getPurls(purls)
-	sbom := cyclonedx.ProcessPurlsIntoSBOM(newPurls)
+	resultsFromOssIndex, err := ossindex.AuditPackages(purls)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
+	fmt.Println(sbom)
 	statusURL := submitToThirdPartyAPI(sbom, internalID)
 
 	finished := make(chan bool)

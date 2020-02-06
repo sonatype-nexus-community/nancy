@@ -24,21 +24,50 @@ import (
 )
 
 const cycloneDXBomXmlns1_1 = "http://cyclonedx.org/schema/bom/1.1"
+const cycloneDXBomXmlns1_0_V = "http://cyclonedx.org/schema/ext/vulnerability/1.0"
 
 const version = "1"
 
 // ProcessPurlsIntoSBOM will take a slice of packageurl.PackageURL and convert them
 // into a minimal 1.1 CycloneDX sbom
-func ProcessPurlsIntoSBOM(purls []packageurl.PackageURL) string {
-	return processPurlsIntoSBOMSchema1_1(purls)
+func ProcessPurlsIntoSBOM(results []types.Coordinate) string {
+	return processPurlsIntoSBOMSchema1_1(results)
 }
 
-func processPurlsIntoSBOMSchema1_1(purls []packageurl.PackageURL) string {
+func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 	sbom := types.Sbom{}
 	sbom.Xmlns = cycloneDXBomXmlns1_1
+	sbom.XMLNSV = cycloneDXBomXmlns1_0_V
 	sbom.Version = version
-	for _, v := range purls {
-		component := types.Component{Type: "library", BomRef: v.String(), Purl: v.String(), Name: v.Name, Version: v.Version}
+	for _, v := range results {
+		purl, err := packageurl.FromString(v.Coordinates)
+		if err != nil {
+			fmt.Println(err)
+		}
+		component := types.Component{
+			Type:    "library",
+			BomRef:  purl.String(),
+			Purl:    purl.String(),
+			Name:    purl.Name,
+			Version: purl.Version,
+		}
+
+		if v.IsVulnerable() {
+			vulns := types.Vulnerabilities{}
+			for _, x := range v.Vulnerabilities {
+				rating := types.Rating{Score: types.Score{Base: x.CvssScore}}
+				rating.Vector = x.CvssVector
+				ratings := types.Ratings{}
+				ratings.Rating = rating
+				source := types.Source{Name: "ossindex"}
+				source.URL = x.Reference
+				vuln := types.SbomVulnerability{ID: x.Cve, Source: source, Description: x.Description, Ref: v.Coordinates}
+				vuln.Ratings = append(vuln.Ratings, ratings)
+				vulns.Vulnerability = append(vulns.Vulnerability, vuln)
+			}
+			component.Vulnerabilities = vulns
+		}
+
 		sbom.Components.Component = append(sbom.Components.Component, component)
 	}
 
