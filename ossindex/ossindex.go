@@ -74,7 +74,6 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 	// Initialize the cache
 	db, err := openDb(dbDir)
-	fmt.Println(dbDir)
 	customerrors.Check(err, "Error initializing cache")
 
 	defer func() {
