@@ -21,12 +21,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
-	"github.com/mbndr/figlet4go"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/configuration"
@@ -56,20 +55,8 @@ func main() {
 }
 
 func printHeader() {
-	ascii := figlet4go.NewAsciiRender()
-	options := figlet4go.NewRenderOptions()
-	options.FontColor = []figlet4go.Color{
-		figlet4go.ColorGreen,
-	}
-	fontsPath, _ := os.Getwd()
-	fontsPath = path.Join(fontsPath, "fonts")
-	ascii.LoadFont(fontsPath)
-	options.FontName = "3D-ASCII"
-	renderStr, _ := ascii.RenderOpts("Nancy", options)
-	fmt.Print(renderStr)
-	options.FontName = "Small Slant"
-	renderStr, _ = ascii.RenderOpts("By Sonatype", options)
-	fmt.Print(renderStr)
+	figure.NewFigure("Nancy", "larry3d", true).Print()
+	figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
 }
 
 func processConfig(config configuration.Configuration) {
