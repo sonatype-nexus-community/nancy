@@ -35,8 +35,6 @@ import (
 	"github.com/sonatype-nexus-community/nancy/parse"
 )
 
-var ossIndexConfig configuration.Configuration
-
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "iq" {
 		config, err := configuration.ParseIQ(os.Args[2:])
@@ -75,10 +73,10 @@ func processConfig(config configuration.Configuration) {
 	log.Println("Nancy version: " + buildversion.BuildVersion)
 
 	if config.UseStdIn {
-		doStdInAndParse()
+		doStdInAndParse(config)
 	}
 	if !config.UseStdIn {
-		doCheckExistenceAndParse()
+		doCheckExistenceAndParse(config)
 	}
 }
 
@@ -104,7 +102,7 @@ func processIQConfig(config configuration.IqConfiguration) {
 	doStdInAndParseForIQ(config)
 }
 
-func doStdInAndParse() {
+func doStdInAndParse(config configuration.Configuration) {
 	fi, err := os.Stdin.Stat()
 	if err != nil {
 		panic(err)
@@ -118,7 +116,7 @@ func doStdInAndParse() {
 		mod.ProjectList, _ = parse.GoList(scanner)
 		var purls = mod.ExtractPurlsFromManifest()
 		var packageCount = len(purls)
-		checkOSSIndex(purls, packageCount)
+		checkOSSIndex(purls, packageCount, config)
 	}
 }
 
@@ -139,10 +137,10 @@ func doStdInAndParseForIQ(config configuration.IqConfiguration) {
 	}
 }
 
-func doCheckExistenceAndParse() {
+func doCheckExistenceAndParse(config configuration.Configuration) {
 	switch {
-	case strings.Contains(ossIndexConfig.Path, "Gopkg.lock"):
-		workingDir := filepath.Dir(ossIndexConfig.Path)
+	case strings.Contains(config.Path, "Gopkg.lock"):
+		workingDir := filepath.Dir(config.Path)
 		if workingDir == "." {
 			workingDir, _ = os.Getwd()
 		}
@@ -153,7 +151,7 @@ func doCheckExistenceAndParse() {
 		}
 		project, err := ctx.LoadProject()
 		if err != nil {
-			customerrors.Check(err, fmt.Sprint("could not read lock at path "+ossIndexConfig.Path))
+			customerrors.Check(err, fmt.Sprint("could not read lock at path "+config.Path))
 		}
 		if project.Lock == nil {
 			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
@@ -161,31 +159,31 @@ func doCheckExistenceAndParse() {
 
 		purls, invalidPurls := packages.ExtractPurlsUsingDep(*project)
 		if len(invalidPurls) > 0 {
-			audit.LogInvalidSemVerWarning(ossIndexConfig.NoColor, ossIndexConfig.Quiet, invalidPurls)
+			audit.LogInvalidSemVerWarning(config.NoColor, config.Quiet, invalidPurls)
 		}
 
 		var packageCount = len(purls)
-		checkOSSIndex(purls, packageCount)
-	case strings.Contains(ossIndexConfig.Path, "go.sum"):
+		checkOSSIndex(purls, packageCount, config)
+	case strings.Contains(config.Path, "go.sum"):
 		mod := packages.Mod{}
-		mod.GoSumPath = ossIndexConfig.Path
+		mod.GoSumPath = config.Path
 		if mod.CheckExistenceOfManifest() {
-			mod.ProjectList, _ = parse.GoSum(ossIndexConfig.Path)
+			mod.ProjectList, _ = parse.GoSum(config.Path)
 			var purls = mod.ExtractPurlsFromManifest()
 			var packageCount = len(purls)
 
-			checkOSSIndex(purls, packageCount)
+			checkOSSIndex(purls, packageCount, config)
 		}
 	default:
 		os.Exit(3)
 	}
 }
 
-func checkOSSIndex(purls []string, packageCount int) {
+func checkOSSIndex(purls []string, packageCount int, config configuration.Configuration) {
 	coordinates, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "Error auditing packages")
 
-	if count := audit.LogResults(ossIndexConfig.NoColor, packageCount, coordinates, ossIndexConfig.CveList.Cves); count > 0 {
+	if count := audit.LogResults(config.NoColor, packageCount, coordinates, config.CveList.Cves); count > 0 {
 		os.Exit(count)
 	}
 }
