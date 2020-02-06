@@ -86,7 +86,6 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 	}
 
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
-	fmt.Println(sbom)
 	statusURL := submitToThirdPartyAPI(sbom, internalID)
 
 	finished := make(chan bool)
