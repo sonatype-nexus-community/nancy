@@ -24,10 +24,9 @@ require (
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/stretchr/testify v1.3.0
-	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2 // indirect
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	gopkg.in/h2non/gock.v1 v1.0.15
+	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a // indirect
 )
 
 go 1.13
