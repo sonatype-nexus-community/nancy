@@ -18,12 +18,12 @@ package cyclonedx
 import (
 	"testing"
 
+	"github.com/beevik/etree"
+	"github.com/package-url/packageurl-go"
 	"github.com/shopspring/decimal"
 	"github.com/sonatype-nexus-community/nancy/types"
-	"github.com/stretchr/testify/assert"
+	assert "gopkg.in/go-playground/assert.v1"
 )
-
-const expectedResult = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n <bom xmlns=\"http://cyclonedx.org/schema/bom/1.1\" xmlns:v=\"http://cyclonedx.org/schema/ext/vulnerability/1.0\" version=\"1\">\n      <components>\n           <component type=\"library\" bom-ref=\"pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2\">\n                <name>crypto</name>\n                <version>v0.0.0-20190308221718-c2843e01d9a2</version>\n                <purl>pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2</purl>\n                <v:vulnerabilities>\n                     <v:vulnerability ref=\"pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2\">\n                          <v:id>CVE-123</v:id>\n                          <v:source name=\"ossindex\">\n                               <v:url>http://www.google.com</v:url>\n                          </v:source>\n                          <v:ratings>\n                               <v:rating>\n                                    <v:score>\n                                         <v:base>5.8</v:base>\n                                    </v:score>\n                                    <v:vector>WhatsYourVectorVictor</v:vector>\n                               </v:rating>\n                          </v:ratings>\n                          <v:description>Hello I am a CVE</v:description>\n                     </v:vulnerability>\n                </v:vulnerabilities>\n           </component>\n           <component type=\"library\" bom-ref=\"pkg:golang/github.com/go-yaml/yaml@v2.2.2\">\n                <name>yaml</name>\n                <version>v2.2.2</version>\n                <purl>pkg:golang/github.com/go-yaml/yaml@v2.2.2</purl>\n                <v:vulnerabilities></v:vulnerabilities>\n           </component>\n      </components>\n </bom>"
 
 func TestProcessPurlsIntoSBOM(t *testing.T) {
 	results := []types.Coordinate{}
@@ -52,5 +52,78 @@ func TestProcessPurlsIntoSBOM(t *testing.T) {
 	})
 	result := ProcessPurlsIntoSBOM(results)
 
-	assert.Equal(t, result, expectedResult)
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromString(result); err != nil {
+		t.Error("Uh Oh")
+	}
+
+	root := doc.SelectElement("bom")
+	assert.Equal(t, root.Tag, "bom")
+	assert.Equal(t, root.Attr[0].Key, "xmlns")
+	assert.Equal(t, root.Attr[0].Value, "http://cyclonedx.org/schema/bom/1.1")
+	assert.Equal(t, root.Attr[1].Space, "xmlns")
+	assert.Equal(t, root.Attr[1].Key, "v")
+	assert.Equal(t, root.Attr[1].Value, "http://cyclonedx.org/schema/ext/vulnerability/1.0")
+	assert.Equal(t, root.Attr[2].Key, "version")
+	assert.Equal(t, root.Attr[2].Value, "1")
+	components := root.SelectElement("components")
+	for i, component := range components.SelectElements("component") {
+		coordinate, _ := packageurl.FromString(results[i].Coordinates)
+		assert.Equal(t, component.Tag, "component")
+		assert.Equal(t, component.Attr[0].Key, "type")
+		assert.Equal(t, component.Attr[0].Value, "library")
+		assert.Equal(t, component.Attr[1].Key, "bom-ref")
+		assert.Equal(t, component.Attr[1].Value, results[i].Coordinates)
+		name := component.SelectElement("name")
+		assert.Equal(t, name.Tag, "name")
+		assert.Equal(t, name.Text(), coordinate.Name)
+		version := component.SelectElement("version")
+		assert.Equal(t, version.Tag, "version")
+		assert.Equal(t, version.Text(), coordinate.Version)
+		purl := component.SelectElement("purl")
+		assert.Equal(t, purl.Tag, "purl")
+		assert.Equal(t, purl.Text(), coordinate.ToString())
+		if purl.Text() == "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2" {
+			vulnerabilities := component.SelectElement("vulnerabilities")
+			assert.Equal(t, vulnerabilities.Space, "v")
+			assert.Equal(t, vulnerabilities.Tag, "vulnerabilities")
+			for x, vulnerability := range vulnerabilities.SelectElements("vulnerability") {
+				assert.Equal(t, vulnerability.Tag, "vulnerability")
+				assert.Equal(t, vulnerability.Space, "v")
+				assert.Equal(t, vulnerability.Attr[0].Key, "ref")
+				assert.Equal(t, vulnerability.Attr[0].Value, coordinate.ToString())
+				id := vulnerability.SelectElement("id")
+				assert.Equal(t, id.Tag, "id")
+				assert.Equal(t, id.Space, "v")
+				assert.Equal(t, id.Text(), results[0].Vulnerabilities[x].Title)
+				source := vulnerability.SelectElement("source")
+				assert.Equal(t, source.Tag, "source")
+				assert.Equal(t, source.Space, "v")
+				assert.Equal(t, source.Attr[0].Key, "name")
+				assert.Equal(t, source.Attr[0].Value, "ossindex")
+				url := source.SelectElement("url")
+				assert.Equal(t, url.Tag, "url")
+				assert.Equal(t, url.Space, "v")
+				assert.Equal(t, url.Text(), results[0].Vulnerabilities[x].Reference)
+				ratings := vulnerability.SelectElement("ratings")
+				assert.Equal(t, ratings.Tag, "ratings")
+				assert.Equal(t, ratings.Space, "v")
+				rating := ratings.SelectElement("rating")
+				assert.Equal(t, rating.Tag, "rating")
+				assert.Equal(t, rating.Space, "v")
+				score := rating.SelectElement("score")
+				assert.Equal(t, score.Tag, "score")
+				assert.Equal(t, score.Space, "v")
+				base := score.SelectElement("base")
+				assert.Equal(t, base.Tag, "base")
+				assert.Equal(t, base.Space, "v")
+				assert.Equal(t, base.Text(), results[0].Vulnerabilities[x].CvssScore.String())
+				vector := rating.SelectElement("vector")
+				assert.Equal(t, vector.Tag, "vector")
+				assert.Equal(t, vector.Space, "v")
+				assert.Equal(t, vector.Text(), results[0].Vulnerabilities[x].CvssVector)
+			}
+		}
+	}
 }

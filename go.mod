@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/semver v0.0.0-20180403130225-3c92f33da7a8
 	github.com/Masterminds/vcs v1.13.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/beevik/etree v1.1.0
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/common-nighthawk/go-figure v0.0.0-20190529165535-67e0ed34491a
 	github.com/dgraph-io/badger v1.5.5-0.20181004181505-439fd464b155
@@ -29,6 +30,7 @@ require (
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
 	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a // indirect
+	gopkg.in/go-playground/assert.v1 v1.2.1
 )
 
 go 1.13
