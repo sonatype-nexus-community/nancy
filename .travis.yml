@@ -8,7 +8,7 @@ before_install:
 install:
   - go mod download
 script:
-  - go test ./... -v
+  - go test ./... -v -p 1
   - go env
   - GOOS=linux GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-linux.amd64-$VERSION
   - GOOS=darwin GOARCH=amd64 go build -ldflags="-X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion=$VERSION' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildTime=$time' -X 'github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit=$TRAVIS_COMMIT'" -o nancy-darwin.amd64-$VERSION
