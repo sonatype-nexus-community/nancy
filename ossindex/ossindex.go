@@ -64,6 +64,7 @@ func openDb(dbDir string) (db *badger.DB, err error) {
 		opts.Dir = dbDir + "/" + dbValueDirName
 		opts.ValueDir = dbDir + "/" + dbValueDirName
 	} else {
+		os.RemoveAll(dbDir + "/" + "test-nancy")
 		opts.Dir = dbDir + "/" + "test-nancy"
 		opts.ValueDir = dbDir + "/" + "test-nancy"
 	}
