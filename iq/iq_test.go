@@ -44,7 +44,7 @@ const applicationsResponse = `{
 	]
 }`
 
-const thirdPartyAPIResultJson = `{
+const thirdPartyAPIResultJSON = `{
 		"statusUrl": "api/v2/scan/applications/4bb67dcfc86344e3a483832f8c496419/status/9cee2b6366fc4d328edc318eae46b2cb"
 }`
 
@@ -87,7 +87,7 @@ func TestAuditPackages(t *testing.T) {
 		httpmock.NewStringResponder(200, applicationsResponse))
 
 	httpmock.RegisterResponder("POST", "http://sillyplace.com:8090/api/v2/scan/applications/4bb67dcfc86344e3a483832f8c496419/sources/nancy?stageId=develop",
-		httpmock.NewStringResponder(202, thirdPartyAPIResultJson))
+		httpmock.NewStringResponder(202, thirdPartyAPIResultJSON))
 
 	httpmock.RegisterResponder("GET", "http://sillyplace.com:8090/api/v2/scan/applications/4bb67dcfc86344e3a483832f8c496419/status/9cee2b6366fc4d328edc318eae46b2cb",
 		httpmock.NewStringResponder(200, pollingResult))

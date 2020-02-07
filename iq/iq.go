@@ -21,10 +21,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
@@ -62,15 +60,6 @@ type thirdPartyAPIResult struct {
 }
 
 var statusURLResp types.StatusURLResult
-
-func getPurls(purls []string) (result []packageurl.PackageURL) {
-	for _, v := range purls {
-		purl, _ := packageurl.FromString(v)
-		result = append(result, purl)
-	}
-
-	return
-}
 
 // AuditPackages accepts a slice of purls, public application ID, and configuration, and will submit these to
 // Nexus IQ Server for audit, and return a struct of StatusURLResult
@@ -127,19 +116,14 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
 
 	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	customerrors.Check(err, "There was an error communicating with Nexus IQ Server to get your internal application ID")
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		customerrors.Check(err, "There was an error retrieving the bytes of the response for getting your internal application ID from Nexus IQ Server")
+
 		var response applicationResponse
 		json.Unmarshal(bodyBytes, &response)
 		return response.Applications[0].ID
