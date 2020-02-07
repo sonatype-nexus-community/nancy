@@ -18,7 +18,6 @@ require (
 	github.com/jarcoal/httpmock v1.0.4
 	github.com/jmank88/nuts v0.3.0 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
-	github.com/mbndr/figlet4go v0.0.0-20190224160619-d6cef5b186ea
 	github.com/nightlyone/lockfile v0.0.0-20180618180623-0ad87eef1443 // indirect
 	github.com/package-url/packageurl-go v0.1.0
 	github.com/pelletier/go-toml v1.4.0 // indirect
@@ -29,7 +28,7 @@ require (
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a // indirect
+	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )
 

@@ -71,8 +71,6 @@ Options:
 		return config, err
 	}
 
-	fmt.Print(args)
-
 	return config, nil
 }
 

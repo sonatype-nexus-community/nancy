@@ -201,6 +201,7 @@ func checkOSSIndex(purls []string, packageCount int, config configuration.Config
 func auditWithIQServer(purls []string, applicationID string, config configuration.IqConfiguration) {
 	res := iq.AuditPackages(purls, applicationID, config)
 
+	fmt.Println()
 	if res.IsError {
 		customerrors.Check(errors.New(res.ErrorMessage), "Uh oh! There was an error with your request to Nexus IQ Server")
 	}
