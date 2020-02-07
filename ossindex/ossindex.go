@@ -83,11 +83,11 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 	defer db.Close()
 	customerrors.Check(err, "Error initializing cache")
 
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("error closing db: %s\n", err)
-		}
-	}()
+	// defer func() {
+	// 	if err := db.Close(); err != nil {
+	// 		log.Printf("error closing db: %s\n", err)
+	// 	}
+	// }()
 
 	var newPurls []string
 	var results []types.Coordinate
