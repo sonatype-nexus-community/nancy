@@ -86,6 +86,7 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 	// Initialize the cache
 	db, err := openDb(dbDir)
+	defer db.Close()
 	customerrors.Check(err, "Error initializing cache")
 
 	var newPurls []string
@@ -111,7 +112,6 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		return nil
 	})
 	if err != nil {
-		db.Close()
 		return nil, err
 	}
 
@@ -125,41 +125,35 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 			req, err := setupRequest(jsonStr)
 			if err != nil {
-				db.Close()
 				return nil, err
 			}
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				db.Close()
 				return nil, err
 			}
 
 			if resp.StatusCode == http.StatusOK {
 				log.Printf("Response: %+v\n", resp)
 			} else {
-				db.Close()
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					db.Close()
 					log.Printf("error closing response body: %s\n", err)
 				}
 			}()
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				db.Close()
 				return nil, err
 			}
 
 			// Process results
 			var coordinates []types.Coordinate
 			if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
-				db.Close()
 				return nil, err
 			}
 
@@ -173,19 +167,16 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJson), time.Hour*12)
 					if err != nil {
-						db.Close()
 						return err
 					}
 				}
 
 				return nil
 			}); err != nil {
-				db.Close()
 				return nil, err
 			}
 		}
 	}
-	db.Close()
 	return results, nil
 }
 
