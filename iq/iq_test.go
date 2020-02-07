@@ -132,3 +132,36 @@ func TestAuditPackagesIqDownOrUnreachable(t *testing.T) {
 
 	assert.Panics(t, func() { AuditPackages(purls, "testapp", setupIqConfiguration()) }, "The code did not panic")
 }
+
+func TestAuditPackagesIqUpButBadThirdPartyAPIResponse(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	jsonCoordinates, _ := json.Marshal([]types.Coordinate{
+		{
+			Coordinates:     "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+			Reference:       "https://ossindex.sonatype.org/component/pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+			Vulnerabilities: []types.Vulnerability{},
+		},
+		{
+			Coordinates:     "pkg:golang/github.com/go-yaml/yaml@v2.2.2",
+			Reference:       "https://ossindex.sonatype.org/component/pkg:golang/github.com/go-yaml/yaml@v2.2.2",
+			Vulnerabilities: []types.Vulnerability{},
+		},
+	})
+
+	httpmock.RegisterResponder("POST", "https://ossindex.sonatype.org/api/v3/component-report",
+		httpmock.NewStringResponder(200, string(jsonCoordinates)))
+
+	httpmock.RegisterResponder("GET", "http://sillyplace.com:8090/api/v2/applications?publicId=testapp",
+		httpmock.NewStringResponder(200, applicationsResponse))
+
+	httpmock.RegisterResponder("POST", "http://sillyplace.com:8090/api/v2/scan/applications/4bb67dcfc86344e3a483832f8c496419/sources/nancy?stageId=develop",
+		httpmock.NewBytesResponder(500, []byte("")))
+
+	var purls []string
+	purls = append(purls, "pkg:golang/github.com/go-yaml/yaml@v2.2.2")
+	purls = append(purls, "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2")
+
+	assert.Panics(t, func() { AuditPackages(purls, "testapp", setupIqConfiguration()) }, "The code did not panic")
+}

@@ -91,6 +91,9 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
 	statusURL := submitToThirdPartyAPI(sbom, internalID)
+	if statusURL == "" {
+		panic(fmt.Sprintf("There was an issue submitting your sbom to the Nexus IQ Third Party API, sbom: %s", sbom))
+	}
 
 	finished := make(chan bool)
 
