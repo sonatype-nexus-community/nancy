@@ -34,13 +34,19 @@ Options:
   -version
         prints current nancy version
 
-IQ Options:
+$ > nancy iq
+Usage:
+        go list -m all | nancy iq [options]
+
+Options:
   -application string
         Specify application ID for request
+  -max-retries int
+        Specify maximum number of tries to poll Nexus IQ Server (default 300)
   -server-url string
         Specify Nexus IQ Server URL/port (default "http://localhost:8070")
   -stage string
-        Specify stage for application (default "build")
+        Specify stage for application (default "develop")
   -token string
         Specify token/password for request (default "admin123")
   -user string

@@ -42,6 +42,7 @@ type IqConfiguration struct {
 	Stage       string
 	Application string
 	Server      string
+	MaxRetries  int
 }
 
 var unixComments = regexp.MustCompile(`#.*$`)
@@ -53,6 +54,7 @@ func ParseIQ(args []string) (config IqConfiguration, err error) {
 	iqCommand.StringVar(&config.Server, "server-url", "http://localhost:8070", "Specify Nexus IQ Server URL/port")
 	iqCommand.StringVar(&config.Application, "application", "", "Specify application ID for request")
 	iqCommand.StringVar(&config.Stage, "stage", "develop", "Specify stage for application")
+	iqCommand.IntVar(&config.MaxRetries, "max-retries", 300, "Specify maximum number of tries to poll Nexus IQ Server")
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, `Usage:

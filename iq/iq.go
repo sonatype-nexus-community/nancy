@@ -43,7 +43,10 @@ const (
 	pollInterval = 1 * time.Second
 )
 
-var localConfig configuration.IqConfiguration
+var (
+	localConfig configuration.IqConfiguration
+	tries       = 0
+)
 
 // Internal types for use by this package, don't need to expose them
 type applicationResponse struct {
@@ -95,7 +98,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 			case <-finished:
 				return
 			default:
-				pollIQServer(fmt.Sprintf("%s/%s", localConfig.Server, statusURL), finished)
+				pollIQServer(fmt.Sprintf("%s/%s", localConfig.Server, statusURL), finished, localConfig.MaxRetries)
 				time.Sleep(pollInterval)
 			}
 		}
@@ -170,7 +173,11 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 	return ""
 }
 
-func pollIQServer(statusURL string, finished chan bool) {
+func pollIQServer(statusURL string, finished chan bool, maxRetries int) {
+	if tries > maxRetries {
+		finished <- true
+	}
+
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", statusURL, nil)
 
@@ -199,6 +206,7 @@ func pollIQServer(statusURL string, finished chan bool) {
 		}
 		finished <- true
 	}
+	tries++
 	fmt.Print(".")
 }
 
