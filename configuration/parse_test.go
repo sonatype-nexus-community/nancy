@@ -98,6 +98,31 @@ CVN-543`)
 	}
 }
 
+func TestConfigParseIQ(t *testing.T) {
+	tests := map[string]struct {
+		args           []string
+		expectedConfig IqConfiguration
+		expectedErr    error
+	}{
+		"defaults":                               {args: []string{"iq"}, expectedConfig: IqConfiguration{Help: false, Version: false, User: "admin", Token: "admin123", Stage: "develop", Server: "http://localhost:8070", MaxRetries: 300}, expectedErr: nil},
+		"user token non defaults":                {args: []string{"iq", "-user", "nonadmin", "-token", "admin1234"}, expectedConfig: IqConfiguration{Help: false, Version: false, User: "nonadmin", Token: "admin1234", Stage: "develop", Server: "http://localhost:8070", MaxRetries: 300}, expectedErr: nil},
+		"server-url non default":                {args: []string{"iq", "-server-url", "http://localhost:8090"}, expectedConfig: IqConfiguration{Help: false, Version: false, User: "admin", Token: "admin123", Stage: "develop", Server: "http://localhost:8090", MaxRetries: 300}, expectedErr: nil},
+		"max-retries non default":                {args: []string{"iq", "-max-retries", "200"}, expectedConfig: IqConfiguration{Help: false, Version: false, User: "admin", Token: "admin123", Stage: "develop", Server: "http://localhost:8070", MaxRetries: 200}, expectedErr: nil},
+		"stage non default":                {args: []string{"iq", "-stage", "build"}, expectedConfig: IqConfiguration{Help: false, Version: false, User: "admin", Token: "admin123", Stage: "build", Server: "http://localhost:8070", MaxRetries: 300}, expectedErr: nil},
+		"specify application":                {args: []string{"iq", "-application", "testapp"}, expectedConfig: IqConfiguration{Help: false, Version: false, User: "admin", Token: "admin123", Stage: "develop", Server: "http://localhost:8070", MaxRetries: 300, Application: "testapp"}, expectedErr: nil},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			setup()
+
+			actualConfig, actualErr := ParseIQ(test.args[1:])
+			assert.Equal(t, test.expectedErr, actualErr)
+			assert.Equal(t, test.expectedConfig, actualConfig)
+		})
+	}
+}
+
 func setupCVEExcludeFile(t *testing.T, fileContents string) (file *os.File) {
 	file, err := ioutil.TempFile("", "prefix")
 	if err != nil {
