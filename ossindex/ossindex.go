@@ -44,12 +44,6 @@ var (
 	ossIndexUrl string
 )
 
-// func ClearCache() {
-// 	db, err := openDb(getDatabaseDirectory())
-// 	customerrors.Check(err, "Error opening database")
-// 	defer db.Close()
-// }
-
 func getDatabaseDirectory() (dbDir string) {
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
