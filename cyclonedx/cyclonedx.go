@@ -25,7 +25,7 @@ import (
 )
 
 const cycloneDXBomXmlns1_1 = "http://cyclonedx.org/schema/bom/1.1"
-const cycloneDXBomXmlns1_0_V = "http://cyclonedx.org/schema/ext/vulnerability/1.0"
+const cycloneDXBomXmlns1_0V = "http://cyclonedx.org/schema/ext/vulnerability/1.0"
 
 const version = "1"
 
@@ -38,7 +38,7 @@ func ProcessPurlsIntoSBOM(results []types.Coordinate) string {
 func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 	sbom := types.Sbom{}
 	sbom.Xmlns = cycloneDXBomXmlns1_1
-	sbom.XMLNSV = cycloneDXBomXmlns1_0_V
+	sbom.XMLNSV = cycloneDXBomXmlns1_0V
 	sbom.Version = version
 	for _, v := range results {
 		purl, err := packageurl.FromString(v.Coordinates)
