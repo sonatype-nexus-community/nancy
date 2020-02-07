@@ -44,6 +44,12 @@ var (
 	ossIndexUrl string
 )
 
+// func ClearCache() {
+// 	db, err := openDb(getDatabaseDirectory())
+// 	customerrors.Check(err, "Error opening database")
+// 	defer db.Close()
+// }
+
 func getDatabaseDirectory() (dbDir string) {
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
@@ -64,7 +70,6 @@ func openDb(dbDir string) (db *badger.DB, err error) {
 		opts.Dir = dbDir + "/" + dbValueDirName
 		opts.ValueDir = dbDir + "/" + dbValueDirName
 	} else {
-		os.RemoveAll(dbDir + "/" + "test-nancy")
 		opts.Dir = dbDir + "/" + "test-nancy"
 		opts.ValueDir = dbDir + "/" + "test-nancy"
 	}
@@ -81,14 +86,7 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 	// Initialize the cache
 	db, err := openDb(dbDir)
-	defer db.Close()
 	customerrors.Check(err, "Error initializing cache")
-
-	// defer func() {
-	// 	if err := db.Close(); err != nil {
-	// 		log.Printf("error closing db: %s\n", err)
-	// 	}
-	// }()
 
 	var newPurls []string
 	var results []types.Coordinate
@@ -113,6 +111,7 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		return nil
 	})
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -126,35 +125,41 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 			req, err := setupRequest(jsonStr)
 			if err != nil {
+				db.Close()
 				return nil, err
 			}
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
+				db.Close()
 				return nil, err
 			}
 
 			if resp.StatusCode == http.StatusOK {
 				log.Printf("Response: %+v\n", resp)
 			} else {
+				db.Close()
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
+					db.Close()
 					log.Printf("error closing response body: %s\n", err)
 				}
 			}()
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
+				db.Close()
 				return nil, err
 			}
 
 			// Process results
 			var coordinates []types.Coordinate
 			if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
+				db.Close()
 				return nil, err
 			}
 
@@ -168,16 +173,19 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJson), time.Hour*12)
 					if err != nil {
+						db.Close()
 						return err
 					}
 				}
 
 				return nil
 			}); err != nil {
+				db.Close()
 				return nil, err
 			}
 		}
 	}
+	db.Close()
 	return results, nil
 }
 
