@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/package-url/packageurl-go"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -41,9 +42,8 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 	sbom.Version = version
 	for _, v := range results {
 		purl, err := packageurl.FromString(v.Coordinates)
-		if err != nil {
-			fmt.Println(err)
-		}
+		customerrors.Check(err, "Error parsing purl from given coordinate")
+
 		component := types.Component{
 			Type:    "library",
 			BomRef:  purl.String(),

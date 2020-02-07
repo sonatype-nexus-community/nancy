@@ -82,6 +82,10 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 	}
 
 	internalID := getInternalApplicationID(applicationID)
+	if internalID == "" {
+		panic(fmt.Sprintf("Internal ID for %s could not be found, or Nexus IQ Server is down", applicationID))
+	}
+
 	resultsFromOssIndex, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "There was an issue auditing packages using OSS Index")
 
