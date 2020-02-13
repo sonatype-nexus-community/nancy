@@ -69,8 +69,6 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	log.Println("Nancy version: " + buildversion.BuildVersion)
-
 	if config.UseStdIn == true {
 		doStdInAndParse()
 	} else {
