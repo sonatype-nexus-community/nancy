@@ -17,8 +17,7 @@ func TestJsonOutpu(t *testing.T) {
 	logMessage, e := formatter.Format(&entry)
 
 	assert.Nil(t, e)
-	assert.Equal(t, `{"another":"me","stuff":1}
-`, string(logMessage))
+	assert.Equal(t, `{"another":"me","stuff":1}`, string(logMessage))
 }
 
 func TestJsonPrettyPrintOutpu(t *testing.T) {
@@ -35,6 +34,5 @@ func TestJsonPrettyPrintOutpu(t *testing.T) {
 	assert.Equal(t, `{
   "another": "me",
   "stuff": 1
-}
-`, string(logMessage))
+}`, string(logMessage))
 }
