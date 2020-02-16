@@ -123,7 +123,7 @@ func doCheckExistenceAndParse() {
 			mod.ProjectList, _ = parse.GoSum(config.Path)
 			var purls = mod.ExtractPurlsFromManifest()
 
-			checkOSSIndex(purls, []string{})
+			checkOSSIndex(purls, nil)
 		}
 	default:
 		os.Exit(3)
