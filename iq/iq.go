@@ -63,7 +63,7 @@ var statusURLResp types.StatusURLResult
 
 // AuditPackages accepts a slice of purls, public application ID, and configuration, and will submit these to
 // Nexus IQ Server for audit, and return a struct of StatusURLResult
-func AuditPackages(purls []string, applicationID string, config configuration.IqConfiguration) types.StatusURLResult {
+func AuditPackages(purls []string, applicationID string, config configuration.IqConfiguration) (types.StatusURLResult, error) {
 	localConfig = config
 
 	if localConfig.User == "admin" && localConfig.Token == "admin123" {
@@ -72,7 +72,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 
 	internalID := getInternalApplicationID(applicationID)
 	if internalID == "" {
-		panic(fmt.Sprintf("Internal ID for %s could not be found, or Nexus IQ Server is down", applicationID))
+		return statusURLResp, fmt.Errorf("Internal ID for %s could not be found, or Nexus IQ Server is down", applicationID)
 	}
 
 	resultsFromOssIndex, err := ossindex.AuditPackages(purls)
@@ -81,12 +81,12 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
 	statusURL := submitToThirdPartyAPI(sbom, internalID)
 	if statusURL == "" {
-		panic(fmt.Sprintf("There was an issue submitting your sbom to the Nexus IQ Third Party API, sbom: %s", sbom))
+		return statusURLResp, fmt.Errorf("There was an issue submitting your sbom to the Nexus IQ Third Party API, sbom: %s", sbom)
 	}
 
-	finished := make(chan bool)
-
 	statusURLResp = types.StatusURLResult{}
+
+	finished := make(chan bool)
 
 	go func() {
 		for {
@@ -101,7 +101,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 	}()
 
 	<-finished
-	return statusURLResp
+	return statusURLResp, nil
 }
 
 func getInternalApplicationID(applicationID string) (internalID string) {

@@ -96,7 +96,7 @@ func TestAuditPackages(t *testing.T) {
 	purls = append(purls, "pkg:golang/github.com/go-yaml/yaml@v2.2.2")
 	purls = append(purls, "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2")
 
-	result := AuditPackages(purls, "testapp", setupIqConfiguration())
+	result, _ := AuditPackages(purls, "testapp", setupIqConfiguration())
 
 	statusExpected := types.StatusURLResult{PolicyAction: "None", ReportHTMLURL: "http://sillyplace.com:8090/ui/links/application/test-app/report/95c4c14e", IsError: false}
 
@@ -130,7 +130,10 @@ func TestAuditPackagesIqDownOrUnreachable(t *testing.T) {
 	purls = append(purls, "pkg:golang/github.com/go-yaml/yaml@v2.2.2")
 	purls = append(purls, "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2")
 
-	assert.Panics(t, func() { AuditPackages(purls, "testapp", setupIqConfiguration()) }, "The code did not panic")
+	_, err := AuditPackages(purls, "testapp", setupIqConfiguration())
+	if err == nil {
+		t.Error("There is an error")
+	}
 }
 
 func TestAuditPackagesIqUpButBadThirdPartyAPIResponse(t *testing.T) {
@@ -163,5 +166,8 @@ func TestAuditPackagesIqUpButBadThirdPartyAPIResponse(t *testing.T) {
 	purls = append(purls, "pkg:golang/github.com/go-yaml/yaml@v2.2.2")
 	purls = append(purls, "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2")
 
-	assert.Panics(t, func() { AuditPackages(purls, "testapp", setupIqConfiguration()) }, "The code did not panic")
+	_, err := AuditPackages(purls, "testapp", setupIqConfiguration())
+	if err == nil {
+		t.Error("There is an error")
+	}
 }
