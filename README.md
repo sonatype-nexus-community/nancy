@@ -19,6 +19,8 @@ nancy [options] </path/to/Gopkg.lock>
 nancy [options] </path/to/go.sum>
 
 Options:
+  -clean-cache
+    	Deletes local cache directory
   -exclude-vulnerability value
         Comma separated list of CVEs to exclude
   -exclude-vulnerability-file string
