@@ -25,13 +25,14 @@ import (
 )
 
 type Configuration struct {
-	UseStdIn bool
-	Help     bool
-	NoColor  bool
-	Quiet    bool
-	Version  bool
-	CveList  types.CveListFlag
-	Path     string
+	UseStdIn   bool
+	Help       bool
+	NoColor    bool
+	Quiet      bool
+	Version    bool
+	CleanCache bool
+	CveList    types.CveListFlag
+	Path       string
 }
 
 type IqConfiguration struct {
@@ -84,6 +85,7 @@ func Parse(args []string) (Configuration, error) {
 	flag.BoolVar(&noColorDeprecated, "noColor", false, "indicate output should not be colorized (deprecated: please use no-color)")
 	flag.BoolVar(&config.Quiet, "quiet", false, "indicate output should contain only packages with vulnerabilities")
 	flag.BoolVar(&config.Version, "version", false, "prints current nancy version")
+	flag.BoolVar(&config.CleanCache, "clean-cache", false, "Deletes local cache directory")
 	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
 	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
 

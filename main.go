@@ -72,6 +72,14 @@ func processConfig(config configuration.Configuration) {
 		os.Exit(0)
 	}
 
+	if config.CleanCache {
+		if err := ossindex.RemoveCacheDirectory(); err != nil {
+			fmt.Printf("ERROR: cleaning cache: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	if config.Quiet {
 		log.SetOutput(ioutil.Discard)
 	}
@@ -161,7 +169,7 @@ func doCheckExistenceAndParse(config configuration.Configuration) {
 		}
 		project, err := ctx.LoadProject()
 		if err != nil {
-			customerrors.Check(err, fmt.Sprint("could not read lock at path "+config.Path))
+			customerrors.Check(err, fmt.Sprintf("could not read lock at path %s", config.Path))
 		}
 		if project.Lock == nil {
 			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")

@@ -51,6 +51,11 @@ func getDatabaseDirectory() (dbDir string) {
 	return usr.HomeDir + "/.ossindex"
 }
 
+// RemoveCacheDirectory deletes the local database directory.
+func RemoveCacheDirectory() error {
+	return os.RemoveAll(getDatabaseDirectory())
+}
+
 func getOssIndexUrl() string {
 	if ossIndexUrl == "" {
 		ossIndexUrl = defaultOssIndexUrl
