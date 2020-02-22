@@ -22,6 +22,9 @@ jobs:
       - run: go mod download
       - run: gotestsum --junitfile $TEST_RESULTS/unit-tests.xml
       - run: go build 
+      - run: cd testdata/dep && ../../nancy Gopkg.lock && cd -
+      - run: ./nancy go.sum
+      - run: go list -m all | ./nancy
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
@@ -31,6 +34,7 @@ jobs:
           destination: raw-test-output
       - store_test_results:
           path: /tmp/test-results
+
 
 workflows:
   version: 2
