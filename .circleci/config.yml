@@ -21,7 +21,7 @@ jobs:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run: go mod download
       - run: go get -u github.com/jstemmer/go-junit-report
-      - run: go test -v 2>&1 | go-junit-report > $TEST_RESULTS/report.xml
+      - run: go test ./... -v 2>&1 | go-junit-report > $TEST_RESULTS/report.xml
       - run: go build 
       - run: cd testdata/dep && ../../nancy Gopkg.lock && cd -
       - run: ./nancy go.sum
