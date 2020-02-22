@@ -5,7 +5,7 @@ builds:
   -
     ldflags:
       - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion={{.Version}}"
-      - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildTime={{time "01/02/2006"}}"
+      - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildTime={{time "2006-01-02T15:04:05Z07:00"}}"
       - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit={{.FullCommit}}"
     env:
       - CGO_ENABLED=0
