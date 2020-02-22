@@ -1,0 +1,43 @@
+version: 2.1
+workflows:
+  main:
+    jobs:
+      - release:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+      - build:
+        docker:
+          - image: circleci/golang:1.13
+            environment:
+              GO111MODULE: "on"
+              TEST_RESULTS: /tmp/test-results
+        working_directory: /go/src/github.com/sonatype-nexus-community/nancy
+        steps:
+          - checkout
+          - run: mkdir -p $TEST_RESULTS
+          - restore_cache:
+              keys:
+                - go-mod-v1-{{ checksum "go.sum" }}
+          - run: go mod download
+          - run: go get github.com/jstemmer/go-junit-report
+          - run: trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
+          - run: go build 
+          - save_cache:
+              key: go-mod-v1-{{ checksum "go.sum" }}
+              paths:
+                - "/go/pkg/mod"
+          - store_artifacts:
+              path: /tmp/test-results
+              destination: raw-test-output
+          - store_test_results:
+              path: /tmp/test-results
+jobs:
+  release:
+    docker:
+      - image: circleci/golang:1.13
+    steps:
+      - checkout
+      - run: curl -sL https://git.io/goreleaser | bash

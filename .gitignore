@@ -5,3 +5,4 @@ nancy
 #IntelliJ
 .idea
 *.iml
+dist/
