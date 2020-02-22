@@ -2,22 +2,41 @@ before:
   hooks:
     - go mod download
 builds:
-- env:
-  - CGO_ENABLED=0
+  -
+    ldflags:
+      - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion={{.Version}}"
+      - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildTime={{time "01/02/2006"}}"
+      - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit={{.FullCommit}}"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+
 archives:
-- replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
+  - 
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "{{ .ProjectName }}checksums.txt"
+  algorithm: sha256
+
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  name_template: "{{ .Tag }}-next-{{.FullCommit}}"
+
 changelog:
   sort: asc
   filters:
     exclude:
     - '^docs:'
     - '^test:'
+
+release:
+  github:
+    owner: sonatype-nexus-community
+    name: nancy
+  disable: true
