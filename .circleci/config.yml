@@ -20,8 +20,7 @@ jobs:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run: go mod download
-      - run: go get github.com/jstemmer/go-junit-report
-      - run: trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
+      - run: gotestsum --junitfile unit-tests.xml
       - run: go build 
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
