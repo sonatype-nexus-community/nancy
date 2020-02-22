@@ -5,6 +5,8 @@
     <a href="https://travis-ci.org/sonatype-nexus-community/nancy"><img src="https://travis-ci.org/sonatype-nexus-community/nancy.svg?branch=master" alt="Build Status"></img></a>
 </p>
 
+[![CircleCI](https://circleci.com/gh/sonatype-nexus-community/nancy.svg?style=svg)](https://circleci.com/gh/sonatype-nexus-community/nancy)
+
 # Nancy
 
 `nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype OSS Index](https://ossindex.sonatype.org/).
