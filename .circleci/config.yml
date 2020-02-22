@@ -20,7 +20,7 @@ jobs:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run: go mod download
-      - run: gotestsum --junitfile unit-tests.xml
+      - run: gotestsum --junitfile $TEST_RESULTS/unit-tests.xml
       - run: go build 
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
