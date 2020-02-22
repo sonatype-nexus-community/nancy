@@ -2,13 +2,18 @@ version: 2.1
 workflows:
   main:
     jobs:
-      - release:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
-      - build:
+      release:
+        docker:
+          - image: circleci/golang:1.13
+        steps:
+          - checkout
+          - run: curl -sL https://git.io/goreleaser | bash
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+      build:
         docker:
           - image: circleci/golang:1.13
             environment:
@@ -34,10 +39,15 @@ workflows:
               destination: raw-test-output
           - store_test_results:
               path: /tmp/test-results
-jobs:
-  release:
-    docker:
-      - image: circleci/golang:1.13
-    steps:
-      - checkout
-      - run: curl -sL https://git.io/goreleaser | bash
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - release:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
