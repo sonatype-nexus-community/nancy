@@ -1,7 +1,10 @@
 <p align="center">
     <img src="https://github.com/sonatype-nexus-community/nancy/blob/master/docs/images/nancy.png" width="350"/>
 </p>
+
 <p align="center">
+    <a href="https://gitter.im/sonatype-nexus-community/nancy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge">
+    <img src="https://badges.gitter.im/sonatype-nexus-community/nancy.svg" alt="Gitter"></img></a>
     <a href="https://travis-ci.org/sonatype-nexus-community/nancy"><img src="https://travis-ci.org/sonatype-nexus-community/nancy.svg?branch=master" alt="Build Status"></img></a>
 </p>
 
@@ -152,4 +155,4 @@ Have fun creating and using `nancy` and the [Sonatype OSS Index](https://ossinde
 
 Looking to contribute to our code but need some help? There's a few ways to get information:
 
-* Chat with us on [Gitter](https://gitter.im/sonatype/nexus-developers)
+* Chat with us on [Gitter](https://gitter.im/sonatype-nexus-community/nancy)
