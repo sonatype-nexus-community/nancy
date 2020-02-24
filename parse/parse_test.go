@@ -65,4 +65,5 @@ func TestGoSumError(t *testing.T) {
 	if err == nil {
 		t.Error(err)
 	}
+	t.Error("Intentional")
 }
