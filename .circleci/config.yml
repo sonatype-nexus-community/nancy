@@ -32,10 +32,9 @@ jobs:
           paths:
             - "/go/pkg/mod"
       - store_artifacts:
-          path: /tmp/test-results
-          destination: raw-test-output
+          path: /tmp/test-results/report.xml
       - store_test_results:
-          path: /tmp/test-results
+          path: /tmp/test-results/report.xml
 
 
 workflows:
