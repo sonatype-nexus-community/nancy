@@ -15,14 +15,14 @@ jobs:
     working_directory: /go/src/github.com/sonatype-nexus-community/nancy
     steps:
       - checkout
-      - run: mkdir -p $TEST_RESULTS
+      - run: mkdir -p $TEST_RESULTS/gotest
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run: go mod download
       - run: go mod tidy
       - run: go get -u github.com/jstemmer/go-junit-report
-      - run: go test ./... -v 2>&1 | go-junit-report > $TEST_RESULTS/report.xml
+      - run: go test ./... -v 2>&1 | go-junit-report > $TEST_RESULTS/gotest/report.xml
       - run: go build 
       - run: cd testdata/dep && ../../nancy Gopkg.lock && cd -
       - run: ./nancy go.sum
@@ -32,9 +32,9 @@ jobs:
           paths:
             - "/go/pkg/mod"
       - store_artifacts:
-          path: /tmp/test-results/report.xml
+          path: /tmp/test-results/
       - store_test_results:
-          path: /tmp/test-results/report.xml
+          path: /tmp/test-results/
 
 
 workflows:
