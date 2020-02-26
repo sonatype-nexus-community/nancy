@@ -4,9 +4,7 @@
 
 <p align="center">
     <a href="https://circleci.com/gh/sonatype-nexus-community/nancy"><img src="https://circleci.com/gh/sonatype-nexus-community/nancy.svg?style=svg" alt="Circle CI Build Status"></img></a>
-
-    <a href="https://gitter.im/sonatype-nexus-community/nancy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge">
-    <img src="https://badges.gitter.im/sonatype-nexus-community/nancy.svg" alt="Gitter"></img></a>
+    <a href="https://gitter.im/sonatype-nexus-community/nancy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge"><img src="https://badges.gitter.im/sonatype-nexus-community/nancy.svg" alt="Gitter"></img></a>
 </p>
 
 # Nancy
