@@ -23,7 +23,6 @@ import (
 	"testing"
 )
 
-
 func TestExtractPurlsFromManifestUsingDep(t *testing.T) {
 	path, projectDir, err := doGoPathSimulatedSetup(t)
 	defer filet.CleanUp(t)
@@ -74,12 +73,12 @@ func doGoPathSimulatedSetup(t *testing.T) (string, string, error) {
 	path := filet.TmpDir(t, dir)
 	fakeGoPath := fmt.Sprint(path, "/src")
 	e := os.Mkdir(fakeGoPath, os.ModePerm)
-	if e != nil{
+	if e != nil {
 		t.Error(e)
 	}
 	projectDir := fmt.Sprint(fakeGoPath, "/projectname")
 	e = os.Mkdir(projectDir, os.ModePerm)
-	if e != nil{
+	if e != nil {
 		t.Error(e)
 	}
 	lockBytes, _ := ioutil.ReadFile("../testdata/dep/Gopkg.lock")
@@ -103,7 +102,6 @@ func doGoPathSimulatedSetup(t *testing.T) (string, string, error) {
 	}
 	return path, projectDir, e
 }
-
 
 func inArray(val string, array []string) (exists bool) {
 	exists = false

@@ -20,7 +20,6 @@ import (
 
 var testGoSumName = "go.sum"
 
-
 // Simulate calling parse.GopkgLock()
 func getProjectList() (projectList types.ProjectList) {
 	appendProject("github.com/AndreasBriese/bbloom", "", &projectList)

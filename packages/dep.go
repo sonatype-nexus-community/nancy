@@ -20,7 +20,7 @@ import (
 )
 
 func ExtractPurlsUsingDep(project dep.Project) ([]string, []string) {
-	lockedProjects := project.Lock.P;
+	lockedProjects := project.Lock.P
 	var purls []string
 	var invalidPurls []string
 	for _, lockedProject := range lockedProjects {
@@ -37,7 +37,7 @@ func ExtractPurlsUsingDep(project dep.Project) ([]string, []string) {
 			_, err := semver.NewVersion(version)
 			if err != nil {
 				invalidPurls = append(invalidPurls, purl)
-			}else{
+			} else {
 				purls = append(purls, purl)
 			}
 		}
