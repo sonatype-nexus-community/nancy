@@ -14,13 +14,14 @@ builds:
       - linux
       - darwin
       - windows
+    goarch:
+      - amd64
+      - 386
 
 archives:
   - 
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    format_overrides:
-      - goos: windows
-        format: zip
+    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
+    format: binary
 
 checksum:
   name_template: "{{ .ProjectName }}checksums.txt"
@@ -40,4 +41,3 @@ release:
   github:
     owner: sonatype-nexus-community
     name: nancy
-  disable: true
