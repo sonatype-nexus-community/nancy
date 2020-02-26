@@ -2,10 +2,8 @@
     <img src="https://github.com/sonatype-nexus-community/nancy/blob/master/docs/images/nancy.png" width="350"/>
 </p>
 <p align="center">
-    <a href="https://travis-ci.org/sonatype-nexus-community/nancy"><img src="https://travis-ci.org/sonatype-nexus-community/nancy.svg?branch=master" alt="Build Status"></img></a>
+    <a href="https://circleci.com/gh/sonatype-nexus-community/nancy"><img src="https://circleci.com/gh/sonatype-nexus-community/nancy.svg?style=svg" alt="Circle CI Build Status"></img></a>
 </p>
-
-[![CircleCI](https://circleci.com/gh/sonatype-nexus-community/nancy.svg?style=svg)](https://circleci.com/gh/sonatype-nexus-community/nancy)
 
 # Nancy
 
@@ -81,6 +79,8 @@ CVN-543
 
 You can see an example of using `nancy` in Travis-CI at [this intentionally vulnerable repo we made](https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project).
 
+Nancy as well runs on it self (delicious dog food!) in CircleCI, in a myriad of fashions. You can see how we do that here in [our repo's CircleCI config](https://github.com/sonatype-nexus-community/nancy/blob/master/.circleci/config.yml).
+
 ### DISCLAIMER
 
 A portion of the golang ecosystem doesn't use proper versions, and instead uses a commit hash to resolve your dependency. Dependencies like this will not work with
@@ -109,11 +109,11 @@ At current time you have a few options:
 
 ### Download release binary
 
-Each commit to master creates a new release binary, and if you'd like to skip building from source, you can download a binary similar to:
+Each tag pushed to this repo creates a new release binary, and if you'd like to skip building from source, you can download a binary similar to:
 
 ```console
 $ curl -o /path/where/you/want/nancy \
-  https://github.com/sonatype-nexus-community/nancy/releases/download/0.0.4/nancy-linux.amd64-0.0.4
+  https://github.com/sonatype-nexus-community/nancy/releases/download/v0.0.44/nancy-darwin.amd64-v0.0.44
 ```
 
 ## Development
