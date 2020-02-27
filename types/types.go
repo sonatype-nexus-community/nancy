@@ -45,6 +45,7 @@ type Coordinate struct {
 	Coordinates     string
 	Reference       string
 	Vulnerabilities []Vulnerability
+	InvalidSemVer   bool
 }
 
 func (c Coordinate) IsVulnerable() bool {
@@ -58,7 +59,7 @@ func (c Coordinate) IsVulnerable() bool {
 
 //Mark Excluded=true for all Vulnerabilities of the given Coordinate if their Title is in the list of exclusions
 func (c *Coordinate) ExcludeVulnerabilities(exclusions []string) {
-	for i, _ := range c.Vulnerabilities {
+	for i := range c.Vulnerabilities {
 		c.Vulnerabilities[i].maybeExcludeVulnerability(exclusions)
 	}
 }

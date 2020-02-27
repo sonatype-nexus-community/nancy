@@ -24,6 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sonatype-nexus-community/nancy/types"
+
 	figure "github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
 	"github.com/sonatype-nexus-community/nancy/audit"
@@ -133,8 +135,7 @@ func doStdInAndParse(config configuration.Configuration) {
 		scanner := bufio.NewScanner(os.Stdin)
 		mod.ProjectList, _ = parse.GoList(scanner)
 		var purls = mod.ExtractPurlsFromManifest()
-		var packageCount = len(purls)
-		checkOSSIndex(purls, packageCount, config)
+		checkOSSIndex(purls, nil, config)
 	}
 }
 
@@ -175,33 +176,34 @@ func doCheckExistenceAndParse(config configuration.Configuration) {
 			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
 		}
 
-		purls, invalidPurls := packages.ExtractPurlsUsingDep(*project)
-		if len(invalidPurls) > 0 {
-			audit.LogInvalidSemVerWarning(config.NoColor, config.Quiet, invalidPurls)
-		}
+		purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
 
-		var packageCount = len(purls)
-		checkOSSIndex(purls, packageCount, config)
+		checkOSSIndex(purls, invalidPurls, config)
 	case strings.Contains(config.Path, "go.sum"):
 		mod := packages.Mod{}
 		mod.GoSumPath = config.Path
 		if mod.CheckExistenceOfManifest() {
 			mod.ProjectList, _ = parse.GoSum(config.Path)
 			var purls = mod.ExtractPurlsFromManifest()
-			var packageCount = len(purls)
 
-			checkOSSIndex(purls, packageCount, config)
+			checkOSSIndex(purls, nil, config)
 		}
 	default:
 		os.Exit(3)
 	}
 }
 
-func checkOSSIndex(purls []string, packageCount int, config configuration.Configuration) {
+func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) {
+	var packageCount = len(purls)
 	coordinates, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "Error auditing packages")
 
-	if count := audit.LogResults(config.NoColor, packageCount, coordinates, config.CveList.Cves); count > 0 {
+	var invalidCoordinates []types.Coordinate
+	for _, invalidpurl := range invalidpurls {
+		invalidCoordinates = append(invalidCoordinates, types.Coordinate{Coordinates: invalidpurl, InvalidSemVer: true})
+	}
+
+	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
 		os.Exit(count)
 	}
 }
