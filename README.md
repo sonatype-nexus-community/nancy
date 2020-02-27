@@ -9,16 +9,16 @@
 
 # Nancy
 
-`nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype OSS Index](https://ossindex.sonatype.org/).
+`nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype OSS Index](https://ossindex.sonatype.org/), and as well, works with Nexus IQ Server, allowing you a smooth experience as a Golang developer, using the best tools in the market!
 
 ### Usage
 
 ```
  ~ > nancy
 Usage:
-go list -m all | nancy [options]
-nancy [options] </path/to/Gopkg.lock>
-nancy [options] </path/to/go.sum>
+        nancy [options] </path/to/Gopkg.lock>
+        nancy [options] </path/to/go.sum>
+        nancy iq [options]
 
 Options:
   -clean-cache
@@ -26,9 +26,9 @@ Options:
   -exclude-vulnerability value
     	Comma separated list of CVEs to exclude
   -exclude-vulnerability-file string
-    	Path to a file containing newline separated CVEs to be excluded (default "./.nancy-ignore")
+        Path to a file containing newline separated CVEs to be excluded (default "./.nancy-ignore")
   -help
-    	provides help text on how to use nancy
+        provides help text on how to use nancy
   -no-color
     	indicate output should not be colorized
   -output string
@@ -36,12 +36,30 @@ Options:
   -quiet
     	indicate output should contain only packages with vulnerabilities
   -version
-    	prints current nancy version
+        prints current nancy version
+
+$ > nancy iq
+Usage:
+        go list -m all | nancy iq [options]
+
+Options:
+  -application string
+        Specify application ID for request
+  -max-retries int
+        Specify maximum number of tries to poll Nexus IQ Server (default 300)
+  -server-url string
+        Specify Nexus IQ Server URL/port (default "http://localhost:8070")
+  -stage string
+        Specify stage for application (default "develop")
+  -token string
+        Specify token/password for request (default "admin123")
+  -user string
+        Specify username for request (default "admin")
 ```
 
 `nancy` currently works for projects that use `dep` or `go mod` for dependencies.
 
-### Options
+### OSS Index Options
 
 #### Quiet mode
 
@@ -78,6 +96,46 @@ CVN-111
 CVN-123 # Mitigated the risk of this since we only use one method in this package and the affected code doesn't matter
 CVN-543
 ``` 
+
+### Nexus IQ Server Options
+
+By default, assuming you have an out of the box Nexus IQ Server running, you can run `nancy` like so:
+
+`go list -m all | ./nancy iq -application public-application-id`
+
+It is STRONGLY suggested that you do not do this, and we will warn you on output if you are.
+
+A more logical use of `nancy` against Nexus IQ Server will look like so:
+
+`go list -m all | ./nancy iq -application public-application-id -user nondefaultuser -token yourtoken -server-url http://adifferentserverurl:port -stage develop`
+
+Options for stage are as follows:
+
+`build, develop, stage-release, release`
+
+By default `-stage` will be `develop`.
+
+Successful submissions to Nexus IQ Server will result in either an OS exit of 0, meaning all is clear and a response akin to:
+
+```
+Wonderbar! No policy violations reported for this audit!
+Report URL:  http://reportURL
+```
+
+Failed submissions will either indicate failure because of an issue with processing the request, or a policy violation. Both will exit with a code of 1, allowing you to fail your build in CI. Policy Violation failures will include a report URL where you can learn more about why you encountered a failure.
+
+Policy violations will look like:
+
+```
+Hi, Nancy here, you have some policy violations to clean up!
+Report URL:  http://reportURL
+```
+
+Errors processing in Nexus IQ Server will look like:
+
+```
+Uh oh! There was an error with your request to Nexus IQ Server: <error>
+```
 
 #### Output
 

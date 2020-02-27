@@ -18,6 +18,7 @@ package ossindex
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -64,8 +65,13 @@ func getOssIndexUrl() string {
 
 func openDb(dbDir string) (db *badger.DB, err error) {
 	opts := badger.DefaultOptions
-	opts.Dir = dbDir + "/" + dbValueDirName
-	opts.ValueDir = dbDir + "/" + dbValueDirName
+	if flag.Lookup("test") == nil {
+		opts.Dir = dbDir + "/" + dbValueDirName
+		opts.ValueDir = dbDir + "/" + dbValueDirName
+	} else {
+		opts.Dir = dbDir + "/" + "test-nancy"
+		opts.ValueDir = dbDir + "/" + "test-nancy"
+	}
 	db, err = badger.Open(opts)
 	return
 }
@@ -80,12 +86,7 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 	// Initialize the cache
 	db, err := openDb(dbDir)
 	customerrors.Check(err, "Error initializing cache")
-
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("error closing db: %s\n", err)
-		}
-	}()
+	defer db.Close()
 
 	var newPurls []string
 	var results []types.Coordinate

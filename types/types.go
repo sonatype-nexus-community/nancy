@@ -14,6 +14,7 @@
 package types
 
 import (
+	"encoding/xml"
 	"fmt"
 	"strings"
 
@@ -90,4 +91,74 @@ func (cve *CveListFlag) Set(value string) error {
 	cve.Cves = strings.Split(strings.ReplaceAll(value, " ", ""), ",")
 
 	return nil
+}
+
+// IQ Types
+
+// StatusURLResult is a struct to let the consumer know what the response from Nexus IQ Server was
+type StatusURLResult struct {
+	PolicyAction  string `json:"policyAction"`
+	ReportHTMLURL string `json:"reportHtmlUrl"`
+	IsError       bool   `json:"isError"`
+	ErrorMessage  string `json:"errorMessage"`
+}
+
+// CycloneDX Types
+
+// Sbom is a struct to begin assembling a minimal SBOM
+type Sbom struct {
+	XMLName    xml.Name   `xml:"bom"`
+	Xmlns      string     `xml:"xmlns,attr"`
+	XMLNSV     string     `xml:"xmlns:v,attr"`
+	Version    string     `xml:"version,attr"`
+	Components Components `xml:"components"`
+}
+
+// Components is a struct to list the components in a SBOM
+type Components struct {
+	Component []Component `xml:"component"`
+}
+
+// Component is a struct to list the properties of a component in a SBOM
+type Component struct {
+	Type            string          `xml:"type,attr"`
+	BomRef          string          `xml:"bom-ref,attr"`
+	Name            string          `xml:"name"`
+	Version         string          `xml:"version"`
+	Purl            string          `xml:"purl"`
+	Vulnerabilities Vulnerabilities `xml:"v:vulnerabilities,omitempty"`
+}
+
+type Vulnerabilities struct {
+	Vulnerability []SbomVulnerability `xml:"v:vulnerability,omitempty"`
+}
+
+type SbomVulnerability struct {
+	Ref         string    `xml:"ref,attr,omitempty"`
+	ID          string    `xml:"v:id"`
+	Source      Source    `xml:"v:source"`
+	Ratings     []Ratings `xml:"v:ratings"`
+	Description string    `xml:"v:description"`
+}
+
+type Ratings struct {
+	Rating Rating `xml:"v:rating"`
+}
+
+type Rating struct {
+	Score    Score  `xml:"v:score,omitempty"`
+	Severity string `xml:"v:severity,omitempty"`
+	Method   string `xml:"v:method,omitempty"`
+	Vector   string `xml:"v:vector,omitempty"`
+}
+
+type Score struct {
+	Base           decimal.Decimal `xml:"v:base,omitempty"`
+	Impact         string          `xml:"v:impact,omitempty"`
+	Exploitability string          `xml:"v:exploitability,omitempty"`
+}
+
+type Source struct {
+	Name string `xml:"name,attr"`
+	URL  string `xml:"v:url"`
 }

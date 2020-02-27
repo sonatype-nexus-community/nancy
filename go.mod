@@ -6,16 +6,20 @@ require (
 	github.com/Masterminds/semver v0.0.0-20180403130225-3c92f33da7a8
 	github.com/Masterminds/vcs v1.13.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/beevik/etree v1.1.0
 	github.com/boltdb/bolt v1.3.1 // indirect
+	github.com/common-nighthawk/go-figure v0.0.0-20190529165535-67e0ed34491a
 	github.com/dgraph-io/badger v1.5.5-0.20181004181505-439fd464b155
 	github.com/dgryski/go-farm v0.0.0-20180109070241-2de33835d102 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/golang/dep v0.5.4
 	github.com/golang/protobuf v1.2.0 // indirect
-	github.com/google/go-cmp v0.4.0 // indirect
+	github.com/google/go-cmp v0.3.1 // indirect
+	github.com/jarcoal/httpmock v1.0.4
 	github.com/jmank88/nuts v0.3.0 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
 	github.com/nightlyone/lockfile v0.0.0-20180618180623-0ad87eef1443 // indirect
+	github.com/package-url/packageurl-go v0.1.0
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
@@ -25,6 +29,8 @@ require (
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
+	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
+	gopkg.in/go-playground/assert.v1 v1.2.1
 )
 
 go 1.13

@@ -18,33 +18,50 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/sonatype-nexus-community/nancy/types"
+
+	figure "github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/iq"
 	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 )
 
-var config configuration.Configuration
-
 func main() {
-	var err error
-	config, err = configuration.Parse(os.Args[1:])
-	if err != nil {
-		flag.Usage()
-		os.Exit(1)
+	if len(os.Args) > 1 && os.Args[1] == "iq" {
+		config, err := configuration.ParseIQ(os.Args[2:])
+		if err != nil {
+			flag.Usage()
+			os.Exit(1)
+		}
+		processIQConfig(config)
+	} else {
+		ossIndexConfig, err := configuration.Parse(os.Args[1:])
+		if err != nil {
+			flag.Usage()
+			os.Exit(1)
+		}
+		processConfig(ossIndexConfig)
 	}
+}
 
+func printHeader() {
+	figure.NewFigure("Nancy", "larry3d", true).Print()
+	figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
+}
+
+func processConfig(config configuration.Configuration) {
 	if config.Help {
 		flag.Usage()
 		os.Exit(0)
@@ -69,14 +86,43 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	if config.UseStdIn == true {
-		doStdInAndParse()
-	} else {
-		doCheckExistenceAndParse()
+	printHeader()
+
+	log.Println("Nancy version: " + buildversion.BuildVersion)
+
+	if config.UseStdIn {
+		doStdInAndParse(config)
+	}
+	if !config.UseStdIn {
+		doCheckExistenceAndParse(config)
 	}
 }
 
-func doStdInAndParse() {
+func processIQConfig(config configuration.IqConfiguration) {
+	if config.Help {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	if config.Version {
+		fmt.Println(buildversion.BuildVersion)
+		_, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
+		_, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
+		os.Exit(0)
+	}
+
+	if config.Application == "" {
+		flag.Usage()
+	}
+
+	printHeader()
+
+	log.Println("Nancy version: " + buildversion.BuildVersion)
+
+	doStdInAndParseForIQ(config)
+}
+
+func doStdInAndParse(config configuration.Configuration) {
 	fi, err := os.Stdin.Stat()
 	if err != nil {
 		panic(err)
@@ -89,11 +135,28 @@ func doStdInAndParse() {
 		scanner := bufio.NewScanner(os.Stdin)
 		mod.ProjectList, _ = parse.GoList(scanner)
 		var purls = mod.ExtractPurlsFromManifest()
-		checkOSSIndex(purls, []string{})
+		checkOSSIndex(purls, nil, config)
 	}
 }
 
-func doCheckExistenceAndParse() {
+func doStdInAndParseForIQ(config configuration.IqConfiguration) {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		panic(err)
+	}
+	if (fi.Mode() & os.ModeNamedPipe) == 0 {
+		flag.Usage()
+		os.Exit(1)
+	} else {
+		mod := packages.Mod{}
+		scanner := bufio.NewScanner(os.Stdin)
+		mod.ProjectList, _ = parse.GoList(scanner)
+		var purls = mod.ExtractPurlsFromManifestForIQ()
+		auditWithIQServer(purls, config.Application, config)
+	}
+}
+
+func doCheckExistenceAndParse(config configuration.Configuration) {
 	switch {
 	case strings.Contains(config.Path, "Gopkg.lock"):
 		workingDir := filepath.Dir(config.Path)
@@ -115,7 +178,7 @@ func doCheckExistenceAndParse() {
 
 		purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
 
-		checkOSSIndex(purls, invalidPurls)
+		checkOSSIndex(purls, invalidPurls, config)
 	case strings.Contains(config.Path, "go.sum"):
 		mod := packages.Mod{}
 		mod.GoSumPath = config.Path
@@ -123,14 +186,14 @@ func doCheckExistenceAndParse() {
 			mod.ProjectList, _ = parse.GoSum(config.Path)
 			var purls = mod.ExtractPurlsFromManifest()
 
-			checkOSSIndex(purls, nil)
+			checkOSSIndex(purls, nil, config)
 		}
 	default:
 		os.Exit(3)
 	}
 }
 
-func checkOSSIndex(purls []string, invalidpurls []string) {
+func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) {
 	var packageCount = len(purls)
 	coordinates, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "Error auditing packages")
@@ -142,5 +205,25 @@ func checkOSSIndex(purls []string, invalidpurls []string) {
 
 	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
 		os.Exit(count)
+	}
+}
+
+func auditWithIQServer(purls []string, applicationID string, config configuration.IqConfiguration) {
+	res, err := iq.AuditPackages(purls, applicationID, config)
+	customerrors.Check(err, "Uh oh! There was an error with your request to Nexus IQ Server")
+
+	fmt.Println()
+	if res.IsError {
+		customerrors.Check(errors.New(res.ErrorMessage), "Uh oh! There was an error with your request to Nexus IQ Server")
+	}
+
+	if res.PolicyAction != "Failure" {
+		fmt.Println("Wonderbar! No policy violations reported for this audit!")
+		fmt.Println("Report URL: ", res.ReportHTMLURL)
+		os.Exit(0)
+	} else {
+		fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
+		fmt.Println("Report URL: ", res.ReportHTMLURL)
+		os.Exit(1)
 	}
 }

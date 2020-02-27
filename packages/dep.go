@@ -14,9 +14,10 @@
 package packages
 
 import (
+	"strings"
+
 	"github.com/Masterminds/semver"
 	"github.com/golang/dep"
-	"strings"
 )
 
 func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
