@@ -65,7 +65,7 @@ func getOssIndexUrl() string {
 
 func openDb(dbDir string) (db *badger.DB, err error) {
 	opts := badger.DefaultOptions
-	if flag.Lookup("test") == nil {
+	if flag.Lookup("test") == nil || flag.Lookup("test.v") == nil {
 		opts.Dir = dbDir + "/" + dbValueDirName
 		opts.ValueDir = dbDir + "/" + dbValueDirName
 	} else {
