@@ -31,8 +31,6 @@ Options:
     	provides help text on how to use nancy
   -no-color
     	indicate output should not be colorized
-  -noColor
-    	indicate output should not be colorized (deprecated: please use no-color)
   -output string
     	Styling for output format. ["json-pretty" "text" "csv" "json"] (default "text")
   -quiet
