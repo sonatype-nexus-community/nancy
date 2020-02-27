@@ -43,6 +43,7 @@ workflows:
     jobs:
       - build
       - release:
+          context: nancy
           filters:
             branches:
               ignore: /.*/
