@@ -38,7 +38,6 @@ changelog:
     - '^test:'
 
 release:
-  disable: true
   github:
     owner: sonatype-nexus-community
     name: nancy
@@ -48,7 +47,6 @@ dockers:
     goos: linux
     goarch: amd64
     dockerfile: Dockerfile
-    skip_push: true
     build_flag_templates:
     - "--label=author='DJ Schleen'"
     - "--label=version={{ .Version }}"
