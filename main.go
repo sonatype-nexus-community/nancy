@@ -113,7 +113,7 @@ func doCheckExistenceAndParse() {
 			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
 		}
 
-		purls, invalidPurls := packages.ExtractPurlsUsingDep(*project)
+		purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
 
 		checkOSSIndex(purls, invalidPurls)
 	case strings.Contains(config.Path, "go.sum"):
