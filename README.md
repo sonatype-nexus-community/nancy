@@ -74,7 +74,7 @@ We publish a few different flavors for convenience:
 - Latest if you want to be on the bleeding edge ex: `latest`
 - The full tag for those concerned with 100% reliability of underlying Nancy ex: `v0.1.1`
 - The major version (we respect semver) ex: `v0`
-- The major/minor version (we respect semver) ex: `v0.1`
+- The major/minor version (seriously, we respect semver) ex: `v0.1`
 
 ### OSS Index Options
 
