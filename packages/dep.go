@@ -37,7 +37,7 @@ func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
 			_, err := semver.NewVersion(version)
 			if err != nil {
 				invalidPurls = append(invalidPurls, purl)
-			}else{
+			} else {
 				purls = append(purls, purl)
 			}
 		}
