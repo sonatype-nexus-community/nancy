@@ -45,7 +45,6 @@ changelog:
     - '^test:'
 
 release:
-  disable: true
   ids:
     - default
   github:
@@ -62,4 +61,3 @@ brews:
 
     homepage: https://github.com/sonatype-nexus-community/nancy
     description: "A tool to check for vulnerabilities in your Golang dependencies, powered by Sonatype OSS Index"
-    skip_upload: true
