@@ -31,17 +31,10 @@ build: env-setup
 	$(GOBUILD) -o $(BINARY_NAME) -v
 
 test:
-	$(GOTEST) -race -v -count=1 ./...
+	$(GOTEST) -race -v -count=1 -p=1 ./... 2>&1
 
 integration-test: env-setup build
-	cd testdata/dep && ../../$(BINARY_NAME) Gopkg.lock && cd -
-	./$(BINARY_NAME) go.sum
-	$(GOCMD) list -m all | ./$(BINARY_NAME)
-
-package: env-setup
-	export VERSION=$(git describe --abbrev=0 --tags) && export LAST_PREFIX=$(cut -d'.' -f1,2 <<< $VERSION) && export LAST_SUFFIX=$(cut -d'.' -f3 <<< $VERSION) && export NEW_SUFFIX=$(expr "$LAST_SUFFIX" + 1) && export VERSION="$LAST_PREFIX.$NEW_SUFFIX"
-	echo $(VERSION)
-	GOARCH=amd64
-	GOOS=linux $(GOBUILD) -ldflags="-X '$(BUILD_VERSION_LOCATION).BuildVersion=$(VERSION)' -X '$(BUILD_VERSION_LOCATION).BuildTime=$(time)' -X '$(BUILD_VERSION_LOCATION).BuildCommit=$(TRAVIS_COMMIT)'" -o $(BINARY_NAME)-linux.amd64-$(VERSION)
-	GOOS=darwin $(GOBUILD) -ldflags="-X '$(BUILD_VERSION_LOCATION).BuildVersion=$(VERSION)' -X '$(BUILD_VERSION_LOCATION).BuildTime=$(time)' -X '$(BUILD_VERSION_LOCATION).BuildCommit=$(TRAVIS_COMMIT)'" -o $(BINARY_NAME)-darwin.amd64-$(VERSION)
-	GOOS=windows $(GOBUILD) -ldflags="-X '$(BUILD_VERSION_LOCATION).BuildVersion=$(VERSION)' -X '$(BUILD_VERSION_LOCATION).BuildTime=$(time)' -X '$(BUILD_VERSION_LOCATION).BuildCommit=$(TRAVIS_COMMIT)'" -o $(BINARY_NAME)-windows.amd64-$(VERSION).exe
+	cd packages/testdata && ../../$(BINARY_NAME) Gopkg.lock && cd -
+    ./nancy go.sum
+    go list -m all | ./$(BINARY_NAME)
+    go list -m all > deps.out && ./$(BINARY_NAME) < deps.out
