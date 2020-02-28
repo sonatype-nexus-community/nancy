@@ -57,7 +57,7 @@ brews:
       - homebrew
     github:
       owner: sonatype-nexus-community
-      name: nancy-homebrew-tap
+      name: homebrew-nancy-tap
 
     homepage: https://github.com/sonatype-nexus-community/nancy
     description: "A tool to check for vulnerabilities in your Golang dependencies, powered by Sonatype OSS Index"
