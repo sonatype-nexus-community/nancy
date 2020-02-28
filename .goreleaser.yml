@@ -41,3 +41,18 @@ release:
   github:
     owner: sonatype-nexus-community
     name: nancy
+
+dockers:
+  - 
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile
+    build_flag_templates:
+    - "--label=author='DJ Schleen'"
+    - "--label=version={{ .Version }}"
+    - "--label=maintainer='sonatype-nexus-community'"
+    image_templates:
+    - "sonatypecommunity/nancy:latest"
+    - "sonatypecommunity/nancy:{{ .Tag }}"
+    - "sonatypecommunity/nancy:v{{ .Major }}"
+    - "sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}"

@@ -59,6 +59,23 @@ Options:
 
 `nancy` currently works for projects that use `dep` or `go mod` for dependencies.
 
+#### Docker usage
+
+<p align="center">
+    <img src="https://github.com/sonatype-nexus-community/nancy/blob/master/docs/images/nancy_docker.png" width="350"/>
+</p>
+
+`nancy` now comes in a boat! For ease of use, we've dockerized `nancy`. To use our Dockerfile:
+
+`go list -m all | docker run -i sonatypecommunity/nancy:latest`
+
+We publish a few different flavors for convenience:
+
+- Latest if you want to be on the bleeding edge ex: `latest`
+- The full tag for those concerned with 100% reliability of underlying Nancy ex: `v0.1.1`
+- The major version (we respect semver) ex: `v0`
+- The major/minor version (seriously, we respect semver) ex: `v0.1`
+
 ### OSS Index Options
 
 #### Quiet mode
