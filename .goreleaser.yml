@@ -20,8 +20,15 @@ builds:
 
 archives:
   - 
+    id: default
     name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
     format: binary
+  -
+    id: homebrew
+    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
+    format_overrides:
+      - goos: windows
+        format: zip
 
 checksum:
   name_template: "{{ .ProjectName }}checksums.txt"
@@ -38,9 +45,22 @@ changelog:
     - '^test:'
 
 release:
+  ids:
+    - default
   github:
     owner: sonatype-nexus-community
     name: nancy
+
+brews:
+  -
+    ids:
+      - homebrew
+    github:
+      owner: sonatype-nexus-community
+      name: nancy-homebrew-tap
+
+    homepage: https://github.com/sonatype-nexus-community/nancy
+    description: "A tool to check for vulnerabilities in your Golang dependencies, powered by Sonatype OSS Index"
 
 dockers:
   - 
