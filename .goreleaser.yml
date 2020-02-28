@@ -47,6 +47,7 @@ changelog:
 release:
   ids:
     - default
+    - homebrew
   github:
     owner: sonatype-nexus-community
     name: nancy
