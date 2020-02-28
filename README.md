@@ -59,6 +59,17 @@ Options:
 
 `nancy` currently works for projects that use `dep` or `go mod` for dependencies.
 
+#### Homebrew usage
+
+`nancy` can be installed using `brew`:
+
+- `brew tap sonatype-nexus-community/homebrew-nancy-tap`
+- `brew install nancy`
+
+`brew` formulae are created and published to that tap with each new release, so you can use `brew` to upgrade, etc... as you wish.
+
+You can see more about the formulae, etc... at [this repo](https://github.com/sonatype-nexus-community/homebrew-nancy-tap).
+
 #### Docker usage
 
 <p align="center">
