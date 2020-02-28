@@ -124,6 +124,14 @@ CVN-111
 CVN-123 # Mitigated the risk of this since we only use one method in this package and the affected code doesn't matter
 CVN-543
 ``` 
+It's also possible to define expiring ignores. Meaning that if you define a date on a vulnerability ignore until that date it will be ignored and once that 
+date is passed it will now be reported by nancy if its still an issue. Format to add an expiring ignore looks as follows. They can also be followed up by comments 
+to provide context to as why its been ignored until that date.    
+
+```
+CVN-111 until=2021-01-01
+CVN-543 until=2018-02-12 #Waiting on release from third party. Should be out before this date but gives us a little time to fix it. 
+```
 
 ### Nexus IQ Server Options
 
