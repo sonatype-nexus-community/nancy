@@ -5,7 +5,7 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 BINARY_NAME=nancy
 BUILD_VERSION_LOCATION=github.com/sonatype-nexus-community/nancy/buildversion
-GOLANGCI_LINT_DOCKER=golangci/golangci-lint:v1.23.1
+GOLANGCI_LINT_DOCKER=golangci/golangci-lint:v1.23.6
 
 all: deps test lint build
 
