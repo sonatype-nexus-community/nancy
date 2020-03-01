@@ -21,11 +21,11 @@ builds:
 archives:
   -
     id: default
-    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-{{ .Version }}"
+    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
     format: binary
   -
     id: homebrew
-    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-{{ .Version }}"
+    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
     format_overrides:
       - goos: windows
         format: zip
