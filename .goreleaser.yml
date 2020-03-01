@@ -19,13 +19,13 @@ builds:
       - 386
 
 archives:
-  - 
+  -
     id: default
-    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
+    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-{{ .Version }}"
     format: binary
   -
     id: homebrew
-    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
+    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-{{ .Version }}"
     format_overrides:
       - goos: windows
         format: zip
@@ -64,11 +64,14 @@ brews:
     description: "A tool to check for vulnerabilities in your Golang dependencies, powered by Sonatype OSS Index"
 
 dockers:
-  - 
+  -
     goos: linux
     goarch: amd64
-    dockerfile: Dockerfile
+    dockerfile: build/Dockerfile
+    binaries:
+    - nancy
     build_flag_templates:
+    - "--pull"
     - "--label=author='DJ Schleen'"
     - "--label=version={{ .Version }}"
     - "--label=maintainer='sonatype-nexus-community'"
@@ -77,3 +80,19 @@ dockers:
     - "sonatypecommunity/nancy:{{ .Tag }}"
     - "sonatypecommunity/nancy:v{{ .Major }}"
     - "sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}"
+  -
+    goos: linux
+    goarch: amd64
+    dockerfile: build/Dockerfile.ci
+    binaries:
+    - nancy
+    build_flag_templates:
+    - "--pull"
+    - "--label=author='DJ Schleen'"
+    - "--label=version={{ .Version }}"
+    - "--label=maintainer='sonatype-nexus-community'"
+    image_templates:
+    - "sonatypecommunity/nancy:ci"
+    - "sonatypecommunity/nancy:ci-{{ .Tag }}"
+    - "sonatypecommunity/nancy:ci-v{{ .Major }}"
+    - "sonatypecommunity/nancy:ci-v{{ .Major }}.{{ .Minor }}"
