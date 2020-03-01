@@ -16,6 +16,7 @@ jobs:
           TEST_RESULTS: /tmp/test-results
     working_directory: /go/src/github.com/sonatype-nexus-community/nancy
     steps:
+      - setup_remote_docker
       - checkout
       - run: mkdir -p $TEST_RESULTS/gotest
       - restore_cache:
