@@ -63,8 +63,6 @@ func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCou
 				coordinate.Vulnerabilities[j].Reference))
 		}
 	}
-
-	return
 }
 
 func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {

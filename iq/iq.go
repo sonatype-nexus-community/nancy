@@ -127,6 +127,7 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 		fmt.Sprintf("%s%s%s", localConfig.Server, internalApplicationIDURL, applicationID),
 		nil,
 	)
+	customerrors.Check(err, "Request to get internal application id failed")
 
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
 	req.Header.Set("User-Agent", useragent.GetUserAgent())
@@ -141,7 +142,8 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 		customerrors.Check(err, "There was an error retrieving the bytes of the response for getting your internal application ID from Nexus IQ Server")
 
 		var response applicationResponse
-		json.Unmarshal(bodyBytes, &response)
+		err = json.Unmarshal(bodyBytes, &response)
+		customerrors.Check(err, "Could not unmarshal response from iQ server")
 		return response.Applications[0].ID
 	}
 	return ""
@@ -159,6 +161,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 		url,
 		bytes.NewBuffer([]byte(sbom)),
 	)
+	customerrors.Check(err, "Could not POST to Nexus iQ Third Party API")
 
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
 	req.Header.Set("User-Agent", useragent.GetUserAgent())
@@ -175,7 +178,8 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 		customerrors.Check(err, "There was an issue submitting your sbom to the Nexus IQ Third Party API")
 
 		var response thirdPartyAPIResult
-		json.Unmarshal(bodyBytes, &response)
+		err = json.Unmarshal(bodyBytes, &response)
+		customerrors.Check(err, "Could not unmarshal response from iQ server")
 		return response.StatusURL
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
@@ -202,6 +206,7 @@ func pollIQServer(statusURL string, finished chan bool, maxRetries int) {
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", statusURL, nil)
+	customerrors.Check(err, "Could not poll iQ server")
 
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
 
@@ -221,7 +226,8 @@ func pollIQServer(statusURL string, finished chan bool, maxRetries int) {
 		customerrors.Check(err, "There was an error with processing the response from polling Nexus IQ Server")
 
 		var response types.StatusURLResult
-		json.Unmarshal(bodyBytes, &response)
+		err = json.Unmarshal(bodyBytes, &response)
+		customerrors.Check(err, "Could not unmarshal response from iQ server")
 		statusURLResp = response
 		if response.IsError {
 			finished <- true
