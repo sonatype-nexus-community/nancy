@@ -5,14 +5,20 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 BINARY_NAME=nancy
 BUILD_VERSION_LOCATION=github.com/sonatype-nexus-community/nancy/buildversion
-GOLANGCI_LINT_DOCKER=golangci/golangci-lint:v1.23.6
+GOLANGCI_VERSION=v1.23.6
+GOLANGCI_LINT_DOCKER=golangci/golangci-lint:$(GOLANGCI_VERSION)
+LINT_CMD=golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v --max-same-issues 10
 
 all: deps test lint build
 
 .PHONY: lint clean deps env-setup build test integration-test package
 
 lint:
-	docker run --rm -v $$(pwd):/app -v $$(pwd)/.cache:/root/.cache -w /app $(GOLANGCI_LINT_DOCKER) /bin/sh -c "golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v --max-same-issues 10"
+	docker run --rm -v $$(pwd):/app -v $$(pwd)/.cache:/root/.cache -w /app $(GOLANGCI_LINT_DOCKER) /bin/sh -c "$(LINT_CMD)"
+
+ci-lint:
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s $(GOLANGCI_VERSION)
+	./bin/$(LINT_CMD)
 
 clean:
 	$(GOCLEAN)
