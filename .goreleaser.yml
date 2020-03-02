@@ -35,7 +35,7 @@ checksum:
   algorithm: sha256
 
 snapshot:
-  name_template: "{{ .Tag }}-next-{{.FullCommit}}"
+  name_template: "{{ .Version }}-next-{{.FullCommit}}"
 
 changelog:
   sort: asc
