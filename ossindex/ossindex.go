@@ -133,9 +133,7 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 				return nil, err
 			}
 
-			if resp.StatusCode == http.StatusOK {
-				log.Printf("Response: %+v\n", resp)
-			} else {
+			if resp.StatusCode != http.StatusOK {
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
