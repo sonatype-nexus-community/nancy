@@ -23,9 +23,18 @@ import (
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 )
 
-var GOOS = runtime.GOOS
-var GOARCH = runtime.GOARCH
+// Variables that can be overriden (primarily for tests), or for consumers
+var (
+	GOOS       = runtime.GOOS
+	GOARCH     = runtime.GOARCH
+	CLIENTTOOL = "nancy-client"
+)
 
+// GetUserAgent provides a user-agent to nancy that provides info on what version of nancy
+// (or upstream consumers like ahab or cheque) is running, and if the process is being run in
+// CI. If so, it looks for what CI system, and other information such as SC_CALLER_INFO which
+// can be used to tell if nancy is being ran inside an orb, bitbucket pipeline, etc... that
+// we authored
 func GetUserAgent() string {
 	if checkForCIEnvironment() {
 		callerInfo := getCallerInfo()
@@ -38,7 +47,7 @@ func GetUserAgent() string {
 }
 
 func getUserAgentBaseAndVersion() string {
-	return fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion)
+	return fmt.Sprintf("%s/%s", CLIENTTOOL, buildversion.BuildVersion)
 }
 
 func checkCIEnvironments() string {
