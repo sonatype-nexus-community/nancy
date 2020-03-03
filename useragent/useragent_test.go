@@ -85,6 +85,25 @@ func TestGetUserAgentTravisCI(t *testing.T) {
 	}
 }
 
+func TestGetUserAgentGitLabCI(t *testing.T) {
+	clearCircleCIVariables()
+	expected := "nancy-client/development (gitlab-ci; linux amd64)"
+
+	os.Setenv("CI", "true")
+	os.Setenv("GITLAB_CI", "true")
+	GOOS = "linux"
+	GOARCH = "amd64"
+
+	agent := GetUserAgent()
+
+	os.Unsetenv("CI")
+	os.Unsetenv("GITLAB_CI")
+
+	if agent != expected {
+		t.Errorf("User Agent not retrieved successfully, got %s, expected %s", agent, expected)
+	}
+}
+
 func TestGetUserAgentGitHubAction(t *testing.T) {
 	clearCircleCIVariables()
 	expected := "nancy-client/development (github-action 20; linux amd64)"
@@ -136,6 +155,23 @@ func TestGetUserAgentScCallerInfo(t *testing.T) {
 
 	os.Unsetenv("CI")
 	os.Unsetenv("SC_CALLER_INFO")
+
+	if agent != expected {
+		t.Errorf("User Agent not retrieved successfully, got %s, expected %s", agent, expected)
+	}
+}
+
+func TestGetUserAgentCINoClueWhatSystem(t *testing.T) {
+	clearCircleCIVariables()
+	expected := "nancy-client/development (ci usage; linux amd64)"
+
+	os.Setenv("CI", "true")
+	GOOS = "linux"
+	GOARCH = "amd64"
+
+	agent := GetUserAgent()
+
+	os.Unsetenv("CI")
 
 	if agent != expected {
 		t.Errorf("User Agent not retrieved successfully, got %s, expected %s", agent, expected)

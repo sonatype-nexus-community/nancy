@@ -26,40 +26,47 @@ import (
 var GOOS = runtime.GOOS
 var GOARCH = runtime.GOARCH
 
-func GetUserAgent() (useragent string) {
-	useragent = fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion)
+func GetUserAgent() string {
 	if checkForCIEnvironment() {
 		callerInfo := getCallerInfo()
 		if callerInfo == "" {
-			useragent = checkCIEnvironments(useragent)
-			return
+			return checkCIEnvironments()
 		}
-		useragent = useragent + fmt.Sprintf(" (%s; %s %s)", callerInfo, GOOS, GOARCH)
-		return
+		return getCIBasedUserAgent(callerInfo)
 	}
-	useragent = useragent + fmt.Sprintf(" (%s; %s %s)", "non ci usage", GOOS, GOARCH)
-
-	return
+	return getCIBasedUserAgent("non ci usage")
 }
 
-func checkCIEnvironments(useragent string) string {
+func getUserAgentBaseAndVersion() string {
+	return fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion)
+}
+
+func checkCIEnvironments() string {
 	if checkForCISystem("CIRCLECI") {
-		useragent = useragent + fmt.Sprintf(" (%s; %s %s)", "circleci", GOOS, GOARCH)
+		return getCIBasedUserAgent("circleci")
 	}
 	if checkForCISystem("BITBUCKET_BUILD_NUMBER") {
-		useragent = useragent + fmt.Sprintf(" (%s; %s %s)", "bitbucket", GOOS, GOARCH)
+		return getCIBasedUserAgent("bitbucket")
 	}
 	if checkForCISystem("TRAVIS") {
-		useragent = useragent + fmt.Sprintf(" (%s; %s %s)", "travis-ci", GOOS, GOARCH)
+		return getCIBasedUserAgent("travis-ci")
+	}
+	if checkForCISystem("GITLAB_CI") {
+		return getCIBasedUserAgent("gitlab-ci")
 	}
 	if checkIfJenkins() {
-		useragent = useragent + fmt.Sprintf(" (%s; %s %s)", "jenkins", GOOS, GOARCH)
+		return getCIBasedUserAgent("jenkins")
 	}
 	if checkIfGitHub() {
 		id := getGitHubActionID()
-		useragent = useragent + fmt.Sprintf(" (%s %s; %s %s)", "github-action", id, GOOS, GOARCH)
+		return getCIBasedUserAgent(fmt.Sprintf("github-action %s", id))
 	}
-	return useragent
+
+	return getCIBasedUserAgent("ci usage")
+}
+
+func getCIBasedUserAgent(agent string) string {
+	return fmt.Sprintf("%s (%s; %s %s)", getUserAgentBaseAndVersion(), agent, GOOS, GOARCH)
 }
 
 func checkForCIEnvironment() bool {
