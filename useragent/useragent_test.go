@@ -59,6 +59,8 @@ func TestGetUserAgentJenkins(t *testing.T) {
 
 	agent := GetUserAgent()
 
+	os.Unsetenv("JENKINS_HOME")
+
 	if agent != expected {
 		t.Errorf("User Agent not retrieved successfully, got %s, expected %s", agent, expected)
 	}
@@ -74,6 +76,9 @@ func TestGetUserAgentTravisCI(t *testing.T) {
 	GOARCH = "amd64"
 
 	agent := GetUserAgent()
+
+	os.Unsetenv("CI")
+	os.Unsetenv("TRAVIS")
 
 	if agent != expected {
 		t.Errorf("User Agent not retrieved successfully, got %s, expected %s", agent, expected)
@@ -91,6 +96,9 @@ func TestGetUserAgentBitBucket(t *testing.T) {
 
 	agent := GetUserAgent()
 
+	os.Unsetenv("CI")
+	os.Unsetenv("BITBUCKET_BUILD_NUMBER")
+
 	if agent != expected {
 		t.Errorf("User Agent not retrieved successfully, got %s, expected %s", agent, expected)
 	}
@@ -106,6 +114,9 @@ func TestGetUserAgentScCallerInfo(t *testing.T) {
 	GOARCH = "amd64"
 
 	agent := GetUserAgent()
+
+	os.Unsetenv("CI")
+	os.Unsetenv("SC_CALLER_INFO")
 
 	if agent != expected {
 		t.Errorf("User Agent not retrieved successfully, got %s, expected %s", agent, expected)
