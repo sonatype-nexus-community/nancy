@@ -36,46 +36,44 @@ var (
 // can be used to tell if nancy is being ran inside an orb, bitbucket pipeline, etc... that
 // we authored
 func GetUserAgent() string {
+	callTree := os.Getenv("SC_CALLER_INFO")
 	if checkForCIEnvironment() {
-		callerInfo := getCallerInfo()
-		if callerInfo == "" {
-			return checkCIEnvironments()
-		}
-		return getCIBasedUserAgent(callerInfo)
+		return checkCIEnvironments(callTree)
 	}
-	return getCIBasedUserAgent("non ci usage")
+	return getUserAgent("non-ci-usage", "0", callTree)
 }
 
 func getUserAgentBaseAndVersion() string {
 	return fmt.Sprintf("%s/%s", CLIENTTOOL, buildversion.BuildVersion)
 }
 
-func checkCIEnvironments() string {
+func checkCIEnvironments(callTree string) string {
 	if checkForCISystem("CIRCLECI") {
-		return getCIBasedUserAgent("circleci")
+		return getUserAgent("circleci", os.Getenv("CIRCLE_BUILD_NUM"), callTree)
 	}
 	if checkForCISystem("BITBUCKET_BUILD_NUMBER") {
-		return getCIBasedUserAgent("bitbucket")
+		return getUserAgent("bitbucket", os.Getenv("BITBUCKET_BUILD_NUMBER"), callTree)
 	}
 	if checkForCISystem("TRAVIS") {
-		return getCIBasedUserAgent("travis-ci")
+		return getUserAgent("travis-ci", os.Getenv("TRAVIS_BUILD_NUMBER"), callTree)
 	}
 	if checkForCISystem("GITLAB_CI") {
-		return getCIBasedUserAgent("gitlab-ci")
+		return getUserAgent("gitlab-ci", os.Getenv("CI_RUNNER_ID"), callTree)
 	}
 	if checkIfJenkins() {
-		return getCIBasedUserAgent("jenkins")
+		return getUserAgent("jenkins", os.Getenv("BUILD_NUMBER"), callTree)
 	}
 	if checkIfGitHub() {
 		id := getGitHubActionID()
-		return getCIBasedUserAgent(fmt.Sprintf("github-action %s", id))
+		return getUserAgent("github-action", id, callTree)
 	}
 
-	return getCIBasedUserAgent("ci usage")
+	return getUserAgent("ci-unknown", "0", callTree)
 }
 
-func getCIBasedUserAgent(agent string) string {
-	return fmt.Sprintf("%s (%s; %s %s)", getUserAgentBaseAndVersion(), agent, GOOS, GOARCH)
+func getUserAgent(ciName string, ciBuildNumber string, callTree string) string {
+	//CLIENTTOOL/CLIENTTOOLVersion (CIName CIBuildNumber; GOOS GOARCH; DansCrazyCallTree
+	return fmt.Sprintf("%s (%s %s; %s %s; %s)", getUserAgentBaseAndVersion(), ciName, ciBuildNumber, GOOS, GOARCH, callTree)
 }
 
 func checkForCIEnvironment() bool {
