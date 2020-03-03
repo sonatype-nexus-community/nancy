@@ -21,6 +21,7 @@ import (
 )
 
 func TestGetUserAgentNonCI(t *testing.T) {
+	clearCircleCIVariables()
 	expected := "nancy-client/development (non ci usage; linux amd64)"
 
 	GOOS = "linux"
@@ -112,5 +113,6 @@ func TestGetUserAgentScCallerInfo(t *testing.T) {
 }
 
 func clearCircleCIVariables() {
+	os.Unsetenv("CI")
 	os.Unsetenv("CIRCLECI")
 }
