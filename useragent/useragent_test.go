@@ -49,6 +49,7 @@ func TestGetUserAgentCircleCI(t *testing.T) {
 }
 
 func TestGetUserAgentJenkins(t *testing.T) {
+	clearCircleCIVariables()
 	expected := "nancy-client/development (jenkins; linux amd64)"
 
 	os.Setenv("JENKINS_HOME", "/a/place/under/the/sun")
@@ -63,6 +64,7 @@ func TestGetUserAgentJenkins(t *testing.T) {
 }
 
 func TestGetUserAgentTravisCI(t *testing.T) {
+	clearCircleCIVariables()
 	expected := "nancy-client/development (travis-ci; linux amd64)"
 
 	os.Setenv("CI", "true")
@@ -78,6 +80,7 @@ func TestGetUserAgentTravisCI(t *testing.T) {
 }
 
 func TestGetUserAgentBitBucket(t *testing.T) {
+	clearCircleCIVariables()
 	expected := "nancy-client/development (bitbucket; linux amd64)"
 
 	os.Setenv("CI", "true")
@@ -93,6 +96,7 @@ func TestGetUserAgentBitBucket(t *testing.T) {
 }
 
 func TestGetUserAgentScCallerInfo(t *testing.T) {
+	clearCircleCIVariables()
 	expected := "nancy-client/development (bitbucket-nancy-pipe-0.1.9; linux amd64)"
 
 	os.Setenv("CI", "true")
@@ -105,4 +109,8 @@ func TestGetUserAgentScCallerInfo(t *testing.T) {
 	if agent != expected {
 		t.Errorf("User Agent not retrieved successfully, got %s, expected %s", agent, expected)
 	}
+}
+
+func clearCircleCIVariables() {
+	os.Unsetenv("CIRCLECI")
 }
