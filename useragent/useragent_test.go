@@ -85,6 +85,25 @@ func TestGetUserAgentTravisCI(t *testing.T) {
 	}
 }
 
+func TestGetUserAgentGitHubAction(t *testing.T) {
+	clearCircleCIVariables()
+	expected := "nancy-client/development (github-action 20; linux amd64)"
+
+	os.Setenv("GITHUB_ACTIONS", "true")
+	os.Setenv("GITHUB_ACTION", "20")
+	GOOS = "linux"
+	GOARCH = "amd64"
+
+	agent := GetUserAgent()
+
+	os.Unsetenv("GITHUB_ACTIONS")
+	os.Unsetenv("GITHUB_ACTION")
+
+	if agent != expected {
+		t.Errorf("User Agent not retrieved successfully, got %s, expected %s", agent, expected)
+	}
+}
+
 func TestGetUserAgentBitBucket(t *testing.T) {
 	clearCircleCIVariables()
 	expected := "nancy-client/development (bitbucket; linux amd64)"
