@@ -29,9 +29,9 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/nancy/useragent"
 )
 
 const dbValueDirName = "golang"
@@ -205,7 +205,7 @@ func setupRequest(jsonStr []byte) (req *http.Request, err error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
+	req.Header.Set("User-Agent", useragent.GetUserAgent())
 	req.Header.Set("Content-Type", "application/json")
 
 	return req, nil

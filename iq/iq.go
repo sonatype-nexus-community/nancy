@@ -23,12 +23,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/cyclonedx"
 	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/nancy/useragent"
 )
 
 const internalApplicationIDURL = "/api/v2/applications?publicId="
@@ -114,6 +114,7 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 	)
 
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
+	req.Header.Set("User-Agent", useragent.GetUserAgent())
 
 	resp, err := client.Do(req)
 	customerrors.Check(err, "There was an error communicating with Nexus IQ Server to get your internal application ID")
@@ -143,9 +144,8 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 	)
 
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
-
+	req.Header.Set("User-Agent", useragent.GetUserAgent())
 	req.Header.Set("Content-Type", "application/xml")
-	req.Header.Set("User-Agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
 
 	resp, err := client.Do(req)
 	customerrors.Check(err, "There was an issue communicating with the Nexus IQ Third Party API")
@@ -174,7 +174,7 @@ func pollIQServer(statusURL string, finished chan bool, maxRetries int) {
 
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
 
-	req.Header.Set("User-Agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
+	req.Header.Set("User-Agent", useragent.GetUserAgent())
 
 	resp, err := client.Do(req)
 
