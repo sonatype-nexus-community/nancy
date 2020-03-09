@@ -36,46 +36,43 @@ var (
 // can be used to tell if nancy is being ran inside an orb, bitbucket pipeline, etc... that
 // we authored
 func GetUserAgent() string {
+	callTree := os.Getenv("SC_CALLER_INFO")
 	if checkForCIEnvironment() {
-		callerInfo := getCallerInfo()
-		if callerInfo == "" {
-			return checkCIEnvironments()
-		}
-		return getCIBasedUserAgent(callerInfo)
+		return checkCIEnvironments(callTree)
 	}
-	return getCIBasedUserAgent("non ci usage")
+	return getUserAgent("non ci usage", callTree)
 }
 
 func getUserAgentBaseAndVersion() string {
 	return fmt.Sprintf("%s/%s", CLIENTTOOL, buildversion.BuildVersion)
 }
 
-func checkCIEnvironments() string {
+func checkCIEnvironments(callTree string) string {
 	if checkForCISystem("CIRCLECI") {
-		return getCIBasedUserAgent("circleci")
+		return getUserAgent("circleci", callTree)
 	}
 	if checkForCISystem("BITBUCKET_BUILD_NUMBER") {
-		return getCIBasedUserAgent("bitbucket")
+		return getUserAgent("bitbucket", callTree)
 	}
 	if checkForCISystem("TRAVIS") {
-		return getCIBasedUserAgent("travis-ci")
+		return getUserAgent("travis-ci", callTree)
 	}
 	if checkForCISystem("GITLAB_CI") {
-		return getCIBasedUserAgent("gitlab-ci")
+		return getUserAgent("gitlab-ci", callTree)
 	}
 	if checkIfJenkins() {
-		return getCIBasedUserAgent("jenkins")
+		return getUserAgent("jenkins", callTree)
 	}
 	if checkIfGitHub() {
 		id := getGitHubActionID()
-		return getCIBasedUserAgent(fmt.Sprintf("github-action %s", id))
+		return getUserAgent(fmt.Sprintf("github-action %s", id), callTree)
 	}
 
-	return getCIBasedUserAgent("ci usage")
+	return getUserAgent("ci usage", callTree)
 }
 
-func getCIBasedUserAgent(agent string) string {
-	return fmt.Sprintf("%s (%s; %s %s)", getUserAgentBaseAndVersion(), agent, GOOS, GOARCH)
+func getUserAgent(agent string, callTree string) string {
+	return fmt.Sprintf("%s (%s; %s %s; %s)", getUserAgentBaseAndVersion(), agent, GOOS, GOARCH, callTree)
 }
 
 func checkForCIEnvironment() bool {

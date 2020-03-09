@@ -22,7 +22,7 @@ import (
 
 func TestGetUserAgentNonCI(t *testing.T) {
 	clearCircleCIVariables()
-	expected := "nancy-client/development (non ci usage; linux amd64)"
+	expected := "nancy-client/development (non ci usage; linux amd64; )"
 
 	GOOS = "linux"
 	GOARCH = "amd64"
@@ -35,7 +35,7 @@ func TestGetUserAgentNonCI(t *testing.T) {
 }
 
 func TestGetUserAgentCircleCI(t *testing.T) {
-	expected := "nancy-client/development (circleci; linux amd64)"
+	expected := "nancy-client/development (circleci; linux amd64; )"
 
 	os.Setenv("CI", "true")
 	os.Setenv("CIRCLECI", "true")
@@ -51,7 +51,7 @@ func TestGetUserAgentCircleCI(t *testing.T) {
 
 func TestGetUserAgentJenkins(t *testing.T) {
 	clearCircleCIVariables()
-	expected := "nancy-client/development (jenkins; linux amd64)"
+	expected := "nancy-client/development (jenkins; linux amd64; )"
 
 	os.Setenv("JENKINS_HOME", "/a/place/under/the/sun")
 	GOOS = "linux"
@@ -68,7 +68,7 @@ func TestGetUserAgentJenkins(t *testing.T) {
 
 func TestGetUserAgentTravisCI(t *testing.T) {
 	clearCircleCIVariables()
-	expected := "nancy-client/development (travis-ci; linux amd64)"
+	expected := "nancy-client/development (travis-ci; linux amd64; )"
 
 	os.Setenv("CI", "true")
 	os.Setenv("TRAVIS", "true")
@@ -87,7 +87,7 @@ func TestGetUserAgentTravisCI(t *testing.T) {
 
 func TestGetUserAgentGitLabCI(t *testing.T) {
 	clearCircleCIVariables()
-	expected := "nancy-client/development (gitlab-ci; linux amd64)"
+	expected := "nancy-client/development (gitlab-ci; linux amd64; )"
 
 	os.Setenv("CI", "true")
 	os.Setenv("GITLAB_CI", "true")
@@ -106,7 +106,7 @@ func TestGetUserAgentGitLabCI(t *testing.T) {
 
 func TestGetUserAgentGitHubAction(t *testing.T) {
 	clearCircleCIVariables()
-	expected := "nancy-client/development (github-action 20; linux amd64)"
+	expected := "nancy-client/development (github-action 20; linux amd64; )"
 
 	os.Setenv("GITHUB_ACTIONS", "true")
 	os.Setenv("GITHUB_ACTION", "20")
@@ -125,7 +125,7 @@ func TestGetUserAgentGitHubAction(t *testing.T) {
 
 func TestGetUserAgentBitBucket(t *testing.T) {
 	clearCircleCIVariables()
-	expected := "nancy-client/development (bitbucket; linux amd64)"
+	expected := "nancy-client/development (bitbucket; linux amd64; )"
 
 	os.Setenv("CI", "true")
 	os.Setenv("BITBUCKET_BUILD_NUMBER", "20")
@@ -144,16 +144,14 @@ func TestGetUserAgentBitBucket(t *testing.T) {
 
 func TestGetUserAgentScCallerInfo(t *testing.T) {
 	clearCircleCIVariables()
-	expected := "nancy-client/development (bitbucket-nancy-pipe-0.1.9; linux amd64)"
+	expected := "nancy-client/development (non ci usage; linux amd64; bitbucket-nancy-pipe-0.1.9)"
 
-	os.Setenv("CI", "true")
 	os.Setenv("SC_CALLER_INFO", "bitbucket-nancy-pipe-0.1.9")
 	GOOS = "linux"
 	GOARCH = "amd64"
 
 	agent := GetUserAgent()
 
-	os.Unsetenv("CI")
 	os.Unsetenv("SC_CALLER_INFO")
 
 	if agent != expected {
@@ -163,7 +161,7 @@ func TestGetUserAgentScCallerInfo(t *testing.T) {
 
 func TestGetUserAgentCINoClueWhatSystem(t *testing.T) {
 	clearCircleCIVariables()
-	expected := "nancy-client/development (ci usage; linux amd64)"
+	expected := "nancy-client/development (ci usage; linux amd64; )"
 
 	os.Setenv("CI", "true")
 	GOOS = "linux"
