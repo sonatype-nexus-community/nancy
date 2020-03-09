@@ -29,9 +29,9 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/nancy/useragent"
 )
 
 const dbValueDirName = "golang"
@@ -133,9 +133,7 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 				return nil, err
 			}
 
-			if resp.StatusCode == http.StatusOK {
-				log.Printf("Response: %+v\n", resp)
-			} else {
+			if resp.StatusCode != http.StatusOK {
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
@@ -205,7 +203,7 @@ func setupRequest(jsonStr []byte) (req *http.Request, err error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion))
+	req.Header.Set("User-Agent", useragent.GetUserAgent())
 	req.Header.Set("Content-Type", "application/json")
 
 	return req, nil
