@@ -36,6 +36,11 @@ var (
 // can be used to tell if nancy is being ran inside an orb, bitbucket pipeline, etc... that
 // we authored
 func GetUserAgent() string {
+	// where callTree format is:
+	// toolName__toolVersion___subToolName__subToolVersion___subSubToolName__subSubToolVersion
+	//
+	// double underscore "__" delimits Name/Version
+	// triple underscore "___" delimits currentCaller/priorCaller/priorPriorCaller
 	callTree := os.Getenv("SC_CALLER_INFO")
 	if checkForCIEnvironment() {
 		return checkCIEnvironments(callTree)
