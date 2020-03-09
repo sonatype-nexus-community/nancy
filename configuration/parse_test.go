@@ -29,7 +29,7 @@ import (
 
 func TestConfigParse(t *testing.T) {
 	file, _ := os.Open("../testdata/nancyignores/normalIgnore")
-	emptyFile , _ := os.Open("../testdata/nancyignores/emptyFile")
+	emptyFile, _ := os.Open("../testdata/nancyignores/emptyFile")
 	lotsOfRandomNewlinesFile, _ := os.Open("../testdata/nancyignores/lotsOfRandomWhitespace")
 	commentedFile, _ := os.Open("../testdata/nancyignores/commented")
 	untilsFile, _ := os.Open("../testdata/nancyignores/untilsAndComments")
@@ -52,6 +52,7 @@ func TestConfigParse(t *testing.T) {
 		"help":                                   {args: []string{"-help", "/tmp/go2.sum"}, expectedConfig: Configuration{Help: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum"}, expectedErr: nil},
 		"no color":                               {args: []string{"-no-color", "/tmp/go2.sum"}, expectedConfig: Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum"}, expectedErr: nil},
 		"quiet":                                  {args: []string{"-quiet", "/tmp/go3.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go3.sum"}, expectedErr: nil},
+		"quiet stdIn":                            {args: []string{"-quiet"}, expectedConfig: Configuration{UseStdIn: true, NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go3.sum"}, expectedErr: nil},
 		"version":                                {args: []string{"-version", "/tmp/go4.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Path: "/tmp/go4.sum"}, expectedErr: nil},
 		"exclude vulnerabilities":                {args: []string{"-exclude-vulnerability=CVE123,CVE988", "/tmp/go5.sum"}, expectedConfig: Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Path: "/tmp/go5.sum"}, expectedErr: nil},
 		"std in as input":                        {args: []string{}, expectedConfig: Configuration{UseStdIn: true}, expectedErr: nil},
