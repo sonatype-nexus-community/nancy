@@ -121,8 +121,12 @@ Options:
 		return config, err
 	}
 
-	if len(args) > 0 {
-		config.Path = args[len(args)-1]
+	modfilePath, err := getModfilePath()
+	if err != nil {
+		return config, err
+	}
+	if len(modfilePath) > 0 {
+		config.Path = modfilePath
 	} else {
 		config.UseStdIn = true
 	}
@@ -142,6 +146,19 @@ Options:
 	}
 
 	return config, nil
+}
+
+func getModfilePath() (modfilepath string, err error) {
+	if flag.CommandLine.NArg() > 0 {
+		nonFlagArgs := flag.CommandLine.Args()
+		if len(nonFlagArgs) != 1 {
+			return modfilepath, errors.New(fmt.Sprintf("wrong number of modfile paths: %s", nonFlagArgs))
+		}
+		for _, nonFlagArg := range nonFlagArgs {
+			return nonFlagArg, err
+		}
+	}
+	return modfilepath, err
 }
 
 func getCVEExcludesFromFile(config *Configuration, excludeVulnerabilityFilePath string) error {
