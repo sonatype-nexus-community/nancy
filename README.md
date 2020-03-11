@@ -391,6 +391,20 @@ $ curl -o /path/where/you/want/nancy \
 
 Tests can be run like `go test ./... -v`
 
+### Release Process
+
+Follow the steps below to release a new version of Nancy. You need to be part the `deploy in circleci` group for this to work.
+
+  1. Checkout/pull the latest `master` branch, and create a new tag with the desired semantic version and a helpful note:
+  
+         git tag -a v0.1.x -m "Helpful message in tag."
+         
+  2. Push the tag up to `master`:
+  
+         git push origin master
+         
+  3. There is no step 3.
+          
 ## Contributing
 
 We care a lot about making the world a safer place, and that's why we created `nancy`. If you as well want to
