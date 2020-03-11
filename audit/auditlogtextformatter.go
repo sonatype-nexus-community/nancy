@@ -3,11 +3,12 @@ package audit
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/logrusorgru/aurora"
 	. "github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/types"
-	"strconv"
-	"strings"
 )
 
 type AuditLogTextFormatter struct {
@@ -77,13 +78,8 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		invalidEntries := entry.Data["invalid"].([]types.Coordinate)
 		packageCount := entry.Data["num_audited"].(int)
 		numVulnerable := entry.Data["num_vulnerable"].(int)
-		buildVersion := entry.Data["version"].(string)
 
 		var sb strings.Builder
-
-		if !*f.Quiet {
-			sb.WriteString("Nancy version: " + buildVersion + "\n")
-		}
 
 		logInvalidSemVerWarning(&sb, *f.NoColor, *f.Quiet, invalidEntries)
 		for idx := 0; idx < len(auditedEntries); idx++ {
