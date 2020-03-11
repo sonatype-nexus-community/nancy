@@ -22,6 +22,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -56,9 +57,12 @@ func main() {
 	}
 }
 
-func printHeader() {
-	figure.NewFigure("Nancy", "larry3d", true).Print()
-	figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
+func printHeader(quiet bool) {
+	if quiet {
+		figure.NewFigure("Nancy", "larry3d", true).Print()
+		figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
+		log.Println("Nancy version: " + buildversion.BuildVersion)
+	}
 }
 
 func processConfig(config configuration.Configuration) {
@@ -86,9 +90,7 @@ func processConfig(config configuration.Configuration) {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	printHeader()
-
-	log.Println("Nancy version: " + buildversion.BuildVersion)
+	printHeader((!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter"))
 
 	if config.UseStdIn {
 		doStdInAndParse(config)
@@ -115,9 +117,7 @@ func processIQConfig(config configuration.IqConfiguration) {
 		flag.Usage()
 	}
 
-	printHeader()
-
-	log.Println("Nancy version: " + buildversion.BuildVersion)
+	printHeader(true)
 
 	doStdInAndParseForIQ(config)
 }
