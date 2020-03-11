@@ -57,8 +57,8 @@ func main() {
 	}
 }
 
-func printHeader(quiet bool) {
-	if quiet {
+func printHeader(print bool) {
+	if print {
 		figure.NewFigure("Nancy", "larry3d", true).Print()
 		figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
 		log.Println("Nancy version: " + buildversion.BuildVersion)
