@@ -399,7 +399,7 @@ Follow the steps below to release a new version of Nancy. You need to be part of
   
          git tag -a v0.1.x -m "Helpful message in tag."
          
-  2. Push the tag up to `master`:
+  2. Push the tag up:
   
          git push origin v0.1.x
          
