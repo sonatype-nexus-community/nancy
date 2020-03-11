@@ -401,7 +401,7 @@ Follow the steps below to release a new version of Nancy. You need to be part of
          
   2. Push the tag up to `master`:
   
-         git push origin master
+         git push origin v0.1.x
          
   3. There is no step 3.
           
