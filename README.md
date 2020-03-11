@@ -393,7 +393,7 @@ Tests can be run like `go test ./... -v`
 
 ### Release Process
 
-Follow the steps below to release a new version of Nancy. You need to be part of the `deploy in circleci` group for this to work.
+Follow the steps below to release a new version of Nancy. You need to be part of the `deploy from circle ci` group for this to work.
 
   1. Checkout/pull the latest `master` branch, and create a new tag with the desired semantic version and a helpful note:
   
