@@ -25,6 +25,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 
 	figure "github.com/common-nighthawk/go-figure"
@@ -39,39 +41,51 @@ import (
 	"github.com/sonatype-nexus-community/nancy/parse"
 )
 
+var appLog = logger.NewLogger()
+
 func main() {
+	appLog.Debug("Starting Nancy")
+
 	if len(os.Args) > 1 && os.Args[1] == "iq" {
+		appLog.Debug("Nancy parsing config for IQ")
 		config, err := configuration.ParseIQ(os.Args[2:])
 		if err != nil {
 			flag.Usage()
 			os.Exit(1)
 		}
 		processIQConfig(config)
+		appLog.Debug("Nancy finished parsing config for IQ")
 	} else {
+		appLog.Debug("Nancy parsing config for OSS Index")
 		ossIndexConfig, err := configuration.Parse(os.Args[1:])
 		if err != nil {
 			flag.Usage()
 			os.Exit(1)
 		}
 		processConfig(ossIndexConfig)
+		appLog.Debug("Nancy finished parsing config for OSS Index")
 	}
 }
 
 func printHeader(print bool) {
 	if print {
+		appLog.Debug("Attempting to print header")
 		figure.NewFigure("Nancy", "larry3d", true).Print()
 		figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
 		log.Println("Nancy version: " + buildversion.BuildVersion)
+		appLog.Debug("Finished printing header")
 	}
 }
 
 func processConfig(config configuration.Configuration) {
 	if config.Help {
+		appLog.Debug("Printing usage and exiting clean")
 		flag.Usage()
 		os.Exit(0)
 	}
 
 	if config.Version {
+		appLog.Debug("Printing version information and exiting clean")
 		fmt.Println(buildversion.BuildVersion)
 		_, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
 		_, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
@@ -79,23 +93,29 @@ func processConfig(config configuration.Configuration) {
 	}
 
 	if config.CleanCache {
+		appLog.Debug("Attempting to clean cache")
 		if err := ossindex.RemoveCacheDirectory(); err != nil {
+			appLog.Errorf("ERROR: cleaning cache: %v", err)
 			fmt.Printf("ERROR: cleaning cache: %v\n", err)
 			os.Exit(1)
 		}
+		appLog.Debug("Cache cleaned")
 		return
 	}
 
 	if config.Quiet {
+		appLog.Debug("Setting console log output to discard, quiet requested")
 		log.SetOutput(ioutil.Discard)
 	}
 
 	printHeader((!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter"))
 
 	if config.UseStdIn {
+		appLog.Debug("Parsing config for StdIn")
 		doStdInAndParse(config)
 	}
 	if !config.UseStdIn {
+		appLog.Debug("Parsing config for file based scan")
 		doCheckExistenceAndParse(config)
 	}
 }
@@ -140,18 +160,34 @@ func doStdInAndParse(config configuration.Configuration) {
 }
 
 func doStdInAndParseForIQ(config configuration.IqConfiguration) {
+	appLog.Debug("Beginning StdIn parse for IQ")
 	fi, err := os.Stdin.Stat()
 	if err != nil {
+		appLog.Errorf("Error obtaining Std In: %v", err)
 		panic(err)
 	}
 	if (fi.Mode() & os.ModeNamedPipe) == 0 {
+		appLog.Errorf("Error obtaining StdIn, showing usage and exiting with error")
 		flag.Usage()
 		os.Exit(1)
 	} else {
+		appLog.Debug("Instantiating go.mod package")
+
 		mod := packages.Mod{}
 		scanner := bufio.NewScanner(os.Stdin)
+
+		appLog.Debug("Beginning to parse StdIn")
 		mod.ProjectList, _ = parse.GoList(scanner)
+		appLog.WithFields(logrus.Fields{
+			"projectList": mod.ProjectList,
+		}).Debug("Obtained project list")
+
 		var purls = mod.ExtractPurlsFromManifestForIQ()
+		appLog.WithFields(logrus.Fields{
+			"purls": purls,
+		}).Debug("Extracted purls")
+
+		appLog.Debug("Auditing purls with IQ Server")
 		auditWithIQServer(purls, config.Application, config)
 	}
 }
@@ -209,19 +245,23 @@ func checkOSSIndex(purls []string, invalidpurls []string, config configuration.C
 }
 
 func auditWithIQServer(purls []string, applicationID string, config configuration.IqConfiguration) {
+	appLog.Debug("Sending purls to be Audited by IQ Server")
 	res, err := iq.AuditPackages(purls, applicationID, config)
 	customerrors.Check(err, "Uh oh! There was an error with your request to Nexus IQ Server")
 
 	fmt.Println()
 	if res.IsError {
+		appLog.Errorf("An error occurred with the request to IQ Server: %v", res.ErrorMessage)
 		customerrors.Check(errors.New(res.ErrorMessage), "Uh oh! There was an error with your request to Nexus IQ Server")
 	}
 
 	if res.PolicyAction != "Failure" {
+		appLog.Debugf("Successful in communicating with IQ Server: %+v", res)
 		fmt.Println("Wonderbar! No policy violations reported for this audit!")
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
 		os.Exit(0)
 	} else {
+		appLog.Debugf("Successful in communicating with IQ Server: %+v", res)
 		fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
 		os.Exit(1)
