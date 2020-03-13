@@ -36,8 +36,13 @@ func init() {
 	}
 
 	Logger.Out = file
-	Logger.Level = logrus.DebugLevel
+	Logger.Level = logrus.InfoLevel
 	Logger.Formatter = &logrus.JSONFormatter{}
+}
+
+// SetLogLevel is a helper function to set the logging level to something other than it's default
+func SetLogLevel(level logrus.Level) {
+	Logger.Level = level
 }
 
 func getLogFileLocation() (result string) {
