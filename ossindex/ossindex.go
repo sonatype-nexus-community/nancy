@@ -30,7 +30,7 @@ import (
 
 	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/logger"
+	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/sonatype-nexus-community/nancy/useragent"
 )
@@ -45,14 +45,12 @@ var (
 	ossIndexUrl string
 )
 
-var appLog = logger.Logger
-
 func getDatabaseDirectory() (dbDir string) {
-	appLog.Trace("Attempting to get database directory")
+	Logger.Trace("Attempting to get database directory")
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
-	appLog.WithField("home_dir", usr.HomeDir).Trace("Obtained user directory")
+	Logger.WithField("home_dir", usr.HomeDir).Trace("Obtained user directory")
 	var leftPath = path.Join(usr.HomeDir, types.OssIndexDirName)
 	var fullPath string
 	if flag.Lookup("test") == nil {
@@ -77,12 +75,12 @@ func getOssIndexUrl() string {
 }
 
 func openDb(dbDir string) (db *badger.DB, err error) {
-	appLog.Debug("Attempting to open Badger DB")
+	Logger.Debug("Attempting to open Badger DB")
 	opts := badger.DefaultOptions
 
 	opts.Dir = getDatabaseDirectory()
 	opts.ValueDir = getDatabaseDirectory()
-	appLog.WithField("badger_opts", opts).Debug("Set Badger Options")
+	Logger.WithField("badger_opts", opts).Debug("Set Badger Options")
 
 	db, err = badger.Open(opts)
 	return
@@ -146,19 +144,19 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 			}
 
 			if resp.StatusCode != http.StatusOK {
-				appLog.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index")
+				Logger.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index")
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					appLog.WithField("error", err).Error("Error closing response body")
+					Logger.WithField("error", err).Error("Error closing response body")
 				}
 			}()
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				appLog.WithField("error", err).Error("Error accessing OSS Index")
+				Logger.WithField("error", err).Error("Error accessing OSS Index")
 				return nil, err
 			}
 
@@ -208,7 +206,7 @@ func chunk(purls []string, chunkSize int) [][]string {
 }
 
 func setupRequest(jsonStr []byte) (req *http.Request, err error) {
-	appLog.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
+	Logger.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
 	req, err = http.NewRequest(
 		"POST",
 		getOssIndexUrl(),
