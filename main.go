@@ -251,17 +251,17 @@ func auditWithIQServer(purls []string, applicationID string, config configuratio
 
 	fmt.Println()
 	if res.IsError {
-		appLog.Errorf("An error occurred with the request to IQ Server: %v", res.ErrorMessage)
+		appLog.WithField("res", res).Error("An error occurred with the request to IQ Server")
 		customerrors.Check(errors.New(res.ErrorMessage), "Uh oh! There was an error with your request to Nexus IQ Server")
 	}
 
 	if res.PolicyAction != "Failure" {
-		appLog.Debugf("Successful in communicating with IQ Server: %+v", res)
+		appLog.WithField("res", res).Debug("Successful in communicating with IQ Server")
 		fmt.Println("Wonderbar! No policy violations reported for this audit!")
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
 		os.Exit(0)
 	} else {
-		appLog.Debugf("Successful in communicating with IQ Server: %+v", res)
+		appLog.WithField("res", res).Debug("Successful in communicating with IQ Server")
 		fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
 		os.Exit(1)

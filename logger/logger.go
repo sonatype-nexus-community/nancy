@@ -35,9 +35,10 @@ func init() {
 	}
 
 	logger := &logrus.Logger{
-		Out:       file,
-		Level:     logrus.DebugLevel,
-		Formatter: &logrus.JSONFormatter{},
+		Out:          file,
+		Level:        logrus.DebugLevel,
+		Formatter:    &logrus.JSONFormatter{},
+		ReportCaller: true,
 	}
 	Logger = logger
 }

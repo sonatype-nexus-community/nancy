@@ -21,6 +21,7 @@ import (
 	"runtime"
 
 	"github.com/sonatype-nexus-community/nancy/buildversion"
+	"github.com/sonatype-nexus-community/nancy/logger"
 )
 
 // Variables that can be overriden (primarily for tests), or for consumers
@@ -30,12 +31,15 @@ var (
 	CLIENTTOOL = "nancy-client"
 )
 
+var appLog = logger.Logger
+
 // GetUserAgent provides a user-agent to nancy that provides info on what version of nancy
 // (or upstream consumers like ahab or cheque) is running, and if the process is being run in
 // CI. If so, it looks for what CI system, and other information such as SC_CALLER_INFO which
 // can be used to tell if nancy is being ran inside an orb, bitbucket pipeline, etc... that
 // we authored
 func GetUserAgent() string {
+	appLog.Trace("Obtaining User Agent")
 	// where callTree format is:
 	// toolName__toolVersion___subToolName__subToolVersion___subSubToolName__subSubToolVersion
 	//
@@ -49,34 +53,43 @@ func GetUserAgent() string {
 }
 
 func getUserAgentBaseAndVersion() string {
+	appLog.Trace("Attempting to obtain user agent and version")
 	return fmt.Sprintf("%s/%s", CLIENTTOOL, buildversion.BuildVersion)
 }
 
 func checkCIEnvironments(callTree string) string {
 	if checkForCISystem("CIRCLECI") {
+		appLog.Trace("CircleCI usage")
 		return getUserAgent("circleci", callTree)
 	}
 	if checkForCISystem("BITBUCKET_BUILD_NUMBER") {
+		appLog.Trace("BitBucket usage")
 		return getUserAgent("bitbucket", callTree)
 	}
 	if checkForCISystem("TRAVIS") {
+		appLog.Trace("TravisCI usage")
 		return getUserAgent("travis-ci", callTree)
 	}
 	if checkForCISystem("GITLAB_CI") {
+		appLog.Trace("GitLab usage")
 		return getUserAgent("gitlab-ci", callTree)
 	}
 	if checkIfJenkins() {
+		appLog.Trace("Jenkins usage")
 		return getUserAgent("jenkins", callTree)
 	}
 	if checkIfGitHub() {
 		id := getGitHubActionID()
+		appLog.WithField("gh_action_id", id).Trace("GitHub Actions usage")
 		return getUserAgent(fmt.Sprintf("github-action %s", id), callTree)
 	}
 
+	appLog.Trace("Returning User Agent")
 	return getUserAgent("ci usage", callTree)
 }
 
 func getUserAgent(agent string, callTree string) string {
+	appLog.Trace("Obtaining parsed User Agent string")
 	return fmt.Sprintf("%s (%s; %s %s; %s)", getUserAgentBaseAndVersion(), agent, GOOS, GOARCH, callTree)
 }
 
