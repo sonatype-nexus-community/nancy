@@ -21,7 +21,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"os/user"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/sonatype-nexus-community/nancy/useragent"
 )
@@ -43,6 +43,8 @@ const MAX_COORDS = 128
 var (
 	ossIndexUrl string
 )
+
+var appLog = logger.Logger
 
 func getDatabaseDirectory() (dbDir string) {
 	usr, err := user.Current()
@@ -139,7 +141,7 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					log.Printf("error closing response body: %s\n", err)
+					appLog.Debugf("error closing response body: %s\n", err)
 				}
 			}()
 
