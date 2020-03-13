@@ -98,16 +98,14 @@ func processConfig(config configuration.Configuration) {
 		os.Exit(0)
 	}
 
-	if config.Info || config.Debug || config.Trace {
-		if config.Info {
-			Logger.Level = logrus.InfoLevel
-		}
-		if config.Debug {
-			Logger.Level = logrus.DebugLevel
-		}
-		if config.Trace {
-			Logger.Level = logrus.TraceLevel
-		}
+	if config.Info {
+		Logger.Level = logrus.InfoLevel
+	}
+	if config.Debug {
+		Logger.Level = logrus.DebugLevel
+	}
+	if config.Trace {
+		Logger.Level = logrus.TraceLevel
 	}
 
 	if config.CleanCache {
@@ -159,16 +157,14 @@ func processIQConfig(config configuration.IqConfiguration) {
 		os.Exit(0)
 	}
 
-	if config.Info || config.Debug || config.Trace {
-		if config.Info {
-			Logger.Level = logrus.InfoLevel
-		}
-		if config.Debug {
-			Logger.Level = logrus.DebugLevel
-		}
-		if config.Trace {
-			Logger.Level = logrus.TraceLevel
-		}
+	if config.Info {
+		Logger.Level = logrus.InfoLevel
+	}
+	if config.Debug {
+		Logger.Level = logrus.DebugLevel
+	}
+	if config.Trace {
+		Logger.Level = logrus.TraceLevel
 	}
 
 	if config.Application == "" {
