@@ -39,6 +39,9 @@ type Configuration struct {
 	CveList    types.CveListFlag
 	Path       string
 	Formatter  logrus.Formatter
+	Info       bool
+	Debug      bool
+	Trace      bool
 }
 
 type IqConfiguration struct {
@@ -50,6 +53,9 @@ type IqConfiguration struct {
 	Application string
 	Server      string
 	MaxRetries  int
+	Info        bool
+	Debug       bool
+	Trace       bool
 }
 
 var unixComments = regexp.MustCompile(`#.*$`)
@@ -57,6 +63,9 @@ var untilComment = regexp.MustCompile(`(until=)(.*)`)
 
 func ParseIQ(args []string) (config IqConfiguration, err error) {
 	iqCommand := flag.NewFlagSet("iq", flag.ExitOnError)
+	iqCommand.BoolVar(&config.Info, "v", false, "Set log level to Info")
+	iqCommand.BoolVar(&config.Debug, "vv", false, "Set log level to Debug")
+	iqCommand.BoolVar(&config.Trace, "vvv", false, "Set log level to Trace")
 	iqCommand.StringVar(&config.User, "user", "admin", "Specify username for request")
 	iqCommand.StringVar(&config.Token, "token", "admin123", "Specify token/password for request")
 	iqCommand.StringVar(&config.Server, "server-url", "http://localhost:8070", "Specify Nexus IQ Server URL/port")
@@ -99,6 +108,9 @@ func Parse(args []string) (Configuration, error) {
 	flag.BoolVar(&config.Quiet, "quiet", false, "indicate output should contain only packages with vulnerabilities")
 	flag.BoolVar(&config.Version, "version", false, "prints current nancy version")
 	flag.BoolVar(&config.CleanCache, "clean-cache", false, "Deletes local cache directory")
+	flag.BoolVar(&config.Info, "v", false, "Set log level to Info")
+	flag.BoolVar(&config.Debug, "vv", false, "Set log level to Debug")
+	flag.BoolVar(&config.Trace, "vvv", false, "Set log level to Trace")
 	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
 	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
 	flag.StringVar(&outputFormat, "output", "text", "Styling for output format. "+fmt.Sprintf("%+q", reflect.ValueOf(outputFormats).MapKeys()))

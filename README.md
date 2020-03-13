@@ -16,27 +16,33 @@
 ```
  ~ > nancy
 Usage:
+        go list -m all | nancy [options]
+        go list -m all | nancy iq [options]
         nancy [options] </path/to/Gopkg.lock>
         nancy [options] </path/to/go.sum>
-        nancy iq [options]
 
 Options:
   -clean-cache
-    	Deletes local cache directory
+        Deletes local cache directory
   -exclude-vulnerability value
-    	Comma separated list of CVEs to exclude
+        Comma separated list of CVEs to exclude
   -exclude-vulnerability-file string
         Path to a file containing newline separated CVEs to be excluded (default "./.nancy-ignore")
   -help
         provides help text on how to use nancy
   -no-color
-    	indicate output should not be colorized
+        indicate output should not be colorized
   -output string
-    	Styling for output format. ["json-pretty" "text" "csv" "json"] (default "text")
+        Styling for output format. ["json" "json-pretty" "text" "csv"] (default "text")
   -quiet
-    	indicate output should contain only packages with vulnerabilities
+        indicate output should contain only packages with vulnerabilities
+  -v    Set log level to Info
   -version
         prints current nancy version
+  -vv
+        Set log level to Debug
+  -vvv
+        Set log level to Trace
 
 $ > nancy iq
 Usage:
@@ -55,6 +61,11 @@ Options:
         Specify token/password for request (default "admin123")
   -user string
         Specify username for request (default "admin")
+  -v    Set log level to Info
+  -vv
+        Set log level to Debug
+  -vvv
+        Set log level to Trace
 ```
 
 `nancy` currently works for projects that use `dep` or `go mod` for dependencies.

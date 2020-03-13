@@ -98,6 +98,18 @@ func processConfig(config configuration.Configuration) {
 		os.Exit(0)
 	}
 
+	if config.Info || config.Debug || config.Trace {
+		if config.Info {
+			Logger.Level = logrus.InfoLevel
+		}
+		if config.Debug {
+			Logger.Level = logrus.DebugLevel
+		}
+		if config.Trace {
+			Logger.Level = logrus.TraceLevel
+		}
+	}
+
 	if config.CleanCache {
 		Logger.Info("Attempting to clean cache")
 		if err := ossindex.RemoveCacheDirectory(); err != nil {
@@ -145,6 +157,18 @@ func processIQConfig(config configuration.IqConfiguration) {
 		_, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
 		_, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
 		os.Exit(0)
+	}
+
+	if config.Info || config.Debug || config.Trace {
+		if config.Info {
+			Logger.Level = logrus.InfoLevel
+		}
+		if config.Debug {
+			Logger.Level = logrus.DebugLevel
+		}
+		if config.Trace {
+			Logger.Level = logrus.TraceLevel
+		}
 	}
 
 	if config.Application == "" {
