@@ -45,11 +45,6 @@ func init() {
 	LogLady.Formatter = &logrus.JSONFormatter{}
 }
 
-// SetLogLevel is a helper function to set the logging level to something other than it's default
-func SetLogLevel(level logrus.Level) {
-	LogLady.Level = level
-}
-
 // GetLogFileLocation will return the location on disk of the log file
 func GetLogFileLocation() (result string) {
 	result, _ = os.UserHomeDir()
