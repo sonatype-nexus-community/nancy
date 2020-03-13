@@ -22,11 +22,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// DefaultLogFile can be overriden to use a different file name for upstream consumers
 var DefaultLogFile = "nancy.combined.log"
 
+// Logger can be obtained from outside the package
 var Logger *logrus.Logger
 
-func NewLogger() *logrus.Logger {
+func init() {
 	file, err := os.OpenFile(getLogFileLocation(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		Logger.Fatal(err)
@@ -38,7 +40,6 @@ func NewLogger() *logrus.Logger {
 		Formatter: &logrus.JSONFormatter{},
 	}
 	Logger = logger
-	return Logger
 }
 
 func getLogFileLocation() (result string) {

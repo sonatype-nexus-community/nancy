@@ -41,7 +41,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/parse"
 )
 
-var appLog = logger.NewLogger()
+var appLog = logger.Logger
 
 func main() {
 	appLog.Debug("Starting Nancy")
