@@ -146,17 +146,19 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 			}
 
 			if resp.StatusCode != http.StatusOK {
+				appLog.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index")
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					appLog.Debugf("error closing response body: %s\n", err)
+					appLog.WithField("error", err).Error("Error closing response body")
 				}
 			}()
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
+				appLog.WithField("error", err).Error("Error accessing OSS Index")
 				return nil, err
 			}
 
