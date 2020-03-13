@@ -18,8 +18,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -73,7 +71,7 @@ func printHeader(print bool) {
 		figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
 
 		LogLady.WithField("version", buildversion.BuildVersion).Info("Printing Nancy version")
-		log.Println("Nancy version: " + buildversion.BuildVersion)
+		fmt.Println("Nancy version: " + buildversion.BuildVersion)
 		LogLady.Info("Finished printing header")
 	}
 }
@@ -117,11 +115,6 @@ func processConfig(config configuration.Configuration) {
 		}
 		LogLady.Info("Cache cleaned")
 		return
-	}
-
-	if config.Quiet {
-		LogLady.Debug("Setting console log output to discard, quiet requested")
-		log.SetOutput(ioutil.Discard)
 	}
 
 	printHeader((!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter"))

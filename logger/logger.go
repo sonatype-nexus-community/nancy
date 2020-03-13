@@ -32,7 +32,7 @@ var DefaultLogFile = "nancy.combined.log"
 var LogLady = logrus.New()
 
 func init() {
-	if len(os.Args) > 1 && os.Args[1][:5] == "-test" {
+	if len(os.Args) > 1 && os.Args[1] != "iq" && os.Args[1][:5] == "-test" {
 		DefaultLogFile = "nancy.test.log"
 	}
 	file, err := os.OpenFile(GetLogFileLocation(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
