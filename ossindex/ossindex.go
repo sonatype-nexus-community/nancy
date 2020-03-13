@@ -53,7 +53,7 @@ func getDatabaseDirectory() (dbDir string) {
 	customerrors.Check(err, "Error getting user home")
 
 	appLog.WithField("home_dir", usr.HomeDir).Trace("Obtained user directory")
-	var leftPath = path.Join(usr.HomeDir, ".ossindex")
+	var leftPath = path.Join(usr.HomeDir, types.OssIndexDirName)
 	var fullPath string
 	if flag.Lookup("test") == nil {
 		fullPath = path.Join(leftPath, dbValueDirName)

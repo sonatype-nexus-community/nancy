@@ -21,6 +21,7 @@ import (
 	"path"
 
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 // DefaultLogFile can be overriden to use a different file name for upstream consumers
@@ -47,6 +48,6 @@ func SetLogLevel(level logrus.Level) {
 
 func getLogFileLocation() (result string) {
 	result, _ = os.UserHomeDir()
-	result = path.Join(result, ".ossindex", DefaultLogFile)
+	result = path.Join(result, types.OssIndexDirName, DefaultLogFile)
 	return
 }

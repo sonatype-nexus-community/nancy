@@ -53,6 +53,7 @@ func main() {
 			flag.Usage()
 			os.Exit(1)
 		}
+		appLog.WithField("config", config).Info("Obtained IQ config")
 		processIQConfig(config)
 		appLog.Info("Nancy finished parsing config for IQ")
 	} else {
