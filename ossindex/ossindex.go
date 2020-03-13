@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"os/user"
+	"path"
 	"strings"
 	"time"
 
@@ -47,10 +48,20 @@ var (
 var appLog = logger.Logger
 
 func getDatabaseDirectory() (dbDir string) {
+	appLog.Trace("Attempting to get database directory")
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
-	return usr.HomeDir + "/.ossindex"
+	appLog.WithField("home_dir", usr.HomeDir).Trace("Obtained user directory")
+	var leftPath = path.Join(usr.HomeDir, ".ossindex")
+	var fullPath string
+	if flag.Lookup("test") == nil {
+		fullPath = path.Join(leftPath, dbValueDirName)
+	} else {
+		fullPath = path.Join(leftPath, "test-nancy")
+	}
+
+	return fullPath
 }
 
 // RemoveCacheDirectory deletes the local database directory.
@@ -66,14 +77,13 @@ func getOssIndexUrl() string {
 }
 
 func openDb(dbDir string) (db *badger.DB, err error) {
+	appLog.Debug("Attempting to open Badger DB")
 	opts := badger.DefaultOptions
-	if flag.Lookup("test") == nil {
-		opts.Dir = dbDir + "/" + dbValueDirName
-		opts.ValueDir = dbDir + "/" + dbValueDirName
-	} else {
-		opts.Dir = dbDir + "/" + "test-nancy"
-		opts.ValueDir = dbDir + "/" + "test-nancy"
-	}
+
+	opts.Dir = getDatabaseDirectory()
+	opts.ValueDir = getDatabaseDirectory()
+	appLog.WithField("badger_opts", opts).Debug("Set Badger Options")
+
 	db, err = badger.Open(opts)
 	return
 }
@@ -196,6 +206,7 @@ func chunk(purls []string, chunkSize int) [][]string {
 }
 
 func setupRequest(jsonStr []byte) (req *http.Request, err error) {
+	appLog.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
 	req, err = http.NewRequest(
 		"POST",
 		getOssIndexUrl(),

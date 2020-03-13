@@ -16,6 +16,7 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"path"
 
@@ -26,21 +27,17 @@ import (
 var DefaultLogFile = "nancy.combined.log"
 
 // Logger can be obtained from outside the package
-var Logger *logrus.Logger
+var Logger = logrus.New()
 
 func init() {
-	file, err := os.OpenFile(getLogFileLocation(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(getLogFileLocation(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err != nil {
-		Logger.Fatal(err)
+		fmt.Print(err)
 	}
 
-	logger := &logrus.Logger{
-		Out:          file,
-		Level:        logrus.DebugLevel,
-		Formatter:    &logrus.JSONFormatter{},
-		ReportCaller: true,
-	}
-	Logger = logger
+	Logger.Out = file
+	Logger.Level = logrus.DebugLevel
+	Logger.Formatter = &logrus.JSONFormatter{}
 }
 
 func getLogFileLocation() (result string) {
