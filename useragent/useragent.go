@@ -50,9 +50,11 @@ func GetUserAgent() string {
 	return getUserAgent("non ci usage", callTree)
 }
 
-func getUserAgentBaseAndVersion() string {
+func getUserAgentBaseAndVersion() (baseAgent string) {
 	Logger.Trace("Attempting to obtain user agent and version")
-	return fmt.Sprintf("%s/%s", CLIENTTOOL, buildversion.BuildVersion)
+	baseAgent = fmt.Sprintf("%s/%s", CLIENTTOOL, buildversion.BuildVersion)
+	Logger.WithField("user_agent_base", baseAgent).Trace("Obtained user agent and version")
+	return
 }
 
 func checkCIEnvironments(callTree string) string {
@@ -86,9 +88,11 @@ func checkCIEnvironments(callTree string) string {
 	return getUserAgent("ci usage", callTree)
 }
 
-func getUserAgent(agent string, callTree string) string {
+func getUserAgent(agent string, callTree string) (userAgent string) {
 	Logger.Trace("Obtaining parsed User Agent string")
-	return fmt.Sprintf("%s (%s; %s %s; %s)", getUserAgentBaseAndVersion(), agent, GOOS, GOARCH, callTree)
+	userAgent = fmt.Sprintf("%s (%s; %s %s; %s)", getUserAgentBaseAndVersion(), agent, GOOS, GOARCH, callTree)
+	Logger.WithField("user_agent_parsed", userAgent).Trace("Obtained parsed User Agent string")
+	return
 }
 
 func checkForCIEnvironment() bool {
