@@ -27,8 +27,9 @@ import (
 // DefaultLogFile can be overriden to use a different file name for upstream consumers
 var DefaultLogFile = "nancy.combined.log"
 
-// Logger can be obtained from outside the package
-var Logger = logrus.New()
+// LogLady can be obtained from outside the package, the name is a reference to the brilliant
+// actress in Twin Peaks
+var LogLady = logrus.New()
 
 func init() {
 	file, err := os.OpenFile(getLogFileLocation(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
@@ -36,14 +37,14 @@ func init() {
 		fmt.Print(err)
 	}
 
-	Logger.Out = file
-	Logger.Level = logrus.InfoLevel
-	Logger.Formatter = &logrus.JSONFormatter{}
+	LogLady.Out = file
+	LogLady.Level = logrus.InfoLevel
+	LogLady.Formatter = &logrus.JSONFormatter{}
 }
 
 // SetLogLevel is a helper function to set the logging level to something other than it's default
 func SetLogLevel(level logrus.Level) {
-	Logger.Level = level
+	LogLady.Level = level
 }
 
 func getLogFileLocation() (result string) {

@@ -37,7 +37,7 @@ func (sw SwError) Exit() {
 func Check(err error, message string) {
 	if err != nil {
 		myErr := SwError{Message: message, Err: err}
-		Logger.WithField("error", err).Error(message)
+		LogLady.WithField("error", err).Error(message)
 		fmt.Println(myErr.Error())
 		fmt.Println("nancy version:", buildversion.BuildVersion)
 		myErr.Exit()

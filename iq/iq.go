@@ -66,20 +66,20 @@ var statusURLResp types.StatusURLResult
 // AuditPackages accepts a slice of purls, public application ID, and configuration, and will submit these to
 // Nexus IQ Server for audit, and return a struct of StatusURLResult
 func AuditPackages(purls []string, applicationID string, config configuration.IqConfiguration) (types.StatusURLResult, error) {
-	Logger.WithFields(logrus.Fields{
+	LogLady.WithFields(logrus.Fields{
 		"purls":          purls,
 		"application_id": applicationID,
 	}).Info("Beginning audit with IQ")
 	localConfig = config
 
 	if localConfig.User == "admin" && localConfig.Token == "admin123" {
-		Logger.Info("Warning user of questionable life choices related to username and password")
+		LogLady.Info("Warning user of questionable life choices related to username and password")
 		warnUserOfBadLifeChoices()
 	}
 
 	internalID := getInternalApplicationID(applicationID)
 	if internalID == "" {
-		Logger.Error("Internal ID not obtained from Nexus IQ")
+		LogLady.Error("Internal ID not obtained from Nexus IQ")
 		return statusURLResp, fmt.Errorf("Internal ID for %s could not be found, or Nexus IQ Server is down", applicationID)
 	}
 
@@ -87,15 +87,15 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 	customerrors.Check(err, "There was an issue auditing packages using OSS Index")
 
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
-	Logger.WithField("sbom", sbom).Debug("Obtained cyclonedx SBOM")
+	LogLady.WithField("sbom", sbom).Debug("Obtained cyclonedx SBOM")
 
-	Logger.WithFields(logrus.Fields{
+	LogLady.WithFields(logrus.Fields{
 		"internal_id": internalID,
 		"sbom":        sbom,
 	}).Debug("Submitting to Third Party API")
 	statusURL := submitToThirdPartyAPI(sbom, internalID)
 	if statusURL == "" {
-		Logger.Error("StatusURL not obtained from Third Party API")
+		LogLady.Error("StatusURL not obtained from Third Party API")
 		return statusURLResp, fmt.Errorf("There was an issue submitting your sbom to the Nexus IQ Third Party API, sbom: %s", sbom)
 	}
 
@@ -148,11 +148,11 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 }
 
 func submitToThirdPartyAPI(sbom string, internalID string) string {
-	Logger.Debug("Beginning to submit to Third Party API")
+	LogLady.Debug("Beginning to submit to Third Party API")
 	client := &http.Client{}
 
 	url := fmt.Sprintf("%s%s", localConfig.Server, fmt.Sprintf("%s%s%s%s", thirdPartyAPILeft, internalID, thirdPartyAPIRight, localConfig.Stage))
-	Logger.WithField("url", url).Debug("Crafted URL for submission to Third Party API")
+	LogLady.WithField("url", url).Debug("Crafted URL for submission to Third Party API")
 
 	req, err := http.NewRequest(
 		"POST",
@@ -171,7 +171,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 
 	if resp.StatusCode == http.StatusAccepted {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		Logger.WithField("body", string(bodyBytes)).Info("Request accepted")
+		LogLady.WithField("body", string(bodyBytes)).Info("Request accepted")
 		customerrors.Check(err, "There was an issue submitting your sbom to the Nexus IQ Third Party API")
 
 		var response thirdPartyAPIResult
@@ -179,7 +179,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 		return response.StatusURL
 	}
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	Logger.WithFields(logrus.Fields{
+	LogLady.WithFields(logrus.Fields{
 		"body":        string(bodyBytes),
 		"status_code": resp.StatusCode,
 		"status":      resp.Status,
@@ -190,13 +190,13 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 }
 
 func pollIQServer(statusURL string, finished chan bool, maxRetries int) {
-	Logger.WithFields(logrus.Fields{
+	LogLady.WithFields(logrus.Fields{
 		"attempt_number": tries,
 		"max_retries":    maxRetries,
 		"status_url":     statusURL,
 	}).Trace("Polling Nexus IQ for response")
 	if tries > maxRetries {
-		Logger.Error("Maximum tries exceeded, finished polling, consider bumping up Max Retries")
+		LogLady.Error("Maximum tries exceeded, finished polling, consider bumping up Max Retries")
 		finished <- true
 	}
 

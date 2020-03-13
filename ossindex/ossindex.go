@@ -46,11 +46,11 @@ var (
 )
 
 func getDatabaseDirectory() (dbDir string) {
-	Logger.Trace("Attempting to get database directory")
+	LogLady.Trace("Attempting to get database directory")
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
-	Logger.WithField("home_dir", usr.HomeDir).Trace("Obtained user directory")
+	LogLady.WithField("home_dir", usr.HomeDir).Trace("Obtained user directory")
 	var leftPath = path.Join(usr.HomeDir, types.OssIndexDirName)
 	var fullPath string
 	if flag.Lookup("test") == nil {
@@ -75,12 +75,12 @@ func getOssIndexUrl() string {
 }
 
 func openDb(dbDir string) (db *badger.DB, err error) {
-	Logger.Debug("Attempting to open Badger DB")
+	LogLady.Debug("Attempting to open Badger DB")
 	opts := badger.DefaultOptions
 
 	opts.Dir = getDatabaseDirectory()
 	opts.ValueDir = getDatabaseDirectory()
-	Logger.WithField("badger_opts", opts).Debug("Set Badger Options")
+	LogLady.WithField("badger_opts", opts).Debug("Set Badger Options")
 
 	db, err = badger.Open(opts)
 	return
@@ -144,19 +144,19 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 			}
 
 			if resp.StatusCode != http.StatusOK {
-				Logger.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index")
+				LogLady.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index")
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					Logger.WithField("error", err).Error("Error closing response body")
+					LogLady.WithField("error", err).Error("Error closing response body")
 				}
 			}()
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				Logger.WithField("error", err).Error("Error accessing OSS Index")
+				LogLady.WithField("error", err).Error("Error accessing OSS Index")
 				return nil, err
 			}
 
@@ -206,7 +206,7 @@ func chunk(purls []string, chunkSize int) [][]string {
 }
 
 func setupRequest(jsonStr []byte) (req *http.Request, err error) {
-	Logger.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
+	LogLady.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
 	req, err = http.NewRequest(
 		"POST",
 		getOssIndexUrl(),
