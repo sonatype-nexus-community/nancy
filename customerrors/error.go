@@ -39,6 +39,7 @@ func Check(err error, message string) {
 		myErr := SwError{Message: message, Err: err}
 		LogLady.WithField("error", err).Error(message)
 		fmt.Println(myErr.Error())
+		fmt.Printf("For more information, check the log file at %s\n", GetLogFileLocation())
 		fmt.Println("nancy version:", buildversion.BuildVersion)
 		myErr.Exit()
 	}

@@ -32,7 +32,7 @@ var DefaultLogFile = "nancy.combined.log"
 var LogLady = logrus.New()
 
 func init() {
-	file, err := os.OpenFile(getLogFileLocation(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(GetLogFileLocation(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -47,7 +47,8 @@ func SetLogLevel(level logrus.Level) {
 	LogLady.Level = level
 }
 
-func getLogFileLocation() (result string) {
+// GetLogFileLocation will return the location on disk of the log file
+func GetLogFileLocation() (result string) {
 	result, _ = os.UserHomeDir()
 	result = path.Join(result, types.OssIndexDirName, DefaultLogFile)
 	return
