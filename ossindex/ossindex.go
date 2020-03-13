@@ -21,15 +21,16 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"os/user"
+	"path"
 	"strings"
 	"time"
 
 	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
+	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/sonatype-nexus-community/nancy/useragent"
 )
@@ -45,10 +46,20 @@ var (
 )
 
 func getDatabaseDirectory() (dbDir string) {
+	LogLady.Trace("Attempting to get database directory")
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
-	return usr.HomeDir + "/.ossindex"
+	LogLady.WithField("home_dir", usr.HomeDir).Trace("Obtained user directory")
+	var leftPath = path.Join(usr.HomeDir, types.OssIndexDirName)
+	var fullPath string
+	if flag.Lookup("test") == nil {
+		fullPath = path.Join(leftPath, dbValueDirName)
+	} else {
+		fullPath = path.Join(leftPath, "test-nancy")
+	}
+
+	return fullPath
 }
 
 // RemoveCacheDirectory deletes the local database directory.
@@ -64,14 +75,13 @@ func getOssIndexUrl() string {
 }
 
 func openDb(dbDir string) (db *badger.DB, err error) {
+	LogLady.Debug("Attempting to open Badger DB")
 	opts := badger.DefaultOptions
-	if flag.Lookup("test") == nil {
-		opts.Dir = dbDir + "/" + dbValueDirName
-		opts.ValueDir = dbDir + "/" + dbValueDirName
-	} else {
-		opts.Dir = dbDir + "/" + "test-nancy"
-		opts.ValueDir = dbDir + "/" + "test-nancy"
-	}
+
+	opts.Dir = getDatabaseDirectory()
+	opts.ValueDir = getDatabaseDirectory()
+	LogLady.WithField("badger_opts", opts).Debug("Set Badger Options")
+
 	db, err = badger.Open(opts)
 	return
 }
@@ -134,17 +144,19 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 			}
 
 			if resp.StatusCode != http.StatusOK {
+				LogLady.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index")
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					log.Printf("error closing response body: %s\n", err)
+					LogLady.WithField("error", err).Error("Error closing response body")
 				}
 			}()
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
+				LogLady.WithField("error", err).Error("Error accessing OSS Index")
 				return nil, err
 			}
 
@@ -194,6 +206,7 @@ func chunk(purls []string, chunkSize int) [][]string {
 }
 
 func setupRequest(jsonStr []byte) (req *http.Request, err error) {
+	LogLady.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
 	req, err = http.NewRequest(
 		"POST",
 		getOssIndexUrl(),

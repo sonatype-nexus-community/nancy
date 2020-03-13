@@ -18,6 +18,7 @@ import (
 	"os"
 
 	"github.com/sonatype-nexus-community/nancy/buildversion"
+	. "github.com/sonatype-nexus-community/nancy/logger"
 )
 
 type SwError struct {
@@ -36,7 +37,9 @@ func (sw SwError) Exit() {
 func Check(err error, message string) {
 	if err != nil {
 		myErr := SwError{Message: message, Err: err}
+		LogLady.WithField("error", err).Error(message)
 		fmt.Println(myErr.Error())
+		fmt.Printf("For more information, check the log file at %s\n", GetLogFileLocation())
 		fmt.Println("nancy version:", buildversion.BuildVersion)
 		myErr.Exit()
 	}

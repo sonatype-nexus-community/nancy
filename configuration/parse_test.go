@@ -86,6 +86,9 @@ func TestConfigParse(t *testing.T) {
 		"output of csv":               {args: []string{"-output=csv", "/tmp/go16.sum"}, expectedConfig: Configuration{Formatter: &audit.CsvFormatter{Quiet: &boolFalse}, Path: "/tmp/go16.sum"}, expectedErr: nil},
 		"output of text":              {args: []string{"-output=text", "/tmp/go17.sum"}, expectedConfig: Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go17.sum"}, expectedErr: nil},
 		"output of bad value":         {args: []string{"-output=aintgonnadoit", "/tmp/go18.sum"}, expectedConfig: Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go18.sum"}, expectedErr: nil},
+		"log level of info":           {args: []string{"-v"}, expectedConfig: Configuration{UseStdIn: true, Formatter: defaultAuditLogFormatter, Info: true}, expectedErr: nil},
+		"log level of debug":          {args: []string{"-vv"}, expectedConfig: Configuration{UseStdIn: true, Formatter: defaultAuditLogFormatter, Debug: true}, expectedErr: nil},
+		"log level of trace":          {args: []string{"-vvv"}, expectedConfig: Configuration{UseStdIn: true, Formatter: defaultAuditLogFormatter, Trace: true}, expectedErr: nil},
 	}
 
 	for name, test := range tests {
@@ -120,6 +123,9 @@ func TestConfigParseIQ(t *testing.T) {
 		"max-retries non default": {args: []string{"iq", "-max-retries", "200"}, expectedConfig: IqConfiguration{Help: false, Version: false, User: "admin", Token: "admin123", Stage: "develop", Server: "http://localhost:8070", MaxRetries: 200}, expectedErr: nil},
 		"stage non default":       {args: []string{"iq", "-stage", "build"}, expectedConfig: IqConfiguration{Help: false, Version: false, User: "admin", Token: "admin123", Stage: "build", Server: "http://localhost:8070", MaxRetries: 300}, expectedErr: nil},
 		"specify application":     {args: []string{"iq", "-application", "testapp"}, expectedConfig: IqConfiguration{Help: false, Version: false, User: "admin", Token: "admin123", Stage: "develop", Server: "http://localhost:8070", MaxRetries: 300, Application: "testapp"}, expectedErr: nil},
+		"log level of info":       {args: []string{"iq", "-v"}, expectedConfig: IqConfiguration{User: "admin", Token: "admin123", Stage: "develop", Server: "http://localhost:8070", MaxRetries: 300, Info: true}, expectedErr: nil},
+		"log level of debug":      {args: []string{"iq", "-vv"}, expectedConfig: IqConfiguration{User: "admin", Token: "admin123", Stage: "develop", Server: "http://localhost:8070", MaxRetries: 300, Debug: true}, expectedErr: nil},
+		"log level of trace":      {args: []string{"iq", "-vvv"}, expectedConfig: IqConfiguration{User: "admin", Token: "admin123", Stage: "develop", Server: "http://localhost:8070", MaxRetries: 300, Trace: true}, expectedErr: nil},
 	}
 
 	for name, test := range tests {

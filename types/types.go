@@ -21,6 +21,11 @@ import (
 	decimal "github.com/shopspring/decimal"
 )
 
+// Helpful constants to pull strings we use more than once out of code
+const (
+	OssIndexDirName = ".ossindex"
+)
+
 type Vulnerability struct {
 	Id          string
 	Title       string

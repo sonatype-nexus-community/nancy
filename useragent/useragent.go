@@ -21,6 +21,7 @@ import (
 	"runtime"
 
 	"github.com/sonatype-nexus-community/nancy/buildversion"
+	. "github.com/sonatype-nexus-community/nancy/logger"
 )
 
 // Variables that can be overriden (primarily for tests), or for consumers
@@ -36,6 +37,7 @@ var (
 // can be used to tell if nancy is being ran inside an orb, bitbucket pipeline, etc... that
 // we authored
 func GetUserAgent() string {
+	LogLady.Debug("Obtaining User Agent")
 	// where callTree format is:
 	// toolName__toolVersion___subToolName__subToolVersion___subSubToolName__subSubToolVersion
 	//
@@ -48,36 +50,49 @@ func GetUserAgent() string {
 	return getUserAgent("non ci usage", callTree)
 }
 
-func getUserAgentBaseAndVersion() string {
-	return fmt.Sprintf("%s/%s", CLIENTTOOL, buildversion.BuildVersion)
+func getUserAgentBaseAndVersion() (baseAgent string) {
+	LogLady.Trace("Attempting to obtain user agent and version")
+	baseAgent = fmt.Sprintf("%s/%s", CLIENTTOOL, buildversion.BuildVersion)
+	LogLady.WithField("user_agent_base", baseAgent).Trace("Obtained user agent and version")
+	return
 }
 
 func checkCIEnvironments(callTree string) string {
 	if checkForCISystem("CIRCLECI") {
+		LogLady.Trace("CircleCI usage")
 		return getUserAgent("circleci", callTree)
 	}
 	if checkForCISystem("BITBUCKET_BUILD_NUMBER") {
+		LogLady.Trace("BitBucket usage")
 		return getUserAgent("bitbucket", callTree)
 	}
 	if checkForCISystem("TRAVIS") {
+		LogLady.Trace("TravisCI usage")
 		return getUserAgent("travis-ci", callTree)
 	}
 	if checkForCISystem("GITLAB_CI") {
+		LogLady.Trace("GitLab usage")
 		return getUserAgent("gitlab-ci", callTree)
 	}
 	if checkIfJenkins() {
+		LogLady.Trace("Jenkins usage")
 		return getUserAgent("jenkins", callTree)
 	}
 	if checkIfGitHub() {
 		id := getGitHubActionID()
+		LogLady.WithField("gh_action_id", id).Trace("GitHub Actions usage")
 		return getUserAgent(fmt.Sprintf("github-action %s", id), callTree)
 	}
 
+	LogLady.Trace("Returning User Agent")
 	return getUserAgent("ci usage", callTree)
 }
 
-func getUserAgent(agent string, callTree string) string {
-	return fmt.Sprintf("%s (%s; %s %s; %s)", getUserAgentBaseAndVersion(), agent, GOOS, GOARCH, callTree)
+func getUserAgent(agent string, callTree string) (userAgent string) {
+	LogLady.Trace("Obtaining parsed User Agent string")
+	userAgent = fmt.Sprintf("%s (%s; %s %s; %s)", getUserAgentBaseAndVersion(), agent, GOOS, GOARCH, callTree)
+	LogLady.WithField("user_agent_parsed", userAgent).Trace("Obtained parsed User Agent string")
+	return
 }
 
 func checkForCIEnvironment() bool {
