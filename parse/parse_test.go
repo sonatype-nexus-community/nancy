@@ -20,7 +20,7 @@ import (
 )
 
 func TestGoSum(t *testing.T) {
-	deps, err := GoSum("go.sum")
+	deps, err := GoSum("../testdata/parse/go.sum")
 	if err != nil {
 		t.Error(err)
 	}
@@ -31,7 +31,7 @@ func TestGoSum(t *testing.T) {
 }
 
 func TestGoSumDuplicates(t *testing.T) {
-	deps, err := GoSum("gosumdupes.sum")
+	deps, err := GoSum("../testdata/parse/gosumdupes.sum")
 	if err != nil {
 		t.Error(err)
 	}
@@ -107,7 +107,7 @@ golang.org/x/sys v0.0.0-20181228144115-9a3f9b0469bb`
 }
 
 func TestGoSumError(t *testing.T) {
-	_, err := GoSum("go.notsum")
+	_, err := GoSum("../testdata/parse/go.notsum")
 	if err == nil {
 		t.Error(err)
 	}
