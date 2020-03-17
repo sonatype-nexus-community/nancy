@@ -28,16 +28,16 @@ import (
 )
 
 func TestConfigParse(t *testing.T) {
-	file, _ := os.Open("../testdata/nancyignores/normalIgnore")
-	emptyFile, _ := os.Open("../testdata/nancyignores/emptyFile")
-	lotsOfRandomNewlinesFile, _ := os.Open("../testdata/nancyignores/lotsOfRandomWhitespace")
-	commentedFile, _ := os.Open("../testdata/nancyignores/commented")
-	untilsFile, _ := os.Open("../testdata/nancyignores/untilsAndComments")
-	invalidUntilsFile, _ := os.Open("../testdata/nancyignores/untilsInvaild")
+	file, _ := os.Open("testdata/normalIgnore")
+	emptyFile, _ := os.Open("testdata/emptyFile")
+	lotsOfRandomNewlinesFile, _ := os.Open("testdata/lotsOfRandomWhitespace")
+	commentedFile, _ := os.Open("testdata/commented")
+	untilsFile, _ := os.Open("testdata/untilsAndComments")
+	invalidUntilsFile, _ := os.Open("testdata/untilsInvaild")
 	invalidUntilLine, _ := bufio.NewReader(invalidUntilsFile).ReadString('\n')
 	invalidUntilLine = strings.TrimSpace(invalidUntilLine)
 
-	invalidDateUntilsFile, _ := os.Open("../testdata/nancyignores/untilsBadDateFormat")
+	invalidDateUntilsFile, _ := os.Open("testdata/untilsBadDateFormat")
 	invalidDateUntilLine, _ := bufio.NewReader(invalidDateUntilsFile).ReadString('\n')
 	invalidDateUntilLine = strings.TrimSpace(invalidDateUntilLine)
 

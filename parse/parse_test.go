@@ -20,7 +20,7 @@ import (
 )
 
 func TestGoSum(t *testing.T) {
-	deps, err := GoSum("../testdata/parse/go.sum")
+	deps, err := GoSum("testdata/go.sum")
 	if err != nil {
 		t.Error(err)
 	}
