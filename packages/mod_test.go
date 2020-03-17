@@ -14,8 +14,9 @@
 package packages
 
 import (
-	"github.com/sonatype-nexus-community/nancy/types"
 	"testing"
+
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 var testGoSumName = "go.sum"
@@ -26,6 +27,25 @@ func getProjectList() (projectList types.ProjectList) {
 	appendProject("gopkg.in/BurntSushi/toml", "v0.3.1", &projectList)
 	appendProject("github.com/dgraph-io/badger", "v1.5.4", &projectList)
 	appendProject("github.com/dgryski/go-farm", "", &projectList)
+	appendProject("github.com/golang/protobuf", "v1.2.0", &projectList)
+	appendProject("github.com/logrusorgru/aurora", "", &projectList)
+	appendProject("github.com/pkg/errors", "v0.8.0", &projectList)
+	appendProject("github.com/shopspring/decimal", "1.1.0", &projectList)
+	appendProject("golang.org/x/net", "", &projectList)
+	appendProject("golang.org/x/sys", "", &projectList)
+
+	return projectList
+}
+
+func getProjectListDuplicates() (projectList types.ProjectList) {
+	appendProject("github.com/AndreasBriese/bbloom", "", &projectList)
+	appendProject("gopkg.in/BurntSushi/toml", "v0.3.1", &projectList)
+	appendProject("github.com/dgraph-io/badger", "v1.5.4", &projectList)
+	appendProject("github.com/dgraph-io/badger", "v1.5.4", &projectList)
+	appendProject("gopkg.in/dgraph-io/badger", "v1.5.4", &projectList)
+	appendProject("github.com/dgryski/go-farm", "", &projectList)
+	appendProject("github.com/golang/protobuf", "v1.2.0", &projectList)
+	appendProject("github.com/golang/protobuf", "v1.2.0", &projectList)
 	appendProject("github.com/golang/protobuf", "v1.2.0", &projectList)
 	appendProject("github.com/logrusorgru/aurora", "", &projectList)
 	appendProject("github.com/pkg/errors", "v0.8.0", &projectList)
@@ -55,6 +75,21 @@ func TestModExtractPurlsFromManifest(t *testing.T) {
 	mod := Mod{}
 	mod.GoSumPath = testGoSumName
 	mod.ProjectList = getProjectList()
+	if err != nil {
+		t.Error(err)
+	}
+
+	result := mod.ExtractPurlsFromManifest()
+	if len(result) != 5 {
+		t.Error(result)
+	}
+}
+
+func TestModExtractPurlsFromManifestDuplicates(t *testing.T) {
+	var err error
+	mod := Mod{}
+	mod.GoSumPath = testGoSumName
+	mod.ProjectList = getProjectListDuplicates()
 	if err != nil {
 		t.Error(err)
 	}
