@@ -15,11 +15,9 @@ package parse
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
 
-	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -34,9 +32,6 @@ func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
 	for stdIn.Scan() {
 		parseSpaceSeparatedDependency(stdIn, &deps, goListDependencyCriteria)
 	}
-
-	LogLady.Info("Beginning to dedupe list")
-	deps = removeDuplicates(&deps)
 
 	return deps, nil
 }
@@ -54,9 +49,6 @@ func GoSum(path string) (deps types.ProjectList, err error) {
 		parseSpaceSeparatedDependency(scanner, &deps, goModDependencyCriteria)
 	}
 
-	LogLady.Info("Beginning to dedupe list")
-	deps = removeDuplicates(&deps)
-
 	return deps, nil
 }
 
@@ -66,20 +58,4 @@ func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectLi
 	if criteria(s) {
 		deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[1]})
 	}
-}
-
-func removeDuplicates(deps *types.ProjectList) (newDeps types.ProjectList) {
-	encountered := map[string]bool{}
-
-	for _, v := range deps.Projects {
-		if encountered[fmt.Sprintf("%s-%s", v.Name, v.Version)] == true {
-			LogLady.WithField("dep", v).Debug("Found duplicate dependency, eliminating it")
-		} else {
-			LogLady.WithField("dep", v).Debug("Unique dependency, adding it")
-			encountered[fmt.Sprintf("%s-%s", v.Name, v.Version)] = true
-			newDeps.Projects = append(newDeps.Projects, v)
-		}
-	}
-
-	return
 }

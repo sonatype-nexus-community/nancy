@@ -13,11 +13,15 @@
 // limitations under the License.
 package packages
 
-import "strings"
-import "github.com/sonatype-nexus-community/nancy/types"
-import "fmt"
-import "github.com/sonatype-nexus-community/nancy/customerrors"
-import "os"
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/sonatype-nexus-community/nancy/customerrors"
+	. "github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/types"
+)
 
 type Mod struct {
 	ProjectList types.ProjectList
@@ -34,7 +38,10 @@ func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 			purls = append(purls, purl)
 		}
 	}
-	return purls
+
+	purls = removeDuplicates(purls)
+
+	return
 }
 
 func (m Mod) ExtractPurlsFromManifestForIQ() (purls []string) {
@@ -46,7 +53,9 @@ func (m Mod) ExtractPurlsFromManifestForIQ() (purls []string) {
 			purls = append(purls, purl)
 		}
 	}
-	return purls
+	purls = removeDuplicates(purls)
+
+	return
 }
 
 func (m Mod) CheckExistenceOfManifest() bool {
@@ -54,4 +63,20 @@ func (m Mod) CheckExistenceOfManifest() bool {
 		customerrors.Check(err, fmt.Sprint("No go.sum found at path: "+m.GoSumPath))
 	}
 	return true
+}
+
+func removeDuplicates(purls []string) (dedupedPurls []string) {
+	encountered := map[string]bool{}
+
+	for _, v := range purls {
+		if encountered[v] == true {
+			LogLady.WithField("dep", v).Debug("Found duplicate dependency, eliminating it")
+		} else {
+			LogLady.WithField("dep", v).Debug("Unique dependency, adding it")
+			encountered[v] = true
+			dedupedPurls = append(dedupedPurls, v)
+		}
+	}
+
+	return
 }
