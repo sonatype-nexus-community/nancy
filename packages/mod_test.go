@@ -19,7 +19,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-var testGoSumName = "go.sum"
+var testGoSumName = "testdata/go.sum"
 
 // Simulate calling parse.GopkgLock()
 func getProjectList() (projectList types.ProjectList) {

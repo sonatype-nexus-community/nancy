@@ -81,13 +81,19 @@ func doGoPathSimulatedSetup(t *testing.T) (string, string, error) {
 	if e != nil {
 		t.Error(e)
 	}
-	lockBytes, _ := ioutil.ReadFile("../testdata/dep/Gopkg.lock")
+	lockBytes, e := ioutil.ReadFile("testdata/Gopkg.lock")
+	if e != nil {
+		t.Error(e)
+	}
 	e = ioutil.WriteFile(fmt.Sprint(projectDir, "/Gopkg.lock"), lockBytes, 0644)
 	if e != nil {
 		t.Error(e)
 	}
 
-	tomlBytes, _ := ioutil.ReadFile("../testdata/dep/Gopkg.toml")
+	tomlBytes, e := ioutil.ReadFile("testdata/Gopkg.toml")
+	if e != nil {
+		t.Error(e)
+	}
 	e = ioutil.WriteFile(fmt.Sprint(projectDir, "/Gopkg.toml"), tomlBytes, 0644)
 	if e != nil {
 		t.Error(e)
