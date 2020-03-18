@@ -17,23 +17,30 @@ package logger
 
 import (
 	"fmt"
-	"os"
-	"path"
-
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"os"
+	"path"
+	"strings"
 )
 
-// DefaultLogFile can be overriden to use a different file name for upstream consumers
-var DefaultLogFile = "nancy.combined.log"
+const DefaultLogFilename = "nancy.combined.log"
+const TestLogfilename = "nancy.test.log"
+
+// DefaultLogFile can be overridden to use a different file name for upstream consumers
+var DefaultLogFile = DefaultLogFilename
 
 // LogLady can be obtained from outside the package, the name is a reference to the brilliant
 // actress in Twin Peaks
 var LogLady = logrus.New()
 
 func init() {
-	if len(os.Args) > 1 && os.Args[1] != "iq" && os.Args[1][:5] == "-test" {
-		DefaultLogFile = "nancy.test.log"
+	doInit(os.Args)
+}
+
+func doInit(args []string) {
+	if useTestLogFile(args) {
+		DefaultLogFile = TestLogfilename
 	}
 	file, err := os.OpenFile(GetLogFileLocation(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err != nil {
@@ -43,6 +50,31 @@ func init() {
 	LogLady.Out = file
 	LogLady.Level = logrus.InfoLevel
 	LogLady.Formatter = &logrus.JSONFormatter{}
+}
+
+func stringPrefixInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if strings.Contains(b, a) {
+			return true
+		}
+	}
+	return false
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func useTestLogFile(args []string) bool {
+	if stringPrefixInSlice("-test.", args) && !stringInSlice("-iq", args) {
+		return true
+	}
+	return false
 }
 
 // GetLogFileLocation will return the location on disk of the log file
