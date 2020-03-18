@@ -200,7 +200,7 @@ func checkStdIn() {
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		LogLady.Info("StdIn is valid")
 	} else {
-		LogLady.Error("StdIn is invalid")
+		LogLady.Error("StdIn is invalid, either empty or another reason")
 		flag.Usage()
 		os.Exit(1)
 	}
