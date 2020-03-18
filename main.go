@@ -174,68 +174,58 @@ func processIQConfig(config configuration.IqConfiguration) {
 
 func doStdInAndParse(config configuration.Configuration) {
 	LogLady.Info("Beginning StdIn parse for OSS Index")
-	fi, err := os.Stdin.Stat()
-	if err != nil {
-		LogLady.WithField("error", err).Error("Error obtaining Std In")
-		panic(err)
-	}
-	if (fi.Mode() & os.ModeNamedPipe) == 0 {
-		LogLady.Error("Error obtaining StdIn, showing usage and exiting with error")
+	checkStdIn()
+	LogLady.Info("Instantiating go.mod package")
+
+	mod := packages.Mod{}
+	scanner := bufio.NewScanner(os.Stdin)
+
+	LogLady.Info("Beginning to parse StdIn")
+	mod.ProjectList, _ = parse.GoList(scanner)
+	LogLady.WithFields(logrus.Fields{
+		"projectList": mod.ProjectList,
+	}).Debug("Obtained project list")
+
+	var purls = mod.ExtractPurlsFromManifest()
+	LogLady.WithFields(logrus.Fields{
+		"purls": purls,
+	}).Debug("Extracted purls")
+
+	LogLady.Info("Auditing purls with OSS Index")
+	checkOSSIndex(purls, nil, config)
+}
+
+func checkStdIn() {
+	stat, _ := os.Stdin.Stat()
+	if (stat.Mode() & os.ModeCharDevice) == 0 {
+		LogLady.Info("StdIn is valid")
+	} else {
+		LogLady.Error("StdIn is invalid")
 		flag.Usage()
 		os.Exit(1)
-	} else {
-		LogLady.Info("Instantiating go.mod package")
-
-		mod := packages.Mod{}
-		scanner := bufio.NewScanner(os.Stdin)
-
-		LogLady.Info("Beginning to parse StdIn")
-		mod.ProjectList, _ = parse.GoList(scanner)
-		LogLady.WithFields(logrus.Fields{
-			"projectList": mod.ProjectList,
-		}).Debug("Obtained project list")
-
-		var purls = mod.ExtractPurlsFromManifest()
-		LogLady.WithFields(logrus.Fields{
-			"purls": purls,
-		}).Debug("Extracted purls")
-
-		LogLady.Info("Auditing purls with OSS Index")
-		checkOSSIndex(purls, nil, config)
 	}
 }
 
 func doStdInAndParseForIQ(config configuration.IqConfiguration) {
 	LogLady.Debug("Beginning StdIn parse for IQ")
-	fi, err := os.Stdin.Stat()
-	if err != nil {
-		LogLady.WithField("error", err).Error("Error obtaining Std In")
-		panic(err)
-	}
-	if (fi.Mode() & os.ModeNamedPipe) == 0 {
-		LogLady.Error("Error obtaining StdIn, showing usage and exiting with error")
-		flag.Usage()
-		os.Exit(1)
-	} else {
-		LogLady.Info("Instantiating go.mod package")
+	LogLady.Info("Instantiating go.mod package")
 
-		mod := packages.Mod{}
-		scanner := bufio.NewScanner(os.Stdin)
+	mod := packages.Mod{}
+	scanner := bufio.NewScanner(os.Stdin)
 
-		LogLady.Info("Beginning to parse StdIn")
-		mod.ProjectList, _ = parse.GoList(scanner)
-		LogLady.WithFields(logrus.Fields{
-			"projectList": mod.ProjectList,
-		}).Debug("Obtained project list")
+	LogLady.Info("Beginning to parse StdIn")
+	mod.ProjectList, _ = parse.GoList(scanner)
+	LogLady.WithFields(logrus.Fields{
+		"projectList": mod.ProjectList,
+	}).Debug("Obtained project list")
 
-		var purls = mod.ExtractPurlsFromManifestForIQ()
-		LogLady.WithFields(logrus.Fields{
-			"purls": purls,
-		}).Debug("Extracted purls")
+	var purls = mod.ExtractPurlsFromManifestForIQ()
+	LogLady.WithFields(logrus.Fields{
+		"purls": purls,
+	}).Debug("Extracted purls")
 
-		LogLady.Info("Auditing purls with IQ Server")
-		auditWithIQServer(purls, config.Application, config)
-	}
+	LogLady.Info("Auditing purls with IQ Server")
+	auditWithIQServer(purls, config.Application, config)
 }
 
 func doCheckExistenceAndParse(config configuration.Configuration) {
