@@ -3,6 +3,7 @@ package audit
 import (
 	"errors"
 	. "github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -20,4 +21,31 @@ func TestFormatterErrorsIfEntryNotValid(t *testing.T) {
 	assert.Nil(t, logMessage)
 	assert.NotNil(t, e)
 	assert.Equal(t, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else"), e)
+}
+
+func verifyFormatterSummaryLoudness(t *testing.T, quiet bool) {
+	data := map[string]interface{}{
+		"audited":        []types.Coordinate{},
+		"invalid":        []types.Coordinate{},
+		"num_audited":    0,
+		"num_vulnerable": 0,
+		"version":        0,
+	}
+	entry := Entry{Data: data}
+
+	formatter := AuditLogTextFormatter{Quiet: &quiet, NoColor: new(bool)}
+	logMessage, e := formatter.Format(&entry)
+
+	assert.Nil(t, e)
+
+	expectedSummary := "Audited dependencies:0,Vulnerable:[1;31m0[0m\n"
+	if !quiet {
+		expectedSummary = "\n" + expectedSummary
+	}
+	assert.Equal(t, expectedSummary, string(logMessage))
+}
+
+func TestFormatterSummary(t *testing.T) {
+	verifyFormatterSummaryLoudness(t, false)
+	verifyFormatterSummaryLoudness(t, true)
 }
