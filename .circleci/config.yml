@@ -29,6 +29,7 @@ jobs:
       - run: cd packages/testdata && ../../nancy Gopkg.lock && cd -
       - run: ./nancy go.sum
       - run: go list -m all | ./nancy
+      - run: go list -m all > deps.out && ./nancy < deps.out
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
