@@ -92,7 +92,9 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 			}
 		}
 
-		sb.WriteString("\n")
+		if !*f.Quiet {
+			sb.WriteString("\n")
+		}
 		au := aurora.NewAurora(!*f.NoColor)
 		sb.WriteString("Audited dependencies:" + strconv.Itoa(packageCount) + "," +
 			"Vulnerable:" + au.Bold(au.Red(strconv.Itoa(numVulnerable))).String() + "\n")
