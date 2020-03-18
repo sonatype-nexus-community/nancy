@@ -208,6 +208,7 @@ func checkStdIn() {
 
 func doStdInAndParseForIQ(config configuration.IqConfiguration) {
 	LogLady.Debug("Beginning StdIn parse for IQ")
+	checkStdIn()
 	LogLady.Info("Instantiating go.mod package")
 
 	mod := packages.Mod{}
