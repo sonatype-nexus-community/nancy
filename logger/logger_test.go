@@ -17,6 +17,7 @@ package logger
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -30,8 +31,8 @@ func TestLogger(t *testing.T) {
 	// Do initial write to have a file
 	LogLady.Debug("Test")
 
-	if !strings.Contains(GetLogFileLocation(), "nancy.test.log") {
-		t.Error("Nancy test file not in log file location")
+	if !strings.Contains(GetLogFileLocation(), TestLogfilename) {
+		t.Errorf("Nancy test file not in log file location. args: %+v", os.Args)
 	}
 
 	err := os.Truncate(GetLogFileLocation(), 0)
@@ -63,4 +64,38 @@ type LogTest struct {
 	Level string `json:"level"`
 	Msg   string `json:"msg"`
 	Time  string `json:"time"`
+}
+
+func setupTestCase(t *testing.T) func(t *testing.T) {
+	origDefault := DefaultLogFile
+	t.Logf("setup test case, origDefault: %+v", origDefault)
+	DefaultLogFile = DefaultLogFilename
+	return func(t *testing.T) {
+		t.Logf("teardown test case, origDefault: %+v", origDefault)
+		DefaultLogFile = origDefault
+	}
+}
+
+func TestInit(t *testing.T) {
+	teardownTestCase := setupTestCase(t)
+	defer teardownTestCase(t)
+
+	doInit([]string{"yadda", "-test.v"})
+	assert.Equal(t, TestLogfilename, DefaultLogFile)
+}
+
+func TestInitIQ(t *testing.T) {
+	teardownTestCase := setupTestCase(t)
+	defer teardownTestCase(t)
+
+	doInit([]string{"yadda", "-iq", "-test.v"})
+	assert.Equal(t, DefaultLogFilename, DefaultLogFile)
+}
+
+func TestInitDefault(t *testing.T) {
+	teardownTestCase := setupTestCase(t)
+	defer teardownTestCase(t)
+
+	doInit([]string{"yadda", "-yadda"})
+	assert.Equal(t, DefaultLogFilename, DefaultLogFile)
 }
