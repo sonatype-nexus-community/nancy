@@ -37,10 +37,10 @@ env-setup:
 build: env-setup
 	$(GOBUILD) -o $(BINARY_NAME) -v
 
-test:
+test: build
 	$(GOTEST) -v -count=1 -p=1 ./... 2>&1
 
-integration-test: env-setup build
+integration-test: build
 	cd packages/testdata && ../../$(BINARY_NAME) Gopkg.lock && cd -
 	./$(BINARY_NAME) go.sum
 	go list -m all | ./$(BINARY_NAME)
