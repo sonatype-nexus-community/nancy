@@ -38,7 +38,7 @@ build: env-setup
 	$(GOBUILD) -o $(BINARY_NAME) -v
 
 test:
-	$(GOTEST) -race -v -count=1 -p=1 ./... 2>&1
+	$(GOTEST) -v -count=1 -p=1 ./... 2>&1
 
 integration-test: env-setup build
 	cd packages/testdata && ../../$(BINARY_NAME) Gopkg.lock && cd -
