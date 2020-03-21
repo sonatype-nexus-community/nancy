@@ -15,6 +15,7 @@ package configuration
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
