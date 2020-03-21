@@ -17,11 +17,12 @@ package logger
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 const DefaultLogFilename = "nancy.combined.log"
@@ -80,7 +81,10 @@ func useTestLogFile(args []string) bool {
 // GetLogFileLocation will return the location on disk of the log file
 func GetLogFileLocation() (result string) {
 	result, _ = os.UserHomeDir()
-	os.MkdirAll(path.Join(result, types.OssIndexDirName), os.ModePerm)
+	err := os.MkdirAll(path.Join(result, types.OssIndexDirName), os.ModePerm)
+	if err != nil {
+		fmt.Print(err)
+	}
 	result = path.Join(result, types.OssIndexDirName, DefaultLogFile)
 	return
 }

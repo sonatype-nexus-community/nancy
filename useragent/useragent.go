@@ -43,7 +43,7 @@ func GetUserAgent() string {
 	//
 	// double underscore "__" delimits Name/Version
 	// triple underscore "___" delimits currentCaller/priorCaller/priorPriorCaller
-	callTree := os.Getenv("SC_CALLER_INFO")
+	callTree := getCallerInfo()
 	if checkForCIEnvironment() {
 		return checkCIEnvironments(callTree)
 	}
@@ -105,18 +105,12 @@ func checkForCIEnvironment() bool {
 
 func checkIfJenkins() bool {
 	s := os.Getenv("JENKINS_HOME")
-	if s != "" {
-		return true
-	}
-	return false
+	return s != ""
 }
 
 func checkIfGitHub() bool {
 	s := os.Getenv("GITHUB_ACTIONS")
-	if s != "" {
-		return true
-	}
-	return false
+	return s != ""
 }
 
 // Returns info from SC_CALLER_INFO, example: bitbucket-nancy-pipe-0.1.9
@@ -132,8 +126,5 @@ func getGitHubActionID() string {
 
 func checkForCISystem(system string) bool {
 	s := os.Getenv(system)
-	if s != "" {
-		return true
-	}
-	return false
+	return s != ""
 }

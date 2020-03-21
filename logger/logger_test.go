@@ -17,11 +17,12 @@ package logger
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/sirupsen/logrus"
 )
@@ -36,6 +37,9 @@ func TestLogger(t *testing.T) {
 	}
 
 	err := os.Truncate(GetLogFileLocation(), 0)
+	if err != nil {
+		t.Error("Unable to cleanup log file location")
+	}
 
 	LogLady.Debug("Test")
 

@@ -15,7 +15,6 @@ package configuration
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -164,7 +163,7 @@ func getModfilePath() (modfilepath string, err error) {
 	if flag.CommandLine.NArg() > 0 {
 		nonFlagArgs := flag.CommandLine.Args()
 		if len(nonFlagArgs) != 1 {
-			return modfilepath, errors.New(fmt.Sprintf("wrong number of modfile paths: %s", nonFlagArgs))
+			return modfilepath, fmt.Errorf("wrong number of modfile paths: %s", nonFlagArgs)
 		}
 		for _, nonFlagArg := range nonFlagArgs {
 			return nonFlagArg, err
