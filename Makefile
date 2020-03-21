@@ -42,6 +42,6 @@ test:
 
 integration-test: env-setup build
 	cd packages/testdata && ../../$(BINARY_NAME) Gopkg.lock && cd -
-    ./nancy go.sum
-    go list -m all | ./$(BINARY_NAME)
-    go list -m all > deps.out && ./$(BINARY_NAME) < deps.out
+	./$(BINARY_NAME) go.sum
+	go list -m all | ./$(BINARY_NAME)
+	go list -m all > deps.out && ./$(BINARY_NAME) < deps.out
