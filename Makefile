@@ -11,7 +11,7 @@ LINT_CMD=golangci-lint cache status --color always && golangci-lint run --timeou
 
 all: deps test lint build
 
-.PHONY: lint clean deps env-setup build test integration-test package
+.PHONY: lint clean deps build test integration-test package
 
 lint:
 	docker run --rm -v $$(pwd):/app -v $$(pwd)/.cache:/root/.cache -w /app $(GOLANGCI_LINT_DOCKER) /bin/sh -c "$(LINT_CMD)"
@@ -31,11 +31,8 @@ deps:
 	$(GOCMD) mod verify
 	$(GOCMD) mod tidy
 
-env-setup:
-	export GO111MODULE=on CGO_ENABLED=0
-
-build: env-setup
-	$(GOBUILD) -o $(BINARY_NAME) -v
+build: 
+	GO111MODULE=on CGO_ENABLED=0 $(GOBUILD) -o $(BINARY_NAME) -v
 
 test: build
 	$(GOTEST) -v -count=1 -p=1 ./... 2>&1
