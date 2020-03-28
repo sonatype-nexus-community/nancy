@@ -1,4 +1,5 @@
 # Go parameters
+GO_BUILD_FLAGS=GO111MODULE=on CGO_ENABLED=0
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
@@ -32,7 +33,7 @@ deps:
 	$(GOCMD) mod tidy
 
 build: 
-	GO111MODULE=on CGO_ENABLED=0 $(GOBUILD) -o $(BINARY_NAME) -v
+	$(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
 
 test: build
 	$(GOTEST) -v -count=1 -p=1 ./... 2>&1
