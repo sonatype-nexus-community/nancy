@@ -104,6 +104,7 @@ func TestAuditPackages(t *testing.T) {
 }
 
 func TestAuditPackagesIqCannotLocateApplicationID(t *testing.T) {
+	expectedError := "Unable to retrieve an internal ID for the specified public application ID: testapp"
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -116,10 +117,10 @@ func TestAuditPackagesIqCannotLocateApplicationID(t *testing.T) {
 
 	_, err := AuditPackages(purls, "testapp", setupIqConfiguration())
 	if err == nil {
-		t.Error("There is an error")
+		t.Errorf("err should not be nil, expected an err with the following text: %s", expectedError)
 	}
-	if err.Error() != "Internal ID for testapp could not be found, or Nexus IQ Server is down" {
-		t.Error("Error returned is not as expected")
+	if err.Error() != expectedError {
+		t.Errorf("Error returned is not as expected. Expected: %s but got: %s", expectedError, err.Error())
 	}
 }
 
