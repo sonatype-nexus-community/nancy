@@ -103,6 +103,26 @@ func TestAuditPackages(t *testing.T) {
 	assert.Equal(t, result, statusExpected)
 }
 
+func TestAuditPackagesIqCannotLocateApplicationID(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "http://sillyplace.com:8090/api/v2/applications?publicId=testapp",
+		httpmock.NewBytesResponder(200, []byte(`{ "applications": [] }`)))
+
+	var purls []string
+	purls = append(purls, "pkg:golang/github.com/go-yaml/yaml@v2.2.2")
+	purls = append(purls, "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2")
+
+	_, err := AuditPackages(purls, "testapp", setupIqConfiguration())
+	if err == nil {
+		t.Error("There is an error")
+	}
+	if err.Error() != "Internal ID for testapp could not be found, or Nexus IQ Server is down" {
+		t.Error("Error returned is not as expected")
+	}
+}
+
 func TestAuditPackagesIqDownOrUnreachable(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
