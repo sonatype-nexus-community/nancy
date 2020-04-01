@@ -142,7 +142,16 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 
 		var response applicationResponse
 		json.Unmarshal(bodyBytes, &response)
-		return response.Applications[0].ID
+		if response.Applications != nil && len(response.Applications) > 0 {
+			LogLady.WithFields(logrus.Fields{
+				"internal_id": response.Applications[0].ID,
+			}).Debug("Retrieved internal ID from Nexus IQ Server")
+
+			return response.Applications[0].ID
+		}
+		LogLady.WithFields(logrus.Fields{
+			"application_id": applicationID,
+		}).Error("Unable to retrieve an internal ID for the specified public application ID")
 	}
 	return ""
 }
