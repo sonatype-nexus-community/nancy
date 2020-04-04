@@ -87,7 +87,10 @@ func openDb(dbDir string) (db *badger.DB, err error) {
 	return
 }
 
-// AuditPackages will given a list of Package URLs, run an OSS Index audit
+// AuditPackages will given a list of Package URLs, run an OSS Index audit.
+//
+// Deprecated: AuditPackages is old and being maintained for upstream compatibility at the moment.
+// It will be removed when we go to a major version release. Use AuditPackagesWithOSSIndex instead.
 func AuditPackages(purls []string) ([]types.Coordinate, error) {
 	return doAuditPackages(purls, nil)
 }
