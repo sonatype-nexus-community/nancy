@@ -130,6 +130,7 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		if len(chunk) > 0 {
 			var request types.AuditRequest
 			request.Coordinates = chunk
+			LogLady.WithField("request", request).Info("Prepping request to OSS Index")
 			var jsonStr, _ = json.Marshal(request)
 
 			req, err := setupRequest(jsonStr)
@@ -148,6 +149,8 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
 			}
 
+			LogLady.WithField("status_code", resp.StatusCode).Info("Obtained a response from OSS Index")
+
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
 					LogLady.WithField("error", err).Error("Error closing response body")
@@ -163,8 +166,11 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 			// Process results
 			var coordinates []types.Coordinate
 			if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
+				LogLady.WithField("error", err).Error("Unable to unmarshall body into coordinates")
 				return nil, err
 			}
+
+			LogLady.WithField("coordinates", coordinates).Info("Coordinates unmarshalled from OSS Index")
 
 			// Cache the new results
 			if err := db.Update(func(txn *badger.Txn) error {
@@ -173,9 +179,11 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 					results = append(results, coordinates[i])
 
 					var coordJson, _ = json.Marshal(coordinates[i])
+					LogLady.WithField("json", coordJson).Info("Marshall coordinate into json for insertion into DB")
 
 					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJson), time.Hour*12)
 					if err != nil {
+						LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
 						return err
 					}
 				}
