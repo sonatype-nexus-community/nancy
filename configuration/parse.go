@@ -93,7 +93,7 @@ Options:
 
 	usersHomeDir, _ := os.UserHomeDir()
 
-	path := filepath.Join(usersHomeDir, ".iqserver", ".iq-server-config")
+	path := filepath.Join(usersHomeDir, types.IQServerDirName, types.IQServerConfigFileName)
 
 	err = loadIQConfigFromFile(path, &config)
 	if err != nil {
@@ -175,7 +175,7 @@ Options:
 
 	usersHomeDir, _ := os.UserHomeDir()
 
-	path := filepath.Join(usersHomeDir, ".ossindex", ".oss-index-config")
+	path := filepath.Join(usersHomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 
 	err := loadConfigFromFile(path, &config)
 	if err != nil {

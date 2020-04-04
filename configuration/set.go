@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	. "github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -50,7 +51,7 @@ func getAndSetIQConfig() {
 	fmt.Print("What token do you want to use (default: admin123)? ")
 	fmt.Scanln(&iqConfig.Token)
 
-	err := marshallAndWriteToDisk(iqConfig, filepath.Join(homeDir, ".iqserver", ".iq-server-config"))
+	err := marshallAndWriteToDisk(iqConfig, filepath.Join(homeDir, types.IQServerDirName, types.IQServerConfigFileName))
 	if err != nil {
 		LogLady.Error(err)
 	}
@@ -63,7 +64,7 @@ func getAndSetOSSIndexConfig() {
 	fmt.Print("What token do you want to use? ")
 	fmt.Scanln(&ossIndexConfig.Token)
 
-	err := marshallAndWriteToDisk(ossIndexConfig, filepath.Join(homeDir, ".ossindex", ".oss-index-config"))
+	err := marshallAndWriteToDisk(ossIndexConfig, filepath.Join(homeDir, types.OssIndexDirName, types.OssIndexConfigFileName))
 	if err != nil {
 		LogLady.Error(err)
 	}

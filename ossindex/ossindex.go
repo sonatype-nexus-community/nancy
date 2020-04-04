@@ -185,6 +185,11 @@ func doRequestToOSSIndex(jsonStr []byte, config *configuration.Configuration) (c
 		return
 	}
 
+	if resp.StatusCode == http.StatusTooManyRequests {
+		LogLady.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index due to Rate Limiting")
+		return nil, &types.OSSIndexRateLimitError{}
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		LogLady.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index")
 		return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
