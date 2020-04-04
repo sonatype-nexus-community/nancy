@@ -18,7 +18,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -26,7 +28,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/audit"
+	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"gopkg.in/yaml.v2"
 )
 
 type Configuration struct {
@@ -42,6 +46,8 @@ type Configuration struct {
 	Info       bool
 	Debug      bool
 	Trace      bool
+	Username   string `yaml:"Username"`
+	Token      string `yaml:"Token"`
 }
 
 type IqConfiguration struct {
@@ -60,6 +66,8 @@ type IqConfiguration struct {
 
 var unixComments = regexp.MustCompile(`#.*$`)
 var untilComment = regexp.MustCompile(`(until=)(.*)`)
+
+var usersHomeDir string
 
 func ParseIQ(args []string) (config IqConfiguration, err error) {
 	iqCommand := flag.NewFlagSet("iq", flag.ExitOnError)
@@ -83,12 +91,48 @@ Options:
 		os.Exit(2)
 	}
 
+	usersHomeDir, _ := os.UserHomeDir()
+
+	path := filepath.Join(usersHomeDir, ".iqserver", ".iq-server-config")
+
+	err = loadIQConfigFromFile(path, &config)
+	if err != nil {
+		fmt.Println(err)
+		LogLady.Info("Unable to load config from file")
+	}
+
 	err = iqCommand.Parse(args)
 	if err != nil {
 		return config, err
 	}
 
 	return config, nil
+}
+
+func loadConfigFromFile(configLocation string, config *Configuration) error {
+	b, err := ioutil.ReadFile(configLocation)
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(b, config)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func loadIQConfigFromFile(configLocation string, config *IqConfiguration) error {
+	b, err := ioutil.ReadFile(configLocation)
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(b, config)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func Parse(args []string) (Configuration, error) {
@@ -128,7 +172,17 @@ Options:
 		os.Exit(2)
 	}
 
-	err := flag.CommandLine.Parse(args)
+	usersHomeDir, _ := os.UserHomeDir()
+
+	path := filepath.Join(usersHomeDir, ".ossindex", ".oss-index-config")
+
+	err := loadConfigFromFile(path, &config)
+	if err != nil {
+		fmt.Println(err)
+		LogLady.Info("Unable to load config from file")
+	}
+
+	err = flag.CommandLine.Parse(args)
 	if err != nil {
 		return config, err
 	}
