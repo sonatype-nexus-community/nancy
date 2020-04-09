@@ -42,15 +42,18 @@ func init() {
 // GetConfigFromCommandLine is a method to obtain IQ or OSS Index config from the command line,
 // and then write it to disk.
 func GetConfigFromCommandLine(stdin io.Reader) (err error) {
+	LogLady.Info("Starting process to obtain config from user")
 	reader := bufio.NewReader(stdin)
 	fmt.Print("Hi! What config can I help you set, IQ or OSS Index (values: iq, ossindex, enter for exit)? ")
 	configType, _ := reader.ReadString('\n')
 
 	switch str := strings.TrimSpace(configType); str {
 	case "iq":
+		LogLady.Info("User chose to set IQ Config, moving forward")
 		ConfigLocation = filepath.Join(HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
 		err = getAndSetIQConfig(reader)
 	case "ossindex":
+		LogLady.Info("User chose to set OSS Index config, moving forward")
 		ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 		err = getAndSetOSSIndexConfig(reader)
 	case "":
@@ -68,27 +71,35 @@ func GetConfigFromCommandLine(stdin io.Reader) (err error) {
 }
 
 func getAndSetIQConfig(reader *bufio.Reader) (err error) {
+	LogLady.Info("Getting config for IQ Server from user")
+
 	iqConfig := IQConfig{Server: "http://localhost:8070", Username: "admin", Token: "admin123"}
+
 	fmt.Print("What is the address of your Nexus IQ Server (default: http://localhost:8070)? ")
-	iqConfig.Server, _ = reader.ReadString('\n')
-	iqConfig.Server = strings.TrimSpace(iqConfig.Server)
+	server, _ := reader.ReadString('\n')
+	iqConfig.Server = emptyOrDefault(server, iqConfig.Server)
+
 	fmt.Print("What username do you want to authenticate as (default: admin)? ")
-	iqConfig.Username, _ = reader.ReadString('\n')
-	iqConfig.Username = strings.TrimSpace(iqConfig.Username)
+	username, _ := reader.ReadString('\n')
+	iqConfig.Username = emptyOrDefault(username, iqConfig.Username)
+
 	fmt.Print("What token do you want to use (default: admin123)? ")
-	iqConfig.Token, _ = reader.ReadString('\n')
-	iqConfig.Token = strings.TrimSpace(iqConfig.Token)
+	token, _ := reader.ReadString('\n')
+	iqConfig.Token = emptyOrDefault(token, iqConfig.Token)
 
 	if iqConfig.Username == "admin" || iqConfig.Token == "admin123" {
+		LogLady.Info("Warning user of bad life choices, using default values for IQ Server username or token")
 		warnUserOfBadLifeChoices()
 		fmt.Print("[y/N]? ")
 		theChoice, _ := reader.ReadString('\n')
-		theChoice = strings.TrimSpace(theChoice)
+		theChoice = emptyOrDefault(theChoice, "y")
 		if theChoice == "y" {
+			LogLady.Info("User chose to rectify their bad life choices, asking for config again")
 			getAndSetIQConfig(reader)
 		}
 	}
 
+	LogLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
 	err = marshallAndWriteToDisk(iqConfig)
 	if err != nil {
 		return
@@ -96,15 +107,28 @@ func getAndSetIQConfig(reader *bufio.Reader) (err error) {
 	return
 }
 
+func emptyOrDefault(value string, defaultValue string) string {
+	str := strings.TrimSpace(value)
+	if str == "" {
+		return defaultValue
+	}
+	return value
+}
+
 func getAndSetOSSIndexConfig(reader *bufio.Reader) (err error) {
+	LogLady.Info("Getting config for OSS Index from user")
+
 	ossIndexConfig := OSSIndexConfig{}
+
 	fmt.Print("What username do you want to authenticate as (ex: admin)? ")
 	ossIndexConfig.Username, _ = reader.ReadString('\n')
 	ossIndexConfig.Username = strings.TrimSpace(ossIndexConfig.Username)
+
 	fmt.Print("What token do you want to use? ")
 	ossIndexConfig.Token, _ = reader.ReadString('\n')
 	ossIndexConfig.Token = strings.TrimSpace(ossIndexConfig.Token)
 
+	LogLady.Info("Successfully got OSS Index config from user, attempting to save to disk")
 	err = marshallAndWriteToDisk(ossIndexConfig)
 	if err != nil {
 		LogLady.Error(err)
@@ -133,6 +157,7 @@ func marshallAndWriteToDisk(config interface{}) (err error) {
 		return
 	}
 
+	LogLady.WithField("config_location", ConfigLocation).Info("Successfully wrote config to disk")
 	fmt.Println(fmt.Sprintf("Successfully wrote config to: %s", ConfigLocation))
 	return
 }
