@@ -79,7 +79,7 @@ func getAndSetIQConfig(reader *bufio.Reader) (err error) {
 	iqConfig.Token, _ = reader.ReadString('\n')
 	iqConfig.Token = strings.TrimSpace(iqConfig.Token)
 
-	if iqConfig.Username == "admin" && iqConfig.Token == "admin123" {
+	if iqConfig.Username == "admin" || iqConfig.Token == "admin123" {
 		warnUserOfBadLifeChoices()
 		fmt.Print("[y/N]? ")
 		theChoice, _ := reader.ReadString('\n')
@@ -140,10 +140,10 @@ func marshallAndWriteToDisk(config interface{}) (err error) {
 
 func warnUserOfBadLifeChoices() {
 	fmt.Println()
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-	fmt.Println("!!!! WARNING : You are using the default username and password for Nexus IQ. !!!!")
-	fmt.Println("!!!! You are strongly encouraged to change these, and use a token.           !!!!")
-	fmt.Println("!!!! Would you like to change them and try again?                            !!!!")
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	fmt.Println("!!!! WARNING : You are using the default username and/or password for Nexus IQ. !!!!")
+	fmt.Println("!!!! You are strongly encouraged to change these, and use a token.              !!!!")
+	fmt.Println("!!!! Would you like to change them and try again?                               !!!!")
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	fmt.Println()
 }
