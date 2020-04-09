@@ -54,7 +54,7 @@ func main() {
 		LogLady.Info("Nancy finished parsing config for IQ")
 	} else if len(os.Args) > 1 && os.Args[1] == "config" {
 		LogLady.Info("Nancy setting config via the command line")
-		configuration.GetConfigFromCommandLine()
+		configuration.GetConfigFromCommandLine(os.Stdin)
 	} else {
 		LogLady.Info("Nancy parsing config for OSS Index")
 		ossIndexConfig, err := configuration.Parse(os.Args[1:])
