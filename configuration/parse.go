@@ -67,8 +67,6 @@ type IqConfiguration struct {
 var unixComments = regexp.MustCompile(`#.*$`)
 var untilComment = regexp.MustCompile(`(until=)(.*)`)
 
-var usersHomeDir string
-
 func ParseIQ(args []string) (config IqConfiguration, err error) {
 	iqCommand := flag.NewFlagSet("iq", flag.ExitOnError)
 	iqCommand.BoolVar(&config.Info, "v", false, "Set log level to Info")
@@ -91,11 +89,9 @@ Options:
 		os.Exit(2)
 	}
 
-	usersHomeDir, _ := os.UserHomeDir()
+	ConfigLocation = filepath.Join(HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
 
-	path := filepath.Join(usersHomeDir, types.IQServerDirName, types.IQServerConfigFileName)
-
-	err = loadIQConfigFromFile(path, &config)
+	err = loadIQConfigFromFile(ConfigLocation, &config)
 	if err != nil {
 		fmt.Println(err)
 		LogLady.Info("Unable to load config from file")
@@ -173,11 +169,9 @@ Options:
 		os.Exit(2)
 	}
 
-	usersHomeDir, _ := os.UserHomeDir()
+	ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 
-	path := filepath.Join(usersHomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
-
-	err := loadConfigFromFile(path, &config)
+	err := loadConfigFromFile(ConfigLocation, &config)
 	if err != nil {
 		fmt.Println(err)
 		LogLady.Info("Unable to load config from file")
