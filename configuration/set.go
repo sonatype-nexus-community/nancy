@@ -59,6 +59,7 @@ func GetConfigFromCommandLine(stdin io.Reader) (err error) {
 	case "":
 		return
 	default:
+		LogLady.Info("User chose to set OSS Index config, moving forward")
 		fmt.Println("Invalid value, 'iq' and 'ossindex' are accepted values, try again!")
 		GetConfigFromCommandLine(stdin)
 	}
@@ -112,7 +113,7 @@ func emptyOrDefault(value string, defaultValue string) string {
 	if str == "" {
 		return defaultValue
 	}
-	return value
+	return str
 }
 
 func getAndSetOSSIndexConfig(reader *bufio.Reader) (err error) {
