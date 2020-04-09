@@ -43,6 +43,7 @@ func doInit(args []string) {
 	if useTestLogFile(args) {
 		DefaultLogFile = TestLogfilename
 	}
+
 	file, err := os.OpenFile(GetLogFileLocation(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Print(err)
