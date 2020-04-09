@@ -56,6 +56,8 @@ func main() {
 		LogLady.Info("Nancy setting config via the command line")
 		err := configuration.GetConfigFromCommandLine(os.Stdin)
 		customerrors.Check(err, err.Error())
+
+		os.Exit(0)
 	} else {
 		LogLady.Info("Nancy parsing config for OSS Index")
 		ossIndexConfig, err := configuration.Parse(os.Args[1:])
