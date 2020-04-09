@@ -2,7 +2,6 @@ package configuration
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -55,16 +54,17 @@ func GetConfigFromCommandLine(stdin io.Reader) (err error) {
 		ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 		err = getAndSetOSSIndexConfig(reader)
 	case "":
-		return errors.New("Uh oh")
+		return
 	default:
 		fmt.Println("Invalid value, 'iq' and 'ossindex' are accepted values, try again!")
 		GetConfigFromCommandLine(stdin)
 	}
 
 	if err != nil {
+		LogLady.Error(err)
 		return
 	}
-	return nil
+	return
 }
 
 func getAndSetIQConfig(reader *bufio.Reader) (err error) {
@@ -91,7 +91,6 @@ func getAndSetIQConfig(reader *bufio.Reader) (err error) {
 
 	err = marshallAndWriteToDisk(iqConfig)
 	if err != nil {
-		LogLady.Error(err)
 		return
 	}
 	return
