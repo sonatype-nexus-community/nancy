@@ -51,6 +51,16 @@ func getAndSetIQConfig() {
 	fmt.Print("What token do you want to use (default: admin123)? ")
 	fmt.Scanln(&iqConfig.Token)
 
+	if iqConfig.Username == "admin" && iqConfig.Token == "admin123" {
+		var theChoice string
+		warnUserOfBadLifeChoices()
+		fmt.Print("[y/N]? ")
+		fmt.Scanln(&theChoice)
+		if theChoice == "y" {
+			getAndSetIQConfig()
+		}
+	}
+
 	err := marshallAndWriteToDisk(iqConfig, filepath.Join(homeDir, types.IQServerDirName, types.IQServerConfigFileName))
 	if err != nil {
 		LogLady.Error(err)
@@ -80,5 +90,17 @@ func marshallAndWriteToDisk(config interface{}, configLocation string) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Println(fmt.Sprintf("Successfully wrote config to: %s", configLocation))
 	return nil
+}
+
+func warnUserOfBadLifeChoices() {
+	fmt.Println()
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	fmt.Println("!!!! WARNING : You are using the default username and password for Nexus IQ. !!!!")
+	fmt.Println("!!!! You are strongly encouraged to change these, and use a token.           !!!!")
+	fmt.Println("!!!! Would you like to change them and try again?                            !!!!")
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	fmt.Println()
 }
