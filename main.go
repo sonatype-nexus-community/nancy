@@ -55,7 +55,7 @@ func main() {
 	} else if len(os.Args) > 1 && os.Args[1] == "config" {
 		LogLady.Info("Nancy setting config via the command line")
 		err := configuration.GetConfigFromCommandLine(os.Stdin)
-		customerrors.Check(err, err.Error())
+		customerrors.Check(err, "Unable to set config for Nancy")
 
 		os.Exit(0)
 	} else {

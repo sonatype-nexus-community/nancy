@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -109,7 +108,7 @@ func getAndSetIQConfig(reader *bufio.Reader) (err error) {
 }
 
 func emptyOrDefault(value string, defaultValue string) string {
-	str := strings.TrimSpace(value)
+	str := strings.Trim(strings.TrimSpace(value), "\n")
 	if str == "" {
 		return defaultValue
 	}
@@ -123,11 +122,11 @@ func getAndSetOSSIndexConfig(reader *bufio.Reader) (err error) {
 
 	fmt.Print("What username do you want to authenticate as (ex: admin)? ")
 	ossIndexConfig.Username, _ = reader.ReadString('\n')
-	ossIndexConfig.Username = strings.TrimSpace(ossIndexConfig.Username)
+	ossIndexConfig.Username = strings.Trim(strings.TrimSpace(ossIndexConfig.Username), "\n")
 
 	fmt.Print("What token do you want to use? ")
 	ossIndexConfig.Token, _ = reader.ReadString('\n')
-	ossIndexConfig.Token = strings.TrimSpace(ossIndexConfig.Token)
+	ossIndexConfig.Token = strings.Trim(strings.TrimSpace(ossIndexConfig.Token), "\n")
 
 	LogLady.Info("Successfully got OSS Index config from user, attempting to save to disk")
 	err = marshallAndWriteToDisk(ossIndexConfig)
@@ -146,8 +145,6 @@ func marshallAndWriteToDisk(config interface{}) (err error) {
 	}
 
 	base := filepath.Dir(ConfigLocation)
-
-	log.Print(base)
 
 	if _, err := os.Stat(base); os.IsNotExist(err) {
 		os.Mkdir(base, os.ModePerm)
