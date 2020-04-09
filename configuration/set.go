@@ -37,7 +37,7 @@ func GetConfigFromCommandLine() {
 	case "":
 		os.Exit(0)
 	default:
-		fmt.Println("Invalid value, iq and ossindex are accepted values, try again!")
+		fmt.Println("Invalid value, 'iq' and 'ossindex' are accepted values, try again!")
 		GetConfigFromCommandLine()
 	}
 }
