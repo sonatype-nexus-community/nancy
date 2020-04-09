@@ -143,6 +143,7 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 		if len(chunk) > 0 {
 			var request types.AuditRequest
 			request.Coordinates = chunk
+			LogLady.WithField("request", request).Info("Prepping request to OSS Index")
 			var jsonStr, _ = json.Marshal(request)
 
 			coordinates, err := doRequestToOSSIndex(jsonStr, config)
@@ -150,16 +151,20 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 				return nil, err
 			}
 
+			LogLady.WithField("coordinates", coordinates).Info("Coordinates unmarshalled from OSS Index")
+
 			// Cache the new results
 			if err := db.Update(func(txn *badger.Txn) error {
 				for i := 0; i < len(coordinates); i++ {
-					var coord = coordinates[i].Coordinates
+					coord := coordinates[i].Coordinates
 					results = append(results, coordinates[i])
 
 					coordJSON, _ := json.Marshal(coordinates[i])
+					LogLady.WithField("json", coordinates[i]).Info("Marshall coordinate into json for insertion into DB")
 
 					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJSON), time.Hour*12)
 					if err != nil {
+						LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
 						return err
 					}
 				}
