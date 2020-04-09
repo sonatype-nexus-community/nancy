@@ -178,8 +178,8 @@ type OSSIndexRateLimitError struct {
 
 func (o *OSSIndexRateLimitError) Error() string {
 	return `You have been rate limited by OSS Index.
-		If you do not have a OSS Index account, please visit https://ossindex.sonatype.org/user/register to register an account.
-		After registering and verifying your account, you can retrieve your username (Email Address), and API Token
-		at https://ossindex.sonatype.org/user/settings. Upon retrieving those, run nancy config and set your OSS Index
-		settings, and rerun Nancy.`
+If you do not have a OSS Index account, please visit https://ossindex.sonatype.org/user/register to register an account.
+After registering and verifying your account, you can retrieve your username (Email Address), and API Token
+at https://ossindex.sonatype.org/user/settings. Upon retrieving those, run 'nancy config', set your OSS Index
+settings, and rerun Nancy.`
 }
