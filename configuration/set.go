@@ -57,7 +57,7 @@ func GetConfigFromCommandLine(stdin io.Reader) (err error) {
 	case "":
 		return errors.New("Uh oh")
 	default:
-		fmt.Println("Invalid value, iq and ossindex are accepted values, try again!")
+		fmt.Println("Invalid value, 'iq' and 'ossindex' are accepted values, try again!")
 		GetConfigFromCommandLine(stdin)
 	}
 
