@@ -60,7 +60,7 @@ func GetConfigFromCommandLine(stdin io.Reader) (err error) {
 	default:
 		LogLady.Info("User chose to set OSS Index config, moving forward")
 		fmt.Println("Invalid value, 'iq' and 'ossindex' are accepted values, try again!")
-		GetConfigFromCommandLine(stdin)
+		err = GetConfigFromCommandLine(stdin)
 	}
 
 	if err != nil {
@@ -95,7 +95,7 @@ func getAndSetIQConfig(reader *bufio.Reader) (err error) {
 		theChoice = emptyOrDefault(theChoice, "y")
 		if theChoice == "y" {
 			LogLady.Info("User chose to rectify their bad life choices, asking for config again")
-			getAndSetIQConfig(reader)
+			err = getAndSetIQConfig(reader)
 		} else {
 			LogLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
 			err = marshallAndWriteToDisk(iqConfig)
@@ -150,8 +150,11 @@ func marshallAndWriteToDisk(config interface{}) (err error) {
 
 	base := filepath.Dir(ConfigLocation)
 
-	if _, err := os.Stat(base); os.IsNotExist(err) {
-		os.Mkdir(base, os.ModePerm)
+	if _, err = os.Stat(base); os.IsNotExist(err) {
+		err = os.Mkdir(base, os.ModePerm)
+		if err != nil {
+			return
+		}
 	}
 
 	err = ioutil.WriteFile(ConfigLocation, d, 0644)
@@ -160,7 +163,7 @@ func marshallAndWriteToDisk(config interface{}) (err error) {
 	}
 
 	LogLady.WithField("config_location", ConfigLocation).Info("Successfully wrote config to disk")
-	fmt.Println(fmt.Sprintf("Successfully wrote config to: %s", ConfigLocation))
+	fmt.Printf("Successfully wrote config to: %s", ConfigLocation)
 	return
 }
 

@@ -83,7 +83,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 		return statusURLResp, err
 	}
 
-	resultsFromOssIndex, err := ossindex.AuditPackages(purls)
+	resultsFromOssIndex, err := ossindex.AuditPackages(purls) //nolint deprecation
 	customerrors.Check(err, "There was an issue auditing packages using OSS Index")
 
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
@@ -142,7 +142,7 @@ func getInternalApplicationID(applicationID string) (string, error) {
 		customerrors.Check(err, "There was an error retrieving the bytes of the response for getting your internal application ID from Nexus IQ Server")
 
 		var response applicationResponse
-		json.Unmarshal(bodyBytes, &response)
+		customerrors.Check(json.Unmarshal(bodyBytes, &response), "failed to unmarshal response")
 
 		if response.Applications != nil && len(response.Applications) > 0 {
 			LogLady.WithFields(logrus.Fields{
