@@ -1,4 +1,4 @@
-@Library([‘private-pipeline-library’, ‘jenkins-shared’]) _
+@Library(['private-pipeline-library', 'jenkins-shared']) _
 
 dockerizedBuildPipeline(
   prepare: {
