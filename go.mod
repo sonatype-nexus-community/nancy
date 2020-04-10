@@ -17,6 +17,7 @@ require (
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/jarcoal/httpmock v1.0.4
 	github.com/jmank88/nuts v0.3.0 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
 	github.com/nightlyone/lockfile v0.0.0-20180618180623-0ad87eef1443 // indirect
 	github.com/package-url/packageurl-go v0.1.0
@@ -24,13 +25,14 @@ require (
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
+	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1
+	gopkg.in/yaml.v2 v2.2.8
 )
 
 go 1.13

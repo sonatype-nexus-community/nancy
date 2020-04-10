@@ -18,7 +18,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -26,7 +28,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/audit"
+	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
+	"gopkg.in/yaml.v2"
 )
 
 type Configuration struct {
@@ -42,6 +46,8 @@ type Configuration struct {
 	Info       bool
 	Debug      bool
 	Trace      bool
+	Username   string `yaml:"Username"`
+	Token      string `yaml:"Token"`
 }
 
 type IqConfiguration struct {
@@ -66,8 +72,8 @@ func ParseIQ(args []string) (config IqConfiguration, err error) {
 	iqCommand.BoolVar(&config.Info, "v", false, "Set log level to Info")
 	iqCommand.BoolVar(&config.Debug, "vv", false, "Set log level to Debug")
 	iqCommand.BoolVar(&config.Trace, "vvv", false, "Set log level to Trace")
-	iqCommand.StringVar(&config.User, "user", "admin", "Specify username for request")
-	iqCommand.StringVar(&config.Token, "token", "admin123", "Specify token/password for request")
+	iqCommand.StringVar(&config.User, "user", "admin", "Specify Nexus IQ username for request")
+	iqCommand.StringVar(&config.Token, "token", "admin123", "Specify Nexus IQ token/password for request")
 	iqCommand.StringVar(&config.Server, "server-url", "http://localhost:8070", "Specify Nexus IQ Server URL/port")
 	iqCommand.StringVar(&config.Application, "application", "", "Specify application ID for request")
 	iqCommand.StringVar(&config.Stage, "stage", "develop", "Specify stage for application")
@@ -83,12 +89,46 @@ Options:
 		os.Exit(2)
 	}
 
+	ConfigLocation = filepath.Join(HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
+
+	err = loadIQConfigFromFile(ConfigLocation, &config)
+	if err != nil {
+		fmt.Println(err)
+		LogLady.Info("Unable to load config from file")
+	}
+
 	err = iqCommand.Parse(args)
 	if err != nil {
 		return config, err
 	}
 
 	return config, nil
+}
+
+func loadConfigFromFile(configLocation string, config *Configuration) error {
+	b, err := ioutil.ReadFile(configLocation)
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(b, config)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func loadIQConfigFromFile(configLocation string, config *IqConfiguration) error {
+	b, err := ioutil.ReadFile(configLocation)
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(b, config)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func Parse(args []string) (Configuration, error) {
@@ -112,6 +152,8 @@ func Parse(args []string) (Configuration, error) {
 	flag.BoolVar(&config.Debug, "vv", false, "Set log level to Debug")
 	flag.BoolVar(&config.Trace, "vvv", false, "Set log level to Trace")
 	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
+	flag.StringVar(&config.Username, "user", "", "Specify OSS Index username for request")
+	flag.StringVar(&config.Token, "token", "", "Specify OSS Index API token for request")
 	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
 	flag.StringVar(&outputFormat, "output", "text", "Styling for output format. "+fmt.Sprintf("%+q", reflect.ValueOf(outputFormats).MapKeys()))
 
@@ -119,6 +161,7 @@ func Parse(args []string) (Configuration, error) {
 		_, _ = fmt.Fprintf(os.Stderr, `Usage:
 	go list -m all | nancy [options]
 	go list -m all | nancy iq [options]
+	nancy config
 	nancy [options] </path/to/Gopkg.lock>
 	nancy [options] </path/to/go.sum>
 			
@@ -128,7 +171,15 @@ Options:
 		os.Exit(2)
 	}
 
-	err := flag.CommandLine.Parse(args)
+	ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+
+	err := loadConfigFromFile(ConfigLocation, &config)
+	if err != nil {
+		fmt.Println(err)
+		LogLady.Info("Unable to load config from file")
+	}
+
+	err = flag.CommandLine.Parse(args)
 	if err != nil {
 		return config, err
 	}

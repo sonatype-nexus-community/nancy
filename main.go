@@ -52,6 +52,12 @@ func main() {
 		LogLady.WithField("config", config).Info("Obtained IQ config")
 		processIQConfig(config)
 		LogLady.Info("Nancy finished parsing config for IQ")
+	} else if len(os.Args) > 1 && os.Args[1] == "config" {
+		LogLady.Info("Nancy setting config via the command line")
+		err := configuration.GetConfigFromCommandLine(os.Stdin)
+		customerrors.Check(err, "Unable to set config for Nancy")
+
+		os.Exit(0)
 	} else {
 		LogLady.Info("Nancy parsing config for OSS Index")
 		ossIndexConfig, err := configuration.Parse(os.Args[1:])
@@ -268,7 +274,7 @@ func doCheckExistenceAndParse(config configuration.Configuration) {
 
 func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) {
 	var packageCount = len(purls)
-	coordinates, err := ossindex.AuditPackages(purls)
+	coordinates, err := ossindex.AuditPackagesWithOSSIndex(purls, &config)
 	customerrors.Check(err, "Error auditing packages")
 
 	var invalidCoordinates []types.Coordinate

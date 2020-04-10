@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
+	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -251,10 +252,15 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 
 func TestSetupRequest(t *testing.T) {
 	coordJson, _ := setupJson(t)
-	req, err := setupRequest(coordJson)
+	config := configuration.Configuration{Username: "testuser", Token: "test"}
+	req, err := setupRequest(coordJson, &config)
 
 	assert.Equal(t, req.Header.Get("Content-Type"), "application/json")
 	assert.Equal(t, req.Method, "POST")
+	user, token, ok := req.BasicAuth()
+	assert.Equal(t, user, "testuser")
+	assert.Equal(t, token, "test")
+	assert.Equal(t, ok, true)
 	assert.Nil(t, err)
 }
 
