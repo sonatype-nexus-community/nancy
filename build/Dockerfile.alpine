@@ -1,0 +1,8 @@
+FROM alpine:latest
+
+RUN apk add --no-cache ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+COPY nancy /usr/local/bin/nancy
+
+CMD ["nancy"]

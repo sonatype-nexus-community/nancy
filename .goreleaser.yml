@@ -19,9 +19,10 @@ before:
 builds:
   -
     ldflags:
-      - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion={{.Version}}"
-      - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildTime={{time "2006-01-02T15:04:05Z07:00"}}"
-      - -s -w -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit={{.FullCommit}}"
+      - -s -w
+        -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildVersion={{.Version}}"
+        -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildTime={{time "2006-01-02T15:04:05Z07:00"}}"
+        -X "github.com/sonatype-nexus-community/nancy/buildversion.BuildCommit={{.FullCommit}}"
     env:
       - CGO_ENABLED=0
     goos:
@@ -33,7 +34,7 @@ builds:
       - 386
 
 archives:
-  - 
+  -
     id: default
     name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
     format: binary
@@ -49,7 +50,7 @@ checksum:
   algorithm: sha256
 
 snapshot:
-  name_template: "{{ .Tag }}-next-{{.FullCommit}}"
+  name_template: "{{ .Version }}-next-{{.FullCommit}}"
 
 changelog:
   sort: asc
@@ -78,11 +79,12 @@ brews:
     description: "A tool to check for vulnerabilities in your Golang dependencies, powered by Sonatype OSS Index"
 
 dockers:
-  - 
+  -
     goos: linux
     goarch: amd64
     dockerfile: Dockerfile.goreleaser
     build_flag_templates:
+    - "--pull"
     - "--label=author='DJ Schleen'"
     - "--label=version={{ .Version }}"
     - "--label=maintainer='sonatype-nexus-community'"
@@ -91,3 +93,19 @@ dockers:
     - "sonatypecommunity/nancy:{{ .Tag }}"
     - "sonatypecommunity/nancy:v{{ .Major }}"
     - "sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}"
+  -
+    goos: linux
+    goarch: amd64
+    dockerfile: build/Dockerfile.alpine
+    binaries:
+    - nancy
+    build_flag_templates:
+    - "--pull"
+    - "--label=author='DJ Schleen'"
+    - "--label=version={{ .Version }}"
+    - "--label=maintainer='sonatype-nexus-community'"
+    image_templates:
+    - "sonatypecommunity/nancy:alpine"
+    - "sonatypecommunity/nancy:{{ .Tag }}-alpine"
+    - "sonatypecommunity/nancy:v{{ .Major }}-alpine"
+    - "sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}-alpine"
