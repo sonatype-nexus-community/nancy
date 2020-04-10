@@ -8,3 +8,6 @@ nancy*amd64*
 .idea
 *.iml
 dist/
+
+# ci config for local ci build
+.circleci/local-config.yml
