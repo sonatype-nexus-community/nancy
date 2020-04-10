@@ -60,7 +60,7 @@ func TestGetConfigFromCommandLineIqServer(t *testing.T) {
 	}
 }
 
-func TestGetConfigFromCommandLineIqServerWithNoAnswer(t *testing.T) {
+func TestGetConfigFromCommandLineIqServerWithLoopToResetConfig(t *testing.T) {
 	HomeDir = "/tmp"
 	var buffer bytes.Buffer
 	buffer.Write([]byte("iq\nhttp://localhost:8070\nadmin\nadmin123\ny\nhttp://localhost:8080\nadmin1\nadmin1234\n"))
