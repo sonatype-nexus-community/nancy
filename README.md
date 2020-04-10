@@ -18,6 +18,7 @@
 Usage:
         go list -m all | nancy [options]
         go list -m all | nancy iq [options]
+        nancy config
         nancy [options] </path/to/Gopkg.lock>
         nancy [options] </path/to/go.sum>
 
@@ -36,6 +37,10 @@ Options:
         Styling for output format. ["json" "json-pretty" "text" "csv"] (default "text")
   -quiet
         indicate output should contain only packages with vulnerabilities
+  -token string
+        Specify OSS Index API token for request
+  -user string
+        Specify OSS Index username for request
   -v    Set log level to Info
   -version
         prints current nancy version
@@ -58,9 +63,9 @@ Options:
   -stage string
         Specify stage for application (default "develop")
   -token string
-        Specify token/password for request (default "admin123")
+        Specify Nexus IQ token/password for request (default "admin123")
   -user string
-        Specify username for request (default "admin")
+        Specify Nexus IQ username for request (default "admin")
   -v    Set log level to Info
   -vv
         Set log level to Debug
@@ -99,6 +104,30 @@ We publish a few different flavors for convenience:
 - The major/minor version (seriously, we respect semver) ex: `v0.1`
 
 ### OSS Index Options
+
+#### Rate limiting / Setting OSS Index config
+
+**NOTE: New as of Nancy v0.1.17**
+
+If you start using Nancy extensively, you might run into Rate Limiting from OSS Index! Don't worry, we've got your back!
+
+If you run into Rate Limiting you should recieve an error that will give you instructions on how to register on OSS Index:
+
+```
+You have been rate limited by OSS Index.
+If you do not have a OSS Index account, please visit https://ossindex.sonatype.org/user/register to register an account.
+After registering and verifying your account, you can retrieve your username (Email Address), and API Token
+at https://ossindex.sonatype.org/user/settings. Upon retrieving those, run 'nancy config', set your OSS Index
+settings, and rerun Nancy.
+```
+
+After setting this config, you'll be gifted a nice new higher rate limit. If you escape this limit, you might take a look at using Nexus IQ Server, or reach out to the friendly people at OSS Index for partnership opportunities.
+
+You can also set the user and token via the command line like so:
+
+`nancy -user auser@anemailaddress.com -token A4@k3@p1T0k3n`
+
+This can be handy for testing your account out, or if you want to override your set config with a different user.
 
 #### Quiet mode
 
@@ -142,46 +171,6 @@ to provide context to as why its been ignored until that date.
 ```
 CVN-111 until=2021-01-01
 CVN-543 until=2018-02-12 #Waiting on release from third party. Should be out before this date but gives us a little time to fix it. 
-```
-
-### Nexus IQ Server Options
-
-By default, assuming you have an out of the box Nexus IQ Server running, you can run `nancy` like so:
-
-`go list -m all | ./nancy iq -application public-application-id`
-
-It is STRONGLY suggested that you do not do this, and we will warn you on output if you are.
-
-A more logical use of `nancy` against Nexus IQ Server will look like so:
-
-`go list -m all | ./nancy iq -application public-application-id -user nondefaultuser -token yourtoken -server-url http://adifferentserverurl:port -stage develop`
-
-Options for stage are as follows:
-
-`build, develop, stage-release, release`
-
-By default `-stage` will be `develop`.
-
-Successful submissions to Nexus IQ Server will result in either an OS exit of 0, meaning all is clear and a response akin to:
-
-```
-Wonderbar! No policy violations reported for this audit!
-Report URL:  http://reportURL
-```
-
-Failed submissions will either indicate failure because of an issue with processing the request, or a policy violation. Both will exit with a code of 1, allowing you to fail your build in CI. Policy Violation failures will include a report URL where you can learn more about why you encountered a failure.
-
-Policy violations will look like:
-
-```
-Hi, Nancy here, you have some policy violations to clean up!
-Report URL:  http://reportURL
-```
-
-Errors processing in Nexus IQ Server will look like:
-
-```
-Uh oh! There was an error with your request to Nexus IQ Server: <error>
 ```
 
 #### Output
@@ -353,7 +342,55 @@ Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
 [3/10],pkg:golang/github.com/ethereum/go-ethereum@1.8.15,true,1,"[{""Id"":""4efaed86-e62e-4c0c-b812-36c07e61ede4"",""Title"":""CWE-400: Uncontrolled Resource Consumption ('Resource Exhaustion')"",""Description"":""The software does not properly restrict the size or amount of resources that are requested or influenced by an actor, which can be used to consume more resources than intended."",""CvssScore"":""7.5"",""CvssVector"":""CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"",""Cve"":"""",""Reference"":""https://ossindex.sonatype.org/vuln/4efaed86-e62e-4c0c-b812-36c07e61ede4"",""Excluded"":false}]"
 ...
 ```
+### Nexus IQ Server Options
 
+By default, assuming you have an out of the box Nexus IQ Server running, you can run `nancy` like so:
+
+`go list -m all | ./nancy iq -application public-application-id`
+
+It is STRONGLY suggested that you do not do this, and we will warn you on output if you are.
+
+A more logical use of `nancy` against Nexus IQ Server will look like so:
+
+`go list -m all | ./nancy iq -application public-application-id -user nondefaultuser -token yourtoken -server-url http://adifferentserverurl:port -stage develop`
+
+Options for stage are as follows:
+
+`build, develop, stage-release, release`
+
+By default `-stage` will be `develop`.
+
+Successful submissions to Nexus IQ Server will result in either an OS exit of 0, meaning all is clear and a response akin to:
+
+```
+Wonderbar! No policy violations reported for this audit!
+Report URL:  http://reportURL
+```
+
+Failed submissions will either indicate failure because of an issue with processing the request, or a policy violation. Both will exit with a code of 1, allowing you to fail your build in CI. Policy Violation failures will include a report URL where you can learn more about why you encountered a failure.
+
+Policy violations will look like:
+
+```
+Hi, Nancy here, you have some policy violations to clean up!
+Report URL:  http://reportURL
+```
+
+Errors processing in Nexus IQ Server will look like:
+
+```
+Uh oh! There was an error with your request to Nexus IQ Server: <error>
+```
+
+#### Persistent Nexus IQ Server Config
+
+Nancy let's you set the Nexus IQ Server Address, User and Token as persistent config (application and stage are generally per project so we do not let you set these globally).
+
+To set your Nexus IQ Server config run:
+
+`nancy config`
+
+Choose `iq` as an option and run through the rest of the config. Once you are done, Nancy should use this config for communicating with Nexus IQ, simplifying your use of the tool.
 
 ### Usage in CI
 

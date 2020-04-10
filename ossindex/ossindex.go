@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
+	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -86,8 +87,20 @@ func openDb(dbDir string) (db *badger.DB, err error) {
 	return
 }
 
-// AuditPackages will given a list of Package URLs, run an OSS Index audit
+// AuditPackages will given a list of Package URLs, run an OSS Index audit.
+//
+// Deprecated: AuditPackages is old and being maintained for upstream compatibility at the moment.
+// It will be removed when we go to a major version release. Use AuditPackagesWithOSSIndex instead.
 func AuditPackages(purls []string) ([]types.Coordinate, error) {
+	return doAuditPackages(purls, nil)
+}
+
+// AuditPackagesWithOSSIndex will given a list of Package URLs, run an OSS Index audit, and takes OSS Index configuration
+func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
+	return doAuditPackages(purls, config)
+}
+
+func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
 	dbDir := getDatabaseDirectory()
 	if err := os.MkdirAll(dbDir, os.ModePerm); err != nil {
 		return nil, err
@@ -130,52 +143,28 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		if len(chunk) > 0 {
 			var request types.AuditRequest
 			request.Coordinates = chunk
+			LogLady.WithField("request", request).Info("Prepping request to OSS Index")
 			var jsonStr, _ = json.Marshal(request)
 
-			req, err := setupRequest(jsonStr)
+			coordinates, err := doRequestToOSSIndex(jsonStr, config)
 			if err != nil {
 				return nil, err
 			}
 
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			if err != nil {
-				return nil, err
-			}
-
-			if resp.StatusCode != http.StatusOK {
-				LogLady.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index")
-				return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
-			}
-
-			defer func() {
-				if err := resp.Body.Close(); err != nil {
-					LogLady.WithField("error", err).Error("Error closing response body")
-				}
-			}()
-
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				LogLady.WithField("error", err).Error("Error accessing OSS Index")
-				return nil, err
-			}
-
-			// Process results
-			var coordinates []types.Coordinate
-			if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
-				return nil, err
-			}
+			LogLady.WithField("coordinates", coordinates).Info("Coordinates unmarshalled from OSS Index")
 
 			// Cache the new results
 			if err := db.Update(func(txn *badger.Txn) error {
 				for i := 0; i < len(coordinates); i++ {
-					var coord = coordinates[i].Coordinates
+					coord := coordinates[i].Coordinates
 					results = append(results, coordinates[i])
 
-					var coordJson, _ = json.Marshal(coordinates[i])
+					coordJSON, _ := json.Marshal(coordinates[i])
+					LogLady.WithField("json", coordinates[i]).Info("Marshall coordinate into json for insertion into DB")
 
-					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJson), time.Hour*12)
+					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJSON), time.Hour*12)
 					if err != nil {
+						LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
 						return err
 					}
 				}
@@ -187,6 +176,69 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 		}
 	}
 	return results, nil
+}
+
+func doRequestToOSSIndex(jsonStr []byte, config *configuration.Configuration) (coordinates []types.Coordinate, err error) {
+	req, err := setupRequest(jsonStr, config)
+	if err != nil {
+		return
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		LogLady.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index due to Rate Limiting")
+		return nil, &types.OSSIndexRateLimitError{}
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		LogLady.WithField("resp_status_code", resp.Status).Error("Error accessing OSS Index")
+		return nil, fmt.Errorf("[%s] error accessing OSS Index", resp.Status)
+	}
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			LogLady.WithField("error", err).Error("Error closing response body")
+		}
+	}()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		LogLady.WithField("error", err).Error("Error accessing OSS Index")
+		return
+	}
+
+	// Process results
+	if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
+		LogLady.WithField("error", err).Error("Error unmarshalling response from OSS Index")
+		return
+	}
+	return
+}
+
+func setupRequest(jsonStr []byte, config *configuration.Configuration) (req *http.Request, err error) {
+	LogLady.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
+	req, err = http.NewRequest(
+		"POST",
+		getOssIndexUrl(),
+		bytes.NewBuffer(jsonStr),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("User-Agent", useragent.GetUserAgent())
+	req.Header.Set("Content-Type", "application/json")
+	if config != nil && config.Username != "" && config.Token != "" {
+		LogLady.Info("Set OSS Index Basic Auth")
+		req.SetBasicAuth(config.Username, config.Token)
+	}
+
+	return req, nil
 }
 
 func chunk(purls []string, chunkSize int) [][]string {
@@ -203,21 +255,4 @@ func chunk(purls []string, chunkSize int) [][]string {
 	}
 
 	return divided
-}
-
-func setupRequest(jsonStr []byte) (req *http.Request, err error) {
-	LogLady.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
-	req, err = http.NewRequest(
-		"POST",
-		getOssIndexUrl(),
-		bytes.NewBuffer(jsonStr),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("User-Agent", useragent.GetUserAgent())
-	req.Header.Set("Content-Type", "application/json")
-
-	return req, nil
 }

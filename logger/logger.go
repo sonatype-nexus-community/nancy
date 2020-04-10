@@ -43,7 +43,8 @@ func doInit(args []string) {
 	if useTestLogFile(args) {
 		DefaultLogFile = TestLogfilename
 	}
-	file, err := os.OpenFile(GetLogFileLocation(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+
+	file, err := os.OpenFile(GetLogFileLocation(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Printf("Could not open log file. error: %v\n", err)
 	}

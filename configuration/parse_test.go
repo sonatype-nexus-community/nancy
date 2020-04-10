@@ -140,5 +140,7 @@ func TestConfigParseIQ(t *testing.T) {
 }
 
 func setup() {
+	// Set HomeDir to a nonsensical location to avoid loading file based config
+	HomeDir = "/doesnt/exist"
 	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
 }

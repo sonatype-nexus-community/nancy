@@ -77,10 +77,10 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 		warnUserOfBadLifeChoices()
 	}
 
-	internalID := getInternalApplicationID(applicationID)
-	if internalID == "" {
+	internalID, err := getInternalApplicationID(applicationID)
+	if internalID == "" && err != nil {
 		LogLady.Error("Internal ID not obtained from Nexus IQ")
-		return statusURLResp, fmt.Errorf("Internal ID for %s could not be found, or Nexus IQ Server is down", applicationID)
+		return statusURLResp, err
 	}
 
 	resultsFromOssIndex, err := ossindex.AuditPackages(purls)
@@ -119,7 +119,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 	return statusURLResp, nil
 }
 
-func getInternalApplicationID(applicationID string) (internalID string) {
+func getInternalApplicationID(applicationID string) (string, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequest(
@@ -142,11 +142,26 @@ func getInternalApplicationID(applicationID string) (internalID string) {
 		customerrors.Check(err, "There was an error retrieving the bytes of the response for getting your internal application ID from Nexus IQ Server")
 
 		var response applicationResponse
-		err = json.Unmarshal(bodyBytes, &response)
-		customerrors.Check(err, "Could not unmarshal response from iQ server")
-		return response.Applications[0].ID
+		json.Unmarshal(bodyBytes, &response)
+
+		if response.Applications != nil && len(response.Applications) > 0 {
+			LogLady.WithFields(logrus.Fields{
+				"internal_id": response.Applications[0].ID,
+			}).Debug("Retrieved internal ID from Nexus IQ Server")
+
+			return response.Applications[0].ID, nil
+		}
+
+		LogLady.WithFields(logrus.Fields{
+			"application_id": applicationID,
+		}).Error("Unable to retrieve an internal ID for the specified public application ID")
+
+		return "", fmt.Errorf("Unable to retrieve an internal ID for the specified public application ID: %s", applicationID)
 	}
-	return ""
+	LogLady.WithFields(logrus.Fields{
+		"status_code": resp.StatusCode,
+	}).Error("Error communicating with Nexus IQ Server application endpoint")
+	return "", fmt.Errorf("Unable to communicate with Nexus IQ Server, status code returned is: %d", resp.StatusCode)
 }
 
 func submitToThirdPartyAPI(sbom string, internalID string) string {

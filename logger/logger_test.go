@@ -23,25 +23,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/sirupsen/logrus"
 )
 
 func TestLogger(t *testing.T) {
-	LogLady.Level = logrus.DebugLevel
-	// Do initial write to have a file
-	LogLady.Debug("Test")
-
 	if !strings.Contains(GetLogFileLocation(), TestLogfilename) {
 		t.Errorf("Nancy test file not in log file location. args: %+v", os.Args)
 	}
 
-	err := os.Truncate(GetLogFileLocation(), 0)
-	if err != nil {
-		t.Error("Unable to cleanup log file location")
-	}
-
-	LogLady.Debug("Test")
+	LogLady.Info("Test")
 
 	dat, err := ioutil.ReadFile(GetLogFileLocation())
 	if err != nil {
@@ -55,7 +44,7 @@ func TestLogger(t *testing.T) {
 		t.Error("Improperly written log, should be valid json")
 	}
 
-	if logTest.Level != "debug" {
+	if logTest.Level != "info" {
 		t.Error("Log level not set properly")
 	}
 
