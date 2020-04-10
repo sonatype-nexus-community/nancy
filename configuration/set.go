@@ -96,11 +96,15 @@ func getAndSetIQConfig(reader *bufio.Reader) (err error) {
 		if theChoice == "y" {
 			LogLady.Info("User chose to rectify their bad life choices, asking for config again")
 			getAndSetIQConfig(reader)
+		} else {
+			LogLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
+			err = marshallAndWriteToDisk(iqConfig)
 		}
+	} else {
+		LogLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
+		err = marshallAndWriteToDisk(iqConfig)
 	}
 
-	LogLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
-	err = marshallAndWriteToDisk(iqConfig)
 	if err != nil {
 		return
 	}
