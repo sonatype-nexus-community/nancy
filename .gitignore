@@ -1,6 +1,8 @@
 vendor
 nancy
+nancy*amd64*
 .DS_Store
+.cache
 
 #IntelliJ
 .idea

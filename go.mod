@@ -14,7 +14,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/golang/dep v0.5.4
 	github.com/golang/protobuf v1.2.0 // indirect
-	github.com/google/go-cmp v0.3.1 // indirect
+	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/jarcoal/httpmock v1.0.4
 	github.com/jmank88/nuts v0.3.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect

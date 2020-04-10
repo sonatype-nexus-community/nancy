@@ -19,7 +19,7 @@ func TestCveRemoveWhiteSpace(t *testing.T) {
 	cve := CveListFlag{}
 	test := "CVE-123, CVE-456, CVE-0020-20"
 	result := []string{"CVE-123", "CVE-456", "CVE-0020-20"}
-	cve.Set(test)
+	_ = cve.Set(test)
 
 	if len(cve.Cves) != 3 {
 		t.Errorf("Split unsuccessful")

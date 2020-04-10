@@ -419,9 +419,8 @@ At current time you have a few options:
 ### Build from source
 
 * Clone the project `git clone github.com/sonatype-nexus-community/nancy`
-* Depending on your env you may have to enable go.mod `export GO111MODULE=on`
-* In the root of the project `go test ./...`
-* If tests checkout go ahead and run `go build`.
+* In the root of the project run `make`
+  * This will execute multiple targets so if you want to short circuit some of that process you can also just run `make build` to get the binary without running tests, linting, etc
 * Use that binary where ever your heart so desires!
 
 ### Download release binary
@@ -437,7 +436,7 @@ $ curl -o /path/where/you/want/nancy \
 
 `nancy` is written using Golang 1.13, so it is best you start there.
 
-Tests can be run like `go test ./... -v`
+Tests can be run like this `make test`
 
 ### Release Process
 

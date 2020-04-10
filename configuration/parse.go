@@ -15,7 +15,6 @@ package configuration
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -215,7 +214,7 @@ func getModfilePath() (modfilepath string, err error) {
 	if flag.CommandLine.NArg() > 0 {
 		nonFlagArgs := flag.CommandLine.Args()
 		if len(nonFlagArgs) != 1 {
-			return modfilepath, errors.New(fmt.Sprintf("wrong number of modfile paths: %s", nonFlagArgs))
+			return modfilepath, fmt.Errorf("wrong number of modfile paths: %s", nonFlagArgs)
 		}
 		for _, nonFlagArg := range nonFlagArgs {
 			return nonFlagArg, err
@@ -260,7 +259,7 @@ func determineIfLineIsExclusion(ogLine string, config *Configuration) error {
 		if until != nil {
 			parseDate, err := time.Parse("2006-01-02", strings.TrimSpace(until[2]))
 			if err != nil {
-				return errors.New(fmt.Sprintf("failed to parse until at line '%s'. Expected format is 'until=yyyy-MM-dd'", ogLine))
+				return fmt.Errorf("failed to parse until at line %q. Expected format is 'until=yyyy-MM-dd'", ogLine)
 			}
 			if parseDate.After(time.Now()) {
 				config.CveList.Cves = append(config.CveList.Cves, cveOnly)

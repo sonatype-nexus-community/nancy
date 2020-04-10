@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	. "github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -53,33 +54,33 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 		var buf bytes.Buffer
 		w := csv.NewWriter(&buf)
 
-		w.Write([]string{"Summary"})
-		w.Write(summaryHeader)
-		w.Write(summaryRow)
+		f.write(w, []string{"Summary"})
+		f.write(w, summaryHeader)
+		f.write(w, summaryRow)
 
 		if !*f.Quiet {
 			invalidCount := len(invalidEntries)
 			if invalidCount > 0 {
-				w.Write([]string{""})
-				w.Write([]string{"Invalid Package(s)"})
-				w.Write(invalidHeader)
+				f.write(w, []string{""})
+				f.write(w, []string{"Invalid Package(s)"})
+				f.write(w, invalidHeader)
 				for i := 1; i <= invalidCount; i++ {
 					invalidEntry := invalidEntries[i-1]
-					w.Write([]string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(invalidCount) + "]", invalidEntry.Coordinates, "Does not use SemVer"})
+					f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(invalidCount) + "]", invalidEntry.Coordinates, "Does not use SemVer"})
 				}
 			}
 		}
 
 		if !*f.Quiet || numVulnerable > 0 {
-			w.Write([]string{""})
-			w.Write([]string{"Audited Package(s)"})
-			w.Write(auditedHeader)
+			f.write(w, []string{""})
+			f.write(w, []string{"Audited Package(s)"})
+			f.write(w, auditedHeader)
 		}
 		for i := 1; i <= len(auditedEntries); i++ {
 			auditEntry := auditedEntries[i-1]
 			if auditEntry.IsVulnerable() || !*f.Quiet {
 				jsonVulns, _ := json.Marshal(auditEntry.Vulnerabilities)
-				w.Write([]string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(packageCount) + "]", auditEntry.Coordinates, strconv.FormatBool(auditEntry.IsVulnerable()), strconv.Itoa(len(auditEntry.Vulnerabilities)), string(jsonVulns)})
+				f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(packageCount) + "]", auditEntry.Coordinates, strconv.FormatBool(auditEntry.IsVulnerable()), strconv.Itoa(len(auditEntry.Vulnerabilities)), string(jsonVulns)})
 			}
 		}
 
@@ -90,4 +91,9 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 		return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
 	}
 
+}
+
+func (f *CsvFormatter) write(w *csv.Writer, line []string) {
+	err := w.Write(line)
+	customerrors.Check(err, "Failed to write data to csv")
 }

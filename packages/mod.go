@@ -30,8 +30,7 @@ type Mod struct {
 
 func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 	for _, s := range m.ProjectList.Projects {
-		var version string
-		version = strings.Replace(s.Version, "v", "", -1)
+		version := strings.Replace(s.Version, "v", "", -1)
 
 		if len(version) > 0 { // There must be a version we can use
 			var purl = "pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version
@@ -69,7 +68,7 @@ func removeDuplicates(purls []string) (dedupedPurls []string) {
 	encountered := map[string]bool{}
 
 	for _, v := range purls {
-		if encountered[v] == true {
+		if encountered[v] {
 			LogLady.WithField("dep", v).Debug("Found duplicate dependency, eliminating it")
 		} else {
 			LogLady.WithField("dep", v).Debug("Unique dependency, adding it")

@@ -46,7 +46,7 @@ func doInit(args []string) {
 
 	file, err := os.OpenFile(GetLogFileLocation(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Printf("Could not open log file. error: %v\n", err)
 	}
 
 	LogLady.Out = file
@@ -82,7 +82,10 @@ func useTestLogFile(args []string) bool {
 // GetLogFileLocation will return the location on disk of the log file
 func GetLogFileLocation() (result string) {
 	result, _ = os.UserHomeDir()
-	os.MkdirAll(path.Join(result, types.OssIndexDirName), os.ModePerm)
+	err := os.MkdirAll(path.Join(result, types.OssIndexDirName), os.ModePerm)
+	if err != nil {
+		fmt.Printf("Failed to make all dirs needed to be able to store log file. error: %v\n", err)
+	}
 	result = path.Join(result, types.OssIndexDirName, DefaultLogFile)
 	return
 }
