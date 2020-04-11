@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Definitions and functions for processing the OSS Index Feed
+// Package ossindex has definitions and functions for processing the OSS Index Feed
 package ossindex
 
 import (
@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
+	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
@@ -87,20 +88,37 @@ func openDb(dbDir string) (db *badger.DB, err error) {
 	return
 }
 
+func purlsToPackageURL(purls []string) (newPurls []packageurl.PackageURL) {
+	for _, v := range purls {
+		newPurl, _ := packageurl.FromString(v)
+		newPurls = append(newPurls, newPurl)
+	}
+	return
+}
+
 // AuditPackages will given a list of Package URLs, run an OSS Index audit.
 //
 // Deprecated: AuditPackages is old and being maintained for upstream compatibility at the moment.
 // It will be removed when we go to a major version release. Use AuditPackagesWithOSSIndex instead.
 func AuditPackages(purls []string) ([]types.Coordinate, error) {
-	return doAuditPackages(purls, nil)
+	return doAudit(purlsToPackageURL(purls), nil)
 }
 
 // AuditPackagesWithOSSIndex will given a list of Package URLs, run an OSS Index audit, and takes OSS Index configuration
+//
+// Deprecated: AuditPackagesWithOSSIndex is old and being maintained for upstream compatibility at the moment.
+// It will be removed when we go to a major version release. Use Audit instead.
 func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
-	return doAuditPackages(purls, config)
+	updatedConfig := configuration.Config{Username: config.Username, Token: config.Token}
+	return doAudit(purlsToPackageURL(purls), &updatedConfig)
 }
 
-func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
+// Audit will given a list of Package URLs, run an OSS Index audit, and takes OSS Index configuration
+func Audit(purls []packageurl.PackageURL, config *configuration.Config) ([]types.Coordinate, error) {
+	return doAudit(purls, config)
+}
+
+func doAudit(purls []packageurl.PackageURL, config *configuration.Config) ([]types.Coordinate, error) {
 	dbDir := getDatabaseDirectory()
 	if err := os.MkdirAll(dbDir, os.ModePerm); err != nil {
 		return nil, err
@@ -116,7 +134,7 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 
 	err = db.View(func(txn *badger.Txn) error {
 		for _, purl := range purls {
-			item, err := txn.Get([]byte(strings.ToLower(purl)))
+			item, err := txn.Get([]byte(strings.ToLower(purl.ToString())))
 			if err == nil {
 				err := item.Value(func(val []byte) error {
 					var coordinate types.Coordinate
@@ -125,10 +143,10 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 					return err
 				})
 				if err != nil {
-					newPurls = append(newPurls, purl)
+					newPurls = append(newPurls, purl.ToString())
 				}
 			} else {
-				newPurls = append(newPurls, purl)
+				newPurls = append(newPurls, purl.ToString())
 			}
 		}
 		return nil
@@ -178,7 +196,7 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 	return results, nil
 }
 
-func doRequestToOSSIndex(jsonStr []byte, config *configuration.Configuration) (coordinates []types.Coordinate, err error) {
+func doRequestToOSSIndex(jsonStr []byte, config *configuration.Config) (coordinates []types.Coordinate, err error) {
 	req, err := setupRequest(jsonStr, config)
 	if err != nil {
 		return
@@ -220,7 +238,7 @@ func doRequestToOSSIndex(jsonStr []byte, config *configuration.Configuration) (c
 	return
 }
 
-func setupRequest(jsonStr []byte, config *configuration.Configuration) (req *http.Request, err error) {
+func setupRequest(jsonStr []byte, config *configuration.Config) (req *http.Request, err error) {
 	LogLady.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
 	req, err = http.NewRequest(
 		"POST",

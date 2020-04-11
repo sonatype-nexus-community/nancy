@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/package-url/packageurl-go"
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
@@ -44,7 +45,7 @@ const (
 )
 
 var (
-	localConfig configuration.IqConfiguration
+	localConfig configuration.Config
 	tries       = 0
 )
 
@@ -63,27 +64,45 @@ type thirdPartyAPIResult struct {
 
 var statusURLResp types.StatusURLResult
 
+func purlsToPackageURL(purls []string) (newPurls []packageurl.PackageURL) {
+	for _, v := range purls {
+		newPurl, _ := packageurl.FromString(v)
+		newPurls = append(newPurls, newPurl)
+	}
+	return
+}
+
+// Audit accepts a slice of packageurl.PackageURL, and configuration, and will submit these to
+// Nexus IQ Server for audit, and return a struct of StatusURLResult
+func Audit(purls []packageurl.PackageURL, config configuration.Config) (types.StatusURLResult, error) {
+	return doAudit(purls, config)
+}
+
 // AuditPackages accepts a slice of purls, public application ID, and configuration, and will submit these to
 // Nexus IQ Server for audit, and return a struct of StatusURLResult
 func AuditPackages(purls []string, applicationID string, config configuration.IqConfiguration) (types.StatusURLResult, error) {
+	return doAudit(purlsToPackageURL(purls), configuration.Config{Username: config.User, Token: config.Token, Application: config.Application, Stage: config.Stage, Server: config.Server})
+}
+
+func doAudit(purls []packageurl.PackageURL, config configuration.Config) (types.StatusURLResult, error) {
 	LogLady.WithFields(logrus.Fields{
 		"purls":          purls,
-		"application_id": applicationID,
+		"application_id": config.Application,
 	}).Info("Beginning audit with IQ")
 	localConfig = config
 
-	if localConfig.User == "admin" && localConfig.Token == "admin123" {
+	if localConfig.Username == "admin" && localConfig.Token == "admin123" {
 		LogLady.Info("Warning user of questionable life choices related to username and password")
 		warnUserOfBadLifeChoices()
 	}
 
-	internalID, err := getInternalApplicationID(applicationID)
+	internalID, err := getInternalApplicationID(config.Application)
 	if internalID == "" && err != nil {
 		LogLady.Error("Internal ID not obtained from Nexus IQ")
 		return statusURLResp, err
 	}
 
-	resultsFromOssIndex, err := ossindex.AuditPackages(purls)
+	resultsFromOssIndex, err := ossindex.Audit(purls, &config)
 	customerrors.Check(err, "There was an issue auditing packages using OSS Index")
 
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
@@ -128,7 +147,7 @@ func getInternalApplicationID(applicationID string) (string, error) {
 		nil,
 	)
 
-	req.SetBasicAuth(localConfig.User, localConfig.Token)
+	req.SetBasicAuth(localConfig.Username, localConfig.Token)
 	req.Header.Set("User-Agent", useragent.GetUserAgent())
 
 	resp, err := client.Do(req)
@@ -176,7 +195,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 		bytes.NewBuffer([]byte(sbom)),
 	)
 
-	req.SetBasicAuth(localConfig.User, localConfig.Token)
+	req.SetBasicAuth(localConfig.Username, localConfig.Token)
 	req.Header.Set("User-Agent", useragent.GetUserAgent())
 	req.Header.Set("Content-Type", "application/xml")
 
@@ -219,7 +238,7 @@ func pollIQServer(statusURL string, finished chan bool, maxRetries int) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", statusURL, nil)
 
-	req.SetBasicAuth(localConfig.User, localConfig.Token)
+	req.SetBasicAuth(localConfig.Username, localConfig.Token)
 
 	req.Header.Set("User-Agent", useragent.GetUserAgent())
 

@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/package-url/packageurl-go"
 	"github.com/sirupsen/logrus"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -42,15 +43,18 @@ import (
 func main() {
 	LogLady.Info("Starting Nancy")
 
+	config := configuration.Config{}
+
 	if len(os.Args) > 1 && os.Args[1] == "iq" {
 		LogLady.Info("Nancy parsing config for IQ")
-		config, err := configuration.ParseIQ(os.Args[2:])
+		config.Type = "iq"
+		err := config.Parse(os.Args[2:])
 		if err != nil {
 			flag.Usage()
 			os.Exit(1)
 		}
 		LogLady.WithField("config", config).Info("Obtained IQ config")
-		processIQConfig(config)
+		processConfig(config)
 		LogLady.Info("Nancy finished parsing config for IQ")
 	} else if len(os.Args) > 1 && os.Args[1] == "config" {
 		LogLady.Info("Nancy setting config via the command line")
@@ -60,12 +64,13 @@ func main() {
 		os.Exit(0)
 	} else {
 		LogLady.Info("Nancy parsing config for OSS Index")
-		ossIndexConfig, err := configuration.Parse(os.Args[1:])
+		config.Type = "ossindex"
+		err := config.Parse(os.Args[1:])
 		if err != nil {
 			flag.Usage()
 			os.Exit(1)
 		}
-		processConfig(ossIndexConfig)
+		processConfig(config)
 		LogLady.Info("Nancy finished parsing config for OSS Index")
 	}
 }
@@ -82,7 +87,7 @@ func printHeader(print bool) {
 	}
 }
 
-func processConfig(config configuration.Configuration) {
+func processConfig(config configuration.Config) {
 	if config.Help {
 		LogLady.Info("Printing usage and exiting clean")
 		flag.Usage()
@@ -123,62 +128,32 @@ func processConfig(config configuration.Configuration) {
 		return
 	}
 
-	printHeader((!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter"))
+	if config.Type == "iq" {
+		if config.Application == "" {
+			LogLady.Info("No application specified, printing usage and exiting clean")
+			flag.Usage()
+			os.Exit(0)
+		}
 
-	if config.UseStdIn {
-		LogLady.Info("Parsing config for StdIn")
-		doStdInAndParse(config)
-	}
-	if !config.UseStdIn {
-		LogLady.Info("Parsing config for file based scan")
-		doCheckExistenceAndParse(config)
+		printHeader(true)
+
+		LogLady.Info("Parsing IQ config for StdIn")
+		doStdInAndParseForIQ(config)
+	} else {
+		printHeader((!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter"))
+
+		if config.UseStdIn {
+			LogLady.Info("Parsing config for StdIn")
+			doStdInAndParse(config)
+		}
+		if !config.UseStdIn {
+			LogLady.Info("Parsing config for file based scan")
+			doCheckExistenceAndParse(config)
+		}
 	}
 }
 
-func processIQConfig(config configuration.IqConfiguration) {
-	// TODO: a lot of this code is a duplication of the OSS Index config, probably should extract some of it
-	if config.Help {
-		LogLady.Info("Printing usage and exiting clean")
-		flag.Usage()
-		os.Exit(0)
-	}
-
-	if config.Version {
-		LogLady.WithFields(logrus.Fields{
-			"build_time":   buildversion.BuildTime,
-			"build_commit": buildversion.BuildCommit,
-			"version":      buildversion.BuildVersion,
-		}).Info("Printing version information and exiting clean")
-
-		fmt.Println(buildversion.BuildVersion)
-		_, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
-		_, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
-		os.Exit(0)
-	}
-
-	if config.Info {
-		LogLady.Level = logrus.InfoLevel
-	}
-	if config.Debug {
-		LogLady.Level = logrus.DebugLevel
-	}
-	if config.Trace {
-		LogLady.Level = logrus.TraceLevel
-	}
-
-	if config.Application == "" {
-		LogLady.Info("No application specified, printing usage and exiting clean")
-		flag.Usage()
-		os.Exit(0)
-	}
-
-	printHeader(true)
-
-	LogLady.Info("Parsing IQ config for StdIn")
-	doStdInAndParseForIQ(config)
-}
-
-func doStdInAndParse(config configuration.Configuration) {
+func doStdInAndParse(config configuration.Config) {
 	LogLady.Info("Beginning StdIn parse for OSS Index")
 	checkStdIn()
 	LogLady.Info("Instantiating go.mod package")
@@ -192,7 +167,7 @@ func doStdInAndParse(config configuration.Configuration) {
 		"projectList": mod.ProjectList,
 	}).Debug("Obtained project list")
 
-	var purls = mod.ExtractPurlsFromManifest()
+	var purls = mod.ExtractPackageURLsFromManifest()
 	LogLady.WithFields(logrus.Fields{
 		"purls": purls,
 	}).Debug("Extracted purls")
@@ -212,7 +187,7 @@ func checkStdIn() {
 	}
 }
 
-func doStdInAndParseForIQ(config configuration.IqConfiguration) {
+func doStdInAndParseForIQ(config configuration.Config) {
 	LogLady.Debug("Beginning StdIn parse for IQ")
 	checkStdIn()
 	LogLady.Info("Instantiating go.mod package")
@@ -226,16 +201,16 @@ func doStdInAndParseForIQ(config configuration.IqConfiguration) {
 		"projectList": mod.ProjectList,
 	}).Debug("Obtained project list")
 
-	var purls = mod.ExtractPurlsFromManifestForIQ()
+	var purls = mod.ExtractPackageURLsFromManifestForIQ()
 	LogLady.WithFields(logrus.Fields{
 		"purls": purls,
 	}).Debug("Extracted purls")
 
 	LogLady.Info("Auditing purls with IQ Server")
-	auditWithIQServer(purls, config.Application, config)
+	auditWithIQServer(purls, config)
 }
 
-func doCheckExistenceAndParse(config configuration.Configuration) {
+func doCheckExistenceAndParse(config configuration.Config) {
 	switch {
 	case strings.Contains(config.Path, "Gopkg.lock"):
 		workingDir := filepath.Dir(config.Path)
@@ -255,7 +230,7 @@ func doCheckExistenceAndParse(config configuration.Configuration) {
 			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
 		}
 
-		purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
+		purls, invalidPurls := packages.ExtractPackageURLsUsingDep(project)
 
 		checkOSSIndex(purls, invalidPurls, config)
 	case strings.Contains(config.Path, "go.sum"):
@@ -263,7 +238,7 @@ func doCheckExistenceAndParse(config configuration.Configuration) {
 		mod.GoSumPath = config.Path
 		if mod.CheckExistenceOfManifest() {
 			mod.ProjectList, _ = parse.GoSum(config.Path)
-			var purls = mod.ExtractPurlsFromManifest()
+			var purls = mod.ExtractPackageURLsFromManifest()
 
 			checkOSSIndex(purls, nil, config)
 		}
@@ -272,14 +247,14 @@ func doCheckExistenceAndParse(config configuration.Configuration) {
 	}
 }
 
-func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) {
+func checkOSSIndex(purls []packageurl.PackageURL, invalidpurls []packageurl.PackageURL, config configuration.Config) {
 	var packageCount = len(purls)
-	coordinates, err := ossindex.AuditPackagesWithOSSIndex(purls, &config)
+	coordinates, err := ossindex.Audit(purls, &config)
 	customerrors.Check(err, "Error auditing packages")
 
 	var invalidCoordinates []types.Coordinate
 	for _, invalidpurl := range invalidpurls {
-		invalidCoordinates = append(invalidCoordinates, types.Coordinate{Coordinates: invalidpurl, InvalidSemVer: true})
+		invalidCoordinates = append(invalidCoordinates, types.Coordinate{Coordinates: invalidpurl.ToString(), InvalidSemVer: true})
 	}
 
 	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
@@ -287,9 +262,9 @@ func checkOSSIndex(purls []string, invalidpurls []string, config configuration.C
 	}
 }
 
-func auditWithIQServer(purls []string, applicationID string, config configuration.IqConfiguration) {
+func auditWithIQServer(purls []packageurl.PackageURL, config configuration.Config) {
 	LogLady.Debug("Sending purls to be Audited by IQ Server")
-	res, err := iq.AuditPackages(purls, applicationID, config)
+	res, err := iq.Audit(purls, config)
 	customerrors.Check(err, "Uh oh! There was an error with your request to Nexus IQ Server")
 
 	fmt.Println()

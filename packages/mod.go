@@ -18,6 +18,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -40,6 +41,38 @@ func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 	}
 
 	purls = removeDuplicates(purls)
+
+	return
+}
+
+// ExtractPackageURLsFromManifest will go through a ProjectList and parse, and return that list
+// as a slice of packageurl.PackageURL
+func (m Mod) ExtractPackageURLsFromManifest() (purls []packageurl.PackageURL) {
+	for _, s := range m.ProjectList.Projects {
+		var version string
+		version = strings.Replace(s.Version, "v", "", -1)
+
+		if len(version) > 0 { // There must be a version we can use
+			purl, _ := packageurl.FromString("pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version)
+			purls = append(purls, purl)
+		}
+	}
+
+	purls = removeDuplicatePackageURLs(purls)
+
+	return
+}
+
+func (m Mod) ExtractPackageURLsFromManifestForIQ() (purls []packageurl.PackageURL) {
+	for _, s := range m.ProjectList.Projects {
+		if len(s.Version) > 0 { // There must be a version we can use
+			var version = s.Version
+			version = strings.Replace(version, "+incompatible", "", -1)
+			purl, _ := packageurl.FromString("pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version)
+			purls = append(purls, purl)
+		}
+	}
+	purls = removeDuplicatePackageURLs(purls)
 
 	return
 }
@@ -74,6 +107,22 @@ func removeDuplicates(purls []string) (dedupedPurls []string) {
 		} else {
 			LogLady.WithField("dep", v).Debug("Unique dependency, adding it")
 			encountered[v] = true
+			dedupedPurls = append(dedupedPurls, v)
+		}
+	}
+
+	return
+}
+
+func removeDuplicatePackageURLs(purls []packageurl.PackageURL) (dedupedPurls []packageurl.PackageURL) {
+	encountered := map[string]bool{}
+
+	for _, v := range purls {
+		if encountered[v.ToString()] == true {
+			LogLady.WithField("dep", v).Debug("Found duplicate dependency, eliminating it")
+		} else {
+			LogLady.WithField("dep", v).Debug("Unique dependency, adding it")
+			encountered[v.ToString()] = true
 			dedupedPurls = append(dedupedPurls, v)
 		}
 	}

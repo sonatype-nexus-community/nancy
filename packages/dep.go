@@ -18,6 +18,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/golang/dep"
+	"github.com/package-url/packageurl-go"
 )
 
 func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
@@ -34,6 +35,34 @@ func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
 			name := lockedProject.Ident().String()
 			packageName := convertGopkgNameToPurl(string(name))
 			var purl = "pkg:" + packageName + "@" + version
+
+			_, err := semver.NewVersion(version)
+			if err != nil {
+				invalidPurls = append(invalidPurls, purl)
+			} else {
+				purls = append(purls, purl)
+			}
+		}
+	}
+	return purls, invalidPurls
+}
+
+// ExtractPackageURLsUsingDep will go through a variable of type *dep.Project, parse it, and return that list
+// as a slice of packageurl.PackageURL
+func ExtractPackageURLsUsingDep(project *dep.Project) ([]packageurl.PackageURL, []packageurl.PackageURL) {
+	lockedProjects := project.Lock.P
+	var purls []packageurl.PackageURL
+	var invalidPurls []packageurl.PackageURL
+	for _, lockedProject := range lockedProjects {
+		var version string
+		i := lockedProject.Version().String()
+
+		version = strings.Replace(i, "v", "", -1)
+
+		if len(version) > 0 { // There must be a version we can use
+			name := lockedProject.Ident().String()
+			packageName := convertGopkgNameToPurl(string(name))
+			purl, _ := packageurl.FromString("pkg:" + packageName + "@" + version)
 
 			_, err := semver.NewVersion(version)
 			if err != nil {
