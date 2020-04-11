@@ -64,24 +64,10 @@ type thirdPartyAPIResult struct {
 
 var statusURLResp types.StatusURLResult
 
-func purlsToPackageURL(purls []string) (newPurls []packageurl.PackageURL) {
-	for _, v := range purls {
-		newPurl, _ := packageurl.FromString(v)
-		newPurls = append(newPurls, newPurl)
-	}
-	return
-}
-
 // Audit accepts a slice of packageurl.PackageURL, and configuration, and will submit these to
 // Nexus IQ Server for audit, and return a struct of StatusURLResult
 func Audit(purls []packageurl.PackageURL, config configuration.Config) (types.StatusURLResult, error) {
 	return doAudit(purls, config)
-}
-
-// AuditPackages accepts a slice of purls, public application ID, and configuration, and will submit these to
-// Nexus IQ Server for audit, and return a struct of StatusURLResult
-func AuditPackages(purls []string, applicationID string, config configuration.IqConfiguration) (types.StatusURLResult, error) {
-	return doAudit(purlsToPackageURL(purls), configuration.Config{Username: config.User, Token: config.Token, Application: config.Application, Stage: config.Stage, Server: config.Server})
 }
 
 func doAudit(purls []packageurl.PackageURL, config configuration.Config) (types.StatusURLResult, error) {

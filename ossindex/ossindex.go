@@ -88,31 +88,6 @@ func openDb(dbDir string) (db *badger.DB, err error) {
 	return
 }
 
-func purlsToPackageURL(purls []string) (newPurls []packageurl.PackageURL) {
-	for _, v := range purls {
-		newPurl, _ := packageurl.FromString(v)
-		newPurls = append(newPurls, newPurl)
-	}
-	return
-}
-
-// AuditPackages will given a list of Package URLs, run an OSS Index audit.
-//
-// Deprecated: AuditPackages is old and being maintained for upstream compatibility at the moment.
-// It will be removed when we go to a major version release. Use AuditPackagesWithOSSIndex instead.
-func AuditPackages(purls []string) ([]types.Coordinate, error) {
-	return doAudit(purlsToPackageURL(purls), nil)
-}
-
-// AuditPackagesWithOSSIndex will given a list of Package URLs, run an OSS Index audit, and takes OSS Index configuration
-//
-// Deprecated: AuditPackagesWithOSSIndex is old and being maintained for upstream compatibility at the moment.
-// It will be removed when we go to a major version release. Use Audit instead.
-func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
-	updatedConfig := configuration.Config{Username: config.Username, Token: config.Token}
-	return doAudit(purlsToPackageURL(purls), &updatedConfig)
-}
-
 // Audit will given a list of Package URLs, run an OSS Index audit, and takes OSS Index configuration
 func Audit(purls []packageurl.PackageURL, config *configuration.Config) ([]types.Coordinate, error) {
 	return doAudit(purls, config)
