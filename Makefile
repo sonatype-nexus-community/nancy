@@ -34,7 +34,7 @@ deps:
 
 headers:
 	$(GOCMD) get github.com/google/addlicense
-	addlicense -check -l apache 
+	addlicense -check -f ./header.txt .
 
 build: 
 	$(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
