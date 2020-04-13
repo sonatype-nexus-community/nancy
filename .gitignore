@@ -6,3 +6,4 @@ nancy
 .idea
 *.iml
 dist/
+test-results.xml
