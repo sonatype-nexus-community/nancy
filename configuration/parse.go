@@ -289,8 +289,6 @@ func (c *Config) handleOssIndexOutputFormat(outputFormat string) error {
 			setTextOutputFormat()
 		case "csv":
 			OssIndexOutputFormats[outputFormat].(*audit.CsvFormatter).Quiet = &c.Quiet
-		default:
-			setTextOutputFormat()
 		}
 		c.Formatter = OssIndexOutputFormats[outputFormat]
 	} else {
