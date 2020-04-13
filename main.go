@@ -126,7 +126,7 @@ func processConfig(config *configuration.Config) {
 	}
 
 	if config.Type == configuration.IQServer {
-		if config.Application == "" {
+		if config.IQConfig.Application == "" {
 			LogLady.Info("No application specified, printing usage and exiting clean")
 			flag.Usage()
 			os.Exit(0)
@@ -137,7 +137,7 @@ func processConfig(config *configuration.Config) {
 		LogLady.Info("Parsing IQ config for StdIn")
 		doStdInAndParseForIQ(config)
 	} else {
-		printHeader((!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter"))
+		printHeader((!config.Quiet && reflect.TypeOf(config.OSSIndexConfig.Formatter).String() == "*audit.AuditLogTextFormatter"))
 
 		if config.UseStdIn {
 			LogLady.Info("Parsing config for StdIn")
@@ -254,7 +254,7 @@ func checkOSSIndex(purls []packageurl.PackageURL, invalidpurls []packageurl.Pack
 		invalidCoordinates = append(invalidCoordinates, types.Coordinate{Coordinates: invalidpurl.ToString(), InvalidSemVer: true})
 	}
 
-	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
+	if count := audit.LogResults(config.OSSIndexConfig.Formatter, packageCount, coordinates, invalidCoordinates, config.OSSIndexConfig.CveList.Cves); count > 0 {
 		os.Exit(count)
 	}
 }

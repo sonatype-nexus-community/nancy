@@ -40,9 +40,6 @@ type Config struct {
 	Type           ConfigType
 	Help           bool
 	Version        bool
-	Stage          string
-	Application    string
-	MaxRetries     int
 	Info           bool
 	Debug          bool
 	Trace          bool
@@ -50,9 +47,7 @@ type Config struct {
 	NoColor        bool
 	Quiet          bool
 	CleanCache     bool
-	CveList        types.CveListFlag
 	Path           string
-	Formatter      logrus.Formatter
 	IQConfig       IQConfig
 	OSSIndexConfig OSSIndexConfig
 }
@@ -114,7 +109,7 @@ func (c *Config) doParseOssIndex(args []string) (err error) {
 	flag.BoolVar(&c.Info, "v", false, "Set log level to Info")
 	flag.BoolVar(&c.Debug, "vv", false, "Set log level to Debug")
 	flag.BoolVar(&c.Trace, "vvv", false, "Set log level to Trace")
-	flag.Var(&c.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
+	flag.Var(&c.OSSIndexConfig.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
 	flag.StringVar(&c.OSSIndexConfig.Username, "user", "", "Specify OSS Index username for request")
 	flag.StringVar(&c.OSSIndexConfig.Token, "token", "", "Specify OSS Index API token for request")
 	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
@@ -178,9 +173,9 @@ func (c *Config) doParseIqServer(args []string) (err error) {
 	iqCommand.StringVar(&c.IQConfig.Username, "user", "admin", "Specify Nexus IQ username for request")
 	iqCommand.StringVar(&c.IQConfig.Token, "token", "admin123", "Specify Nexus IQ token/password for request")
 	iqCommand.StringVar(&c.IQConfig.Server, "server-url", "http://localhost:8070", "Specify Nexus IQ Server URL/port")
-	iqCommand.StringVar(&c.Application, "application", "", "Specify application ID for request")
-	iqCommand.StringVar(&c.Stage, "stage", "develop", "Specify stage for application")
-	iqCommand.IntVar(&c.MaxRetries, "max-retries", 300, "Specify maximum number of tries to poll Nexus IQ Server")
+	iqCommand.StringVar(&c.IQConfig.Application, "application", "", "Specify application ID for request")
+	iqCommand.StringVar(&c.IQConfig.Stage, "stage", "develop", "Specify stage for application")
+	iqCommand.IntVar(&c.IQConfig.MaxRetries, "max-retries", 300, "Specify maximum number of tries to poll Nexus IQ Server")
 
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, `Usage:
@@ -268,10 +263,10 @@ func (c *Config) determineIfLineIsExclusion(ogLine string) error {
 				return fmt.Errorf("failed to parse until at line '%s'. Expected format is 'until=yyyy-MM-dd'", ogLine)
 			}
 			if parseDate.After(time.Now()) {
-				c.CveList.Cves = append(c.CveList.Cves, cveOnly)
+				c.OSSIndexConfig.CveList.Cves = append(c.OSSIndexConfig.CveList.Cves, cveOnly)
 			}
 		} else {
-			c.CveList.Cves = append(c.CveList.Cves, cveOnly)
+			c.OSSIndexConfig.CveList.Cves = append(c.OSSIndexConfig.CveList.Cves, cveOnly)
 		}
 	}
 	return nil
@@ -290,7 +285,7 @@ func (c *Config) handleOssIndexOutputFormat(outputFormat string) error {
 		case "csv":
 			OssIndexOutputFormats[outputFormat].(*audit.CsvFormatter).Quiet = &c.Quiet
 		}
-		c.Formatter = OssIndexOutputFormats[outputFormat]
+		c.OSSIndexConfig.Formatter = OssIndexOutputFormats[outputFormat]
 	} else {
 		width, _, err := terminal.GetSize(int(os.Stdout.Fd()))
 		if err != nil {
@@ -300,7 +295,7 @@ func (c *Config) handleOssIndexOutputFormat(outputFormat string) error {
 		fmt.Println("!!! Output format of", strings.TrimSpace(outputFormat), "is not valid. Defaulting to text output")
 		fmt.Println(strings.Repeat("!", width))
 		setTextOutputFormat()
-		c.Formatter = OssIndexOutputFormats["text"]
+		c.OSSIndexConfig.Formatter = OssIndexOutputFormats["text"]
 	}
 	return nil
 }

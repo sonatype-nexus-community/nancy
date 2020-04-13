@@ -73,7 +73,7 @@ func Audit(purls []packageurl.PackageURL, config configuration.Config) (types.St
 func doAudit(purls []packageurl.PackageURL, config configuration.Config) (types.StatusURLResult, error) {
 	LogLady.WithFields(logrus.Fields{
 		"purls":          purls,
-		"application_id": config.Application,
+		"application_id": config.IQConfig.Application,
 	}).Info("Beginning audit with IQ")
 	localConfig = config
 
@@ -82,7 +82,7 @@ func doAudit(purls []packageurl.PackageURL, config configuration.Config) (types.
 		warnUserOfBadLifeChoices()
 	}
 
-	internalID, err := getInternalApplicationID(config.Application)
+	internalID, err := getInternalApplicationID(config.IQConfig.Application)
 	if internalID == "" && err != nil {
 		LogLady.Error("Internal ID not obtained from Nexus IQ")
 		return statusURLResp, err
@@ -114,7 +114,7 @@ func doAudit(purls []packageurl.PackageURL, config configuration.Config) (types.
 			case <-finished:
 				return
 			default:
-				pollIQServer(fmt.Sprintf("%s/%s", localConfig.IQConfig.Server, statusURL), finished, localConfig.MaxRetries)
+				pollIQServer(fmt.Sprintf("%s/%s", localConfig.IQConfig.Server, statusURL), finished, localConfig.IQConfig.MaxRetries)
 				time.Sleep(pollInterval)
 			}
 		}
@@ -172,7 +172,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 	LogLady.Debug("Beginning to submit to Third Party API")
 	client := &http.Client{}
 
-	url := fmt.Sprintf("%s%s", localConfig.IQConfig.Server, fmt.Sprintf("%s%s%s%s", thirdPartyAPILeft, internalID, thirdPartyAPIRight, localConfig.Stage))
+	url := fmt.Sprintf("%s%s", localConfig.IQConfig.Server, fmt.Sprintf("%s%s%s%s", thirdPartyAPILeft, internalID, thirdPartyAPIRight, localConfig.IQConfig.Stage))
 	LogLady.WithField("url", url).Debug("Crafted URL for submission to Third Party API")
 
 	req, err := http.NewRequest(

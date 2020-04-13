@@ -37,12 +37,12 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 	return doAudit(
 		purlsToPackageURL(purls),
 		configuration.Config{
-			Application: config.Application,
-			Stage:       config.Stage,
 			IQConfig: configuration.IQConfig{
-				Username: config.User,
-				Token:    config.Token,
-				Server:   config.Server,
+				Application: config.Application,
+				Stage:       config.Stage,
+				Username:    config.User,
+				Token:       config.Token,
+				Server:      config.Server,
 			},
 		})
 }

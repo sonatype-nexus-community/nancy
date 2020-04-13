@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"gopkg.in/yaml.v2"
@@ -16,15 +17,20 @@ import (
 
 // IQConfig is a struct for holding IQ Configuration, and for writing it to yaml
 type IQConfig struct {
-	Server   string `yaml:"Server"`
-	Username string `yaml:"Username"`
-	Token    string `yaml:"Token"`
+	Server      string `yaml:"Server"`
+	Username    string `yaml:"Username"`
+	Token       string `yaml:"Token"`
+	Application string `yaml:",omitempty"`
+	Stage       string `yaml:",omitempty"`
+	MaxRetries  int    `yaml:",omitempty"`
 }
 
 // OSSIndexConfig is a struct for holding OSS Index Configuration, and for writing it to yaml
 type OSSIndexConfig struct {
-	Username string `yaml:"Username"`
-	Token    string `yaml:"Token"`
+	Username  string            `yaml:"Username"`
+	Token     string            `yaml:"Token"`
+	Formatter logrus.Formatter  `yaml:",omitempty"`
+	CveList   types.CveListFlag `yaml:",omitempty"`
 }
 
 var (
