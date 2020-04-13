@@ -458,6 +458,7 @@ Tests can be run like `go test ./... -v`
 
 Adding new files? Get the license header correct with:
 
+> go get -u github.com/google/addlicense
 > addlicense -f ./header.txt .
 
 ### Release Process
