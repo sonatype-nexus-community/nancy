@@ -34,7 +34,7 @@ deps:
 
 headers:
 	$(GOCMD) get github.com/google/addlicense
-	addlicense -check -l apache -c Sonatype Inc -y 2020 
+	addlicense -check -l apache 
 
 build: 
 	$(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
