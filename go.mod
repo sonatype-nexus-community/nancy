@@ -14,6 +14,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/golang/dep v0.5.4
 	github.com/golang/protobuf v1.2.0 // indirect
+	github.com/google/addlicense v0.0.0-20200301095109-7c013a14f2e2 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/jarcoal/httpmock v1.0.4
 	github.com/jmank88/nuts v0.3.0 // indirect
@@ -29,7 +30,7 @@ require (
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
-	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
+	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
 	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1
 	gopkg.in/yaml.v2 v2.2.8

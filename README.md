@@ -456,6 +456,10 @@ $ curl -o /path/where/you/want/nancy \
 
 Tests can be run like `go test ./... -v`
 
+Adding new files? Get the license header correct with:
+
+> addlicense -f ./header.txt .
+
 ### Release Process
 
 Follow the steps below to release a new version of Nancy. You need to be part of the `deploy from circle ci` group for this to work.
