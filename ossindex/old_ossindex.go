@@ -42,6 +42,11 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 // Deprecated: AuditPackagesWithOSSIndex is old and being maintained for upstream compatibility at the moment.
 // It will be removed when we go to a major version release. Use Audit instead.
 func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
-	updatedConfig := configuration.Config{Username: config.Username, Token: config.Token}
+	updatedConfig := configuration.Config{
+		OSSIndexConfig: configuration.OSSIndexConfig{
+			Username: config.Username,
+			Token:    config.Token,
+		},
+	}
 	return doAudit(purlsToPackageURL(purls), &updatedConfig)
 }

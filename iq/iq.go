@@ -77,7 +77,7 @@ func doAudit(purls []packageurl.PackageURL, config configuration.Config) (types.
 	}).Info("Beginning audit with IQ")
 	localConfig = config
 
-	if localConfig.Username == "admin" && localConfig.Token == "admin123" {
+	if localConfig.IQConfig.Username == "admin" && localConfig.IQConfig.Token == "admin123" {
 		LogLady.Info("Warning user of questionable life choices related to username and password")
 		warnUserOfBadLifeChoices()
 	}
@@ -114,7 +114,7 @@ func doAudit(purls []packageurl.PackageURL, config configuration.Config) (types.
 			case <-finished:
 				return
 			default:
-				pollIQServer(fmt.Sprintf("%s/%s", localConfig.Server, statusURL), finished, localConfig.MaxRetries)
+				pollIQServer(fmt.Sprintf("%s/%s", localConfig.IQConfig.Server, statusURL), finished, localConfig.MaxRetries)
 				time.Sleep(pollInterval)
 			}
 		}
@@ -129,11 +129,11 @@ func getInternalApplicationID(applicationID string) (string, error) {
 
 	req, err := http.NewRequest(
 		"GET",
-		fmt.Sprintf("%s%s%s", localConfig.Server, internalApplicationIDURL, applicationID),
+		fmt.Sprintf("%s%s%s", localConfig.IQConfig.Server, internalApplicationIDURL, applicationID),
 		nil,
 	)
 
-	req.SetBasicAuth(localConfig.Username, localConfig.Token)
+	req.SetBasicAuth(localConfig.IQConfig.Username, localConfig.IQConfig.Token)
 	req.Header.Set("User-Agent", useragent.GetUserAgent())
 
 	resp, err := client.Do(req)
@@ -172,7 +172,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 	LogLady.Debug("Beginning to submit to Third Party API")
 	client := &http.Client{}
 
-	url := fmt.Sprintf("%s%s", localConfig.Server, fmt.Sprintf("%s%s%s%s", thirdPartyAPILeft, internalID, thirdPartyAPIRight, localConfig.Stage))
+	url := fmt.Sprintf("%s%s", localConfig.IQConfig.Server, fmt.Sprintf("%s%s%s%s", thirdPartyAPILeft, internalID, thirdPartyAPIRight, localConfig.Stage))
 	LogLady.WithField("url", url).Debug("Crafted URL for submission to Third Party API")
 
 	req, err := http.NewRequest(
@@ -181,7 +181,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) string {
 		bytes.NewBuffer([]byte(sbom)),
 	)
 
-	req.SetBasicAuth(localConfig.Username, localConfig.Token)
+	req.SetBasicAuth(localConfig.IQConfig.Username, localConfig.IQConfig.Token)
 	req.Header.Set("User-Agent", useragent.GetUserAgent())
 	req.Header.Set("Content-Type", "application/xml")
 
@@ -224,7 +224,7 @@ func pollIQServer(statusURL string, finished chan bool, maxRetries int) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", statusURL, nil)
 
-	req.SetBasicAuth(localConfig.Username, localConfig.Token)
+	req.SetBasicAuth(localConfig.IQConfig.Username, localConfig.IQConfig.Token)
 
 	req.Header.Set("User-Agent", useragent.GetUserAgent())
 

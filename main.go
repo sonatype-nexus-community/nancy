@@ -42,12 +42,9 @@ import (
 
 func main() {
 	LogLady.Info("Starting Nancy")
-
-	config := configuration.Config{}
-
 	if len(os.Args) > 1 && os.Args[1] == "iq" {
 		LogLady.Info("Nancy parsing config for IQ")
-		config.Type = "iq"
+		config := configuration.NewConfig(configuration.IQServer)
 		err := config.Parse(os.Args[2:])
 		if err != nil {
 			flag.Usage()
@@ -64,7 +61,7 @@ func main() {
 		os.Exit(0)
 	} else {
 		LogLady.Info("Nancy parsing config for OSS Index")
-		config.Type = "ossindex"
+		config := configuration.NewConfig(configuration.OSSIndex)
 		err := config.Parse(os.Args[1:])
 		if err != nil {
 			flag.Usage()
@@ -87,7 +84,7 @@ func printHeader(print bool) {
 	}
 }
 
-func processConfig(config configuration.Config) {
+func processConfig(config *configuration.Config) {
 	if config.Help {
 		LogLady.Info("Printing usage and exiting clean")
 		flag.Usage()
@@ -128,7 +125,7 @@ func processConfig(config configuration.Config) {
 		return
 	}
 
-	if config.Type == "iq" {
+	if config.Type == configuration.IQServer {
 		if config.Application == "" {
 			LogLady.Info("No application specified, printing usage and exiting clean")
 			flag.Usage()
@@ -153,7 +150,7 @@ func processConfig(config configuration.Config) {
 	}
 }
 
-func doStdInAndParse(config configuration.Config) {
+func doStdInAndParse(config *configuration.Config) {
 	LogLady.Info("Beginning StdIn parse for OSS Index")
 	checkStdIn()
 	LogLady.Info("Instantiating go.mod package")
@@ -187,7 +184,7 @@ func checkStdIn() {
 	}
 }
 
-func doStdInAndParseForIQ(config configuration.Config) {
+func doStdInAndParseForIQ(config *configuration.Config) {
 	LogLady.Debug("Beginning StdIn parse for IQ")
 	checkStdIn()
 	LogLady.Info("Instantiating go.mod package")
@@ -210,7 +207,7 @@ func doStdInAndParseForIQ(config configuration.Config) {
 	auditWithIQServer(purls, config)
 }
 
-func doCheckExistenceAndParse(config configuration.Config) {
+func doCheckExistenceAndParse(config *configuration.Config) {
 	switch {
 	case strings.Contains(config.Path, "Gopkg.lock"):
 		workingDir := filepath.Dir(config.Path)
@@ -247,9 +244,9 @@ func doCheckExistenceAndParse(config configuration.Config) {
 	}
 }
 
-func checkOSSIndex(purls []packageurl.PackageURL, invalidpurls []packageurl.PackageURL, config configuration.Config) {
+func checkOSSIndex(purls []packageurl.PackageURL, invalidpurls []packageurl.PackageURL, config *configuration.Config) {
 	var packageCount = len(purls)
-	coordinates, err := ossindex.Audit(purls, &config)
+	coordinates, err := ossindex.Audit(purls, config)
 	customerrors.Check(err, "Error auditing packages")
 
 	var invalidCoordinates []types.Coordinate
@@ -262,9 +259,9 @@ func checkOSSIndex(purls []packageurl.PackageURL, invalidpurls []packageurl.Pack
 	}
 }
 
-func auditWithIQServer(purls []packageurl.PackageURL, config configuration.Config) {
+func auditWithIQServer(purls []packageurl.PackageURL, config *configuration.Config) {
 	LogLady.Debug("Sending purls to be Audited by IQ Server")
-	res, err := iq.Audit(purls, config)
+	res, err := iq.Audit(purls, *config)
 	customerrors.Check(err, "Uh oh! There was an error with your request to Nexus IQ Server")
 
 	fmt.Println()

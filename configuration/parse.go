@@ -37,26 +37,41 @@ import (
 
 // Config is a struct for loading OSS Index or Nexus IQ Server config
 type Config struct {
-	Type        string
-	Help        bool
-	Version     bool
-	Stage       string
-	Application string
-	Server      string
-	MaxRetries  int
-	Info        bool
-	Debug       bool
-	Trace       bool
-	UseStdIn    bool
-	NoColor     bool
-	Quiet       bool
-	CleanCache  bool
-	CveList     types.CveListFlag
-	Path        string
-	Formatter   logrus.Formatter
-	Username    string `yaml:"Username"`
-	Token       string `yaml:"Token"`
+	Type           ConfigType
+	Help           bool
+	Version        bool
+	Stage          string
+	Application    string
+	MaxRetries     int
+	Info           bool
+	Debug          bool
+	Trace          bool
+	UseStdIn       bool
+	NoColor        bool
+	Quiet          bool
+	CleanCache     bool
+	CveList        types.CveListFlag
+	Path           string
+	Formatter      logrus.Formatter
+	IQConfig       IQConfig
+	OSSIndexConfig OSSIndexConfig
 }
+
+// ConfigType is a struct for valid Nancy config types
+type ConfigType int
+
+func (t ConfigType) String() string {
+	types := [...]string{"OSSIndex", "IQServer"}
+	if t < OSSIndex || t > IQServer {
+		return "Unsupported"
+	}
+	return types[t]
+}
+
+const (
+	OSSIndex ConfigType = 0
+	IQServer ConfigType = 1
+)
 
 var unixComments = regexp.MustCompile(`#.*$`)
 var untilComment = regexp.MustCompile(`(until=)(.*)`)
@@ -69,12 +84,18 @@ var OssIndexOutputFormats = map[string]logrus.Formatter{
 	"csv":         &audit.CsvFormatter{},
 }
 
+func NewConfig(typeOfConfig ConfigType) *Config {
+	config := Config{}
+	config.Type = typeOfConfig
+	return &config
+}
+
 // Parse is used to parse command line args, and populate the Config struct with the values necessary
 func (c *Config) Parse(args []string) (err error) {
 	switch c.Type {
-	case "ossindex":
+	case OSSIndex:
 		return c.doParseOssIndex(args)
-	case "iq":
+	case IQServer:
 		return c.doParseIqServer(args)
 	default:
 		return c.doParseOssIndex(args)
@@ -94,8 +115,8 @@ func (c *Config) doParseOssIndex(args []string) (err error) {
 	flag.BoolVar(&c.Debug, "vv", false, "Set log level to Debug")
 	flag.BoolVar(&c.Trace, "vvv", false, "Set log level to Trace")
 	flag.Var(&c.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
-	flag.StringVar(&c.Username, "user", "", "Specify OSS Index username for request")
-	flag.StringVar(&c.Token, "token", "", "Specify OSS Index API token for request")
+	flag.StringVar(&c.OSSIndexConfig.Username, "user", "", "Specify OSS Index username for request")
+	flag.StringVar(&c.OSSIndexConfig.Token, "token", "", "Specify OSS Index API token for request")
 	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
 	flag.StringVar(&outputFormat, "output", "text", "Styling for output format. "+fmt.Sprintf("%+q", reflect.ValueOf(OssIndexOutputFormats).MapKeys()))
 
@@ -115,10 +136,10 @@ Options:
 
 	ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 
-	err = c.loadConfigFromFile(ConfigLocation)
+	err = c.loadConfigFromFile(ConfigLocation, OSSIndex)
 	if err != nil {
 		fmt.Println(err)
-		LogLady.Info("Unable to load config from file")
+		LogLady.Info("Unable to load OSS Index config from file")
 	}
 
 	err = flag.CommandLine.Parse(args)
@@ -154,9 +175,9 @@ func (c *Config) doParseIqServer(args []string) (err error) {
 	iqCommand.BoolVar(&c.Info, "v", false, "Set log level to Info")
 	iqCommand.BoolVar(&c.Debug, "vv", false, "Set log level to Debug")
 	iqCommand.BoolVar(&c.Trace, "vvv", false, "Set log level to Trace")
-	iqCommand.StringVar(&c.Username, "user", "admin", "Specify Nexus IQ username for request")
-	iqCommand.StringVar(&c.Token, "token", "admin123", "Specify Nexus IQ token/password for request")
-	iqCommand.StringVar(&c.Server, "server-url", "http://localhost:8070", "Specify Nexus IQ Server URL/port")
+	iqCommand.StringVar(&c.IQConfig.Username, "user", "admin", "Specify Nexus IQ username for request")
+	iqCommand.StringVar(&c.IQConfig.Token, "token", "admin123", "Specify Nexus IQ token/password for request")
+	iqCommand.StringVar(&c.IQConfig.Server, "server-url", "http://localhost:8070", "Specify Nexus IQ Server URL/port")
 	iqCommand.StringVar(&c.Application, "application", "", "Specify application ID for request")
 	iqCommand.StringVar(&c.Stage, "stage", "develop", "Specify stage for application")
 	iqCommand.IntVar(&c.MaxRetries, "max-retries", 300, "Specify maximum number of tries to poll Nexus IQ Server")
@@ -172,11 +193,15 @@ Options:
 	}
 
 	ConfigLocation = filepath.Join(HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
-
-	err = c.loadConfigFromFile(ConfigLocation)
+	err = c.loadConfigFromFile(ConfigLocation, IQServer)
 	if err != nil {
-		fmt.Println(err)
-		LogLady.Info("Unable to load config from file")
+		LogLady.Info("Unable to load IQ Server config from file")
+	}
+
+	ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+	err = c.loadConfigFromFile(ConfigLocation, OSSIndex)
+	if err != nil {
+		LogLady.Info("Unable to load OSS Index config from file")
 	}
 
 	err = iqCommand.Parse(args)
@@ -187,12 +212,16 @@ Options:
 	return
 }
 
-func (c *Config) loadConfigFromFile(configLocation string) error {
+func (c *Config) loadConfigFromFile(configLocation string, configType ConfigType) error {
 	b, err := ioutil.ReadFile(configLocation)
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(b, c)
+	if configType == OSSIndex {
+		err = yaml.Unmarshal(b, &c.OSSIndexConfig)
+	} else {
+		err = yaml.Unmarshal(b, &c.IQConfig)
+	}
 	if err != nil {
 		return err
 	}

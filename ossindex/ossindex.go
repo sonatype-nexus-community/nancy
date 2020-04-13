@@ -226,9 +226,10 @@ func setupRequest(jsonStr []byte, config *configuration.Config) (req *http.Reque
 
 	req.Header.Set("User-Agent", useragent.GetUserAgent())
 	req.Header.Set("Content-Type", "application/json")
-	if config != nil && config.Username != "" && config.Token != "" {
+	if config != nil && config.OSSIndexConfig.Username != "" && config.OSSIndexConfig.Token != "" {
+		LogLady.Info(config)
 		LogLady.Info("Set OSS Index Basic Auth")
-		req.SetBasicAuth(config.Username, config.Token)
+		req.SetBasicAuth(config.OSSIndexConfig.Username, config.OSSIndexConfig.Token)
 	}
 
 	return req, nil

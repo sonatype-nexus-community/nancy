@@ -34,5 +34,15 @@ func purlsToPackageURL(purls []string) (newPurls []packageurl.PackageURL) {
 //
 // Deprecated: please use Audit instead
 func AuditPackages(purls []string, applicationID string, config configuration.IqConfiguration) (types.StatusURLResult, error) {
-	return doAudit(purlsToPackageURL(purls), configuration.Config{Username: config.User, Token: config.Token, Application: config.Application, Stage: config.Stage, Server: config.Server})
+	return doAudit(
+		purlsToPackageURL(purls),
+		configuration.Config{
+			Application: config.Application,
+			Stage:       config.Stage,
+			IQConfig: configuration.IQConfig{
+				Username: config.User,
+				Token:    config.Token,
+				Server:   config.Server,
+			},
+		})
 }
