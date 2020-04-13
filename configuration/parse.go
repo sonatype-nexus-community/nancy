@@ -92,7 +92,6 @@ Options:
 
 	err = loadIQConfigFromFile(ConfigLocation, &config)
 	if err != nil {
-		fmt.Println(err)
 		LogLady.Info("Unable to load config from file")
 	}
 
@@ -174,7 +173,6 @@ Options:
 
 	err := loadConfigFromFile(ConfigLocation, &config)
 	if err != nil {
-		fmt.Println(err)
 		LogLady.Info("Unable to load config from file")
 	}
 

@@ -16,12 +16,12 @@
 package logger
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -45,9 +45,7 @@ func doInit(args []string) {
 	}
 
 	file, err := os.OpenFile(GetLogFileLocation(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
-	if err != nil {
-		fmt.Printf("Could not open log file. error: %v\n", err)
-	}
+	customerrors.Check(err, "Unable to open log file")
 
 	LogLady.Out = file
 	LogLady.Level = logrus.InfoLevel
@@ -83,9 +81,7 @@ func useTestLogFile(args []string) bool {
 func GetLogFileLocation() (result string) {
 	result, _ = os.UserHomeDir()
 	err := os.MkdirAll(path.Join(result, types.OssIndexDirName), os.ModePerm)
-	if err != nil {
-		fmt.Printf("Failed to make all dirs needed to be able to store log file. error: %v\n", err)
-	}
+	customerrors.Check(err, "Unable to create directories necessary for log file")
 	result = path.Join(result, types.OssIndexDirName, DefaultLogFile)
 	return
 }
