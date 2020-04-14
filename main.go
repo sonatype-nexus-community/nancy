@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -91,9 +92,11 @@ func processConfig(config configuration.Configuration) {
 
 	if config.Version {
 		LogLady.WithFields(logrus.Fields{
-			"build_time":   buildversion.BuildTime,
-			"build_commit": buildversion.BuildCommit,
-			"version":      buildversion.BuildVersion,
+			"build_time":       buildversion.BuildTime,
+			"build_commit":     buildversion.BuildCommit,
+			"version":          buildversion.BuildVersion,
+			"operating_system": runtime.GOOS,
+			"architecture":     runtime.GOARCH,
 		}).Info("Printing version information and exiting clean")
 
 		fmt.Println(buildversion.BuildVersion)
