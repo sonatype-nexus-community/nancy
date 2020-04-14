@@ -13,6 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+FROM alpine:latest as builder
 
-FROM golang:1.14.1-alpine
+RUN apk add --no-cache ca-certificates \
+    && update-ca-certificates 2>/dev/null || true \
+    && rm -rf /var/cache/apk/*
 
+#--------------------------------
+# Deployment Image
+#--------------------------------
+FROM scratch
+
+#Import from builder image
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/passwd /etc/passwd
+COPY nancy /
+
+ENTRYPOINT [ "/nancy" ]
