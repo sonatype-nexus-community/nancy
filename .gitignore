@@ -8,3 +8,4 @@ nancy*amd64*
 .idea
 *.iml
 dist/
+test-results.xml
