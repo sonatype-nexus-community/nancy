@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/shopspring/decimal"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/ossindex/internal/cache"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -34,11 +35,7 @@ import (
 const purl = "pkg:github/BurntSushi/toml@0.3.1"
 
 var lowerCasePurl = strings.ToLower(purl)
-var expectedCoordinate = types.Coordinate{
-	Coordinates:     lowerCasePurl,
-	Reference:       "https://ossindex.sonatype.org/component/" + lowerCasePurl,
-	Vulnerabilities: []types.Vulnerability{},
-}
+var expectedCoordinate types.Coordinate
 
 func TestOssIndexUrlDefault(t *testing.T) {
 	setupTest(t)
@@ -140,13 +137,7 @@ func verifyClientCallAndWriteValidPackageResponse(t *testing.T, r *http.Request,
 	assert.Equal(t, http.MethodPost, r.Method)
 	assert.Equal(t, "/", r.URL.EscapedPath())
 	w.WriteHeader(http.StatusOK)
-	coordinates := []types.Coordinate{
-		{
-			Coordinates:     "pkg:github/burntsushi/toml@0.3.1",
-			Reference:       "https://ossindex.sonatype.org/component/pkg:github/burntsushi/toml@0.3.1",
-			Vulnerabilities: []types.Vulnerability{},
-		},
-	}
+	coordinates := []types.Coordinate{expectedCoordinate}
 	jsonCoordinates, _ := json.Marshal(coordinates)
 	_, _ = w.Write(jsonCoordinates)
 }
@@ -200,6 +191,23 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 }
 
 func setupTest(t *testing.T) {
+	dec, _ := decimal.NewFromString("9.8")
+	expectedCoordinate = types.Coordinate{
+		Coordinates: lowerCasePurl,
+		Reference:   "https://ossindex.sonatype.org/component/" + lowerCasePurl,
+		Vulnerabilities: []types.Vulnerability{
+			{
+				Id:          "id",
+				Title:       "test",
+				Description: "description",
+				CvssScore:   dec,
+				CvssVector:  "vectorvictor",
+				Cve:         "CVE-123-123",
+				Reference:   "http://www.internet.com",
+				Excluded:    false,
+			},
+		},
+	}
 	cache.DBName = "nancy-test"
 	err := cache.RemoveCacheDirectory()
 	if err != nil {
