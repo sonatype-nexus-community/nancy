@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
@@ -39,16 +38,6 @@ var expectedCoordinate = types.Coordinate{
 	Coordinates:     lowerCasePurl,
 	Reference:       "https://ossindex.sonatype.org/component/" + lowerCasePurl,
 	Vulnerabilities: []types.Vulnerability{},
-}
-
-func exists(filePath string) (exists bool) {
-	exists = true
-
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		exists = false
-	}
-
-	return
 }
 
 func TestOssIndexUrlDefault(t *testing.T) {
