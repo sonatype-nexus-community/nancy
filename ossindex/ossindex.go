@@ -23,11 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"strings"
-	"time"
 
-	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
@@ -70,43 +66,10 @@ func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configurati
 }
 
 func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
-	dbDir := cache.GetDatabaseDirectory()
-	if err := os.MkdirAll(dbDir, os.ModePerm); err != nil {
-		return nil, err
-	}
-
-	// Initialize the cache
-	db, err := cache.OpenDb(dbDir)
+	newPurls, results, err := cache.HydrateNewPurlsFromCache(purls)
 	customerrors.Check(err, "Error initializing cache")
-	defer db.Close()
 
-	var newPurls []string
-	var results []types.Coordinate
-
-	err = db.View(func(txn *badger.Txn) error {
-		for _, purl := range purls {
-			item, err := txn.Get([]byte(strings.ToLower(purl)))
-			if err == nil {
-				err := item.Value(func(val []byte) error {
-					var coordinate types.Coordinate
-					err := json.Unmarshal(val, &coordinate)
-					results = append(results, coordinate)
-					return err
-				})
-				if err != nil {
-					newPurls = append(newPurls, purl)
-				}
-			} else {
-				newPurls = append(newPurls, purl)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var chunks = chunk(newPurls, MAX_COORDS)
+	chunks := chunk(newPurls, MAX_COORDS)
 
 	for _, chunk := range chunks {
 		if len(chunk) > 0 {
@@ -120,26 +83,13 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 				return nil, err
 			}
 
+			for _, v := range coordinates {
+				results = append(results, v)
+			}
+
 			LogLady.WithField("coordinates", coordinates).Info("Coordinates unmarshalled from OSS Index")
-
-			// Cache the new results
-			if err := db.Update(func(txn *badger.Txn) error {
-				for i := 0; i < len(coordinates); i++ {
-					coord := coordinates[i].Coordinates
-					results = append(results, coordinates[i])
-
-					coordJSON, _ := json.Marshal(coordinates[i])
-					LogLady.WithField("json", coordinates[i]).Info("Marshall coordinate into json for insertion into DB")
-
-					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJSON), time.Hour*12)
-					if err != nil {
-						LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
-						return err
-					}
-				}
-
-				return nil
-			}); err != nil {
+			err = cache.InsertValuesIntoCache(coordinates)
+			if err != nil {
 				return nil, err
 			}
 		}

@@ -18,10 +18,13 @@
 package cache
 
 import (
+	"encoding/json"
 	"flag"
 	"os"
 	"os/user"
 	"path"
+	"strings"
+	"time"
 
 	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
@@ -31,7 +34,7 @@ import (
 
 const dbValueDirName = "golang"
 
-func GetDatabaseDirectory() (dbDir string) {
+func getDatabaseDirectory() (dbDir string) {
 	LogLady.Trace("Attempting to get database directory")
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
@@ -50,17 +53,81 @@ func GetDatabaseDirectory() (dbDir string) {
 
 // RemoveCacheDirectory deletes the local database directory.
 func RemoveCacheDirectory() error {
-	return os.RemoveAll(GetDatabaseDirectory())
+	return os.RemoveAll(getDatabaseDirectory())
 }
 
-func OpenDb(dbDir string) (db *badger.DB, err error) {
+func openDb(dbDir string) (db *badger.DB, err error) {
 	LogLady.Debug("Attempting to open Badger DB")
 	opts := badger.DefaultOptions
 
-	opts.Dir = GetDatabaseDirectory()
-	opts.ValueDir = GetDatabaseDirectory()
+	opts.Dir = getDatabaseDirectory()
+	opts.ValueDir = getDatabaseDirectory()
 	LogLady.WithField("badger_opts", opts).Debug("Set Badger Options")
 
 	db, err = badger.Open(opts)
+	return
+}
+
+func InsertValuesIntoCache(coordinates []types.Coordinate) (err error) {
+	dbDir := getDatabaseDirectory()
+	if err = os.MkdirAll(dbDir, os.ModePerm); err != nil {
+		return
+	}
+	// Initialize the cache
+	db, err := openDb(dbDir)
+	customerrors.Check(err, "Error initializing cache")
+	defer db.Close()
+
+	// Cache the new results
+	if err = db.Update(func(txn *badger.Txn) error {
+		for i := 0; i < len(coordinates); i++ {
+			coord := coordinates[i].Coordinates
+
+			coordJSON, _ := json.Marshal(coordinates[i])
+			LogLady.WithField("json", coordinates[i]).Info("Marshall coordinate into json for insertion into DB")
+
+			err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJSON), time.Hour*12)
+			if err != nil {
+				LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+	return
+}
+
+func HydrateNewPurlsFromCache(purls []string) (newPurls []string, results []types.Coordinate, err error) {
+	dbDir := getDatabaseDirectory()
+	if err = os.MkdirAll(dbDir, os.ModePerm); err != nil {
+		return
+	}
+	// Initialize the cache
+	db, err := openDb(dbDir)
+	customerrors.Check(err, "Error initializing cache")
+	defer db.Close()
+
+	err = db.View(func(txn *badger.Txn) error {
+		for _, purl := range purls {
+			item, err := txn.Get([]byte(strings.ToLower(purl)))
+			if err == nil {
+				err := item.Value(func(val []byte) error {
+					var coordinate types.Coordinate
+					err := json.Unmarshal(val, &coordinate)
+					results = append(results, coordinate)
+					return err
+				})
+				if err != nil {
+					newPurls = append(newPurls, purl)
+				}
+			} else {
+				newPurls = append(newPurls, purl)
+			}
+		}
+		return err
+	})
 	return
 }
