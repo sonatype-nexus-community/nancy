@@ -80,7 +80,7 @@ func main() {
 			LogLady.Info("Nancy finished parsing config for OSS Index")
 		}
 	}
-	configuration.Parse(os.Args)
+	_, _ = configuration.Parse(os.Args)
 	flag.Usage()
 	os.Exit(1)
 }
