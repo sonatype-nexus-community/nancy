@@ -25,7 +25,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
@@ -206,14 +205,9 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	// create the cached package
 	db, err := openDb(getDatabaseDirectory())
 	assert.Nil(t, err)
-	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
-		var coordJson, _ = json.Marshal(expectedCoordinate)
-		err := txn.SetWithTTL([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson), time.Hour*12)
-		if err != nil {
-			return err
-		}
-		return nil
-	}))
+	var coordJson, _ = json.Marshal(expectedCoordinate)
+	_, err = db.Exec("INSERT INTO nancy_cache (coordinates, vulnerabilities_json) values (?, ?)", lowerCasePurl, coordJson)
+	assert.Nil(t, err)
 	assert.Nil(t, db.Close())
 
 	coordinates, err := AuditPackages([]string{purl})
@@ -234,14 +228,9 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 	// create the cached package with short TTL for the cached item to ensure item TTL expires before we read it
 	db, err := openDb(getDatabaseDirectory())
 	assert.Nil(t, err)
-	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
-		var coordJson, _ = json.Marshal(expectedCoordinate)
-		err := txn.SetWithTTL([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson), time.Second*1)
-		if err != nil {
-			return err
-		}
-		return nil
-	}))
+	var coordJson, _ = json.Marshal(expectedCoordinate)
+	_, err = db.Exec("INSERT INTO nancy_cache (coordinates, vulnerabilities_json) values (?, ?)", lowerCasePurl, coordJson)
+	assert.Nil(t, err)
 	assert.Nil(t, db.Close())
 	time.Sleep(2 * time.Second)
 

@@ -17,23 +17,22 @@ package ossindex
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"os/user"
-	"path"
-	"strings"
-	"time"
-
-	"github.com/dgraph-io/badger"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/sonatype-nexus-community/nancy/useragent"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"os/user"
+	"path"
+	"time"
 )
 
 const dbValueDirName = "golang"
@@ -44,6 +43,7 @@ const MAX_COORDS = 128
 
 var (
 	ossIndexUrl string
+	now = time.Now()
 )
 
 func getDatabaseDirectory() (dbDir string) {
@@ -75,16 +75,21 @@ func getOssIndexUrl() string {
 	return ossIndexUrl
 }
 
-func openDb(dbDir string) (db *badger.DB, err error) {
+func openDb(dbDir string) (db *sql.DB, err error) {
 	LogLady.Debug("Attempting to open Badger DB")
-	opts := badger.DefaultOptions
-
-	opts.Dir = getDatabaseDirectory()
-	opts.ValueDir = getDatabaseDirectory()
-	LogLady.WithField("badger_opts", opts).Debug("Set Badger Options")
-
-	db, err = badger.Open(opts)
+	db, err = sql.Open("sqlite3", dbDir+"/nancy.sqlite")
+	if err != nil {
+		return nil, err
+	}
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS nancy_cache (coordinates TEXT, vulnerabilities_json TEXT, insert_time INTEGER)")
+	if err != nil {
+		return nil, err
+	}
 	return
+}
+
+func purgeExpiredEntries(db *sql.DB) error{
+	db.Exec("DELETE FROM nancy_cache WHERE insert_time < ?", )
 }
 
 // AuditPackages will given a list of Package URLs, run an OSS Index audit.
@@ -109,34 +114,39 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 	// Initialize the cache
 	db, err := openDb(dbDir)
 	customerrors.Check(err, "Error initializing cache")
+	err = purgeExpiredEntries(db, now.Add())
+	customerrors.Check(err, "Error initializing cache")
 	defer db.Close()
 
 	var newPurls []string
 	var results []types.Coordinate
 
-	err = db.View(func(txn *badger.Txn) error {
-		for _, purl := range purls {
-			item, err := txn.Get([]byte(strings.ToLower(purl)))
-			if err == nil {
-				err := item.Value(func(val []byte) error {
-					var coordinate types.Coordinate
-					err := json.Unmarshal(val, &coordinate)
-					results = append(results, coordinate)
-					return err
-				})
-				if err != nil {
-					newPurls = append(newPurls, purl)
-				}
-			} else {
-				newPurls = append(newPurls, purl)
-			}
-		}
-		return nil
-	})
+	lookupStmt, err := db.Prepare("SELECT vulnerabilities_json from nancy_cache where coordinates = ?")
 	if err != nil {
 		return nil, err
 	}
+	for _, purl := range purls {
+		var coordJson string
+		err = lookupStmt.QueryRow(purl).Scan(&coordJson)
+		if err != nil {
+			//not in cache
+			if err == sql.ErrNoRows {
+				newPurls = append(newPurls, purl)
+				continue
+			}
+			//something weird happened, error out
+			return nil, err
+		}
 
+		var coordinate types.Coordinate
+		err := json.Unmarshal([]byte(coordJson), &coordinate)
+		if err != nil {
+			newPurls = append(newPurls, purl)
+			continue
+		}
+		results = append(results, coordinate)
+
+	}
 	var chunks = chunk(newPurls, MAX_COORDS)
 
 	for _, chunk := range chunks {
@@ -154,25 +164,36 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 			LogLady.WithField("coordinates", coordinates).Info("Coordinates unmarshalled from OSS Index")
 
 			// Cache the new results
-			if err := db.Update(func(txn *badger.Txn) error {
-				for i := 0; i < len(coordinates); i++ {
-					coord := coordinates[i].Coordinates
-					results = append(results, coordinates[i])
-
-					coordJSON, _ := json.Marshal(coordinates[i])
-					LogLady.WithField("json", coordinates[i]).Info("Marshall coordinate into json for insertion into DB")
-
-					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJSON), time.Hour*12)
-					if err != nil {
-						LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
-						return err
-					}
-				}
-
-				return nil
-			}); err != nil {
+			cacheInsertStatement, err := db.Prepare("INSERT INTO nancy_cache (coordinates, vulnerabilities_json) values (?, ?) ")
+			if err != nil {
 				return nil, err
 			}
+			time.Now().Unix()
+			for i := 0; i < len(coordinates); i++ {
+				coord := coordinates[i].Coordinates
+
+				results = append(results, coordinates[i])
+
+				coordJSON, _ := json.Marshal(coordinates[i])
+				LogLady.WithField("json", coordinates[i]).Info("Marshall coordinate into json for insertion into DB")
+				if err != nil {
+					fmt.Println(err)
+				}
+				_, err = cacheInsertStatement.Exec(coord, coordJSON)
+				if err != nil {
+					fmt.Println(err)
+				}
+				//		err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJSON), time.Hour*12)
+				//		if err != nil {
+				//			LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
+				//			return err
+				//		}
+			}
+			//
+			//	return nil
+			//}); err != nil {
+			//	return nil, err
+			//}
 		}
 	}
 	return results, nil
