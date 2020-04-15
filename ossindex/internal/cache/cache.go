@@ -20,7 +20,7 @@ package cache
 import (
 	"encoding/json"
 	"errors"
-	"flag"
+	"os"
 	"os/user"
 	"path"
 	"strings"
@@ -32,7 +32,9 @@ import (
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-const dbValueDirName = "nancy-cache"
+var DBName = "nancy-cache"
+
+const dbDirName = "nancy"
 
 // DBValue is a local struct used for adding a TTL to a Coordinates struct
 type DBValue struct {
@@ -44,21 +46,22 @@ func getDatabaseDirectory() (dbDir string) {
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
-	var leftPath = path.Join(usr.HomeDir, types.OssIndexDirName)
-	var fullPath string
-	if flag.Lookup("test") == nil {
-		fullPath = path.Join(leftPath, dbValueDirName)
-	} else {
-		fullPath = path.Join(leftPath, "nancy-test")
-	}
-
-	return fullPath
+	return path.Join(usr.HomeDir, types.OssIndexDirName, dbDirName, DBName)
 }
 
 // RemoveCacheDirectory deletes the local database directory.
 func RemoveCacheDirectory() error {
 	defer pudge.CloseAll()
-	return pudge.DeleteFile(getDatabaseDirectory())
+	err := pudge.DeleteFile(getDatabaseDirectory())
+	if err == nil {
+		return nil
+	}
+	if _, ok := err.(*os.PathError); ok {
+		LogLady.WithField("error", err).Error("Unable to delete database, looks like it doesn't exist")
+		return nil
+	}
+
+	return err
 }
 
 // InsertValuesIntoCache takes a slice of Coordinates, and inserts them into the cache database.

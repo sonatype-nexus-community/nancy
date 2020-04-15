@@ -25,10 +25,9 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/configuration"
+	"github.com/sonatype-nexus-community/nancy/ossindex/internal/cache"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -52,41 +51,19 @@ func exists(filePath string) (exists bool) {
 	return
 }
 
-func setupTestCaseMoveCacheDb(t *testing.T) func(t *testing.T) {
-	// temporarily move existing cache db
-	cacheValueDir := getDatabaseDirectory() + "/" + dbValueDirName
-	var mustRestoreExistingValueDir = exists(cacheValueDir)
-	backupValueDir := getDatabaseDirectory() + "/" + dbValueDirName + "-NancyOssIndexTestBackup"
-	if mustRestoreExistingValueDir {
-		// move existing valueDir to backup name
-		assert.Nil(t, os.Rename(cacheValueDir, backupValueDir))
-	}
-
-	return func(t *testing.T) {
-		// remove valueDir created during test
-		assert.Nil(t, os.RemoveAll(cacheValueDir))
-
-		if mustRestoreExistingValueDir {
-			// restore existing valueDir from backup name
-			assert.Nil(t, os.Rename(backupValueDir, cacheValueDir))
-		}
-	}
-}
-
 func TestOssIndexUrlDefault(t *testing.T) {
+	setupTest(t)
 	ossIndexUrl = ""
 	assert.Equal(t, defaultOssIndexUrl, getOssIndexUrl())
 }
 
 func TestAuditPackages_Empty(t *testing.T) {
+	setupTest(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Errorf("No call should occur with empty package. called: %v", r)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
-
-	teardownTestCase := setupTestCaseMoveCacheDb(t)
-	defer teardownTestCase(t)
 
 	coordinates, err := AuditPackages([]string{})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
@@ -94,14 +71,12 @@ func TestAuditPackages_Empty(t *testing.T) {
 }
 
 func TestAuditPackages_Nil(t *testing.T) {
+	setupTest(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Errorf("No call should occur with nil package. called: %v", r)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
-
-	teardownTestCase := setupTestCaseMoveCacheDb(t)
-	defer teardownTestCase(t)
 
 	coordinates, err := AuditPackages(nil)
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
@@ -109,14 +84,12 @@ func TestAuditPackages_Nil(t *testing.T) {
 }
 
 func TestAuditPackages_ErrorHttpRequest(t *testing.T) {
+	setupTest(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Errorf("No call should occur with nil package. called: %v", r)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL + "\\"
-
-	teardownTestCase := setupTestCaseMoveCacheDb(t)
-	defer teardownTestCase(t)
 
 	coordinates, err := AuditPackages([]string{"nonexistent-purl"})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
@@ -125,6 +98,7 @@ func TestAuditPackages_ErrorHttpRequest(t *testing.T) {
 }
 
 func TestAuditPackages_ErrorNonExistentPurl(t *testing.T) {
+	setupTest(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPost, r.Method)
 		assert.Equal(t, "/", r.URL.EscapedPath())
@@ -134,15 +108,13 @@ func TestAuditPackages_ErrorNonExistentPurl(t *testing.T) {
 	defer ts.Close()
 	ossIndexUrl = ts.URL
 
-	teardownTestCase := setupTestCaseMoveCacheDb(t)
-	defer teardownTestCase(t)
-
 	coordinates, err := AuditPackages([]string{"nonexistent-purl"})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
 	assert.Equal(t, "[400 Bad Request] error accessing OSS Index", err.Error())
 }
 
 func TestAuditPackages_ErrorBadResponseBody(t *testing.T) {
+	setupTest(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPost, r.Method)
 		assert.Equal(t, "/", r.URL.EscapedPath())
@@ -153,9 +125,6 @@ func TestAuditPackages_ErrorBadResponseBody(t *testing.T) {
 	defer ts.Close()
 	ossIndexUrl = ts.URL
 
-	teardownTestCase := setupTestCaseMoveCacheDb(t)
-	defer teardownTestCase(t)
-
 	coordinates, err := AuditPackages([]string{purl})
 
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
@@ -165,14 +134,12 @@ func TestAuditPackages_ErrorBadResponseBody(t *testing.T) {
 }
 
 func TestAuditPackages_NewPackage(t *testing.T) {
+	setupTest(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		verifyClientCallAndWriteValidPackageResponse(t, r, w)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
-
-	teardownTestCase := setupTestCaseMoveCacheDb(t)
-	defer teardownTestCase(t)
 
 	coordinates, err := AuditPackages([]string{purl})
 
@@ -196,27 +163,20 @@ func verifyClientCallAndWriteValidPackageResponse(t *testing.T, r *http.Request,
 }
 
 func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
+	setupTest(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Errorf("No call should occur with previously cached package. called: %v", r)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
 
-	teardownTestCase := setupTestCaseMoveCacheDb(t)
-	defer teardownTestCase(t)
+	var tempCoordinates []types.Coordinate
+	tempCoordinates = append(tempCoordinates, expectedCoordinate)
 
-	// create the cached package
-	db, err := openDb(getDatabaseDirectory())
-	assert.Nil(t, err)
-	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
-		var coordJson, _ = json.Marshal(expectedCoordinate)
-		err := txn.SetWithTTL([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson), time.Hour*12)
-		if err != nil {
-			return err
-		}
-		return nil
-	}))
-	assert.Nil(t, db.Close())
+	err := cache.InsertValuesIntoCache(tempCoordinates)
+	if err != nil {
+		t.Error(err)
+	}
 
 	coordinates, err := AuditPackages([]string{purl})
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
@@ -224,32 +184,38 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 }
 
 func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
+	setupTest(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		verifyClientCallAndWriteValidPackageResponse(t, r, w)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
 
-	teardownTestCase := setupTestCaseMoveCacheDb(t)
-	defer teardownTestCase(t)
-
-	// create the cached package with short TTL for the cached item to ensure item TTL expires before we read it
-	db, err := openDb(getDatabaseDirectory())
-	assert.Nil(t, err)
-	assert.Nil(t, db.Update(func(txn *badger.Txn) error {
-		var coordJson, _ = json.Marshal(expectedCoordinate)
-		err := txn.SetWithTTL([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson), time.Second*1)
-		if err != nil {
-			return err
-		}
-		return nil
-	}))
-	assert.Nil(t, db.Close())
-	time.Sleep(2 * time.Second)
+	// // create the cached package with short TTL for the cached item to ensure item TTL expires before we read it
+	// db, err := openDb(getDatabaseDirectory())
+	// assert.Nil(t, err)
+	// assert.Nil(t, db.Update(func(txn *badger.Txn) error {
+	// 	var coordJson, _ = json.Marshal(expectedCoordinate)
+	// 	err := txn.SetWithTTL([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson), time.Second*1)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	return nil
+	// }))
+	// assert.Nil(t, db.Close())
+	// time.Sleep(2 * time.Second)
 
 	coordinates, err := AuditPackages([]string{purl})
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
 	assert.Nil(t, err)
+}
+
+func setupTest(t *testing.T) {
+	cache.DBName = "nancy-test"
+	err := cache.RemoveCacheDirectory()
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestSetupRequest(t *testing.T) {
