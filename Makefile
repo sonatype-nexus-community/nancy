@@ -40,7 +40,7 @@ build:
 	$(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
 
 test: build
-	$(GOTEST) -v -count=1 -p=1 ./... 2>&1
+	$(GOTEST) -v ./... 2>&1
 
 integration-test: build
 	cd packages/testdata && ../../$(BINARY_NAME) Gopkg.lock && cd -
