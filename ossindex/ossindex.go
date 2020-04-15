@@ -83,9 +83,7 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 				return nil, err
 			}
 
-			for _, v := range coordinates {
-				results = append(results, v)
-			}
+			results = append(results, coordinates...)
 
 			LogLady.WithField("coordinates", coordinates).Info("Coordinates unmarshalled from OSS Index")
 			err = cache.InsertValuesIntoCache(coordinates)
