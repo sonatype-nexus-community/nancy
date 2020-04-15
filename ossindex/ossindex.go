@@ -20,13 +20,10 @@ package ossindex
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/user"
-	"path"
 	"strings"
 	"time"
 
@@ -34,11 +31,10 @@ import (
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/ossindex/internal/cache"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/sonatype-nexus-community/nancy/useragent"
 )
-
-const dbValueDirName = "golang"
 
 const defaultOssIndexUrl = "https://ossindex.sonatype.org/api/v3/component-report"
 
@@ -48,28 +44,6 @@ var (
 	ossIndexUrl string
 )
 
-func getDatabaseDirectory() (dbDir string) {
-	LogLady.Trace("Attempting to get database directory")
-	usr, err := user.Current()
-	customerrors.Check(err, "Error getting user home")
-
-	LogLady.WithField("home_dir", usr.HomeDir).Trace("Obtained user directory")
-	var leftPath = path.Join(usr.HomeDir, types.OssIndexDirName)
-	var fullPath string
-	if flag.Lookup("test") == nil {
-		fullPath = path.Join(leftPath, dbValueDirName)
-	} else {
-		fullPath = path.Join(leftPath, "test-nancy")
-	}
-
-	return fullPath
-}
-
-// RemoveCacheDirectory deletes the local database directory.
-func RemoveCacheDirectory() error {
-	return os.RemoveAll(getDatabaseDirectory())
-}
-
 func getOssIndexUrl() string {
 	if ossIndexUrl == "" {
 		ossIndexUrl = defaultOssIndexUrl
@@ -77,16 +51,9 @@ func getOssIndexUrl() string {
 	return ossIndexUrl
 }
 
-func openDb(dbDir string) (db *badger.DB, err error) {
-	LogLady.Debug("Attempting to open Badger DB")
-	opts := badger.DefaultOptions
-
-	opts.Dir = getDatabaseDirectory()
-	opts.ValueDir = getDatabaseDirectory()
-	LogLady.WithField("badger_opts", opts).Debug("Set Badger Options")
-
-	db, err = badger.Open(opts)
-	return
+// RemoveCacheDirectory deletes the local database directory.
+func RemoveCacheDirectory() error {
+	return cache.RemoveCacheDirectory()
 }
 
 // AuditPackages will given a list of Package URLs, run an OSS Index audit.
@@ -103,13 +70,13 @@ func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configurati
 }
 
 func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
-	dbDir := getDatabaseDirectory()
+	dbDir := cache.GetDatabaseDirectory()
 	if err := os.MkdirAll(dbDir, os.ModePerm); err != nil {
 		return nil, err
 	}
 
 	// Initialize the cache
-	db, err := openDb(dbDir)
+	db, err := cache.OpenDb(dbDir)
 	customerrors.Check(err, "Error initializing cache")
 	defer db.Close()
 
