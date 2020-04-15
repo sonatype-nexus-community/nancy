@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -79,7 +80,13 @@ func printHeader(print bool) {
 		figure.NewFigure("Nancy", "larry3d", true).Print()
 		figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
 
-		LogLady.WithField("version", buildversion.BuildVersion).Info("Printing Nancy version")
+		LogLady.WithFields(logrus.Fields{
+			"build_time":       buildversion.BuildTime,
+			"build_commit":     buildversion.BuildCommit,
+			"version":          buildversion.BuildVersion,
+			"operating_system": runtime.GOOS,
+			"architecture":     runtime.GOARCH,
+		}).Info("Printing Nancy version")
 		fmt.Println("Nancy version: " + buildversion.BuildVersion)
 		LogLady.Info("Finished printing header")
 	}
@@ -94,9 +101,11 @@ func processConfig(config configuration.Configuration) {
 
 	if config.Version {
 		LogLady.WithFields(logrus.Fields{
-			"build_time":   buildversion.BuildTime,
-			"build_commit": buildversion.BuildCommit,
-			"version":      buildversion.BuildVersion,
+			"build_time":       buildversion.BuildTime,
+			"build_commit":     buildversion.BuildCommit,
+			"version":          buildversion.BuildVersion,
+			"operating_system": runtime.GOOS,
+			"architecture":     runtime.GOARCH,
 		}).Info("Printing version information and exiting clean")
 
 		fmt.Println(buildversion.BuildVersion)
