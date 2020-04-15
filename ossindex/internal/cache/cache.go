@@ -32,6 +32,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
+// DBName is exported from cache so that in tests we can switch the DB name, and avoid polluting our real DB
 var DBName = "nancy-cache"
 
 const dbDirName = "nancy"
@@ -51,7 +52,12 @@ func getDatabaseDirectory() (dbDir string) {
 
 // RemoveCacheDirectory deletes the local database directory.
 func RemoveCacheDirectory() error {
-	defer pudge.CloseAll()
+	defer func() {
+		if err := pudge.CloseAll(); err != nil {
+			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")
+		}
+	}()
+
 	err := pudge.DeleteFile(getDatabaseDirectory())
 	if err == nil {
 		return nil
@@ -68,7 +74,11 @@ func RemoveCacheDirectory() error {
 // By default, values are given a TTL of 12 hours. An error is returned if there is an issue setting
 // a key into the cache.
 func InsertValuesIntoCache(coordinates []types.Coordinate) (err error) {
-	defer pudge.CloseAll()
+	defer func() {
+		if err := pudge.CloseAll(); err != nil {
+			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")
+		}
+	}()
 
 	for _, coordinate := range coordinates {
 		ttl := time.Now().Local().Add(time.Hour * 12)
@@ -86,7 +96,12 @@ func InsertValuesIntoCache(coordinates []types.Coordinate) (err error) {
 // a partially hydrated results slice if there are results in the cache, and an error if the world
 // ends, or we wrote bad code, whichever comes first.
 func HydrateNewPurlsFromCache(purls []string) ([]string, []types.Coordinate, error) {
-	defer pudge.CloseAll()
+	defer func() {
+		if err := pudge.CloseAll(); err != nil {
+			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")
+		}
+	}()
+
 	var newPurls []string
 	var results []types.Coordinate
 
