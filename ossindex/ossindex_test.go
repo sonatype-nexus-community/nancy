@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/shopspring/decimal"
 	"github.com/sonatype-nexus-community/nancy/configuration"
@@ -153,7 +154,7 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	var tempCoordinates []types.Coordinate
 	tempCoordinates = append(tempCoordinates, expectedCoordinate)
 
-	err := cache.InsertValuesIntoCache(tempCoordinates)
+	err := cache.InsertValuesIntoCache(tempCoordinates, cache.TTL)
 	if err != nil {
 		t.Error(err)
 	}
@@ -165,25 +166,15 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 
 func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 	setupTest(t)
+
+	// Set the cache TTL to a date in the past for testing
+	cache.TTL = time.Now().AddDate(0, 0, -1)
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		verifyClientCallAndWriteValidPackageResponse(t, r, w)
 	}))
 	defer ts.Close()
 	ossIndexUrl = ts.URL
-
-	// // create the cached package with short TTL for the cached item to ensure item TTL expires before we read it
-	// db, err := openDb(getDatabaseDirectory())
-	// assert.Nil(t, err)
-	// assert.Nil(t, db.Update(func(txn *badger.Txn) error {
-	// 	var coordJson, _ = json.Marshal(expectedCoordinate)
-	// 	err := txn.SetWithTTL([]byte(strings.ToLower(lowerCasePurl)), []byte(coordJson), time.Second*1)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	return nil
-	// }))
-	// assert.Nil(t, db.Close())
-	// time.Sleep(2 * time.Second)
 
 	coordinates, err := AuditPackages([]string{purl})
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)

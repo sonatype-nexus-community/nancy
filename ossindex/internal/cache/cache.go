@@ -35,6 +35,10 @@ import (
 // DBName is exported from cache so that in tests we can switch the DB name, and avoid polluting our real DB
 var DBName = "nancy-cache"
 
+// TTL is exported so that you can a) set the TTL to a lower period of time if you want, and b)
+// so that in tests we can simulate an expired cache object
+var TTL = time.Now().Local().Add(time.Hour * 12)
+
 const dbDirName = "nancy"
 
 // DBValue is a local struct used for adding a TTL to a Coordinates struct
@@ -73,7 +77,7 @@ func RemoveCacheDirectory() error {
 // InsertValuesIntoCache takes a slice of Coordinates, and inserts them into the cache database.
 // By default, values are given a TTL of 12 hours. An error is returned if there is an issue setting
 // a key into the cache.
-func InsertValuesIntoCache(coordinates []types.Coordinate) (err error) {
+func InsertValuesIntoCache(coordinates []types.Coordinate, ttl time.Time) (err error) {
 	defer func() {
 		if err := pudge.CloseAll(); err != nil {
 			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")
@@ -81,7 +85,6 @@ func InsertValuesIntoCache(coordinates []types.Coordinate) (err error) {
 	}()
 
 	for _, coordinate := range coordinates {
-		ttl := time.Now().Local().Add(time.Hour * 12)
 		err = pudge.Set(getDatabaseDirectory(), strings.ToLower(coordinate.Coordinates), DBValue{Coordinates: coordinate, TTL: ttl.Unix()})
 		if err != nil {
 			LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
