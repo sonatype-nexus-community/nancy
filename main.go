@@ -77,7 +77,13 @@ func printHeader(print bool) {
 		figure.NewFigure("Nancy", "larry3d", true).Print()
 		figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
 
-		LogLady.WithField("version", buildversion.BuildVersion).Info("Printing Nancy version")
+		LogLady.WithFields(logrus.Fields{
+			"build_time":       buildversion.BuildTime,
+			"build_commit":     buildversion.BuildCommit,
+			"version":          buildversion.BuildVersion,
+			"operating_system": runtime.GOOS,
+			"architecture":     runtime.GOARCH,
+		}).Info("Printing Nancy version")
 		fmt.Println("Nancy version: " + buildversion.BuildVersion)
 		LogLady.Info("Finished printing header")
 	}
