@@ -23,6 +23,7 @@ require (
 	github.com/package-url/packageurl-go v0.1.0
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/pkg/errors v0.8.0 // indirect
+	github.com/recoilme/pudge v1.0.3
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/sirupsen/logrus v1.5.0
