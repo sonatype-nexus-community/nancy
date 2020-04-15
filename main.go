@@ -45,32 +45,44 @@ import (
 func main() {
 	LogLady.Info("Starting Nancy")
 
-	if len(os.Args) > 1 && os.Args[1] == "iq" {
-		LogLady.Info("Nancy parsing config for IQ")
-		config, err := configuration.ParseIQ(os.Args[2:])
-		if err != nil {
-			flag.Usage()
-			os.Exit(1)
-		}
-		LogLady.WithField("config", config).Info("Obtained IQ config")
-		processIQConfig(config)
-		LogLady.Info("Nancy finished parsing config for IQ")
-	} else if len(os.Args) > 1 && os.Args[1] == "config" {
-		LogLady.Info("Nancy setting config via the command line")
-		err := configuration.GetConfigFromCommandLine(os.Stdin)
-		customerrors.Check(err, "Unable to set config for Nancy")
+	if len(os.Args) > 1 {
+		switch args := os.Args; args[1] {
+		case "iq":
+			LogLady.Info("Nancy parsing config for IQ")
+			config, err := configuration.ParseIQ(os.Args[2:])
+			if err != nil {
+				flag.Usage()
+				os.Exit(1)
+			}
+			LogLady.WithField("config", config).Info("Obtained IQ config")
+			processIQConfig(config)
+			LogLady.Info("Nancy finished parsing config for IQ")
 
-		os.Exit(0)
-	} else {
-		LogLady.Info("Nancy parsing config for OSS Index")
-		ossIndexConfig, err := configuration.Parse(os.Args[1:])
-		if err != nil {
-			flag.Usage()
-			os.Exit(1)
+		case "config":
+			LogLady.Info("Nancy setting config via the command line")
+			err := configuration.GetConfigFromCommandLine(os.Stdin)
+			customerrors.Check(err, "Unable to set config for Nancy")
+
+			os.Exit(0)
+
+		default:
+			LogLady.Info("Nancy parsing config for OSS Index")
+			ossIndexConfig, err := configuration.Parse(os.Args[1:])
+			if err != nil {
+				flag.Usage()
+				os.Exit(1)
+			}
+			if !strings.HasPrefix(os.Args[1], "-") {
+				flag.Usage()
+				os.Exit(1)
+			}
+			processConfig(ossIndexConfig)
+			LogLady.Info("Nancy finished parsing config for OSS Index")
 		}
-		processConfig(ossIndexConfig)
-		LogLady.Info("Nancy finished parsing config for OSS Index")
 	}
+	configuration.Parse(os.Args)
+	flag.Usage()
+	os.Exit(1)
 }
 
 func printHeader(print bool) {
