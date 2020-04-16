@@ -42,6 +42,8 @@ func TestInsert(t *testing.T) {
 
 	assert.Equal(t, coordinates[0], result.Coordinates)
 	assert.Nil(t, err)
+
+	tearDown(t, cache)
 }
 
 func TestGetWithRegularTTL(t *testing.T) {
@@ -55,6 +57,8 @@ func TestGetWithRegularTTL(t *testing.T) {
 	assert.Empty(t, newPurls)
 	assert.Equal(t, results, coordinates)
 	assert.Nil(t, err)
+
+	tearDown(t, cache)
 }
 
 func TestGetWithExpiredTTL(t *testing.T) {
@@ -76,6 +80,8 @@ func TestGetWithExpiredTTL(t *testing.T) {
 	if _, ok := err.(*os.PathError); ok {
 		t.Error("Should be a os.PathError returned")
 	}
+
+	tearDown(t, cache)
 }
 
 func setupTestsAndCache(t *testing.T) *Cache {
@@ -100,10 +106,17 @@ func setupTestsAndCache(t *testing.T) *Cache {
 	purls = append(purls, "pkg:golang/test@0.0.0")
 
 	coordinates = append(coordinates, coordinate)
-	cache := Cache{DBName: "nancy-test", TTL: time.Now().Local().Add(time.Hour * 12)}
+	cache := Cache{DBName: "nancy-cache-test", TTL: time.Now().Local().Add(time.Hour * 12)}
 	err := cache.RemoveCacheDirectory()
 	if err != nil {
 		t.Error(err)
 	}
 	return &cache
+}
+
+func tearDown(t *testing.T, cache *Cache) {
+	err := cache.RemoveCacheDirectory()
+	if err != nil {
+		t.Error(err)
+	}
 }
