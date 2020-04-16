@@ -18,8 +18,8 @@
 package cache
 
 import (
-	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/user"
 	"path"
@@ -70,6 +70,10 @@ func RemoveCacheDirectory() error {
 		LogLady.WithField("error", err).Error("Unable to delete database, looks like it doesn't exist")
 		return nil
 	}
+	err = pudge.BackupAll(getDatabaseDirectory())
+	if err != nil {
+		return err
+	}
 
 	return err
 }
@@ -84,11 +88,33 @@ func InsertValuesIntoCache(coordinates []types.Coordinate, ttl time.Time) (err e
 		}
 	}()
 
-	for _, coordinate := range coordinates {
-		err = pudge.Set(getDatabaseDirectory(), strings.ToLower(coordinate.Coordinates), DBValue{Coordinates: coordinate, TTL: ttl.Unix()})
+	for i := 0; i < len(coordinates); i++ {
+		var exists DBValue
+		err = pudge.Get(getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates), &exists)
 		if err != nil {
-			LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
-			return
+			if errors.Is(err, pudge.ErrKeyNotFound) {
+				err = pudge.Set(getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates), DBValue{Coordinates: coordinates[i], TTL: ttl.Unix()})
+				if err != nil {
+					LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
+					fmt.Println(err)
+					continue
+				}
+			}
+			continue
+		}
+		if exists.TTL < time.Now().Unix() {
+			err = pudge.Delete(getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates))
+			if err != nil {
+				fmt.Println(err)
+				LogLady.WithField("error", err).Error("Unable to delete coordinate from cache DB")
+				continue
+			}
+			err = pudge.Set(getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates), DBValue{Coordinates: coordinates[i], TTL: ttl.Unix()})
+			if err != nil {
+				fmt.Println(err)
+				LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
+				continue
+			}
 		}
 	}
 	return
@@ -108,40 +134,29 @@ func HydrateNewPurlsFromCache(purls []string) ([]string, []types.Coordinate, err
 	var newPurls []string
 	var results []types.Coordinate
 
-	for _, purl := range purls {
+	for i := 0; i < len(purls); i++ {
 		var item DBValue
-		err := pudge.Get(getDatabaseDirectory(), strings.ToLower(purl), &item)
+		err := pudge.Get(getDatabaseDirectory(), strings.ToLower(purls[i]), &item)
 		if err != nil {
 			if errors.Is(err, pudge.ErrKeyNotFound) {
-				newPurls = append(newPurls, purl)
+				newPurls = append(newPurls, purls[i])
 				continue
 			} else {
 				return nil, nil, err
 			}
 		}
 
-		var bytes []byte
-		bytes, err = json.Marshal(item)
-		if err != nil {
-			LogLady.WithField("error", err).Error("Unable to marshal pudge db value into slice of bytes")
-			return nil, nil, err
-		}
-
-		var coordinate DBValue
-		err = json.Unmarshal(bytes, &coordinate)
-		if err != nil {
-			newPurls = append(newPurls, purl)
-		}
-
-		if coordinate.TTL < time.Now().Unix() {
-			newPurls = append(newPurls, purl)
-			err = pudge.Delete(getDatabaseDirectory(), strings.ToLower(coordinate.Coordinates.Coordinates))
+		if item.TTL < time.Now().Unix() {
+			newPurls = append(newPurls, purls[i])
+			err = pudge.Delete(getDatabaseDirectory(), strings.ToLower(item.Coordinates.Coordinates))
 			if err != nil {
 				LogLady.WithField("error", err).Error("Unable to delete value from pudge db")
 			}
+			continue
+		} else {
+			LogLady.WithField("coordinate", item.Coordinates).Info("Result found in cache, moving forward and hydrating results")
+			results = append(results, item.Coordinates)
 		}
-		LogLady.WithField("coordinate", coordinate.Coordinates).Info("Result found in cache, moving forward and hydrating results")
-		results = append(results, coordinate.Coordinates)
 	}
 
 	return newPurls, results, nil

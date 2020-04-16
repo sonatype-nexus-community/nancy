@@ -170,6 +170,14 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 	// Set the cache TTL to a date in the past for testing
 	cache.TTL = time.Now().AddDate(0, 0, -1)
 
+	var tempCoordinates []types.Coordinate
+	tempCoordinates = append(tempCoordinates, expectedCoordinate)
+
+	err := cache.InsertValuesIntoCache(tempCoordinates, cache.TTL)
+	if err != nil {
+		t.Error(err)
+	}
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		verifyClientCallAndWriteValidPackageResponse(t, r, w)
 	}))
