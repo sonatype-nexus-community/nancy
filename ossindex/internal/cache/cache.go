@@ -88,16 +88,23 @@ func InsertValuesIntoCache(coordinates []types.Coordinate, ttl time.Time) (err e
 		}
 	}()
 
+	doSet := func(coordinate types.Coordinate) error {
+		err = pudge.Set(getDatabaseDirectory(), strings.ToLower(coordinate.Coordinates), DBValue{Coordinates: coordinate, TTL: ttl.Unix()})
+		if err != nil {
+			LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
+			return err
+		}
+		return nil
+	}
+
 	for i := 0; i < len(coordinates); i++ {
 		var exists DBValue
 		err = pudge.Get(getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates), &exists)
 		if err != nil {
 			if errors.Is(err, pudge.ErrKeyNotFound) {
-				err = pudge.Set(getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates), DBValue{Coordinates: coordinates[i], TTL: ttl.Unix()})
+				err = doSet(coordinates[i])
 				if err != nil {
-					LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
-					fmt.Println(err)
-					continue
+					return
 				}
 			}
 			continue
@@ -109,10 +116,8 @@ func InsertValuesIntoCache(coordinates []types.Coordinate, ttl time.Time) (err e
 				LogLady.WithField("error", err).Error("Unable to delete coordinate from cache DB")
 				continue
 			}
-			err = pudge.Set(getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates), DBValue{Coordinates: coordinates[i], TTL: ttl.Unix()})
+			err = doSet(coordinates[i])
 			if err != nil {
-				fmt.Println(err)
-				LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
 				continue
 			}
 		}
