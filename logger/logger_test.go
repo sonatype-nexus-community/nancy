@@ -42,15 +42,18 @@ func TestLogger(t *testing.T) {
 	var logTest LogTest
 
 	err = json.Unmarshal(dat, &logTest)
+
 	if err != nil {
 		t.Error("Improperly written log, should be valid json")
 	}
 
 	if logTest.Level != "info" {
+		t.Error(logTest)
 		t.Error("Log level not set properly")
 	}
 
 	if logTest.Msg != "Test" {
+		t.Error(logTest)
 		t.Error("Message not written to log correctly")
 	}
 }

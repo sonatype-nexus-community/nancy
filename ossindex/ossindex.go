@@ -20,73 +20,52 @@ package ossindex
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"os/user"
-	"path"
-	"strings"
 	"time"
 
-	"github.com/dgraph-io/badger"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/ossindex/internal/cache"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/sonatype-nexus-community/nancy/useragent"
 )
 
-const dbValueDirName = "golang"
+const defaultOssIndexURL = "https://ossindex.sonatype.org/api/v3/component-report"
 
-const defaultOssIndexUrl = "https://ossindex.sonatype.org/api/v3/component-report"
-
+// MAX_COORDS is the maximum amount of coords to query OSS Index with at one time
+//
+// Deprecated: use MaxCoords instead
 const MAX_COORDS = 128
 
+// MaxCoords is the maximum amount of coords to query OSS Index with at one time
+const MaxCoords = MAX_COORDS
+
 var (
-	ossIndexUrl string
+	ossIndexURL string
 )
 
-func getDatabaseDirectory() (dbDir string) {
-	LogLady.Trace("Attempting to get database directory")
-	usr, err := user.Current()
-	customerrors.Check(err, "Error getting user home")
+var dbCache *cache.Cache
 
-	LogLady.WithField("home_dir", usr.HomeDir).Trace("Obtained user directory")
-	var leftPath = path.Join(usr.HomeDir, types.OssIndexDirName)
-	var fullPath string
-	if flag.Lookup("test") == nil {
-		fullPath = path.Join(leftPath, dbValueDirName)
-	} else {
-		fullPath = path.Join(leftPath, "test-nancy")
+func init() {
+	dbCache = &cache.Cache{
+		DBName: "nancy-cache",
+		TTL:    time.Now().Local().Add(time.Hour * 12),
 	}
+}
 
-	return fullPath
+func getOssIndexURL() string {
+	if ossIndexURL == "" {
+		ossIndexURL = defaultOssIndexURL
+	}
+	return ossIndexURL
 }
 
 // RemoveCacheDirectory deletes the local database directory.
 func RemoveCacheDirectory() error {
-	return os.RemoveAll(getDatabaseDirectory())
-}
-
-func getOssIndexUrl() string {
-	if ossIndexUrl == "" {
-		ossIndexUrl = defaultOssIndexUrl
-	}
-	return ossIndexUrl
-}
-
-func openDb(dbDir string) (db *badger.DB, err error) {
-	LogLady.Debug("Attempting to open Badger DB")
-	opts := badger.DefaultOptions
-
-	opts.Dir = getDatabaseDirectory()
-	opts.ValueDir = getDatabaseDirectory()
-	LogLady.WithField("badger_opts", opts).Debug("Set Badger Options")
-
-	db, err = badger.Open(opts)
-	return
+	return dbCache.RemoveCache()
 }
 
 // AuditPackages will given a list of Package URLs, run an OSS Index audit.
@@ -103,43 +82,10 @@ func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configurati
 }
 
 func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
-	dbDir := getDatabaseDirectory()
-	if err := os.MkdirAll(dbDir, os.ModePerm); err != nil {
-		return nil, err
-	}
-
-	// Initialize the cache
-	db, err := openDb(dbDir)
+	newPurls, results, err := dbCache.GetCacheValues(purls)
 	customerrors.Check(err, "Error initializing cache")
-	defer db.Close()
 
-	var newPurls []string
-	var results []types.Coordinate
-
-	err = db.View(func(txn *badger.Txn) error {
-		for _, purl := range purls {
-			item, err := txn.Get([]byte(strings.ToLower(purl)))
-			if err == nil {
-				err := item.Value(func(val []byte) error {
-					var coordinate types.Coordinate
-					err := json.Unmarshal(val, &coordinate)
-					results = append(results, coordinate)
-					return err
-				})
-				if err != nil {
-					newPurls = append(newPurls, purl)
-				}
-			} else {
-				newPurls = append(newPurls, purl)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var chunks = chunk(newPurls, MAX_COORDS)
+	chunks := chunk(newPurls, MaxCoords)
 
 	for _, chunk := range chunks {
 		if len(chunk) > 0 {
@@ -153,26 +99,11 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 				return nil, err
 			}
 
+			results = append(results, coordinates...)
+
 			LogLady.WithField("coordinates", coordinates).Info("Coordinates unmarshalled from OSS Index")
-
-			// Cache the new results
-			if err := db.Update(func(txn *badger.Txn) error {
-				for i := 0; i < len(coordinates); i++ {
-					coord := coordinates[i].Coordinates
-					results = append(results, coordinates[i])
-
-					coordJSON, _ := json.Marshal(coordinates[i])
-					LogLady.WithField("json", coordinates[i]).Info("Marshall coordinate into json for insertion into DB")
-
-					err := txn.SetWithTTL([]byte(strings.ToLower(coord)), []byte(coordJSON), time.Hour*12)
-					if err != nil {
-						LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
-						return err
-					}
-				}
-
-				return nil
-			}); err != nil {
+			err = dbCache.Insert(coordinates)
+			if err != nil {
 				return nil, err
 			}
 		}
@@ -226,7 +157,7 @@ func setupRequest(jsonStr []byte, config *configuration.Configuration) (req *htt
 	LogLady.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
 	req, err = http.NewRequest(
 		"POST",
-		getOssIndexUrl(),
+		getOssIndexURL(),
 		bytes.NewBuffer(jsonStr),
 	)
 	if err != nil {
