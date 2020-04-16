@@ -1,8 +1,9 @@
 FROM alpine:latest
 
 RUN apk add --no-cache ca-certificates \
+    && update-ca-certificates 2>/dev/null || true \
     && rm -rf /var/cache/apk/*
 
-COPY nancy /usr/local/bin/nancy
+COPY nancy /
 
 CMD ["nancy"]

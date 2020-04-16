@@ -83,6 +83,8 @@ dockers:
     goos: linux
     goarch: amd64
     dockerfile: Dockerfile.goreleaser
+    binaries:
+      - nancy
     build_flag_templates:
     - "--label=author='DJ Schleen'"
     - "--label=version={{ .Version }}"
