@@ -79,10 +79,10 @@ func (c *Cache) RemoveCacheDirectory() error {
 	return err
 }
 
-// InsertValuesIntoCache takes a slice of Coordinates, and inserts them into the cache database.
+// Insert takes a slice of Coordinates, and inserts them into the cache database.
 // By default, values are given a TTL of 12 hours. An error is returned if there is an issue setting
 // a key into the cache.
-func (c *Cache) InsertValuesIntoCache(coordinates []types.Coordinate) (err error) {
+func (c *Cache) Insert(coordinates []types.Coordinate) (err error) {
 	defer func() {
 		if err := pudge.CloseAll(); err != nil {
 			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")
@@ -126,11 +126,11 @@ func (c *Cache) InsertValuesIntoCache(coordinates []types.Coordinate) (err error
 	return
 }
 
-// HydrateNewPurlsFromCache takes a slice of purls, and checks to see if they are in the cache.
+// GetCacheValues takes a slice of purls, and checks to see if they are in the cache.
 // It will return a new slice of purls used to talk to OSS Index (if any are not in the cache),
 // a partially hydrated results slice if there are results in the cache, and an error if the world
 // ends, or we wrote bad code, whichever comes first.
-func (c *Cache) HydrateNewPurlsFromCache(purls []string) ([]string, []types.Coordinate, error) {
+func (c *Cache) GetCacheValues(purls []string) ([]string, []types.Coordinate, error) {
 	defer func() {
 		if err := pudge.CloseAll(); err != nil {
 			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")

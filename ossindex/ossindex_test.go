@@ -153,7 +153,7 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 	var tempCoordinates []types.Coordinate
 	tempCoordinates = append(tempCoordinates, expectedCoordinate)
 
-	err := dbCache.InsertValuesIntoCache(tempCoordinates)
+	err := dbCache.Insert(tempCoordinates)
 	if err != nil {
 		t.Error(err)
 	}
@@ -172,7 +172,7 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 	var tempCoordinates []types.Coordinate
 	tempCoordinates = append(tempCoordinates, expectedCoordinate)
 
-	err := dbCache.InsertValuesIntoCache(tempCoordinates)
+	err := dbCache.Insert(tempCoordinates)
 	if err != nil {
 		t.Error(err)
 	}

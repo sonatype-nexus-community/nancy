@@ -82,7 +82,7 @@ func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configurati
 }
 
 func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
-	newPurls, results, err := dbCache.HydrateNewPurlsFromCache(purls)
+	newPurls, results, err := dbCache.GetCacheValues(purls)
 	customerrors.Check(err, "Error initializing cache")
 
 	chunks := chunk(newPurls, MaxCoords)
@@ -102,7 +102,7 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 			results = append(results, coordinates...)
 
 			LogLady.WithField("coordinates", coordinates).Info("Coordinates unmarshalled from OSS Index")
-			err = dbCache.InsertValuesIntoCache(coordinates)
+			err = dbCache.Insert(coordinates)
 			if err != nil {
 				return nil, err
 			}
