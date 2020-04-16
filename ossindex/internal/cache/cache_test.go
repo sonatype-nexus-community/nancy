@@ -18,7 +18,6 @@
 package cache
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -77,9 +76,7 @@ func TestGetWithExpiredTTL(t *testing.T) {
 	var result DBValue
 	err = cache.getKeyAndHydrate(purls[0], &result)
 	assert.NotNil(t, err)
-	if _, ok := err.(*os.PathError); ok {
-		t.Error("Should be a os.PathError returned")
-	}
+	assert.Equal(t, err.Error(), "Error: key not found")
 
 	tearDown(t, cache)
 }
