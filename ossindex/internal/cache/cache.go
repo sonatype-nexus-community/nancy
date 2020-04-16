@@ -19,7 +19,6 @@ package cache
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/user"
 	"path"
@@ -80,8 +79,7 @@ func (c *Cache) RemoveCacheDirectory() error {
 }
 
 // Insert takes a slice of Coordinates, and inserts them into the cache database.
-// By default, values are given a TTL of 12 hours. An error is returned if there is an issue setting
-// a key into the cache.
+// An error is returned if there is an issue setting a key into the cache.
 func (c *Cache) Insert(coordinates []types.Coordinate) (err error) {
 	defer func() {
 		if err := pudge.CloseAll(); err != nil {
@@ -100,7 +98,7 @@ func (c *Cache) Insert(coordinates []types.Coordinate) (err error) {
 
 	for i := 0; i < len(coordinates); i++ {
 		var exists DBValue
-		err = pudge.Get(c.getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates), &exists)
+		err = c.getKeyAndHydrate(coordinates[i].Coordinates, &exists)
 		if err != nil {
 			if errors.Is(err, pudge.ErrKeyNotFound) {
 				err = doSet(coordinates[i])
@@ -111,12 +109,7 @@ func (c *Cache) Insert(coordinates []types.Coordinate) (err error) {
 			continue
 		}
 		if exists.TTL < time.Now().Unix() {
-			err = pudge.Delete(c.getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates))
-			if err != nil {
-				fmt.Println(err)
-				LogLady.WithField("error", err).Error("Unable to delete coordinate from cache DB")
-				continue
-			}
+			c.deleteKey(strings.ToLower(coordinates[i].Coordinates))
 			err = doSet(coordinates[i])
 			if err != nil {
 				continue
@@ -142,7 +135,7 @@ func (c *Cache) GetCacheValues(purls []string) ([]string, []types.Coordinate, er
 
 	for i := 0; i < len(purls); i++ {
 		var item DBValue
-		err := pudge.Get(c.getDatabaseDirectory(), strings.ToLower(purls[i]), &item)
+		err := c.getKeyAndHydrate(strings.ToLower(purls[i]), &item)
 		if err != nil {
 			if errors.Is(err, pudge.ErrKeyNotFound) {
 				newPurls = append(newPurls, purls[i])
@@ -154,10 +147,7 @@ func (c *Cache) GetCacheValues(purls []string) ([]string, []types.Coordinate, er
 
 		if item.TTL < time.Now().Unix() {
 			newPurls = append(newPurls, purls[i])
-			err = pudge.Delete(c.getDatabaseDirectory(), strings.ToLower(item.Coordinates.Coordinates))
-			if err != nil {
-				LogLady.WithField("error", err).Error("Unable to delete value from pudge db")
-			}
+			c.deleteKey(strings.ToLower(item.Coordinates.Coordinates))
 			continue
 		} else {
 			LogLady.WithField("coordinate", item.Coordinates).Info("Result found in cache, moving forward and hydrating results")
@@ -166,4 +156,15 @@ func (c *Cache) GetCacheValues(purls []string) ([]string, []types.Coordinate, er
 	}
 
 	return newPurls, results, nil
+}
+
+func (c *Cache) deleteKey(key string) {
+	err := pudge.Delete(c.getDatabaseDirectory(), key)
+	if err != nil {
+		LogLady.WithField("error", err).Error("Unable to delete value from pudge db")
+	}
+}
+
+func (c *Cache) getKeyAndHydrate(key string, item *DBValue) error {
+	return pudge.Get(c.getDatabaseDirectory(), key, item)
 }
