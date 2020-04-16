@@ -47,22 +47,22 @@ type DBValue struct {
 	TTL         int64
 }
 
-func (c *Cache) getDatabaseDirectory() (dbDir string) {
+func (c *Cache) getDatabasePath() (dbDir string) {
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
 	return path.Join(usr.HomeDir, types.OssIndexDirName, dbDirName, c.DBName)
 }
 
-// RemoveCacheDirectory deletes the local database directory.
-func (c *Cache) RemoveCacheDirectory() error {
+// RemoveCache deletes the cache database
+func (c *Cache) RemoveCache() error {
 	defer func() {
 		if err := pudge.CloseAll(); err != nil {
 			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")
 		}
 	}()
 
-	err := pudge.DeleteFile(c.getDatabaseDirectory())
+	err := pudge.DeleteFile(c.getDatabasePath())
 	if err == nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func (c *Cache) RemoveCacheDirectory() error {
 		LogLady.WithField("error", err).Error("Unable to delete database, looks like it doesn't exist")
 		return nil
 	}
-	err = pudge.BackupAll(c.getDatabaseDirectory())
+	err = pudge.BackupAll(c.getDatabasePath())
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (c *Cache) Insert(coordinates []types.Coordinate) (err error) {
 	}()
 
 	doSet := func(coordinate types.Coordinate) error {
-		err = pudge.Set(c.getDatabaseDirectory(), strings.ToLower(coordinate.Coordinates), DBValue{Coordinates: coordinate, TTL: c.TTL.Unix()})
+		err = pudge.Set(c.getDatabasePath(), strings.ToLower(coordinate.Coordinates), DBValue{Coordinates: coordinate, TTL: c.TTL.Unix()})
 		if err != nil {
 			LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
 			return err
@@ -161,12 +161,12 @@ func (c *Cache) GetCacheValues(purls []string) ([]string, []types.Coordinate, er
 }
 
 func (c *Cache) deleteKey(key string) {
-	err := pudge.Delete(c.getDatabaseDirectory(), strings.ToLower(key))
+	err := pudge.Delete(c.getDatabasePath(), strings.ToLower(key))
 	if err != nil {
 		LogLady.WithField("error", err).Error("Unable to delete value from pudge db")
 	}
 }
 
 func (c *Cache) getKeyAndHydrate(key string, item *DBValue) error {
-	return pudge.Get(c.getDatabaseDirectory(), strings.ToLower(key), item)
+	return pudge.Get(c.getDatabasePath(), strings.ToLower(key), item)
 }

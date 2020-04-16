@@ -207,7 +207,7 @@ func setupTest(t *testing.T) {
 		},
 	}
 	dbCache.DBName = "nancy-test"
-	err := dbCache.RemoveCacheDirectory()
+	err := dbCache.RemoveCache()
 	if err != nil {
 		t.Error(err)
 	}

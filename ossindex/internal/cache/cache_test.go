@@ -107,7 +107,7 @@ func setupTestsAndCache(t *testing.T) *Cache {
 
 	coordinates = append(coordinates, coordinate)
 	cache := Cache{DBName: "nancy-cache-test", TTL: time.Now().Local().Add(time.Hour * 12)}
-	err := cache.RemoveCacheDirectory()
+	err := cache.RemoveCache()
 	if err != nil {
 		t.Error(err)
 	}
@@ -115,7 +115,7 @@ func setupTestsAndCache(t *testing.T) *Cache {
 }
 
 func tearDown(t *testing.T, cache *Cache) {
-	err := cache.RemoveCacheDirectory()
+	err := cache.RemoveCache()
 	if err != nil {
 		t.Error(err)
 	}

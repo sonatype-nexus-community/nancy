@@ -65,7 +65,7 @@ func getOssIndexURL() string {
 
 // RemoveCacheDirectory deletes the local database directory.
 func RemoveCacheDirectory() error {
-	return dbCache.RemoveCacheDirectory()
+	return dbCache.RemoveCache()
 }
 
 // AuditPackages will given a list of Package URLs, run an OSS Index audit.
