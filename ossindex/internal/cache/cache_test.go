@@ -18,6 +18,7 @@
 package cache
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -68,12 +69,19 @@ func TestGetWithExpiredTTL(t *testing.T) {
 	assert.Equal(t, purls, newPurls)
 	assert.Empty(t, results)
 	assert.Nil(t, err)
+
+	var result DBValue
+	err = cache.getKeyAndHydrate(purls[0], &result)
+	assert.NotNil(t, err)
+	if _, ok := err.(*os.PathError); ok {
+		t.Error("Should be a os.PathError returned")
+	}
 }
 
 func setupTestsAndCache(t *testing.T) *Cache {
 	dec, _ := decimal.NewFromString("9.8")
 	coordinate := types.Coordinate{
-		Coordinates: "test",
+		Coordinates: "pkg:golang/test@0.0.0",
 		Reference:   "http://www.innernet.com",
 		Vulnerabilities: []types.Vulnerability{
 			{
@@ -89,7 +97,7 @@ func setupTestsAndCache(t *testing.T) *Cache {
 		},
 	}
 
-	purls = append(purls, "test")
+	purls = append(purls, "pkg:golang/test@0.0.0")
 
 	coordinates = append(coordinates, coordinate)
 	cache := Cache{DBName: "nancy-test", TTL: time.Now().Local().Add(time.Hour * 12)}
