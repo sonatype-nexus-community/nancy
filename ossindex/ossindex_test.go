@@ -28,7 +28,6 @@ import (
 
 	"github.com/shopspring/decimal"
 	"github.com/sonatype-nexus-community/nancy/configuration"
-	"github.com/sonatype-nexus-community/nancy/ossindex/internal/cache"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,8 +39,8 @@ var expectedCoordinate types.Coordinate
 
 func TestOssIndexUrlDefault(t *testing.T) {
 	setupTest(t)
-	ossIndexUrl = ""
-	assert.Equal(t, defaultOssIndexUrl, getOssIndexUrl())
+	ossIndexURL = ""
+	assert.Equal(t, defaultOssIndexURL, getOssIndexURL())
 }
 
 func TestAuditPackages_Empty(t *testing.T) {
@@ -50,7 +49,7 @@ func TestAuditPackages_Empty(t *testing.T) {
 		t.Errorf("No call should occur with empty package. called: %v", r)
 	}))
 	defer ts.Close()
-	ossIndexUrl = ts.URL
+	ossIndexURL = ts.URL
 
 	coordinates, err := AuditPackages([]string{})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
@@ -63,7 +62,7 @@ func TestAuditPackages_Nil(t *testing.T) {
 		t.Errorf("No call should occur with nil package. called: %v", r)
 	}))
 	defer ts.Close()
-	ossIndexUrl = ts.URL
+	ossIndexURL = ts.URL
 
 	coordinates, err := AuditPackages(nil)
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
@@ -76,7 +75,7 @@ func TestAuditPackages_ErrorHttpRequest(t *testing.T) {
 		t.Errorf("No call should occur with nil package. called: %v", r)
 	}))
 	defer ts.Close()
-	ossIndexUrl = ts.URL + "\\"
+	ossIndexURL = ts.URL + "\\"
 
 	coordinates, err := AuditPackages([]string{"nonexistent-purl"})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
@@ -93,7 +92,7 @@ func TestAuditPackages_ErrorNonExistentPurl(t *testing.T) {
 		w.WriteHeader(http.StatusBadRequest)
 	}))
 	defer ts.Close()
-	ossIndexUrl = ts.URL
+	ossIndexURL = ts.URL
 
 	coordinates, err := AuditPackages([]string{"nonexistent-purl"})
 	assert.Equal(t, []types.Coordinate(nil), coordinates)
@@ -110,7 +109,7 @@ func TestAuditPackages_ErrorBadResponseBody(t *testing.T) {
 		_, _ = w.Write([]byte("badStuff"))
 	}))
 	defer ts.Close()
-	ossIndexUrl = ts.URL
+	ossIndexURL = ts.URL
 
 	coordinates, err := AuditPackages([]string{purl})
 
@@ -126,7 +125,7 @@ func TestAuditPackages_NewPackage(t *testing.T) {
 		verifyClientCallAndWriteValidPackageResponse(t, r, w)
 	}))
 	defer ts.Close()
-	ossIndexUrl = ts.URL
+	ossIndexURL = ts.URL
 
 	coordinates, err := AuditPackages([]string{purl})
 
@@ -149,12 +148,12 @@ func TestAuditPackages_SinglePackage_Cached(t *testing.T) {
 		t.Errorf("No call should occur with previously cached package. called: %v", r)
 	}))
 	defer ts.Close()
-	ossIndexUrl = ts.URL
+	ossIndexURL = ts.URL
 
 	var tempCoordinates []types.Coordinate
 	tempCoordinates = append(tempCoordinates, expectedCoordinate)
 
-	err := cache.InsertValuesIntoCache(tempCoordinates, cache.TTL)
+	err := dbCache.InsertValuesIntoCache(tempCoordinates)
 	if err != nil {
 		t.Error(err)
 	}
@@ -168,12 +167,12 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 	setupTest(t)
 
 	// Set the cache TTL to a date in the past for testing
-	cache.TTL = time.Now().AddDate(0, 0, -1)
+	dbCache.TTL = time.Now().AddDate(0, 0, -1)
 
 	var tempCoordinates []types.Coordinate
 	tempCoordinates = append(tempCoordinates, expectedCoordinate)
 
-	err := cache.InsertValuesIntoCache(tempCoordinates, cache.TTL)
+	err := dbCache.InsertValuesIntoCache(tempCoordinates)
 	if err != nil {
 		t.Error(err)
 	}
@@ -182,7 +181,7 @@ func TestAuditPackages_SinglePackage_Cached_WithExpiredTTL(t *testing.T) {
 		verifyClientCallAndWriteValidPackageResponse(t, r, w)
 	}))
 	defer ts.Close()
-	ossIndexUrl = ts.URL
+	ossIndexURL = ts.URL
 
 	coordinates, err := AuditPackages([]string{purl})
 	assert.Equal(t, []types.Coordinate{expectedCoordinate}, coordinates)
@@ -207,8 +206,8 @@ func setupTest(t *testing.T) {
 			},
 		},
 	}
-	cache.DBName = "nancy-test"
-	err := cache.RemoveCacheDirectory()
+	dbCache.DBName = "nancy-test"
+	err := dbCache.RemoveCacheDirectory()
 	if err != nil {
 		t.Error(err)
 	}

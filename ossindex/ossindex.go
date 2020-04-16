@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
@@ -32,24 +33,39 @@ import (
 	"github.com/sonatype-nexus-community/nancy/useragent"
 )
 
-const defaultOssIndexUrl = "https://ossindex.sonatype.org/api/v3/component-report"
+const defaultOssIndexURL = "https://ossindex.sonatype.org/api/v3/component-report"
 
+// MAX_COORDS is the maximum amount of coords to query OSS Index with at one time
+//
+// Deprecated: use MaxCoords instead
 const MAX_COORDS = 128
 
+// MaxCoords is the maximum amount of coords to query OSS Index with at one time
+const MaxCoords = MAX_COORDS
+
 var (
-	ossIndexUrl string
+	ossIndexURL string
 )
 
-func getOssIndexUrl() string {
-	if ossIndexUrl == "" {
-		ossIndexUrl = defaultOssIndexUrl
+var dbCache *cache.Cache
+
+func init() {
+	dbCache = &cache.Cache{
+		DBName: "nancy-cache",
+		TTL:    time.Now().Local().Add(time.Hour * 12),
 	}
-	return ossIndexUrl
+}
+
+func getOssIndexURL() string {
+	if ossIndexURL == "" {
+		ossIndexURL = defaultOssIndexURL
+	}
+	return ossIndexURL
 }
 
 // RemoveCacheDirectory deletes the local database directory.
 func RemoveCacheDirectory() error {
-	return cache.RemoveCacheDirectory()
+	return dbCache.RemoveCacheDirectory()
 }
 
 // AuditPackages will given a list of Package URLs, run an OSS Index audit.
@@ -66,10 +82,10 @@ func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configurati
 }
 
 func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
-	newPurls, results, err := cache.HydrateNewPurlsFromCache(purls)
+	newPurls, results, err := dbCache.HydrateNewPurlsFromCache(purls)
 	customerrors.Check(err, "Error initializing cache")
 
-	chunks := chunk(newPurls, MAX_COORDS)
+	chunks := chunk(newPurls, MaxCoords)
 
 	for _, chunk := range chunks {
 		if len(chunk) > 0 {
@@ -86,7 +102,7 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 			results = append(results, coordinates...)
 
 			LogLady.WithField("coordinates", coordinates).Info("Coordinates unmarshalled from OSS Index")
-			err = cache.InsertValuesIntoCache(coordinates, cache.TTL)
+			err = dbCache.InsertValuesIntoCache(coordinates)
 			if err != nil {
 				return nil, err
 			}
@@ -141,7 +157,7 @@ func setupRequest(jsonStr []byte, config *configuration.Configuration) (req *htt
 	LogLady.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
 	req, err = http.NewRequest(
 		"POST",
-		getOssIndexUrl(),
+		getOssIndexURL(),
 		bytes.NewBuffer(jsonStr),
 	)
 	if err != nil {

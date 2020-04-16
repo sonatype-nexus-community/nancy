@@ -32,12 +32,13 @@ import (
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-// DBName is exported from cache so that in tests we can switch the DB name, and avoid polluting our real DB
-var DBName = "nancy-cache"
-
-// TTL is exported so that you can a) set the TTL to a lower period of time if you want, and b)
-// so that in tests we can simulate an expired cache object
-var TTL = time.Now().Local().Add(time.Hour * 12)
+// Cache is a struct with methods meant to be used for getting values from a DB cache
+// DBName can be used to override the actual database name, primarily for testing
+// TTL can be used to set the amount of time a specific object can live in the cache
+type Cache struct {
+	DBName string
+	TTL    time.Time
+}
 
 const dbDirName = "nancy"
 
@@ -47,22 +48,22 @@ type DBValue struct {
 	TTL         int64
 }
 
-func getDatabaseDirectory() (dbDir string) {
+func (c *Cache) getDatabaseDirectory() (dbDir string) {
 	usr, err := user.Current()
 	customerrors.Check(err, "Error getting user home")
 
-	return path.Join(usr.HomeDir, types.OssIndexDirName, dbDirName, DBName)
+	return path.Join(usr.HomeDir, types.OssIndexDirName, dbDirName, c.DBName)
 }
 
 // RemoveCacheDirectory deletes the local database directory.
-func RemoveCacheDirectory() error {
+func (c *Cache) RemoveCacheDirectory() error {
 	defer func() {
 		if err := pudge.CloseAll(); err != nil {
 			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")
 		}
 	}()
 
-	err := pudge.DeleteFile(getDatabaseDirectory())
+	err := pudge.DeleteFile(c.getDatabaseDirectory())
 	if err == nil {
 		return nil
 	}
@@ -70,7 +71,7 @@ func RemoveCacheDirectory() error {
 		LogLady.WithField("error", err).Error("Unable to delete database, looks like it doesn't exist")
 		return nil
 	}
-	err = pudge.BackupAll(getDatabaseDirectory())
+	err = pudge.BackupAll(c.getDatabaseDirectory())
 	if err != nil {
 		return err
 	}
@@ -81,7 +82,7 @@ func RemoveCacheDirectory() error {
 // InsertValuesIntoCache takes a slice of Coordinates, and inserts them into the cache database.
 // By default, values are given a TTL of 12 hours. An error is returned if there is an issue setting
 // a key into the cache.
-func InsertValuesIntoCache(coordinates []types.Coordinate, ttl time.Time) (err error) {
+func (c *Cache) InsertValuesIntoCache(coordinates []types.Coordinate) (err error) {
 	defer func() {
 		if err := pudge.CloseAll(); err != nil {
 			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")
@@ -89,7 +90,7 @@ func InsertValuesIntoCache(coordinates []types.Coordinate, ttl time.Time) (err e
 	}()
 
 	doSet := func(coordinate types.Coordinate) error {
-		err = pudge.Set(getDatabaseDirectory(), strings.ToLower(coordinate.Coordinates), DBValue{Coordinates: coordinate, TTL: ttl.Unix()})
+		err = pudge.Set(c.getDatabaseDirectory(), strings.ToLower(coordinate.Coordinates), DBValue{Coordinates: coordinate, TTL: c.TTL.Unix()})
 		if err != nil {
 			LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
 			return err
@@ -99,7 +100,7 @@ func InsertValuesIntoCache(coordinates []types.Coordinate, ttl time.Time) (err e
 
 	for i := 0; i < len(coordinates); i++ {
 		var exists DBValue
-		err = pudge.Get(getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates), &exists)
+		err = pudge.Get(c.getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates), &exists)
 		if err != nil {
 			if errors.Is(err, pudge.ErrKeyNotFound) {
 				err = doSet(coordinates[i])
@@ -110,7 +111,7 @@ func InsertValuesIntoCache(coordinates []types.Coordinate, ttl time.Time) (err e
 			continue
 		}
 		if exists.TTL < time.Now().Unix() {
-			err = pudge.Delete(getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates))
+			err = pudge.Delete(c.getDatabaseDirectory(), strings.ToLower(coordinates[i].Coordinates))
 			if err != nil {
 				fmt.Println(err)
 				LogLady.WithField("error", err).Error("Unable to delete coordinate from cache DB")
@@ -129,7 +130,7 @@ func InsertValuesIntoCache(coordinates []types.Coordinate, ttl time.Time) (err e
 // It will return a new slice of purls used to talk to OSS Index (if any are not in the cache),
 // a partially hydrated results slice if there are results in the cache, and an error if the world
 // ends, or we wrote bad code, whichever comes first.
-func HydrateNewPurlsFromCache(purls []string) ([]string, []types.Coordinate, error) {
+func (c *Cache) HydrateNewPurlsFromCache(purls []string) ([]string, []types.Coordinate, error) {
 	defer func() {
 		if err := pudge.CloseAll(); err != nil {
 			LogLady.WithField("error", err).Error("An error occurred with closing the Pudge DB")
@@ -141,7 +142,7 @@ func HydrateNewPurlsFromCache(purls []string) ([]string, []types.Coordinate, err
 
 	for i := 0; i < len(purls); i++ {
 		var item DBValue
-		err := pudge.Get(getDatabaseDirectory(), strings.ToLower(purls[i]), &item)
+		err := pudge.Get(c.getDatabaseDirectory(), strings.ToLower(purls[i]), &item)
 		if err != nil {
 			if errors.Is(err, pudge.ErrKeyNotFound) {
 				newPurls = append(newPurls, purls[i])
@@ -153,7 +154,7 @@ func HydrateNewPurlsFromCache(purls []string) ([]string, []types.Coordinate, err
 
 		if item.TTL < time.Now().Unix() {
 			newPurls = append(newPurls, purls[i])
-			err = pudge.Delete(getDatabaseDirectory(), strings.ToLower(item.Coordinates.Coordinates))
+			err = pudge.Delete(c.getDatabaseDirectory(), strings.ToLower(item.Coordinates.Coordinates))
 			if err != nil {
 				LogLady.WithField("error", err).Error("Unable to delete value from pudge db")
 			}
