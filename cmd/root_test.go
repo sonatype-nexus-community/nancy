@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"bytes"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -43,15 +44,16 @@ func executeCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 	return c, buf.String(), err
 }
 
-func checkStringContains(t *testing.T, got, expected string) {
-	if !strings.Contains(got, expected) {
-		t.Errorf("Expected to contain: \n %v\nGot:\n %v\n", expected, got)
+func checkStringContains(t *testing.T, got, substr string) {
+	if !strings.Contains(got, substr) {
+		t.Errorf("Expected to contain: \n %v\nGot:\n %v\n", substr, got)
 	}
 }
 
 func TestRootCommandUnknownCommand(t *testing.T) {
 	output, err := executeCommand(rootCmd, "one", "two")
 	checkStringContains(t, output, "Error: unknown command \"one\" for \"nancy\"")
+	assert.NotNil(t, err)
 	checkStringContains(t, err.Error(), "unknown command \"one\" for \"nancy\"")
 }
 
@@ -67,10 +69,25 @@ func TestRootCommandNoArgsNoStdIn(t *testing.T) {
 	cmd.Env = append(os.Environ(), envExitTest+"=true")
 	err := cmd.Run()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		assert.NotNil(t, err)
 		checkStringContains(t, err.Error(), "exit status 2")
 		return
 	}
 	t.Fatalf("process ran with err %v, want exit status 2", err)
+}
+
+func TestRootCommandNoArgsNoStdInByPassExit(t *testing.T) {
+	// setup to bypass exit calls
+	customerrors.BypassExiter()
+	defer func() { customerrors.ResetExiter() }()
+
+	_, err := executeCommand(rootCmd, "")
+	verifyBypassError(t, 2, "checkStdIn", err)
+}
+
+func verifyBypassError(t *testing.T, code int, callerFunctionName string, actual error) {
+	assert.True(t, strings.HasPrefix(actual.Error(), customerrors.GetBypassError(code, "").Error()))
+	assert.True(t, strings.HasSuffix(actual.Error(), callerFunctionName))
 }
 
 func TestRootCommandOssi(t *testing.T) {

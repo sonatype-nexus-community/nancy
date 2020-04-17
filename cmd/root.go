@@ -40,7 +40,7 @@ import (
 
 	. "github.com/sonatype-nexus-community/nancy/logger"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
@@ -55,15 +55,19 @@ powered by Sonatype OSS Index, and as well, works with Nexus IQ Server, allowing
 a smooth experience as a Golang developer, using the best tools in the market!`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		LogLady.Info("Nancy parsing config for OSS Index")
 		ossIndexConfig, err := configuration.Parse(os.Args[1:])
 		if err != nil {
 			flag.Usage()
-			os.Exit(1)
+			err = customerrors.Exit(1)
+			return
 		}
-		processConfig(ossIndexConfig)
+		if err = processConfig(ossIndexConfig); err != nil {
+			return
+		}
 		LogLady.Info("Nancy finished parsing config for OSS Index")
+		return
 	},
 }
 
@@ -118,7 +122,7 @@ func initConfig() {
 	}
 }
 
-func processConfig(config configuration.Configuration) {
+func processConfig(config configuration.Configuration) (err error) {
 	if config.Help {
 		LogLady.Info("Printing usage and exiting clean")
 		flag.Usage()
@@ -159,16 +163,20 @@ func processConfig(config configuration.Configuration) {
 		return
 	}
 
-	printHeader((!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter"))
+	printHeader(!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter")
 
 	if config.UseStdIn {
 		LogLady.Info("Parsing config for StdIn")
-		doStdInAndParse(config)
+		if err = doStdInAndParse(config); err != nil {
+			return
+		}
 	}
 	if !config.UseStdIn {
 		LogLady.Info("Parsing config for file based scan")
 		doCheckExistenceAndParse(config)
 	}
+
+	return
 }
 
 func printHeader(print bool) {
@@ -183,9 +191,11 @@ func printHeader(print bool) {
 	}
 }
 
-func doStdInAndParse(config configuration.Configuration) {
+func doStdInAndParse(config configuration.Configuration) (err error) {
 	LogLady.Info("Beginning StdIn parse for OSS Index")
-	checkStdIn()
+	if err = checkStdIn(); err != nil {
+		return err
+	}
 	LogLady.Info("Instantiating go.mod package")
 
 	mod := packages.Mod{}
@@ -204,6 +214,8 @@ func doStdInAndParse(config configuration.Configuration) {
 
 	LogLady.Info("Auditing purls with OSS Index")
 	checkOSSIndex(purls, nil, config)
+
+	return err
 }
 
 func doCheckExistenceAndParse(config configuration.Configuration) {
@@ -258,13 +270,14 @@ func checkOSSIndex(purls []string, invalidpurls []string, config configuration.C
 	}
 }
 
-func checkStdIn() {
+func checkStdIn() (err error) {
 	stat, _ := os.Stdin.Stat()
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		LogLady.Info("StdIn is valid")
 	} else {
 		LogLady.Error("StdIn is invalid, either empty or another reason")
 		flag.Usage()
-		os.Exit(1)
+		err = customerrors.Exit(2) // same exit code as used in Usage() function. will remove later
 	}
+	return
 }

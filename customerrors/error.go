@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	. "github.com/sonatype-nexus-community/nancy/logger"
+	"os"
+	"runtime"
 )
 
 type ErrorExit struct {
@@ -52,4 +54,31 @@ func NewErrorExitPrintHelp(errCause error, message string) ErrorExit {
 	fmt.Printf("For more information, check the log file at %s\n", logFile)
 	fmt.Println("nancy version:", buildversion.BuildVersion)
 	return myErr
+}
+
+func getCallerFunction(skip int) string {
+	if skip > 10 {
+		LogLady.Errorf("getCallerFunction called with invalid skip value: %d", skip)
+	}
+	programCounters := make([]uintptr, 10)
+	runtime.Callers(0, programCounters)
+
+	// for debugging
+	/*	callerNames := [10]string{}
+		for idx, pc := range programCounters {
+			if pc != 0 {
+				callerNames[idx] = runtime.FuncForPC(programCounters[idx]).Name()
+			}
+		}
+	*/
+	return runtime.FuncForPC(programCounters[skip]).Name()
+}
+
+func Exit(code int) error {
+	activeExiter.Exit(code)
+	return GetBypassError(code, getCallerFunction(3))
+}
+
+func GetBypassError(code int, callerFunction string) error {
+	return fmt.Errorf("exit was bypassed, code: %d, called by: %s", code, callerFunction)
 }
