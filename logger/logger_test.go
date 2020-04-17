@@ -26,13 +26,14 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	if !strings.Contains(GetLogFileLocation(), TestLogfilename) {
+	location, _ := LogFileLocation()
+	if !strings.Contains(location, TestLogfilename) {
 		t.Errorf("Nancy test file not in log file location. args: %+v", os.Args)
 	}
 
 	LogLady.Info("Test")
 
-	dat, err := ioutil.ReadFile(GetLogFileLocation())
+	dat, err := ioutil.ReadFile(location)
 	if err != nil {
 		t.Error("Unable to open log file")
 	}
@@ -73,7 +74,10 @@ func TestInit(t *testing.T) {
 	teardownTestCase := setupTestCase(t)
 	defer teardownTestCase(t)
 
-	doInit([]string{"yadda", "-test.v"})
+	err := doInit([]string{"yadda", "-test.v"})
+	if err != nil {
+		t.Error(err)
+	}
 	assert.Equal(t, TestLogfilename, DefaultLogFile)
 }
 
@@ -81,7 +85,10 @@ func TestInitIQ(t *testing.T) {
 	teardownTestCase := setupTestCase(t)
 	defer teardownTestCase(t)
 
-	doInit([]string{"yadda", "-iq", "-test.v"})
+	err := doInit([]string{"yadda", "-iq", "-test.v"})
+	if err != nil {
+		t.Error(err)
+	}
 	assert.Equal(t, DefaultLogFilename, DefaultLogFile)
 }
 
@@ -89,6 +96,9 @@ func TestInitDefault(t *testing.T) {
 	teardownTestCase := setupTestCase(t)
 	defer teardownTestCase(t)
 
-	doInit([]string{"yadda", "-yadda"})
+	err := doInit([]string{"yadda", "-yadda"})
+	if err != nil {
+		t.Error(err)
+	}
 	assert.Equal(t, DefaultLogFilename, DefaultLogFile)
 }
