@@ -121,10 +121,12 @@ func loadConfigFromFile(configLocation string, config *Configuration) error {
 func loadIQConfigFromFile(configLocation string, config *IqConfiguration) error {
 	b, err := ioutil.ReadFile(configLocation)
 	if err != nil {
+		LogLady.WithField("error", err).Error("Unable to read file")
 		return err
 	}
 	err = yaml.Unmarshal(b, config)
 	if err != nil {
+		LogLady.WithField("error", err).Error("Unable to unmarshal file into config")
 		return err
 	}
 
