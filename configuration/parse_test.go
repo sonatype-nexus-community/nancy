@@ -147,3 +147,19 @@ func setup() {
 	HomeDir = "/doesnt/exist"
 	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
 }
+
+func TestParseUsage(t *testing.T) {
+	setup()
+	_, err := Parse([]string{""})
+	assert.NoError(t, err)
+	// should NOT call os.Exit
+	flag.Usage()
+}
+
+func TestParseIQUsage(t *testing.T) {
+	setup()
+	_, err := ParseIQ([]string{""})
+	assert.NoError(t, err)
+	// should NOT call os.Exit
+	flag.Usage()
+}

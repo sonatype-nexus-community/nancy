@@ -72,9 +72,10 @@ func GetConfigFromCommandLine(stdin io.Reader) (err error) {
 		ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 		err = getAndSetOSSIndexConfig(reader)
 	case "":
+		// TODO this should probably return an error, because it means config setup was not completed
 		return
 	default:
-		LogLady.Info("User chose to set OSS Index config, moving forward")
+		LogLady.Infof("User chose invalid config type: %s, recurse madness", str)
 		fmt.Println("Invalid value, 'iq' and 'ossindex' are accepted values, try again!")
 		err = GetConfigFromCommandLine(stdin)
 	}

@@ -49,6 +49,7 @@ type DBValue struct {
 
 func (c *Cache) getDatabasePath() (dbDir string) {
 	usr, err := user.Current()
+	// TODO Change this to return error, replace customerrors.Check()
 	customerrors.Check(err, "Error getting user home")
 
 	return path.Join(usr.HomeDir, types.OssIndexDirName, dbDirName, c.DBName)

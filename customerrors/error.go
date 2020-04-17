@@ -37,7 +37,7 @@ func (sw SwError) Exit() {
 	os.Exit(3)
 }
 
-func Check(err error, message string) {
+func Check(err error, message string) error {
 	if err != nil {
 		location, _ := LogFileLocation()
 		myErr := SwError{Message: message, Err: err}
@@ -47,4 +47,15 @@ func Check(err error, message string) {
 		fmt.Println("nancy version:", buildversion.BuildVersion)
 		myErr.Exit()
 	}
+	return err
+}
+
+type ErrorExit struct {
+	Message  string
+	Err      error
+	ExitCode int
+}
+
+func (sw ErrorExit) Error() string {
+	return fmt.Sprintf("exit code: %d - %s - error: %s", sw.ExitCode, sw.Message, sw.Err.Error())
 }

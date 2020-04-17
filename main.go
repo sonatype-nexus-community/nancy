@@ -21,6 +21,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -31,7 +32,7 @@ import (
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 
-	figure "github.com/common-nighthawk/go-figure"
+	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
@@ -46,32 +47,66 @@ import (
 func main() {
 	LogLady.Info("Starting Nancy")
 
+	var err error
 	if len(os.Args) > 1 && os.Args[1] == "iq" {
-		LogLady.Info("Nancy parsing config for IQ")
-		config, err := configuration.ParseIQ(os.Args[2:])
-		if err != nil {
-			flag.Usage()
-			os.Exit(1)
-		}
-		LogLady.WithField("config", config).Info("Obtained IQ config")
-		processIQConfig(config)
-		LogLady.Info("Nancy finished parsing config for IQ")
+		err = doIq(os.Args[2:])
 	} else if len(os.Args) > 1 && os.Args[1] == "config" {
-		LogLady.Info("Nancy setting config via the command line")
-		err := configuration.GetConfigFromCommandLine(os.Stdin)
-		customerrors.Check(err, "Unable to set config for Nancy")
-
-		os.Exit(0)
+		err = doConfig(os.Stdin)
 	} else {
-		LogLady.Info("Nancy parsing config for OSS Index")
-		ossIndexConfig, err := configuration.Parse(os.Args[1:])
-		if err != nil {
-			flag.Usage()
-			os.Exit(1)
-		}
-		processConfig(ossIndexConfig)
-		LogLady.Info("Nancy finished parsing config for OSS Index")
+		err = doOssi(os.Args[1:])
 	}
+	if err != nil {
+		if exiterr, ok := err.(*customerrors.ErrorExit); ok {
+			os.Exit(exiterr.ExitCode)
+		} else {
+			// really don't expect this
+			LogLady.WithError(err).Error("unexpected error in main")
+			os.Exit(4)
+		}
+	}
+	fmt.Println("byeeeeee") // probably shouldn't get here until other exit cases above are all covered.
+}
+
+func doOssi(ossiArgs []string) (err error) {
+	LogLady.Info("Nancy parsing config for OSS Index")
+	ossIndexConfig, err := configuration.Parse(ossiArgs)
+	if err != nil {
+		flag.Usage()
+		err = customerrors.ErrorExit{Err: err, ExitCode: 1}
+		return
+	}
+	if err = processConfig(ossIndexConfig); err != nil {
+		return
+	}
+	LogLady.Info("Nancy finished parsing config for OSS Index")
+	return
+}
+
+func doConfig(stdin io.Reader) (err error) {
+	LogLady.Info("Nancy setting config via the command line")
+	if err = configuration.GetConfigFromCommandLine(stdin); err != nil {
+		return
+	}
+	if err = customerrors.Check(err, "Unable to set config for Nancy"); err != nil {
+		return
+	}
+	return
+}
+
+func doIq(iqArgs []string) (err error) {
+	LogLady.Info("Nancy parsing config for IQ")
+	config, err := configuration.ParseIQ(iqArgs)
+	if err != nil {
+		flag.Usage()
+		err = customerrors.ErrorExit{Err: err, ExitCode: 2} // flag.Usage used to exit with code 2
+		return
+	}
+	LogLady.WithField("config", config).Info("Obtained IQ config")
+	if err = processIQConfig(config); err != nil {
+		return
+	}
+	LogLady.Info("Nancy finished parsing config for IQ")
+	return
 }
 
 func printHeader(print bool) {
@@ -92,11 +127,12 @@ func printHeader(print bool) {
 	}
 }
 
-func processConfig(config configuration.Configuration) {
+func processConfig(config configuration.Configuration) (err error) {
 	if config.Help {
 		LogLady.Info("Printing usage and exiting clean")
 		flag.Usage()
-		os.Exit(0)
+		err = customerrors.ErrorExit{ExitCode: 0}
+		return
 	}
 
 	if config.Version {
@@ -111,7 +147,8 @@ func processConfig(config configuration.Configuration) {
 		fmt.Println(buildversion.BuildVersion)
 		_, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
 		_, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
-		os.Exit(0)
+		err = customerrors.ErrorExit{ExitCode: 0}
+		return
 	}
 
 	if config.Info {
@@ -126,33 +163,38 @@ func processConfig(config configuration.Configuration) {
 
 	if config.CleanCache {
 		LogLady.Info("Attempting to clean cache")
-		if err := ossindex.RemoveCacheDirectory(); err != nil {
+		if err = ossindex.RemoveCacheDirectory(); err != nil {
 			LogLady.WithField("error", err).Error("Error cleaning cache")
 			fmt.Printf("ERROR: cleaning cache: %v\n", err)
-			os.Exit(1)
+			err = customerrors.ErrorExit{Err: err, ExitCode: 1}
+			return
 		}
 		LogLady.Info("Cache cleaned")
 		return
 	}
 
-	printHeader((!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter"))
+	printHeader(!config.Quiet && reflect.TypeOf(config.Formatter).String() == "*audit.AuditLogTextFormatter")
 
 	if config.UseStdIn {
 		LogLady.Info("Parsing config for StdIn")
-		doStdInAndParse(config)
+		if err = doStdInAndParse(config); err != nil {
+			return
+		}
 	}
 	if !config.UseStdIn {
 		LogLady.Info("Parsing config for file based scan")
 		doCheckExistenceAndParse(config)
 	}
+	return
 }
 
-func processIQConfig(config configuration.IqConfiguration) {
+func processIQConfig(config configuration.IqConfiguration) (err error) {
 	// TODO: a lot of this code is a duplication of the OSS Index config, probably should extract some of it
 	if config.Help {
 		LogLady.Info("Printing usage and exiting clean")
 		flag.Usage()
-		os.Exit(0)
+		err = customerrors.ErrorExit{ExitCode: 0}
+		return
 	}
 
 	if config.Version {
@@ -165,7 +207,8 @@ func processIQConfig(config configuration.IqConfiguration) {
 		fmt.Println(buildversion.BuildVersion)
 		_, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
 		_, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
-		os.Exit(0)
+		err = customerrors.ErrorExit{ExitCode: 0}
+		return
 	}
 
 	if config.Info {
@@ -181,18 +224,24 @@ func processIQConfig(config configuration.IqConfiguration) {
 	if config.Application == "" {
 		LogLady.Info("No application specified, printing usage and exiting clean")
 		flag.Usage()
-		os.Exit(0)
+		err = customerrors.ErrorExit{ExitCode: 2}
+		return
 	}
 
 	printHeader(true)
 
 	LogLady.Info("Parsing IQ config for StdIn")
-	doStdInAndParseForIQ(config)
+	if err = doStdInAndParseForIQ(config); err != nil {
+		return
+	}
+	return
 }
 
-func doStdInAndParse(config configuration.Configuration) {
+func doStdInAndParse(config configuration.Configuration) (err error) {
 	LogLady.Info("Beginning StdIn parse for OSS Index")
-	checkStdIn()
+	if err = checkStdIn(); err != nil {
+		return
+	}
 	LogLady.Info("Instantiating go.mod package")
 
 	mod := packages.Mod{}
@@ -211,22 +260,27 @@ func doStdInAndParse(config configuration.Configuration) {
 
 	LogLady.Info("Auditing purls with OSS Index")
 	checkOSSIndex(purls, nil, config)
+	return
 }
 
-func checkStdIn() {
+func checkStdIn() (err error) {
 	stat, _ := os.Stdin.Stat()
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		LogLady.Info("StdIn is valid")
 	} else {
 		LogLady.Error("StdIn is invalid, either empty or another reason")
 		flag.Usage()
-		os.Exit(1)
+		err = customerrors.ErrorExit{ExitCode: 1}
+		return
 	}
+	return
 }
 
-func doStdInAndParseForIQ(config configuration.IqConfiguration) {
+func doStdInAndParseForIQ(config configuration.IqConfiguration) (err error) {
 	LogLady.Debug("Beginning StdIn parse for IQ")
-	checkStdIn()
+	if err = checkStdIn(); err != nil {
+		return
+	}
 	LogLady.Info("Instantiating go.mod package")
 
 	mod := packages.Mod{}
@@ -245,6 +299,7 @@ func doStdInAndParseForIQ(config configuration.IqConfiguration) {
 
 	LogLady.Info("Auditing purls with IQ Server")
 	auditWithIQServer(purls, config.Application, config)
+	return
 }
 
 func doCheckExistenceAndParse(config configuration.Configuration) {
