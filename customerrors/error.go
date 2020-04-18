@@ -18,37 +18,7 @@ package customerrors
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/sonatype-nexus-community/nancy/buildversion"
-	. "github.com/sonatype-nexus-community/nancy/logger"
 )
-
-type SwError struct {
-	Message string
-	Err     error
-}
-
-func (sw SwError) Error() string {
-	return fmt.Sprintf("%s - error: %s", sw.Message, sw.Err.Error())
-}
-
-func (sw SwError) Exit() {
-	os.Exit(3)
-}
-
-func Check(err error, message string) error {
-	if err != nil {
-		location, _ := LogFileLocation()
-		myErr := SwError{Message: message, Err: err}
-		LogLady.WithField("error", err).Error(message)
-		fmt.Println(myErr.Error())
-		fmt.Printf("For more information, check the log file at %s\n", location)
-		fmt.Println("nancy version:", buildversion.BuildVersion)
-		myErr.Exit()
-	}
-	return err
-}
 
 type ErrorExit struct {
 	Message  string
@@ -56,6 +26,6 @@ type ErrorExit struct {
 	ExitCode int
 }
 
-func (sw ErrorExit) Error() string {
-	return fmt.Sprintf("exit code: %d - %s - error: %s", sw.ExitCode, sw.Message, sw.Err.Error())
+func (ee ErrorExit) Error() string {
+	return fmt.Sprintf("exit code: %d - %s - error: %s", ee.ExitCode, ee.Message, ee.Err.Error())
 }

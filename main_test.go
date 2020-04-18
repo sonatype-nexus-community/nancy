@@ -19,6 +19,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/stretchr/testify/assert"
@@ -134,6 +135,7 @@ func resetConfig(t *testing.T) {
 func TestDoConfigOssIndex(t *testing.T) {
 	tempDir := setupConfig(t)
 	defer resetConfig(t)
+	//noinspection GoUnhandledErrorResult
 	defer os.RemoveAll(tempDir) // clean up
 
 	var stdin bytes.Buffer
@@ -145,6 +147,7 @@ func TestDoConfigOssIndex(t *testing.T) {
 func TestDoConfigIq(t *testing.T) {
 	tempDir := setupConfig(t)
 	defer resetConfig(t)
+	//noinspection GoUnhandledErrorResult
 	defer os.RemoveAll(tempDir) // clean up
 
 	var stdin bytes.Buffer
@@ -190,6 +193,7 @@ func TestCheckStdInInvalid(t *testing.T) {
 func TestCheckStdInValid(t *testing.T) {
 	tmpfile, err := ioutil.TempFile("", "fakeStdIn")
 	assert.Nil(t, err)
+	//noinspection GoUnhandledErrorResult
 	defer os.Remove(tmpfile.Name()) // clean up
 
 	content := []byte("yadda\n")
@@ -204,6 +208,17 @@ func TestCheckStdInValid(t *testing.T) {
 	os.Stdin = tmpfile
 
 	err = checkStdIn()
+	assert.NoError(t, err)
+}
+
+func TestCheckOSSIndexNoneVulnerable(t *testing.T) {
+	// TODO find way to mock ossindex url for this test, probably just move checkOSSIndex() method to ossindex package
+	purls := []string{"pkg:github/BurntSushi/toml@0.3.1"}
+	invalidPurls := []string{"invalidPurl"}
+	noColor := true
+	quiet := true
+	config := configuration.Configuration{Formatter: &audit.AuditLogTextFormatter{Quiet: &quiet, NoColor: &noColor}}
+	err := checkOSSIndex(purls, invalidPurls, config)
 	assert.NoError(t, err)
 }
 

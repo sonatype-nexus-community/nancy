@@ -47,12 +47,13 @@ type DBValue struct {
 	TTL         int64
 }
 
-func (c *Cache) getDatabasePath() (dbDir string) {
+func (c *Cache) getDatabasePath() (dbDir string, err error) {
 	usr, err := user.Current()
-	// TODO Change this to return error, replace customerrors.Check()
-	customerrors.Check(err, "Error getting user home")
+	if err != nil {
+		return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Error getting user home"}
+	}
 
-	return path.Join(usr.HomeDir, types.OssIndexDirName, dbDirName, c.DBName)
+	return path.Join(usr.HomeDir, types.OssIndexDirName, dbDirName, c.DBName), err
 }
 
 // RemoveCache deletes the cache database
@@ -63,7 +64,11 @@ func (c *Cache) RemoveCache() error {
 		}
 	}()
 
-	err := pudge.DeleteFile(c.getDatabasePath())
+	dbDir, err := c.getDatabasePath()
+	if err != nil {
+		return customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Error getting user home"}
+	}
+	err = pudge.DeleteFile(dbDir)
 	if err == nil {
 		return nil
 	}
@@ -71,7 +76,7 @@ func (c *Cache) RemoveCache() error {
 		LogLady.WithField("error", err).Error("Unable to delete database, looks like it doesn't exist")
 		return nil
 	}
-	err = pudge.BackupAll(c.getDatabasePath())
+	err = pudge.BackupAll(dbDir)
 	if err != nil {
 		return err
 	}
@@ -89,7 +94,12 @@ func (c *Cache) Insert(coordinates []types.Coordinate) (err error) {
 	}()
 
 	doSet := func(coordinate types.Coordinate) error {
-		err = pudge.Set(c.getDatabasePath(), strings.ToLower(coordinate.Coordinates), DBValue{Coordinates: coordinate, TTL: c.TTL.Unix()})
+		dbDir, err := c.getDatabasePath()
+		if err != nil {
+			return customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Error getting user home"}
+		}
+
+		err = pudge.Set(dbDir, strings.ToLower(coordinate.Coordinates), DBValue{Coordinates: coordinate, TTL: c.TTL.Unix()})
 		if err != nil {
 			LogLady.WithField("error", err).Error("Unable to add coordinate to cache DB")
 			return err
@@ -111,7 +121,9 @@ func (c *Cache) Insert(coordinates []types.Coordinate) (err error) {
 			continue
 		}
 		if exists.TTL < time.Now().Unix() {
-			c.deleteKey(coord.Coordinates)
+			if err = c.deleteKey(coord.Coordinates); err != nil {
+				return
+			}
 			err = doSet(coord)
 			if err != nil {
 				continue
@@ -150,7 +162,9 @@ func (c *Cache) GetCacheValues(purls []string) ([]string, []types.Coordinate, er
 
 		if item.TTL < time.Now().Unix() {
 			newPurls = append(newPurls, purl)
-			c.deleteKey(item.Coordinates.Coordinates)
+			if err = c.deleteKey(item.Coordinates.Coordinates); err != nil {
+				return nil, nil, err
+			}
 			continue
 		} else {
 			LogLady.WithField("coordinate", item.Coordinates).Info("Result found in cache, moving forward and hydrating results")
@@ -161,13 +175,24 @@ func (c *Cache) GetCacheValues(purls []string) ([]string, []types.Coordinate, er
 	return newPurls, results, nil
 }
 
-func (c *Cache) deleteKey(key string) {
-	err := pudge.Delete(c.getDatabasePath(), strings.ToLower(key))
+func (c *Cache) deleteKey(key string) error {
+	dbDir, err := c.getDatabasePath()
+	if err != nil {
+		return customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Error getting user home"}
+	}
+
+	err = pudge.Delete(dbDir, strings.ToLower(key))
 	if err != nil {
 		LogLady.WithField("error", err).Error("Unable to delete value from pudge db")
 	}
+	return err
 }
 
 func (c *Cache) getKeyAndHydrate(key string, item *DBValue) error {
-	return pudge.Get(c.getDatabasePath(), strings.ToLower(key), item)
+	dbDir, err := c.getDatabasePath()
+	if err != nil {
+		return customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Error getting user home"}
+	}
+
+	return pudge.Get(dbDir, strings.ToLower(key), item)
 }

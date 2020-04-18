@@ -55,6 +55,7 @@ func main() {
 	} else {
 		err = doOssi(os.Args[1:])
 	}
+
 	if err != nil {
 		if exiterr, ok := err.(*customerrors.ErrorExit); ok {
 			os.Exit(exiterr.ExitCode)
@@ -84,12 +85,7 @@ func doOssi(ossiArgs []string) (err error) {
 
 func doConfig(stdin io.Reader) (err error) {
 	LogLady.Info("Nancy setting config via the command line")
-	if err = configuration.GetConfigFromCommandLine(stdin); err != nil {
-		return
-	}
-	if err = customerrors.Check(err, "Unable to set config for Nancy"); err != nil {
-		return
-	}
+	err = configuration.GetConfigFromCommandLine(stdin)
 	return
 }
 
@@ -183,7 +179,9 @@ func processConfig(config configuration.Configuration) (err error) {
 	}
 	if !config.UseStdIn {
 		LogLady.Info("Parsing config for file based scan")
-		doCheckExistenceAndParse(config)
+		if err = doCheckExistenceAndParse(config); err != nil {
+			return
+		}
 	}
 	return
 }
@@ -259,7 +257,7 @@ func doStdInAndParse(config configuration.Configuration) (err error) {
 	}).Debug("Extracted purls")
 
 	LogLady.Info("Auditing purls with OSS Index")
-	checkOSSIndex(purls, nil, config)
+	err = checkOSSIndex(purls, nil, config)
 	return
 }
 
@@ -298,11 +296,11 @@ func doStdInAndParseForIQ(config configuration.IqConfiguration) (err error) {
 	}).Debug("Extracted purls")
 
 	LogLady.Info("Auditing purls with IQ Server")
-	auditWithIQServer(purls, config.Application, config)
+	err = auditWithIQServer(purls, config.Application, config)
 	return
 }
 
-func doCheckExistenceAndParse(config configuration.Configuration) {
+func doCheckExistenceAndParse(config configuration.Configuration) error {
 	switch {
 	case strings.Contains(config.Path, "Gopkg.lock"):
 		workingDir := filepath.Dir(config.Path)
@@ -315,33 +313,41 @@ func doCheckExistenceAndParse(config configuration.Configuration) {
 			GOPATHs:    []string{getenv},
 		}
 		project, err := ctx.LoadProject()
-		customerrors.Check(err, fmt.Sprintf("could not read lock at path %s", config.Path))
-
+		if err != nil {
+			return customerrors.ErrorExit{ExitCode: 3, Message: fmt.Sprintf("could not read lock at path %s", config.Path)}
+		}
 		if project.Lock == nil {
-			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
+			return customerrors.ErrorExit{ExitCode: 3, Err: errors.New("dep failed to parse lock file and returned nil"), Message: "nancy could not continue due to dep failure"}
 		}
 
 		purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
 
-		checkOSSIndex(purls, invalidPurls, config)
+		return checkOSSIndex(purls, invalidPurls, config)
 	case strings.Contains(config.Path, "go.sum"):
 		mod := packages.Mod{}
 		mod.GoSumPath = config.Path
-		if mod.CheckExistenceOfManifest() {
+		manifestExists, err := mod.CheckExistenceOfManifest()
+		if err != nil {
+			return err
+		}
+		if manifestExists {
 			mod.ProjectList, _ = parse.GoSum(config.Path)
 			var purls = mod.ExtractPurlsFromManifest()
 
-			checkOSSIndex(purls, nil, config)
+			return checkOSSIndex(purls, nil, config)
 		}
 	default:
-		os.Exit(3)
+		return customerrors.ErrorExit{ExitCode: 3}
 	}
+	return nil
 }
 
-func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) {
+func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) error {
 	var packageCount = len(purls)
 	coordinates, err := ossindex.AuditPackagesWithOSSIndex(purls, &config)
-	customerrors.Check(err, "Error auditing packages")
+	if err != nil {
+		return err
+	}
 
 	var invalidCoordinates []types.Coordinate
 	for _, invalidpurl := range invalidpurls {
@@ -349,30 +355,34 @@ func checkOSSIndex(purls []string, invalidpurls []string, config configuration.C
 	}
 
 	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
-		os.Exit(count)
+		// return error with number of vulnerable items found
+		return customerrors.ErrorExit{ExitCode: count}
 	}
+	return nil
 }
 
-func auditWithIQServer(purls []string, applicationID string, config configuration.IqConfiguration) {
+func auditWithIQServer(purls []string, applicationID string, config configuration.IqConfiguration) error {
 	LogLady.Debug("Sending purls to be Audited by IQ Server")
 	res, err := iq.AuditPackages(purls, applicationID, config)
-	customerrors.Check(err, "Uh oh! There was an error with your request to Nexus IQ Server")
+	if err != nil {
+		return err
+	}
 
 	fmt.Println()
 	if res.IsError {
 		LogLady.WithField("res", res).Error("An error occurred with the request to IQ Server")
-		customerrors.Check(errors.New(res.ErrorMessage), "Uh oh! There was an error with your request to Nexus IQ Server")
+		return errors.New(res.ErrorMessage)
 	}
 
 	if res.PolicyAction != "Failure" {
 		LogLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
 		fmt.Println("Wonderbar! No policy violations reported for this audit!")
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
-		os.Exit(0)
+		return nil
 	} else {
 		LogLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
 		fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
-		os.Exit(1)
+		return customerrors.ErrorExit{ExitCode: 1}
 	}
 }

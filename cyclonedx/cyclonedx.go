@@ -33,7 +33,7 @@ const version = "1"
 
 // ProcessPurlsIntoSBOM will take a slice of packageurl.PackageURL and convert them
 // into a minimal 1.1 CycloneDX sbom
-func ProcessPurlsIntoSBOM(results []types.Coordinate) string {
+func ProcessPurlsIntoSBOM(results []types.Coordinate) (string, error) {
 	return processPurlsIntoSBOMSchema1_1(results)
 }
 
@@ -91,7 +91,9 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 	sbom := createSbomDocument()
 	for _, v := range results {
 		purl, err := packageurl.FromString(v.Coordinates)
-		customerrors.Check(err, "Error parsing purl from given coordinate")
+		if err != nil {
+			return "", err
+		}
 
 		component := types.Component{
 			Type:    "library",
@@ -141,5 +143,5 @@ func processAndReturnSbom(sbom *types.Sbom) string {
 
 	output = []byte(xml.Header + string(output))
 
-	return string(output)
+	return string(output), err
 }

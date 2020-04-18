@@ -24,7 +24,6 @@ import (
 	"strconv"
 
 	. "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -57,33 +56,56 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 		var buf bytes.Buffer
 		w := csv.NewWriter(&buf)
 
-		f.write(w, []string{"Summary"})
-		f.write(w, summaryHeader)
-		f.write(w, summaryRow)
+		var err error
+		if err = f.write(w, []string{"Summary"}); err != nil {
+			return nil, err
+		}
+		if err = f.write(w, summaryHeader); err != nil {
+			return nil, err
+		}
+		if err = f.write(w, summaryRow); err != nil {
+			return nil, err
+		}
 
 		if !*f.Quiet {
 			invalidCount := len(invalidEntries)
 			if invalidCount > 0 {
-				f.write(w, []string{""})
-				f.write(w, []string{"Invalid Package(s)"})
-				f.write(w, invalidHeader)
+				if err = f.write(w, []string{""}); err != nil {
+					return nil, err
+				}
+				if err = f.write(w, []string{"Invalid Package(s)"}); err != nil {
+					return nil, err
+				}
+				if err = f.write(w, invalidHeader); err != nil {
+					return nil, err
+				}
 				for i := 1; i <= invalidCount; i++ {
 					invalidEntry := invalidEntries[i-1]
-					f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(invalidCount) + "]", invalidEntry.Coordinates, "Does not use SemVer"})
+					if err = f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(invalidCount) + "]", invalidEntry.Coordinates, "Does not use SemVer"}); err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
 
 		if !*f.Quiet || numVulnerable > 0 {
-			f.write(w, []string{""})
-			f.write(w, []string{"Audited Package(s)"})
-			f.write(w, auditedHeader)
+			if err = f.write(w, []string{""}); err != nil {
+				return nil, err
+			}
+			if err = f.write(w, []string{"Audited Package(s)"}); err != nil {
+				return nil, err
+			}
+			if err = f.write(w, auditedHeader); err != nil {
+				return nil, err
+			}
 		}
 		for i := 1; i <= len(auditedEntries); i++ {
 			auditEntry := auditedEntries[i-1]
 			if auditEntry.IsVulnerable() || !*f.Quiet {
 				jsonVulns, _ := json.Marshal(auditEntry.Vulnerabilities)
-				f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(packageCount) + "]", auditEntry.Coordinates, strconv.FormatBool(auditEntry.IsVulnerable()), strconv.Itoa(len(auditEntry.Vulnerabilities)), string(jsonVulns)})
+				if err = f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(packageCount) + "]", auditEntry.Coordinates, strconv.FormatBool(auditEntry.IsVulnerable()), strconv.Itoa(len(auditEntry.Vulnerabilities)), string(jsonVulns)}); err != nil {
+					return nil, err
+				}
 			}
 		}
 
@@ -96,7 +118,6 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 
 }
 
-func (f *CsvFormatter) write(w *csv.Writer, line []string) {
-	err := w.Write(line)
-	customerrors.Check(err, "Failed to write data to csv")
+func (f *CsvFormatter) write(w *csv.Writer, line []string) error {
+	return w.Write(line)
 }

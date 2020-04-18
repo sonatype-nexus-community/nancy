@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/sonatype-nexus-community/nancy/configuration"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/ossindex/internal/cache"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -83,7 +82,9 @@ func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configurati
 
 func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
 	newPurls, results, err := dbCache.GetCacheValues(purls)
-	customerrors.Check(err, "Error initializing cache")
+	if err != nil {
+		return nil, err
+	}
 
 	chunks := chunk(newPurls, MaxCoords)
 
@@ -146,7 +147,7 @@ func doRequestToOSSIndex(jsonStr []byte, config *configuration.Configuration) (c
 	}
 
 	// Process results
-	if err = json.Unmarshal([]byte(body), &coordinates); err != nil {
+	if err = json.Unmarshal(body, &coordinates); err != nil {
 		LogLady.WithField("error", err).Error("Error unmarshalling response from OSS Index")
 		return
 	}
