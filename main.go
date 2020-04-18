@@ -260,9 +260,8 @@ func doCheckExistenceAndParse(config configuration.Configuration) {
 			GOPATHs:    []string{getenv},
 		}
 		project, err := ctx.LoadProject()
-		if err != nil {
-			customerrors.Check(err, fmt.Sprintf("could not read lock at path %s", config.Path))
-		}
+		customerrors.Check(err, fmt.Sprintf("could not read lock at path %s", config.Path))
+
 		if project.Lock == nil {
 			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
 		}

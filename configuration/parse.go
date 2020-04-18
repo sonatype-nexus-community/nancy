@@ -95,7 +95,6 @@ Options:
 
 	err = loadIQConfigFromFile(ConfigLocation, &config)
 	if err != nil {
-		fmt.Println(err)
 		LogLady.Info("Unable to load config from file")
 	}
 
@@ -110,10 +109,12 @@ Options:
 func loadConfigFromFile(configLocation string, config *Configuration) error {
 	b, err := ioutil.ReadFile(configLocation)
 	if err != nil {
+		LogLady.WithField("error", err).Error("Unable to read OSS Index file")
 		return err
 	}
 	err = yaml.Unmarshal(b, config)
 	if err != nil {
+		LogLady.WithField("error", err).Error("Unable to unmarshal file into OSS Index config")
 		return err
 	}
 
@@ -123,10 +124,12 @@ func loadConfigFromFile(configLocation string, config *Configuration) error {
 func loadIQConfigFromFile(configLocation string, config *IqConfiguration) error {
 	b, err := ioutil.ReadFile(configLocation)
 	if err != nil {
+		LogLady.WithField("error", err).Error("Unable to read IQ file")
 		return err
 	}
 	err = yaml.Unmarshal(b, config)
 	if err != nil {
+		LogLady.WithField("error", err).Error("Unable to unmarshal file into IQ config")
 		return err
 	}
 
@@ -177,7 +180,6 @@ Options:
 
 	err := loadConfigFromFile(ConfigLocation, &config)
 	if err != nil {
-		fmt.Println(err)
 		LogLady.Info("Unable to load config from file")
 	}
 

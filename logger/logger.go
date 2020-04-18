@@ -18,7 +18,6 @@
 package logger
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -38,22 +37,32 @@ var DefaultLogFile = DefaultLogFilename
 var LogLady = logrus.New()
 
 func init() {
-	doInit(os.Args)
+	err := doInit(os.Args)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func doInit(args []string) {
+func doInit(args []string) (err error) {
 	if useTestLogFile(args) {
 		DefaultLogFile = TestLogfilename
 	}
 
-	file, err := os.OpenFile(GetLogFileLocation(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
-	if err != nil {
-		fmt.Printf("Could not open log file. error: %v\n", err)
-	}
-
-	LogLady.Out = file
 	LogLady.Level = logrus.InfoLevel
 	LogLady.Formatter = &logrus.JSONFormatter{}
+
+	location, err := LogFileLocation()
+	if err != nil {
+		return
+	}
+
+	file, err := os.OpenFile(location, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
+	if err != nil {
+		return
+	}
+	LogLady.Out = file
+
+	return
 }
 
 func stringPrefixInSlice(a string, list []string) bool {
@@ -81,12 +90,12 @@ func useTestLogFile(args []string) bool {
 	return false
 }
 
-// GetLogFileLocation will return the location on disk of the log file
-func GetLogFileLocation() (result string) {
+// LogFileLocation will return the location on disk of the log file
+func LogFileLocation() (result string, err error) {
 	result, _ = os.UserHomeDir()
-	err := os.MkdirAll(path.Join(result, types.OssIndexDirName), os.ModePerm)
+	err = os.MkdirAll(path.Join(result, types.OssIndexDirName), os.ModePerm)
 	if err != nil {
-		fmt.Printf("Failed to make all dirs needed to be able to store log file. error: %v\n", err)
+		return
 	}
 	result = path.Join(result, types.OssIndexDirName, DefaultLogFile)
 	return

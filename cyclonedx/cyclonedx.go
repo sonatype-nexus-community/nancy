@@ -19,10 +19,10 @@ package cyclonedx
 
 import (
 	"encoding/xml"
-	"fmt"
 
 	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
+	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -75,7 +75,7 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 
 	output, err := xml.MarshalIndent(sbom, " ", "     ")
 	if err != nil {
-		fmt.Print(err)
+		LogLady.Error(err)
 	}
 
 	output = []byte(xml.Header + string(output))
