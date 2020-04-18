@@ -37,11 +37,58 @@ func ProcessPurlsIntoSBOM(results []types.Coordinate) string {
 	return processPurlsIntoSBOMSchema1_1(results)
 }
 
+// SBOMFromPackageURLs will take a slice of packageurl.PackageURL and convert them
+// into a minimal 1.1 CycloneDX sbom
+func SBOMFromPackageURLs(results []packageurl.PackageURL) string {
+	return processPackageURLsIntoSBOMSchema1_1(results)
+}
+
+// SBOMFromSHA1 will take a slice of Sha1SBOM and convert them
+// into a minimal 1.1 CycloneDX sbom
+func SBOMFromSHA1(results []types.Sha1SBOM) string {
+	return createMinimalSha1Sbom(results)
+}
+
+func createMinimalSha1Sbom(results []types.Sha1SBOM) string {
+	sbom := createSbomDocument()
+	for _, v := range results {
+		hash := types.Hash{
+			Alg: "SHA-1", Attribute: v.Sha1,
+		}
+		component := types.Component{
+			Type:    "library",
+			BomRef:  v.Sha1,
+			Name:    v.Location,
+			Version: "0",
+		}
+		component.Hashes.Hash = append(component.Hashes.Hash, hash)
+
+		sbom.Components.Component = append(sbom.Components.Component, component)
+	}
+
+	return processAndReturnSbom(sbom)
+}
+
+func processPackageURLsIntoSBOMSchema1_1(results []packageurl.PackageURL) string {
+	sbom := createSbomDocument()
+	for _, v := range results {
+		component := types.Component{
+			Type:    "library",
+			BomRef:  v.ToString(),
+			Purl:    v.ToString(),
+			Group:   v.Namespace,
+			Name:    v.Name,
+			Version: v.Version,
+		}
+
+		sbom.Components.Component = append(sbom.Components.Component, component)
+	}
+
+	return processAndReturnSbom(sbom)
+}
+
 func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
-	sbom := types.Sbom{}
-	sbom.Xmlns = cycloneDXBomXmlns1_1
-	sbom.XMLNSV = cycloneDXBomXmlns1_0V
-	sbom.Version = version
+	sbom := createSbomDocument()
 	for _, v := range results {
 		purl, err := packageurl.FromString(v.Coordinates)
 		customerrors.Check(err, "Error parsing purl from given coordinate")
@@ -52,6 +99,7 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 			Purl:    purl.String(),
 			Name:    purl.Name,
 			Version: purl.Version,
+			Group:   purl.Namespace,
 		}
 
 		if v.IsVulnerable() {
@@ -73,6 +121,19 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 		sbom.Components.Component = append(sbom.Components.Component, component)
 	}
 
+	return processAndReturnSbom(sbom)
+}
+
+func createSbomDocument() *types.Sbom {
+	sbom := types.Sbom{}
+	sbom.Xmlns = cycloneDXBomXmlns1_1
+	sbom.XMLNSV = cycloneDXBomXmlns1_0V
+	sbom.Version = version
+
+	return &sbom
+}
+
+func processAndReturnSbom(sbom *types.Sbom) string {
 	output, err := xml.MarshalIndent(sbom, " ", "     ")
 	if err != nil {
 		fmt.Print(err)

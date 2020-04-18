@@ -27,6 +27,82 @@ import (
 	assert "gopkg.in/go-playground/assert.v1"
 )
 
+func TestCreateSBOMFromPackageURLs(t *testing.T) {
+	results := []packageurl.PackageURL{}
+	uno, _ := packageurl.FromString("pkg:golang/github.com/test/test@1.0.0")
+	results = append(results, uno)
+
+	result := SBOMFromPackageURLs(results)
+
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromString(result); err != nil {
+		t.Error("Uh Oh")
+	}
+
+	root := doc.SelectElement("bom")
+	assertBaseXMLValid(root, t)
+	components := root.SelectElement("components")
+	for i, component := range components.SelectElements("component") {
+		assert.Equal(t, component.Tag, "component")
+		assert.Equal(t, component.Attr[0].Key, "type")
+		assert.Equal(t, component.Attr[0].Value, "library")
+		assert.Equal(t, component.Attr[1].Key, "bom-ref")
+		assert.Equal(t, component.Attr[1].Value, results[i].ToString())
+		name := component.SelectElement("name")
+		assert.Equal(t, name.Tag, "name")
+		assert.Equal(t, name.Text(), results[i].Name)
+		version := component.SelectElement("version")
+		assert.Equal(t, version.Tag, "version")
+		assert.Equal(t, version.Text(), results[i].Version)
+		group := component.SelectElement("group")
+		assert.Equal(t, group.Tag, "group")
+		assert.Equal(t, group.Text(), results[i].Namespace)
+		purl := component.SelectElement("purl")
+		assert.Equal(t, purl.Tag, "purl")
+		assert.Equal(t, purl.Text(), results[i].ToString())
+	}
+}
+
+func TestCreateSBOMFromSHA1s(t *testing.T) {
+	results := []types.Sha1SBOM{}
+	uno := types.Sha1SBOM{Location: "/path/on/disk", Sha1: "c2843e01d9a2"}
+	results = append(results, uno)
+
+	result := SBOMFromSHA1(results)
+
+	doc := etree.NewDocument()
+
+	if err := doc.ReadFromString(result); err != nil {
+		t.Error("Uh Oh")
+	}
+
+	root := doc.SelectElement("bom")
+	assertBaseXMLValid(root, t)
+	components := root.SelectElement("components")
+	for i, component := range components.SelectElements("component") {
+		location := results[i].Location
+		sha1 := results[i].Sha1
+		assert.Equal(t, component.Tag, "component")
+		assert.Equal(t, component.Attr[0].Key, "type")
+		assert.Equal(t, component.Attr[0].Value, "library")
+		assert.Equal(t, component.Attr[1].Key, "bom-ref")
+		assert.Equal(t, component.Attr[1].Value, sha1)
+		name := component.SelectElement("name")
+		assert.Equal(t, name.Tag, "name")
+		assert.Equal(t, name.Text(), location)
+		version := component.SelectElement("version")
+		assert.Equal(t, version.Tag, "version")
+		assert.Equal(t, version.Text(), "0")
+		hashes := component.SelectElement("hashes")
+		hash := hashes.SelectElement("hash")
+		assert.Equal(t, hash.Tag, "hash")
+		assert.Equal(t, hash.Text(), sha1)
+		alg := hash.SelectAttr("alg")
+		assert.Equal(t, alg.Value, "SHA-1")
+	}
+}
+
 func TestProcessPurlsIntoSBOM(t *testing.T) {
 	results := []types.Coordinate{}
 	crypto := types.Coordinate{
@@ -61,14 +137,7 @@ func TestProcessPurlsIntoSBOM(t *testing.T) {
 	}
 
 	root := doc.SelectElement("bom")
-	assert.Equal(t, root.Tag, "bom")
-	assert.Equal(t, root.Attr[0].Key, "xmlns")
-	assert.Equal(t, root.Attr[0].Value, "http://cyclonedx.org/schema/bom/1.1")
-	assert.Equal(t, root.Attr[1].Space, "xmlns")
-	assert.Equal(t, root.Attr[1].Key, "v")
-	assert.Equal(t, root.Attr[1].Value, "http://cyclonedx.org/schema/ext/vulnerability/1.0")
-	assert.Equal(t, root.Attr[2].Key, "version")
-	assert.Equal(t, root.Attr[2].Value, "1")
+	assertBaseXMLValid(root, t)
 	components := root.SelectElement("components")
 	for i, component := range components.SelectElements("component") {
 		coordinate, _ := packageurl.FromString(results[i].Coordinates)
@@ -83,6 +152,9 @@ func TestProcessPurlsIntoSBOM(t *testing.T) {
 		version := component.SelectElement("version")
 		assert.Equal(t, version.Tag, "version")
 		assert.Equal(t, version.Text(), coordinate.Version)
+		group := component.SelectElement("group")
+		assert.Equal(t, group.Tag, "group")
+		assert.Equal(t, group.Text(), coordinate.Namespace)
 		purl := component.SelectElement("purl")
 		assert.Equal(t, purl.Tag, "purl")
 		assert.Equal(t, purl.Text(), coordinate.ToString())
@@ -128,4 +200,15 @@ func TestProcessPurlsIntoSBOM(t *testing.T) {
 			}
 		}
 	}
+}
+
+func assertBaseXMLValid(doc *etree.Element, t *testing.T) {
+	assert.Equal(t, doc.Tag, "bom")
+	assert.Equal(t, doc.Attr[0].Key, "xmlns")
+	assert.Equal(t, doc.Attr[0].Value, "http://cyclonedx.org/schema/bom/1.1")
+	assert.Equal(t, doc.Attr[1].Space, "xmlns")
+	assert.Equal(t, doc.Attr[1].Key, "v")
+	assert.Equal(t, doc.Attr[1].Value, "http://cyclonedx.org/schema/ext/vulnerability/1.0")
+	assert.Equal(t, doc.Attr[2].Key, "version")
+	assert.Equal(t, doc.Attr[2].Value, "1")
 }
