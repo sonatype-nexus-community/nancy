@@ -116,6 +116,12 @@ type StatusURLResult struct {
 
 // CycloneDX Types
 
+// Sha1SBOM is a struct to begin assembling a minimal SBOM based on sha1s
+type Sha1SBOM struct {
+	Location string
+	Sha1     string
+}
+
 // Sbom is a struct to begin assembling a minimal SBOM
 type Sbom struct {
 	XMLName    xml.Name   `xml:"bom"`
@@ -136,8 +142,19 @@ type Component struct {
 	BomRef          string          `xml:"bom-ref,attr"`
 	Name            string          `xml:"name"`
 	Version         string          `xml:"version"`
-	Purl            string          `xml:"purl"`
+	Group           string          `xml:"group,omitempty"`
+	Purl            string          `xml:"purl,omitempty"`
+	Hashes          Hashes          `xml:"hashes,omitempty"`
 	Vulnerabilities Vulnerabilities `xml:"v:vulnerabilities,omitempty"`
+}
+
+type Hashes struct {
+	Hash []Hash `xml:"hash,omitempty"`
+}
+
+type Hash struct {
+	Alg       string `xml:"alg,attr,omitempty"`
+	Attribute string `xml:",chardata"`
 }
 
 type Vulnerabilities struct {
