@@ -95,10 +95,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 		return statusURLResp, customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "There was an issue auditing packages using OSS Index"}
 	}
 
-	sbom, err := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
-	if err != nil {
-		return types.StatusURLResult{}, err
-	}
+	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
 	LogLady.WithField("sbom", sbom).Debug("Obtained cyclonedx SBOM")
 
 	LogLady.WithFields(logrus.Fields{

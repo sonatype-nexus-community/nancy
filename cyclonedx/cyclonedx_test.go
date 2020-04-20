@@ -28,7 +28,7 @@ import (
 )
 
 func TestCreateSBOMFromPackageURLs(t *testing.T) {
-	results := []packageurl.PackageURL{}
+	var results []packageurl.PackageURL
 	uno, _ := packageurl.FromString("pkg:golang/github.com/test/test@1.0.0")
 	results = append(results, uno)
 
@@ -65,7 +65,7 @@ func TestCreateSBOMFromPackageURLs(t *testing.T) {
 }
 
 func TestCreateSBOMFromSHA1s(t *testing.T) {
-	results := []types.Sha1SBOM{}
+	var results []types.Sha1SBOM
 	uno := types.Sha1SBOM{Location: "/path/on/disk", Sha1: "c2843e01d9a2"}
 	results = append(results, uno)
 
@@ -128,8 +128,7 @@ func TestProcessPurlsIntoSBOM(t *testing.T) {
 		Reference:       "https://ossindex.sonatype.org/component/pkg:golang/github.com/go-yaml/yaml@v2.2.2",
 		Vulnerabilities: []types.Vulnerability{},
 	})
-	result, err := ProcessPurlsIntoSBOM(results)
-	assert.Equal(t, nil, err)
+	result := ProcessPurlsIntoSBOM(results)
 
 	doc := etree.NewDocument()
 
@@ -216,8 +215,7 @@ func assertBaseXMLValid(doc *etree.Element, t *testing.T) {
 
 func TestProcess1_1NoError(t *testing.T) {
 	var results []types.Coordinate
-	sbom, err := processPurlsIntoSBOMSchema1_1(results)
-	assert.Equal(t, nil, err)
+	sbom := processPurlsIntoSBOMSchema1_1(results)
 	assert.Equal(t, `<?xml version="1.0" encoding="UTF-8"?>
  <bom xmlns="http://cyclonedx.org/schema/bom/1.1" xmlns:v="http://cyclonedx.org/schema/ext/vulnerability/1.0" version="1">
       <components></components>
@@ -231,16 +229,13 @@ func TestProcess1_1WithCoordinate(t *testing.T) {
 		},
 	}
 
-	sbom, err := processPurlsIntoSBOMSchema1_1(results)
-	assert.NotEqual(t, nil, err)
-	assert.Equal(t, "scheme is missing", err.Error())
+	sbom := processPurlsIntoSBOMSchema1_1(results)
 	assert.Equal(t, "", sbom)
 }
 
 func TestProcessWithError(t *testing.T) {
 	var results []types.Coordinate
-	sbom, err := ProcessPurlsIntoSBOM(results)
-	assert.Equal(t, nil, err)
+	sbom := ProcessPurlsIntoSBOM(results)
 	assert.Equal(t, `<?xml version="1.0" encoding="UTF-8"?>
  <bom xmlns="http://cyclonedx.org/schema/bom/1.1" xmlns:v="http://cyclonedx.org/schema/ext/vulnerability/1.0" version="1">
       <components></components>

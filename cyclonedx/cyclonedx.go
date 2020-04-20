@@ -21,7 +21,6 @@ import (
 	"encoding/xml"
 
 	"github.com/package-url/packageurl-go"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
@@ -33,7 +32,7 @@ const version = "1"
 
 // ProcessPurlsIntoSBOM will take a slice of packageurl.PackageURL and convert them
 // into a minimal 1.1 CycloneDX sbom
-func ProcessPurlsIntoSBOM(results []types.Coordinate) (string, error) {
+func ProcessPurlsIntoSBOM(results []types.Coordinate) string {
 	return processPurlsIntoSBOMSchema1_1(results)
 }
 
@@ -92,7 +91,7 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 	for _, v := range results {
 		purl, err := packageurl.FromString(v.Coordinates)
 		if err != nil {
-			return "", err
+			return ""
 		}
 
 		component := types.Component{
@@ -143,5 +142,5 @@ func processAndReturnSbom(sbom *types.Sbom) string {
 
 	output = []byte(xml.Header + string(output))
 
-	return string(output), err
+	return string(output)
 }
