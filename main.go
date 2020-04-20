@@ -65,7 +65,6 @@ func main() {
 			os.Exit(4)
 		}
 	}
-	fmt.Println("byeeeeee") // probably shouldn't get here until other exit cases above are all covered.
 }
 
 func doOssi(ossiArgs []string) (err error) {
