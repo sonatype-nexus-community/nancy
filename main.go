@@ -57,7 +57,7 @@ func main() {
 	}
 
 	if err != nil {
-		if exiterr, ok := err.(*customerrors.ErrorExit); ok {
+		if exiterr, ok := err.(customerrors.ErrorExit); ok {
 			os.Exit(exiterr.ExitCode)
 		} else {
 			// really don't expect this
@@ -76,6 +76,7 @@ func doOssi(ossiArgs []string) (err error) {
 		return
 	}
 	if err = processConfig(ossIndexConfig); err != nil {
+		LogLady.Info("Nancy finished parsing config for OSS Index, vulnerability found")
 		return
 	}
 	LogLady.Info("Nancy finished parsing config for OSS Index")
@@ -355,6 +356,7 @@ func checkOSSIndex(purls []string, invalidpurls []string, config configuration.C
 
 	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
 		// return error with number of vulnerable items found
+		fmt.Printf("Found vuln count: %d\n", count)
 		return customerrors.ErrorExit{ExitCode: count}
 	}
 	return nil
