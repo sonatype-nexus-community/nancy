@@ -99,6 +99,7 @@ func doIq(iqArgs []string) (err error) {
 	}
 	LogLady.WithField("config", config).Info("Obtained IQ config")
 	if err = processIQConfig(config); err != nil {
+		LogLady.Info("Nancy finished parsing config for IQ, vulnerability found")
 		return
 	}
 	LogLady.Info("Nancy finished parsing config for IQ")
