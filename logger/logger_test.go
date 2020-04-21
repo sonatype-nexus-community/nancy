@@ -28,7 +28,8 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	location, _ := LogFileLocation()
+	location, err := LogFileLocation()
+	assert.NoError(t, err)
 	if !strings.Contains(location, TestLogfilename) {
 		t.Errorf("Nancy test file not in log file location. args: %+v", os.Args)
 	}
