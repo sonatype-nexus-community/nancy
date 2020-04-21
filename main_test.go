@@ -111,9 +111,14 @@ func TestDoConfigInvalidHomeDir(t *testing.T) {
 	stdin.Write([]byte("ossindex\nmyOssiUsername\nmyOssiToken\n"))
 	err := doConfig(&stdin)
 	assert.Error(t, err)
-	if exiterr, ok := err.(*os.PathError); ok {
-		assert.Equal(t, "mkdir", exiterr.Op)
-		assert.Equal(t, "/no/such/dir/.ossindex", exiterr.Path)
+	if exiterr, ok := err.(customerrors.ErrorExit); ok {
+		assert.Equal(t, "Unable to set config for Nancy", exiterr.Message)
+		if errCause, ok := exiterr.Err.(*os.PathError); ok {
+			assert.Equal(t, "mkdir", errCause.Op)
+			assert.Equal(t, "/no/such/dir/.ossindex", errCause.Path)
+		} else {
+			t.Fail()
+		}
 	} else {
 		t.Fail()
 	}

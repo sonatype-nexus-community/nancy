@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -83,7 +84,7 @@ func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configurati
 func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
 	newPurls, results, err := dbCache.GetCacheValues(purls)
 	if err != nil {
-		return nil, err
+		return nil, customerrors.NewErrorExitPrintHelp(err, "Error initializing cache")
 	}
 
 	chunks := chunk(newPurls, MaxCoords)

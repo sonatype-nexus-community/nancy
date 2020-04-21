@@ -62,7 +62,7 @@ func (m Mod) ExtractPurlsFromManifestForIQ() (purls []string) {
 
 func (m Mod) CheckExistenceOfManifest() (bool, error) {
 	if _, err := os.Stat(m.GoSumPath); os.IsNotExist(err) {
-		return false, customerrors.ErrorExit{ExitCode: 3, Err: err, Message: fmt.Sprint("No go.sum found at path: " + m.GoSumPath)}
+		return false, customerrors.NewErrorExitPrintHelp(err, fmt.Sprint("No go.sum found at path: "+m.GoSumPath))
 	}
 	return true, nil
 }

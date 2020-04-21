@@ -85,7 +85,9 @@ func doOssi(ossiArgs []string) (err error) {
 
 func doConfig(stdin io.Reader) (err error) {
 	LogLady.Info("Nancy setting config via the command line")
-	err = configuration.GetConfigFromCommandLine(stdin)
+	if err = configuration.GetConfigFromCommandLine(stdin); err != nil {
+		err = customerrors.NewErrorExitPrintHelp(err, "Unable to set config for Nancy")
+	}
 	return
 }
 
@@ -315,10 +317,10 @@ func doCheckExistenceAndParse(config configuration.Configuration) error {
 		}
 		project, err := ctx.LoadProject()
 		if err != nil {
-			return customerrors.ErrorExit{ExitCode: 3, Message: fmt.Sprintf("could not read lock at path %s", config.Path)}
+			return customerrors.NewErrorExitPrintHelp(err, fmt.Sprintf("could not read lock at path %s", config.Path))
 		}
 		if project.Lock == nil {
-			return customerrors.ErrorExit{ExitCode: 3, Err: errors.New("dep failed to parse lock file and returned nil"), Message: "nancy could not continue due to dep failure"}
+			return customerrors.NewErrorExitPrintHelp(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
 		}
 
 		purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
@@ -347,7 +349,7 @@ func checkOSSIndex(purls []string, invalidpurls []string, config configuration.C
 	var packageCount = len(purls)
 	coordinates, err := ossindex.AuditPackagesWithOSSIndex(purls, &config)
 	if err != nil {
-		return err
+		return customerrors.NewErrorExitPrintHelp(err, "Error auditing packages")
 	}
 
 	var invalidCoordinates []types.Coordinate
@@ -367,13 +369,13 @@ func auditWithIQServer(purls []string, applicationID string, config configuratio
 	LogLady.Debug("Sending purls to be Audited by IQ Server")
 	res, err := iq.AuditPackages(purls, applicationID, config)
 	if err != nil {
-		return err
+		return customerrors.NewErrorExitPrintHelp(err, "Uh oh! There was an error with your request to Nexus IQ Server")
 	}
 
 	fmt.Println()
 	if res.IsError {
 		LogLady.WithField("res", res).Error("An error occurred with the request to IQ Server")
-		return errors.New(res.ErrorMessage)
+		return customerrors.NewErrorExitPrintHelp(errors.New(res.ErrorMessage), "Uh oh! There was an error with your request to Nexus IQ Server")
 	}
 
 	if res.PolicyAction != "Failure" {

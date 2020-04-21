@@ -88,8 +88,6 @@ func ParseIQ(args []string) (config IqConfiguration, err error) {
 Options:
 `)
 		iqCommand.PrintDefaults()
-		//os.Exit(2)
-		// Avoid exit calls, but caller should use exit code 2 when handling
 	}
 
 	ConfigLocation = filepath.Join(HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
@@ -174,8 +172,6 @@ func Parse(args []string) (Configuration, error) {
 Options:
 `)
 		flag.PrintDefaults()
-		// os.Exit(2)
-		// Avoid exit calls, but caller should use exit code 2 when handling
 	}
 
 	ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)

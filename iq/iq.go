@@ -92,7 +92,7 @@ func AuditPackages(purls []string, applicationID string, config configuration.Iq
 
 	resultsFromOssIndex, err := ossindex.AuditPackages(purls) //nolint deprecation
 	if err != nil {
-		return statusURLResp, customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "There was an issue auditing packages using OSS Index"}
+		return statusURLResp, customerrors.NewErrorExitPrintHelp(err, "There was an issue auditing packages using OSS Index")
 	}
 
 	sbom := cyclonedx.ProcessPurlsIntoSBOM(resultsFromOssIndex)
@@ -142,7 +142,7 @@ func getInternalApplicationID(applicationID string) (string, error) {
 		nil,
 	)
 	if err != nil {
-		return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Request to get internal application id failed"}
+		return "", customerrors.NewErrorExitPrintHelp(err, "Request to get internal application id failed")
 	}
 
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
@@ -150,7 +150,7 @@ func getInternalApplicationID(applicationID string) (string, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "There was an error communicating with Nexus IQ Server to get your internal application ID"}
+		return "", customerrors.NewErrorExitPrintHelp(err, "There was an error communicating with Nexus IQ Server to get your internal application ID")
 	}
 
 	//noinspection GoUnhandledErrorResult
@@ -159,13 +159,13 @@ func getInternalApplicationID(applicationID string) (string, error) {
 	if resp.StatusCode == http.StatusOK {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "There was an error retrieving the bytes of the response for getting your internal application ID from Nexus IQ Server"}
+			return "", customerrors.NewErrorExitPrintHelp(err, "There was an error retrieving the bytes of the response for getting your internal application ID from Nexus IQ Server")
 		}
 
 		var response applicationResponse
 		err = json.Unmarshal(bodyBytes, &response)
 		if err != nil {
-			return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "failed to unmarshal response"}
+			return "", customerrors.NewErrorExitPrintHelp(err, "failed to unmarshal response")
 		}
 
 		if response.Applications != nil && len(response.Applications) > 0 {
@@ -201,7 +201,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) (string, error) {
 		bytes.NewBuffer([]byte(sbom)),
 	)
 	if err != nil {
-		return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Could not POST to Nexus iQ Third Party API"}
+		return "", customerrors.NewErrorExitPrintHelp(err, "Could not POST to Nexus iQ Third Party API")
 	}
 
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
@@ -210,7 +210,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) (string, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "There was an issue communicating with the Nexus IQ Third Party API"}
+		return "", customerrors.NewErrorExitPrintHelp(err, "There was an issue communicating with the Nexus IQ Third Party API")
 	}
 
 	//noinspection GoUnhandledErrorResult
@@ -220,13 +220,13 @@ func submitToThirdPartyAPI(sbom string, internalID string) (string, error) {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		LogLady.WithField("body", string(bodyBytes)).Info("Request accepted")
 		if err != nil {
-			return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "There was an issue submitting your sbom to the Nexus IQ Third Party API"}
+			return "", customerrors.NewErrorExitPrintHelp(err, "There was an issue submitting your sbom to the Nexus IQ Third Party API")
 		}
 
 		var response thirdPartyAPIResult
 		err = json.Unmarshal(bodyBytes, &response)
 		if err != nil {
-			return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Could not unmarshal response from iQ server"}
+			return "", customerrors.NewErrorExitPrintHelp(err, "Could not unmarshal response from iQ server")
 		}
 		return response.StatusURL, err
 	}
@@ -237,7 +237,7 @@ func submitToThirdPartyAPI(sbom string, internalID string) (string, error) {
 		"status":      resp.Status,
 	}).Info("Request not accepted")
 	if err != nil {
-		return "", customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "There was an issue submitting your sbom to the Nexus IQ Third Party API"}
+		return "", customerrors.NewErrorExitPrintHelp(err, "There was an issue submitting your sbom to the Nexus IQ Third Party API")
 	}
 
 	return "", err
@@ -257,7 +257,7 @@ func pollIQServer(statusURL string, finished chan resultError, maxRetries int) e
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", statusURL, nil)
 	if err != nil {
-		return customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Could not poll iQ server"}
+		return customerrors.NewErrorExitPrintHelp(err, "Could not poll iQ server")
 	}
 
 	req.SetBasicAuth(localConfig.User, localConfig.Token)
@@ -268,7 +268,7 @@ func pollIQServer(statusURL string, finished chan resultError, maxRetries int) e
 
 	if err != nil {
 		finished <- resultError{finished: true, err: err}
-		return customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "There was an error polling Nexus IQ Server"}
+		return customerrors.NewErrorExitPrintHelp(err, "There was an error polling Nexus IQ Server")
 	}
 
 	//noinspection GoUnhandledErrorResult
@@ -277,13 +277,13 @@ func pollIQServer(statusURL string, finished chan resultError, maxRetries int) e
 	if resp.StatusCode == http.StatusOK {
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "There was an error with processing the response from polling Nexus IQ Server"}
+			return customerrors.NewErrorExitPrintHelp(err, "There was an error with processing the response from polling Nexus IQ Server")
 		}
 
 		var response types.StatusURLResult
 		err = json.Unmarshal(bodyBytes, &response)
 		if err != nil {
-			return customerrors.ErrorExit{ExitCode: 3, Err: err, Message: "Could not unmarshal response from iQ server"}
+			return customerrors.NewErrorExitPrintHelp(err, "Could not unmarshal response from iQ server")
 		}
 		statusURLResp = response
 		if response.IsError {

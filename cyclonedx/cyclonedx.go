@@ -19,6 +19,7 @@ package cyclonedx
 
 import (
 	"encoding/xml"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 
 	"github.com/package-url/packageurl-go"
 	. "github.com/sonatype-nexus-community/nancy/logger"
@@ -91,6 +92,7 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 	for _, v := range results {
 		purl, err := packageurl.FromString(v.Coordinates)
 		if err != nil {
+			_ = customerrors.NewErrorExitPrintHelp(err, "Error parsing purl from given coordinate")
 			return ""
 		}
 

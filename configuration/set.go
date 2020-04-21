@@ -75,7 +75,7 @@ func GetConfigFromCommandLine(stdin io.Reader) (err error) {
 		// TODO should this return an error, because it means config setup was not completed?
 		return
 	default:
-		LogLady.Infof("User chose invalid config type: %s, recurse madness", str)
+		LogLady.Infof("User chose invalid config type: %s, will retry", str)
 		fmt.Println("Invalid value, 'iq' and 'ossindex' are accepted values, try again!")
 		err = GetConfigFromCommandLine(stdin)
 	}

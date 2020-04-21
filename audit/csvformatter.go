@@ -21,6 +21,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"strconv"
 
 	. "github.com/sirupsen/logrus"
@@ -119,5 +120,8 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 }
 
 func (f *CsvFormatter) write(w *csv.Writer, line []string) error {
-	return w.Write(line)
+	if err := w.Write(line); err != nil {
+		return customerrors.NewErrorExitPrintHelp(err, "Failed to write data to csv")
+	}
+	return nil
 }
