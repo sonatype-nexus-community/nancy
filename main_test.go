@@ -66,7 +66,7 @@ func TestProcessIQConfigApplicationMissing(t *testing.T) {
 	err := processIQConfig(configuration.IqConfiguration{})
 	assert.Error(t, err)
 	if exiterr, ok := err.(customerrors.ErrorExit); ok {
-		assert.Equal(t, 2, exiterr.ExitCode)
+		assert.Equal(t, 3, exiterr.ExitCode)
 	} else {
 		t.Fail()
 	}
