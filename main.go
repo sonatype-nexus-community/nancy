@@ -223,7 +223,7 @@ func processIQConfig(config configuration.IqConfiguration) (err error) {
 	}
 
 	if config.Application == "" {
-		LogLady.Info("No application specified, printing usage and exiting clean")
+		LogLady.Info("No application specified, printing usage and exiting with error")
 		flag.Usage()
 		err = customerrors.ErrorExit{ExitCode: 2}
 		return
