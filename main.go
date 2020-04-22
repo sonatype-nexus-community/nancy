@@ -225,7 +225,7 @@ func processIQConfig(config configuration.IqConfiguration) (err error) {
 	if config.Application == "" {
 		LogLady.Info("No application specified, printing usage and exiting with error")
 		flag.Usage()
-		err = customerrors.ErrorExit{ExitCode: 2}
+		err = customerrors.NewErrorExitPrintHelp(fmt.Errorf("no IQ application id specified"), "Missing IQ application ID")
 		return
 	}
 
