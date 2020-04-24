@@ -60,11 +60,11 @@ func (m Mod) ExtractPurlsFromManifestForIQ() (purls []string) {
 	return
 }
 
-func (m Mod) CheckExistenceOfManifest() bool {
+func (m Mod) CheckExistenceOfManifest() (bool, error) {
 	if _, err := os.Stat(m.GoSumPath); os.IsNotExist(err) {
-		customerrors.Check(err, fmt.Sprint("No go.sum found at path: "+m.GoSumPath))
+		return false, customerrors.NewErrorExitPrintHelp(err, fmt.Sprint("No go.sum found at path: "+m.GoSumPath))
 	}
-	return true
+	return true, nil
 }
 
 func removeDuplicates(purls []string) (dedupedPurls []string) {

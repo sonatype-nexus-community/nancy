@@ -19,9 +19,9 @@ package cyclonedx
 
 import (
 	"encoding/xml"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 
 	"github.com/package-url/packageurl-go"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
@@ -91,7 +91,10 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 	sbom := createSbomDocument()
 	for _, v := range results {
 		purl, err := packageurl.FromString(v.Coordinates)
-		customerrors.Check(err, "Error parsing purl from given coordinate")
+		if err != nil {
+			_ = customerrors.NewErrorExitPrintHelp(err, "Error parsing purl from given coordinate")
+			return ""
+		}
 
 		component := types.Component{
 			Type:    "library",

@@ -104,3 +104,23 @@ func TestCsvOutputWhenNotAuditLog(t *testing.T) {
 	assert.NotNil(t, e)
 	assert.Equal(t, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else"), e)
 }
+
+func TestCsvFormatter_FormatNoError(t *testing.T) {
+	quiet := true
+	formatter := CsvFormatter{Quiet: &quiet}
+
+	data := map[string]interface{}{
+		"audited": []types.Coordinate{
+			{Coordinates: "auditedCoordinates"},
+		},
+		"invalid": []types.Coordinate{
+			{Coordinates: "invalidCoordinates"},
+		},
+		"num_audited":    0,
+		"num_vulnerable": 0,
+		"version":        "theBuildVersion",
+	}
+	buf, err := formatter.Format(&Entry{Data: data})
+	assert.NoError(t, err)
+	assert.Equal(t, "Summary\nAudited Count,Vulnerable Count,Build Version\n0,0,theBuildVersion\n", string(buf))
+}

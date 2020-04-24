@@ -72,9 +72,10 @@ func GetConfigFromCommandLine(stdin io.Reader) (err error) {
 		ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 		err = getAndSetOSSIndexConfig(reader)
 	case "":
+		// TODO should this return an error, because it means config setup was not completed?
 		return
 	default:
-		LogLady.Info("User chose to set OSS Index config, moving forward")
+		LogLady.Infof("User chose invalid config type: %s, will retry", str)
 		fmt.Println("Invalid value, 'iq' and 'ossindex' are accepted values, try again!")
 		err = GetConfigFromCommandLine(stdin)
 	}
@@ -179,7 +180,7 @@ func marshallAndWriteToDisk(config interface{}) (err error) {
 	}
 
 	LogLady.WithField("config_location", ConfigLocation).Info("Successfully wrote config to disk")
-	fmt.Printf("Successfully wrote config to: %s", ConfigLocation)
+	fmt.Printf("Successfully wrote config to: %s\n", ConfigLocation)
 	return
 }
 

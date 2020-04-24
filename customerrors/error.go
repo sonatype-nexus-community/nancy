@@ -18,33 +18,38 @@ package customerrors
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 )
 
-type SwError struct {
-	Message string
-	Err     error
+type ErrorExit struct {
+	Message  string
+	Err      error
+	ExitCode int
 }
 
-func (sw SwError) Error() string {
-	return fmt.Sprintf("%s - error: %s", sw.Message, sw.Err.Error())
-}
-
-func (sw SwError) Exit() {
-	os.Exit(3)
-}
-
-func Check(err error, message string) {
-	if err != nil {
-		location, _ := LogFileLocation()
-		myErr := SwError{Message: message, Err: err}
-		LogLady.WithField("error", err).Error(message)
-		fmt.Println(myErr.Error())
-		fmt.Printf("For more information, check the log file at %s\n", location)
-		fmt.Println("nancy version:", buildversion.BuildVersion)
-		myErr.Exit()
+func (ee ErrorExit) Error() string {
+	var errString string
+	if ee.Err != nil {
+		errString = ee.Err.Error()
+	} else {
+		errString = ""
 	}
+	return fmt.Sprintf("exit code: %d - %s - error: %s", ee.ExitCode, ee.Message, errString)
+}
+
+func NewErrorExitPrintHelp(errCause error, message string) ErrorExit {
+	myErr := ErrorExit{message, errCause, 3}
+	LogLady.WithField("error", errCause).Error(message)
+	fmt.Println(myErr.Error())
+
+	var logFile string
+	var logFileErr error
+	if logFile, logFileErr = LogFileLocation(); logFileErr != nil {
+		logFile = "unknown"
+	}
+
+	fmt.Printf("For more information, check the log file at %s\n", logFile)
+	fmt.Println("nancy version:", buildversion.BuildVersion)
+	return myErr
 }

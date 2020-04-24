@@ -17,6 +17,7 @@
 package packages
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -66,7 +67,8 @@ func appendProject(name string, version string, projectList *types.ProjectList) 
 func TestModCheckExistenceOfManifestExists(t *testing.T) {
 	mod := Mod{}
 	mod.GoSumPath = testGoSumName
-	exists := mod.CheckExistenceOfManifest()
+	exists, err := mod.CheckExistenceOfManifest()
+	assert.NoError(t, err)
 
 	if !exists {
 		t.Errorf("Expected existence of %s", testGoSumName)
@@ -74,13 +76,9 @@ func TestModCheckExistenceOfManifestExists(t *testing.T) {
 }
 
 func TestModExtractPurlsFromManifest(t *testing.T) {
-	var err error
 	mod := Mod{}
 	mod.GoSumPath = testGoSumName
 	mod.ProjectList = getProjectList()
-	if err != nil {
-		t.Error(err)
-	}
 
 	result := mod.ExtractPurlsFromManifest()
 	if len(result) != 5 {
@@ -89,13 +87,9 @@ func TestModExtractPurlsFromManifest(t *testing.T) {
 }
 
 func TestModExtractPurlsFromManifestDuplicates(t *testing.T) {
-	var err error
 	mod := Mod{}
 	mod.GoSumPath = testGoSumName
 	mod.ProjectList = getProjectListDuplicates()
-	if err != nil {
-		t.Error(err)
-	}
 
 	result := mod.ExtractPurlsFromManifest()
 	if len(result) != 5 {

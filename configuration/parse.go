@@ -70,7 +70,7 @@ var unixComments = regexp.MustCompile(`#.*$`)
 var untilComment = regexp.MustCompile(`(until=)(.*)`)
 
 func ParseIQ(args []string) (config IqConfiguration, err error) {
-	iqCommand := flag.NewFlagSet("iq", flag.ExitOnError)
+	iqCommand := flag.NewFlagSet("iq", flag.ContinueOnError)
 	iqCommand.BoolVar(&config.Info, "v", false, "Set log level to Info")
 	iqCommand.BoolVar(&config.Debug, "vv", false, "Set log level to Debug")
 	iqCommand.BoolVar(&config.Trace, "vvv", false, "Set log level to Trace")
@@ -88,7 +88,6 @@ func ParseIQ(args []string) (config IqConfiguration, err error) {
 Options:
 `)
 		iqCommand.PrintDefaults()
-		os.Exit(2)
 	}
 
 	ConfigLocation = filepath.Join(HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
@@ -103,7 +102,7 @@ Options:
 		return config, err
 	}
 
-	return config, nil
+	return config, err
 }
 
 func loadConfigFromFile(configLocation string, config *Configuration) error {
@@ -173,7 +172,6 @@ func Parse(args []string) (Configuration, error) {
 Options:
 `)
 		flag.PrintDefaults()
-		os.Exit(2)
 	}
 
 	ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)

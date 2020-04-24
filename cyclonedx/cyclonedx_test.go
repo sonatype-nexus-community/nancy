@@ -24,11 +24,11 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/shopspring/decimal"
 	"github.com/sonatype-nexus-community/nancy/types"
-	assert "gopkg.in/go-playground/assert.v1"
+	"gopkg.in/go-playground/assert.v1"
 )
 
 func TestCreateSBOMFromPackageURLs(t *testing.T) {
-	results := []packageurl.PackageURL{}
+	var results []packageurl.PackageURL
 	uno, _ := packageurl.FromString("pkg:golang/github.com/test/test@1.0.0")
 	results = append(results, uno)
 
@@ -65,7 +65,7 @@ func TestCreateSBOMFromPackageURLs(t *testing.T) {
 }
 
 func TestCreateSBOMFromSHA1s(t *testing.T) {
-	results := []types.Sha1SBOM{}
+	var results []types.Sha1SBOM
 	uno := types.Sha1SBOM{Location: "/path/on/disk", Sha1: "c2843e01d9a2"}
 	results = append(results, uno)
 
@@ -104,7 +104,7 @@ func TestCreateSBOMFromSHA1s(t *testing.T) {
 }
 
 func TestProcessPurlsIntoSBOM(t *testing.T) {
-	results := []types.Coordinate{}
+	var results []types.Coordinate
 	crypto := types.Coordinate{
 		Coordinates:     "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
 		Reference:       "https://ossindex.sonatype.org/component/pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
@@ -211,4 +211,33 @@ func assertBaseXMLValid(doc *etree.Element, t *testing.T) {
 	assert.Equal(t, doc.Attr[1].Value, "http://cyclonedx.org/schema/ext/vulnerability/1.0")
 	assert.Equal(t, doc.Attr[2].Key, "version")
 	assert.Equal(t, doc.Attr[2].Value, "1")
+}
+
+func TestProcess1_1NoError(t *testing.T) {
+	var results []types.Coordinate
+	sbom := processPurlsIntoSBOMSchema1_1(results)
+	assert.Equal(t, `<?xml version="1.0" encoding="UTF-8"?>
+ <bom xmlns="http://cyclonedx.org/schema/bom/1.1" xmlns:v="http://cyclonedx.org/schema/ext/vulnerability/1.0" version="1">
+      <components></components>
+ </bom>`, sbom)
+}
+
+func TestProcess1_1WithCoordinate(t *testing.T) {
+	results := []types.Coordinate{
+		{
+			Coordinates: "BADpkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+		},
+	}
+
+	sbom := processPurlsIntoSBOMSchema1_1(results)
+	assert.Equal(t, "", sbom)
+}
+
+func TestProcessWithError(t *testing.T) {
+	var results []types.Coordinate
+	sbom := ProcessPurlsIntoSBOM(results)
+	assert.Equal(t, `<?xml version="1.0" encoding="UTF-8"?>
+ <bom xmlns="http://cyclonedx.org/schema/bom/1.1" xmlns:v="http://cyclonedx.org/schema/ext/vulnerability/1.0" version="1">
+      <components></components>
+ </bom>`, sbom)
 }
