@@ -144,7 +144,7 @@ type Component struct {
 	Version         string          `xml:"version"`
 	Group           string          `xml:"group,omitempty"`
 	Purl            string          `xml:"purl,omitempty"`
-	Hashes          Hashes          `xml:"hashes,omitempty"`
+	Hashes          *Hashes         `xml:"hashes,omitempty"`
 	Vulnerabilities Vulnerabilities `xml:"v:vulnerabilities,omitempty"`
 }
 

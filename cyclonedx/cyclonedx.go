@@ -19,6 +19,7 @@ package cyclonedx
 
 import (
 	"encoding/xml"
+
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 
 	"github.com/package-url/packageurl-go"
@@ -52,16 +53,18 @@ func SBOMFromSHA1(results []types.Sha1SBOM) string {
 func createMinimalSha1Sbom(results []types.Sha1SBOM) string {
 	sbom := createSbomDocument()
 	for _, v := range results {
-		hash := types.Hash{
-			Alg: "SHA-1", Attribute: v.Sha1,
-		}
 		component := types.Component{
 			Type:    "library",
 			BomRef:  v.Sha1,
 			Name:    v.Location,
 			Version: "0",
 		}
-		component.Hashes.Hash = append(component.Hashes.Hash, hash)
+
+		hashes := types.Hashes{}
+
+		hashes.Hash = append(hashes.Hash, types.Hash{Alg: "SHA-1", Attribute: v.Sha1})
+
+		component.Hashes = &hashes
 
 		sbom.Components.Component = append(sbom.Components.Component, component)
 	}
