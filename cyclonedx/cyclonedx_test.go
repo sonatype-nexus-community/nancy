@@ -149,6 +149,8 @@ func TestProcessPurlsIntoSBOM(t *testing.T) {
 		version := component.SelectElement("version")
 		assert.Equal(t, version.Tag, "version")
 		assert.Equal(t, version.Text(), coordinate.Version)
+		hashes := component.SelectElement("hashes")
+		assert.Equal(t, hashes, nil)
 		purl := component.SelectElement("purl")
 		assert.Equal(t, purl.Tag, "purl")
 		assert.Equal(t, purl.Text(), coordinate.ToString())
