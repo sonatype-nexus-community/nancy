@@ -76,7 +76,6 @@ func processPackageURLsIntoSBOMSchema1_1(results []packageurl.PackageURL) string
 			Type:    "library",
 			BomRef:  v.ToString(),
 			Purl:    v.ToString(),
-			Group:   v.Namespace,
 			Name:    v.Name,
 			Version: v.Version,
 		}
@@ -102,7 +101,6 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 			Purl:    purl.String(),
 			Name:    purl.Name,
 			Version: purl.Version,
-			Group:   purl.Namespace,
 		}
 
 		if v.IsVulnerable() {
