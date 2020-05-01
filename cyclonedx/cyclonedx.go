@@ -19,6 +19,8 @@ package cyclonedx
 
 import (
 	"encoding/xml"
+	"fmt"
+	"strings"
 
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 
@@ -96,6 +98,11 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 		if err != nil {
 			_ = customerrors.NewErrorExitPrintHelp(err, "Error parsing purl from given coordinate")
 			return ""
+		}
+
+		// IQ requires a v before versions, so add one if it doesn't exist
+		if !strings.HasPrefix(purl.Version, "v") {
+			purl.Version = fmt.Sprintf("v%s", purl.Version)
 		}
 
 		component := types.Component{

@@ -103,10 +103,14 @@ func TestCreateSBOMFromSHA1s(t *testing.T) {
 func TestProcessPurlsIntoSBOM(t *testing.T) {
 	var results []types.Coordinate
 	crypto := types.Coordinate{
-		Coordinates:     "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
-		Reference:       "https://ossindex.sonatype.org/component/pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+		Coordinates:     "pkg:golang/golang.org/x/crypto@0.0.0-20190308221718-c2843e01d9a2",
+		Reference:       "https://ossindex.sonatype.org/component/pkg:golang/golang.org/x/crypto@0.0.0-20190308221718-c2843e01d9a2",
 		Vulnerabilities: []types.Vulnerability{},
 	}
+
+	expectedPurl := []string{"pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2", "pkg:golang/github.com/go-yaml/yaml@v2.2.2"}
+	expectedVersion := []string{"v0.0.0-20190308221718-c2843e01d9a2", "v2.2.2"}
+
 	dec, _ := decimal.NewFromString("5.8")
 	crypto.Vulnerabilities = append(crypto.Vulnerabilities,
 		types.Vulnerability{
@@ -121,8 +125,8 @@ func TestProcessPurlsIntoSBOM(t *testing.T) {
 	results = append(results, crypto)
 
 	results = append(results, types.Coordinate{
-		Coordinates:     "pkg:golang/github.com/go-yaml/yaml@v2.2.2",
-		Reference:       "https://ossindex.sonatype.org/component/pkg:golang/github.com/go-yaml/yaml@v2.2.2",
+		Coordinates:     "pkg:golang/github.com/go-yaml/yaml@2.2.2",
+		Reference:       "https://ossindex.sonatype.org/component/pkg:golang/github.com/go-yaml/yaml@2.2.2",
 		Vulnerabilities: []types.Vulnerability{},
 	})
 	result := ProcessPurlsIntoSBOM(results)
@@ -142,19 +146,19 @@ func TestProcessPurlsIntoSBOM(t *testing.T) {
 		assert.Equal(t, component.Attr[0].Key, "type")
 		assert.Equal(t, component.Attr[0].Value, "library")
 		assert.Equal(t, component.Attr[1].Key, "bom-ref")
-		assert.Equal(t, component.Attr[1].Value, results[i].Coordinates)
+		assert.Equal(t, expectedPurl[i], component.Attr[1].Value)
 		name := component.SelectElement("name")
 		assert.Equal(t, name.Tag, "name")
 		assert.Equal(t, name.Text(), coordinate.Name)
 		version := component.SelectElement("version")
 		assert.Equal(t, version.Tag, "version")
-		assert.Equal(t, version.Text(), coordinate.Version)
+		assert.Equal(t, expectedVersion[i], version.Text())
 		hashes := component.SelectElement("hashes")
 		assert.Equal(t, hashes, nil)
 		purl := component.SelectElement("purl")
 		assert.Equal(t, purl.Tag, "purl")
-		assert.Equal(t, purl.Text(), coordinate.ToString())
-		if purl.Text() == "pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2" {
+		assert.Equal(t, expectedPurl[i], purl.Text())
+		if purl.Text() == expectedPurl[i] {
 			vulnerabilities := component.SelectElement("vulnerabilities")
 			assert.Equal(t, vulnerabilities.Space, "v")
 			assert.Equal(t, vulnerabilities.Tag, "vulnerabilities")
