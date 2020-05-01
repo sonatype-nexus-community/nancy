@@ -293,7 +293,7 @@ func doStdInAndParseForIQ(config configuration.IqConfiguration) (err error) {
 		"projectList": mod.ProjectList,
 	}).Debug("Obtained project list")
 
-	var purls = mod.ExtractPurlsFromManifestForIQ()
+	var purls = mod.ExtractPurlsFromManifest()
 	LogLady.WithFields(logrus.Fields{
 		"purls": purls,
 	}).Debug("Extracted purls")
