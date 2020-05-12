@@ -72,19 +72,23 @@ func main() {
 }
 
 func doShowoff(args []string) error {
-	const LocalProjectFolder = "intentionally-vulnerable-golang-project"
-	const LocalZipName = LocalProjectFolder + ".zip"
+	const localProjectFolder = "intentionally-vulnerable-golang-project"
+	const localZipName = localProjectFolder + ".zip"
 	const githubProjectZip = "https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project/archive/master.zip"
 
-	fetchZip(githubProjectZip, LocalZipName)
-	err := extractZip(LocalZipName, ".")
+	fmt.Println("Nancy is going to showoff her skills by fetching and analyzing:\n" + githubProjectZip + "\nThis project purposefully contains vulnerabilities")
+
+	fetchZip(githubProjectZip, localZipName)
+	err := extractZip(localZipName, ".")
 	if err != nil {
-		LogLady.WithField("filename", LocalZipName).WithError(err).Fatal("Unable to extract")
+		LogLady.WithField("filename", localZipName).WithError(err).Fatal("Unable to extract")
 	}
 
-	err = doOssi([]string{LocalProjectFolder + "-master/go.sum"})
-	os.Remove(LocalZipName)
-	os.RemoveAll(LocalProjectFolder + "-master")
+	err = doOssi([]string{localProjectFolder + "-master/go.sum"})
+	os.Remove(localZipName)
+	os.RemoveAll(localProjectFolder + "-master")
+
+	fmt.Println(githubProjectZip + " and all temporary files have been cleaned up")
 	return err
 }
 
