@@ -17,11 +17,13 @@
 package main
 
 import (
+	"archive/zip"
 	"bufio"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -52,6 +54,8 @@ func main() {
 		err = doIq(os.Args[2:])
 	} else if len(os.Args) > 1 && os.Args[1] == "config" {
 		err = doConfig(os.Stdin)
+	} else if len(os.Args) > 1 && os.Args[1] == "showoff" {
+		err = doShowoff(os.Args)
 	} else {
 		err = doOssi(os.Args[1:])
 	}
@@ -64,6 +68,84 @@ func main() {
 			LogLady.WithError(err).Error("unexpected error in main")
 			os.Exit(4)
 		}
+	}
+}
+
+func doShowoff(args []string) error {
+	const LocalProjectFolder = "intentionally-vulnerable-golang-project"
+	const LocalZipName = LocalProjectFolder + ".zip"
+	const githubProjectZip = "https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project/archive/master.zip"
+
+	fetchZip(githubProjectZip, LocalZipName)
+	err := extractZip(LocalZipName, ".")
+	if err != nil {
+		LogLady.WithField("filename", LocalZipName).WithError(err).Fatal("Unable to extract")
+	}
+
+	err = doOssi([]string{LocalProjectFolder + "-master/go.sum"})
+	os.Remove(LocalZipName)
+	os.RemoveAll(LocalProjectFolder + "-master")
+	return err
+}
+
+func extractZip(archive, target string) error {
+	reader, err := zip.OpenReader(archive)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
+
+	for _, file := range reader.File {
+		path := filepath.Join(target, file.Name)
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(path, file.Mode())
+			continue
+		}
+
+		fileReader, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer fileReader.Close()
+
+		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			return err
+		}
+		defer targetFile.Close()
+
+		if _, err := io.Copy(targetFile, fileReader); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func fetchZip(url, fileName string) {
+	LogLady.WithField("url", url).Info("Downloading", url)
+
+	output, err := os.Create(fileName)
+	if err != nil {
+		LogLady.WithField("filename", fileName).Fatal("Error creating file")
+		os.Exit(4)
+	}
+	defer output.Close()
+
+	response, err := http.Get(url)
+	if err != nil {
+		LogLady.WithField("url", url).WithError(err).Fatal("Error while downloading")
+		os.Exit(4)
+	}
+	defer response.Body.Close()
+
+	_, err = io.Copy(output, response.Body)
+	if err != nil {
+		LogLady.WithField("url", url).WithError(err).Fatal("Error while downloading")
+		os.Exit(4)
 	}
 }
 
