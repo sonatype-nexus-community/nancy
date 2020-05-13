@@ -105,7 +105,7 @@ func extractZip(archive, target string) error {
 	for _, file := range reader.File {
 		path := filepath.Join(target, file.Name)
 		if file.FileInfo().IsDir() {
-			os.MkdirAll(path, file.Mode())
+			_ = os.MkdirAll(path, file.Mode())
 			continue
 		}
 
