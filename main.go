@@ -55,7 +55,7 @@ func main() {
 	} else if len(os.Args) > 1 && os.Args[1] == "config" {
 		err = doConfig(os.Stdin)
 	} else if len(os.Args) > 1 && os.Args[1] == "showoff" {
-		err = doShowoff(os.Args)
+		err = doShowoff()
 	} else {
 		err = doOssi(os.Args[1:])
 	}
@@ -71,24 +71,24 @@ func main() {
 	}
 }
 
-func doShowoff(args []string) error {
+func doShowoff() error {
 	const localProjectFolder = "intentionally-vulnerable-golang-project"
 	const localZipName = localProjectFolder + ".zip"
 	const githubProjectZip = "https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project/archive/master.zip"
 
-	fmt.Println("Nancy is going to showoff her skills by fetching and analyzing:\n" + githubProjectZip + "\nThis project purposefully contains vulnerabilities")
+	fmt.Println("Nancy is going to showoff her skills by fetching and analyzing:\n", githubProjectZip, "\nThis project purposefully contains vulnerabilities")
 
 	fetchZip(githubProjectZip, localZipName)
 	err := extractZip(localZipName, ".")
 	if err != nil {
-		LogLady.WithField("filename", localZipName).WithError(err).Fatal("Unable to extract")
+		LogLady.WithField("filename", localZipName).WithError(err).Fatal("Unable to extract", localZipName)
 	}
 
 	err = doOssi([]string{localProjectFolder + "-master/go.sum"})
 	os.Remove(localZipName)
 	os.RemoveAll(localProjectFolder + "-master")
 
-	fmt.Println(githubProjectZip + " and all temporary files have been cleaned up")
+	fmt.Println(githubProjectZip, "and all temporary files have been cleaned up")
 	return err
 }
 
