@@ -22,7 +22,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/logrusorgru/aurora"
+	"github.com/shopspring/decimal"
 	. "github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
@@ -35,7 +38,7 @@ type AuditLogTextFormatter struct {
 func logPackage(sb *strings.Builder, noColor bool, quiet bool, idx int, packageCount int, coordinate types.Coordinate) {
 	if !quiet {
 		au := aurora.NewAurora(!noColor)
-		packageLog := "[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "]" +
+		packageLog := "[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "] " +
 			au.Bold(coordinate.Coordinates).String() +
 			au.Gray(20-1, "   No known vulnerabilities against package/version\n").String()
 		sb.WriteString(packageLog)
@@ -53,7 +56,7 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 			for i := 0; i < len(invalidPurls); i++ {
 				idx := i + 1
 				purl := invalidPurls[i].Coordinates
-				sb.WriteString("[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "]" + au.Bold(purl).String() + "\n")
+				sb.WriteString("[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "] " + au.Bold(purl).String() + "\n")
 			}
 			sb.WriteString("\n")
 		}
@@ -64,21 +67,46 @@ func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCou
 	au := aurora.NewAurora(!noColor)
 	sb.WriteString("------------------------------------------------------------\n")
 
-	vulnLog := "[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "]" +
-		au.Bold(au.Red(coordinate.Coordinates+"  [Vulnerable]")).String() +
+	vulnLog := "[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "] " +
+		au.Bold(au.Red(coordinate.Coordinates+" [Vulnerable]")).String() +
 		"   " + strconv.Itoa(len(coordinate.Vulnerabilities)) +
 		" known vulnerabilities affecting installed version\n"
 	sb.WriteString(vulnLog)
 
-	for j := 0; j < len(coordinate.Vulnerabilities); j++ {
-		if !coordinate.Vulnerabilities[j].Excluded {
-			sb.WriteString(fmt.Sprintf("\n%s\n%s\n\nID:%s\nDetails:%s\n",
-				coordinate.Vulnerabilities[j].Title,
-				coordinate.Vulnerabilities[j].Description,
-				coordinate.Vulnerabilities[j].Id,
-				coordinate.Vulnerabilities[j].Reference))
+	for _, v := range coordinate.Vulnerabilities {
+		if !v.Excluded {
+			t := table.NewWriter()
+			t.SetStyle(table.StyleBold)
+			t.AppendRow([]interface{}{"Title", v.Title})
+			t.AppendSeparator()
+			t.AppendRow([]interface{}{"Description", text.WrapSoft(v.Description, 75)})
+			t.AppendSeparator()
+			t.AppendRow([]interface{}{"OSS Index ID", v.Id})
+			t.AppendSeparator()
+			t.AppendRow([]interface{}{"CVSS Score", fmt.Sprintf("%s/10 (%s)", v.CvssScore, scoreAssessment(v.CvssScore))})
+			t.AppendSeparator()
+			t.AppendRow([]interface{}{"CVSS Vector", v.CvssVector})
+			t.AppendSeparator()
+			t.AppendRow([]interface{}{"Link for more info", v.Reference})
+			sb.WriteString(t.Render() + "\n")
 		}
 	}
+}
+
+func scoreAssessment(score decimal.Decimal) string {
+	nine, _ := decimal.NewFromString("9")
+	seven, _ := decimal.NewFromString("7")
+	four, _ := decimal.NewFromString("4")
+	if score.GreaterThanOrEqual(nine) {
+		return "Critical"
+	}
+	if score.GreaterThanOrEqual(seven) {
+		return "High"
+	}
+	if score.GreaterThanOrEqual(four) {
+		return "Medium"
+	}
+	return "Low"
 }
 
 func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
@@ -109,12 +137,16 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		if !*f.Quiet {
 			sb.WriteString("\n")
 		}
+
 		au := aurora.NewAurora(!*f.NoColor)
-		sb.WriteString("Audited dependencies:" + strconv.Itoa(packageCount) + "," +
-			"Vulnerable:" + au.Bold(au.Red(strconv.Itoa(numVulnerable))).String() + "\n")
+		t := table.NewWriter()
+		t.SetStyle(table.StyleBold)
+		t.AppendRow([]interface{}{"Audited Dependencies", strconv.Itoa(packageCount)})
+		t.AppendSeparator()
+		t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(numVulnerable)))})
+		sb.WriteString(t.Render())
 
 		return []byte(sb.String()), nil
-	} else {
-		return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
 	}
+	return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
 }

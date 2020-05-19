@@ -358,8 +358,6 @@ func checkOSSIndex(purls []string, invalidpurls []string, config configuration.C
 	}
 
 	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
-		// return error with number of vulnerable items found
-		fmt.Printf("Found vuln count: %d\n", count)
 		return customerrors.ErrorExit{ExitCode: count}
 	}
 	return nil
