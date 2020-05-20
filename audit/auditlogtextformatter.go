@@ -48,24 +48,31 @@ type AuditLogTextFormatter struct {
 
 func logPackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	au := aurora.NewAurora(!noColor)
-	packageLog := "[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "] " +
-		au.Bold(au.Green(coordinate.Coordinates)).String() + "\n"
-	sb.WriteString(packageLog)
+	sb.WriteString(
+		fmt.Sprintf("[%d/%d] %s\n",
+			idx,
+			packageCount,
+			au.Bold(au.Green(coordinate.Coordinates)).String(),
+		),
+	)
 }
 
 func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, invalidPurls []types.Coordinate) {
 	if !quiet {
-		packageCount := len(invalidPurls)
-		if packageCount > 0 {
-			warningMessage := "!!!!! WARNING !!!!!\nScanning cannot be completed on the following package(s) since they do not use semver.\n"
+		if len(invalidPurls) > 0 {
 			au := aurora.NewAurora(!noColor)
-			sb.WriteString(au.Red(warningMessage).String())
+			sb.WriteString(au.Red("!!!!! WARNING !!!!!\nScanning cannot be completed on the following package(s) since they do not use semver.\n").String())
 
-			for i := 0; i < len(invalidPurls); i++ {
-				idx := i + 1
-				purl := invalidPurls[i].Coordinates
-				sb.WriteString("[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "] " + au.Bold(purl).String() + "\n")
+			for k, v := range invalidPurls {
+				sb.WriteString(
+					fmt.Sprintf("[%d/%d] %s\n",
+						k+1,
+						len(invalidPurls),
+						au.Bold(v.Coordinates).String(),
+					),
+				)
 			}
+
 			sb.WriteString("\n")
 		}
 	}
@@ -75,9 +82,9 @@ func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCou
 	au := aurora.NewAurora(!noColor)
 
 	sb.WriteString(fmt.Sprintf(
-		"[%s/%s] %s\n%s \n",
-		strconv.Itoa(idx),
-		strconv.Itoa(packageCount),
+		"[%d/%d] %s\n%s \n",
+		idx,
+		packageCount,
 		au.Bold(au.Red(coordinate.Coordinates)).String(),
 		au.Red(strconv.Itoa(len(coordinate.Vulnerabilities))+" known vulnerabilities affecting installed version").String(),
 	))
