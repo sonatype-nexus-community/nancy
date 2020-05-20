@@ -49,30 +49,6 @@ func main() {
 	cmd.Execute()
 }
 
-//noinspection GoUnusedFunction
-func mainOld() {
-	LogLady.Info("Starting Nancy")
-
-	var err error
-	if len(os.Args) > 1 && os.Args[1] == "iq" {
-		err = doIq(os.Args[2:])
-	} else if len(os.Args) > 1 && os.Args[1] == "config" {
-		err = doConfig(os.Stdin)
-	} else {
-		err = doOssi(os.Args[1:])
-	}
-
-	if err != nil {
-		if exiterr, ok := err.(customerrors.ErrorExit); ok {
-			os.Exit(exiterr.ExitCode)
-		} else {
-			// really don't expect this
-			LogLady.WithError(err).Error("unexpected error in main")
-			os.Exit(4)
-		}
-	}
-}
-
 func doOssi(ossiArgs []string) (err error) {
 	LogLady.Info("Nancy parsing config for OSS Index")
 	ossIndexConfig, err := configuration.Parse(ossiArgs)
