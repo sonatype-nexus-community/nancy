@@ -57,37 +57,12 @@ func TestRootCommandUnknownCommand(t *testing.T) {
 	checkStringContains(t, err.Error(), "unknown command \"one\" for \"nancy\"")
 }
 
-const envExitTest = "BE_EXIT_TEST"
-
-func TestRootCommandNoArgsNoStdIn(t *testing.T) {
-	// run test in separate process
-	if os.Getenv(envExitTest) == "true" {
-		_, _ = executeCommand(rootCmd, "")
-		return
-	}
-	cmd := exec.Command(os.Args[0], "-test.run="+t.Name())
-	cmd.Env = append(os.Environ(), envExitTest+"=true")
-	err := cmd.Run()
-	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
-		assert.NotNil(t, err)
-		checkStringContains(t, err.Error(), "exit status 2")
-		return
-	}
-	t.Fatalf("process ran with err %v, want exit status 2", err)
-}
-
-func TestRootCommandNoArgsNoStdInByPassExit(t *testing.T) {
-	// setup to bypass exit calls
-	customerrors.BypassExiter()
-	defer func() { customerrors.ResetExiter() }()
-
+func TestRootCommandNoArgsInvalidStdInErrorExit(t *testing.T) {
 	_, err := executeCommand(rootCmd, "")
-	verifyBypassError(t, 2, "checkStdIn", err)
-}
 
-func verifyBypassError(t *testing.T, code int, callerFunctionName string, actual error) {
-	assert.True(t, strings.HasPrefix(actual.Error(), customerrors.GetBypassError(code, "").Error()))
-	assert.True(t, strings.HasSuffix(actual.Error(), callerFunctionName))
+	serr, ok := err.(customerrors.ErrorExit)
+	assert.True(t, ok)
+	assert.Equal(t, 1, serr.ExitCode)
 }
 
 func TestRootCommandOssi(t *testing.T) {

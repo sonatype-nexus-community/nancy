@@ -35,7 +35,7 @@ func TestBadArgs(t *testing.T) {
 	cmd := exec.Command("./nancy", "--bad")
 	out, err := cmd.CombinedOutput()
 	sout := string(out) // because out is []byte
-	if err != nil && !strings.Contains(sout, "unknown flag: --bad") {
+	if err != nil && !strings.Contains(sout, "flag provided but not defined: -bad") {
 		fmt.Println(sout) // so we can see the full output
 		t.Errorf("%v", err)
 	}

@@ -60,7 +60,7 @@ a smooth experience as a Golang developer, using the best tools in the market!`,
 		ossIndexConfig, err := configuration.Parse(os.Args[1:])
 		if err != nil {
 			flag.Usage()
-			err = customerrors.Exit(1)
+			err = customerrors.ErrorExit{Err: err, ExitCode: 1}
 			return
 		}
 		if err = processConfig(ossIndexConfig); err != nil {
@@ -173,7 +173,7 @@ func processConfig(config configuration.Configuration) (err error) {
 	}
 	if !config.UseStdIn {
 		LogLady.Info("Parsing config for file based scan")
-		doCheckExistenceAndParse(config)
+		err = doCheckExistenceAndParse(config)
 	}
 
 	return
@@ -213,12 +213,12 @@ func doStdInAndParse(config configuration.Configuration) (err error) {
 	}).Debug("Extracted purls")
 
 	LogLady.Info("Auditing purls with OSS Index")
-	checkOSSIndex(purls, nil, config)
+	err = checkOSSIndex(purls, nil, config)
 
 	return err
 }
 
-func doCheckExistenceAndParse(config configuration.Configuration) {
+func doCheckExistenceAndParse(config configuration.Configuration) error {
 	switch {
 	case strings.Contains(config.Path, "Gopkg.lock"):
 		workingDir := filepath.Dir(config.Path)
@@ -232,33 +232,44 @@ func doCheckExistenceAndParse(config configuration.Configuration) {
 		}
 		project, err := ctx.LoadProject()
 		if err != nil {
-			customerrors.Check(err, fmt.Sprintf("could not read lock at path %s", config.Path))
+			return customerrors.NewErrorExitPrintHelp(err, fmt.Sprintf("could not read lock at path %s", config.Path))
 		}
 		if project.Lock == nil {
-			customerrors.Check(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
+			return customerrors.NewErrorExitPrintHelp(errors.New("dep failed to parse lock file and returned nil"), "nancy could not continue due to dep failure")
 		}
 
 		purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
 
-		checkOSSIndex(purls, invalidPurls, config)
+		if err := checkOSSIndex(purls, invalidPurls, config); err != nil {
+			return err
+		}
 	case strings.Contains(config.Path, "go.sum"):
 		mod := packages.Mod{}
 		mod.GoSumPath = config.Path
-		if mod.CheckExistenceOfManifest() {
+		manifestExists, err := mod.CheckExistenceOfManifest()
+		if err != nil {
+			return err
+		}
+		if manifestExists {
 			mod.ProjectList, _ = parse.GoSum(config.Path)
 			var purls = mod.ExtractPurlsFromManifest()
 
-			checkOSSIndex(purls, nil, config)
+			if err := checkOSSIndex(purls, nil, config); err != nil {
+				return err
+			}
 		}
 	default:
 		os.Exit(3)
 	}
+	return nil
 }
 
-func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) {
+func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) error {
 	var packageCount = len(purls)
 	coordinates, err := ossindex.AuditPackagesWithOSSIndex(purls, &config)
-	customerrors.Check(err, "Error auditing packages")
+	if err != nil {
+		return customerrors.NewErrorExitPrintHelp(err, "Error auditing packages")
+	}
 
 	var invalidCoordinates []types.Coordinate
 	for _, invalidpurl := range invalidpurls {
@@ -268,6 +279,7 @@ func checkOSSIndex(purls []string, invalidpurls []string, config configuration.C
 	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
 		os.Exit(count)
 	}
+	return nil
 }
 
 func checkStdIn() (err error) {
@@ -277,7 +289,7 @@ func checkStdIn() (err error) {
 	} else {
 		LogLady.Error("StdIn is invalid, either empty or another reason")
 		flag.Usage()
-		err = customerrors.Exit(2) // same exit code as used in Usage() function. will remove later
+		err = customerrors.ErrorExit{ExitCode: 1}
 	}
 	return
 }

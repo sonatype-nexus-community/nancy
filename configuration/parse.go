@@ -20,7 +20,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
