@@ -55,9 +55,9 @@ func verifyFormatterSummaryLoudness(t *testing.T, quiet bool) {
 
 	assert.Nil(t, e)
 
-	expectedSummary := "Audited dependencies:0,Vulnerable:[1;31m0[0m\n"
+	expectedSummary := "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ Summary                     ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━┫\n┃ Audited Dependencies    ┃ 0 ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━┫\n┃ Vulnerable Dependencies ┃ \x1b[1;31m0\x1b[0m ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━┛"
 	if !quiet {
-		expectedSummary = "\n" + expectedSummary
+		expectedSummary = "\nNon Vulnerable Packages\n\n" + expectedSummary
 	}
 	assert.Equal(t, expectedSummary, string(logMessage))
 }
