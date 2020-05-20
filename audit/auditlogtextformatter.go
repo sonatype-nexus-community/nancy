@@ -19,6 +19,7 @@ package audit
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -30,19 +31,26 @@ import (
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
+var (
+	nine, seven, four decimal.Decimal
+)
+
+func init() {
+	nine, _ = decimal.NewFromString("9")
+	seven, _ = decimal.NewFromString("7")
+	four, _ = decimal.NewFromString("4")
+}
+
 type AuditLogTextFormatter struct {
 	Quiet   *bool
 	NoColor *bool
 }
 
-func logPackage(sb *strings.Builder, noColor bool, quiet bool, idx int, packageCount int, coordinate types.Coordinate) {
-	if !quiet {
-		au := aurora.NewAurora(!noColor)
-		packageLog := "[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "] " +
-			au.Bold(coordinate.Coordinates).String() +
-			au.Gray(20-1, "   No known vulnerabilities against package/version\n").String()
-		sb.WriteString(packageLog)
-	}
+func logPackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
+	au := aurora.NewAurora(!noColor)
+	packageLog := "[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "] " +
+		au.Bold(au.Green(coordinate.Coordinates)).String() + "\n"
+	sb.WriteString(packageLog)
 }
 
 func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, invalidPurls []types.Coordinate) {
@@ -65,20 +73,24 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 
 func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	au := aurora.NewAurora(!noColor)
-	sb.WriteString("------------------------------------------------------------\n")
 
-	vulnLog := "[" + strconv.Itoa(idx) + "/" + strconv.Itoa(packageCount) + "] " +
-		au.Bold(au.Red(coordinate.Coordinates+" [Vulnerable]")).String() +
-		"   " + strconv.Itoa(len(coordinate.Vulnerabilities)) +
-		" known vulnerabilities affecting installed version\n"
-	sb.WriteString(vulnLog)
+	sb.WriteString(fmt.Sprintf(
+		"[%s/%s] %s\n%s \n",
+		strconv.Itoa(idx),
+		strconv.Itoa(packageCount),
+		au.Bold(au.Red(coordinate.Coordinates)).String(),
+		au.Red(strconv.Itoa(len(coordinate.Vulnerabilities))+" known vulnerabilities affecting installed version").String(),
+	))
+
+	sort.Slice(coordinate.Vulnerabilities, func(i, j int) bool {
+		return coordinate.Vulnerabilities[i].CvssScore.GreaterThan(coordinate.Vulnerabilities[j].CvssScore)
+	})
 
 	for _, v := range coordinate.Vulnerabilities {
 		if !v.Excluded {
 			t := table.NewWriter()
 			t.SetStyle(table.StyleBold)
-			t.AppendRow([]interface{}{"Title", v.Title})
-			t.AppendSeparator()
+			t.SetTitle(printColorBasedOnCvssScore(v.CvssScore, v.Title, noColor))
 			t.AppendRow([]interface{}{"Description", text.WrapSoft(v.Description, 75)})
 			t.AppendSeparator()
 			t.AppendRow([]interface{}{"OSS Index ID", v.Id})
@@ -93,10 +105,21 @@ func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCou
 	}
 }
 
+func printColorBasedOnCvssScore(score decimal.Decimal, text string, noColor bool) string {
+	au := aurora.NewAurora(!noColor)
+	if score.GreaterThanOrEqual(nine) {
+		return au.Red(au.Bold(text)).String()
+	}
+	if score.GreaterThanOrEqual(seven) {
+		return au.Red(text).String()
+	}
+	if score.GreaterThanOrEqual(four) {
+		return au.Yellow(text).String()
+	}
+	return au.Green(text).String()
+}
+
 func scoreAssessment(score decimal.Decimal) string {
-	nine, _ := decimal.NewFromString("9")
-	seven, _ := decimal.NewFromString("7")
-	four, _ := decimal.NewFromString("4")
 	if score.GreaterThanOrEqual(nine) {
 		return "Critical"
 	}
@@ -107,6 +130,21 @@ func scoreAssessment(score decimal.Decimal) string {
 		return "Medium"
 	}
 	return "Low"
+}
+
+func groupAndPrint(vulnerable []types.Coordinate, nonVulnerable []types.Coordinate, quiet bool, noColor bool, sb *strings.Builder) {
+	if !quiet {
+		sb.WriteString("\nNon Vulnerable Packages\n\n")
+		for k, v := range nonVulnerable {
+			logPackage(sb, noColor, k+1, len(nonVulnerable), v)
+		}
+	}
+	if len(vulnerable) > 0 {
+		sb.WriteString("\nVulnerable Packages\n\n")
+		for k, v := range vulnerable {
+			logVulnerablePackage(sb, noColor, k+1, len(vulnerable), v)
+		}
+	}
 }
 
 func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
@@ -124,23 +162,14 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		var sb strings.Builder
 
 		logInvalidSemVerWarning(&sb, *f.NoColor, *f.Quiet, invalidEntries)
-		for idx := 0; idx < len(auditedEntries); idx++ {
-			coordinate := auditedEntries[idx]
-			if !coordinate.IsVulnerable() && !coordinate.InvalidSemVer {
-				logPackage(&sb, *f.NoColor, *f.Quiet, idx+1, packageCount, coordinate)
-			}
-			if coordinate.IsVulnerable() {
-				logVulnerablePackage(&sb, *f.NoColor, idx+1, packageCount, coordinate)
-			}
-		}
+		nonVulnerablePackages, vulnerablePackages := splitPackages(auditedEntries)
 
-		if !*f.Quiet {
-			sb.WriteString("\n")
-		}
+		groupAndPrint(vulnerablePackages, nonVulnerablePackages, *f.Quiet, *f.NoColor, &sb)
 
 		au := aurora.NewAurora(!*f.NoColor)
 		t := table.NewWriter()
 		t.SetStyle(table.StyleBold)
+		t.SetTitle("Summary")
 		t.AppendRow([]interface{}{"Audited Dependencies", strconv.Itoa(packageCount)})
 		t.AppendSeparator()
 		t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(numVulnerable)))})
@@ -149,4 +178,15 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		return []byte(sb.String()), nil
 	}
 	return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
+}
+
+func splitPackages(entries []types.Coordinate) (nonVulnerable []types.Coordinate, vulnerable []types.Coordinate) {
+	for _, v := range entries {
+		if v.IsVulnerable() {
+			vulnerable = append(vulnerable, v)
+		} else {
+			nonVulnerable = append(nonVulnerable, v)
+		}
+	}
+	return
 }
