@@ -33,9 +33,10 @@ type Mod struct {
 
 func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 	for _, s := range m.ProjectList.Projects {
-		version := strings.Replace(s.Version, "v", "", -1)
-
-		if len(version) > 0 { // There must be a version we can use
+		if len(s.Version) > 0 { // There must be a version we can use
+			// OSS Index no likey v before version, IQ does though, comment left so I will never forget
+			version := strings.Replace(s.Version, "v", "", -1)
+			version = strings.Replace(version, "+incompatible", "", -1)
 			var purl = "pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version
 			purls = append(purls, purl)
 		}
