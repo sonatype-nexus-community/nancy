@@ -491,7 +491,7 @@ Original Gopher designed by Renee French.
 
 Remember:
 
-* If you are a Sonatype customer, you may file Sonatype support tickets related to `hashbrowns` support in regard to this project
+* If you are a Sonatype customer, you may file Sonatype support tickets related to `nancy` support in regard to this project
   * We suggest you file issues here on GitHub as well, so that the community can pitch in
 * If you are not a Sonatype customer, Do NOT file Sonatype support tickets related to nancy support in regard to this project, file an issue here on GitHub
 
