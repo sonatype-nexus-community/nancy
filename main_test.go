@@ -227,6 +227,25 @@ func TestCheckOSSIndexNoneVulnerable(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDoOssiWithPathArgGopkglockOutsideGopath(t *testing.T) {
+	dirToGopkglock := "packages/testdata"
+	pathToGopkglock := dirToGopkglock + "/Gopkg.lock"
+	err := doOssi([]string{pathToGopkglock})
+	assert.Error(t, err)
+	if exiterr, ok := err.(customerrors.ErrorExit); ok {
+		assert.Equal(t, 3, exiterr.ExitCode)
+		assert.Equal(t, fmt.Sprintf("both %s and %s are not within any known GOPATH", dirToGopkglock, dirToGopkglock), exiterr.Err.Error())
+		assert.Equal(t, fmt.Sprintf("could not read lock at path %s", pathToGopkglock), exiterr.Message)
+	} else {
+		t.Fail()
+	}
+}
+
+func TestDoOssiWithPathArgGosum(t *testing.T) {
+	err := doOssi([]string{"packages/testdata/go.sum"})
+	assert.NoError(t, err)
+}
+
 func TestDoOssi(t *testing.T) {
 	err := doOssi([]string{""})
 	assert.Error(t, err)

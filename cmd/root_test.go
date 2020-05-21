@@ -18,12 +18,10 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"os"
-	"os/exec"
 	"strings"
 	"testing"
 )
@@ -50,6 +48,25 @@ func checkStringContains(t *testing.T, got, substr string) {
 	}
 }
 
+func TestRootCommandOssiWithPathArgGopkglockOutsideGopath(t *testing.T) {
+	dirToGopkglock := "../packages/testdata"
+	pathToGopkglock := dirToGopkglock + "/Gopkg.lock"
+	_, err := executeCommand(rootCmd, pathToGopkglock)
+	assert.Error(t, err)
+	if exiterr, ok := err.(customerrors.ErrorExit); ok {
+		assert.Equal(t, 3, exiterr.ExitCode)
+		assert.Equal(t, fmt.Sprintf("both %s and %s are not within any known GOPATH", dirToGopkglock, dirToGopkglock), exiterr.Err.Error())
+		assert.Equal(t, fmt.Sprintf("could not read lock at path %s", pathToGopkglock), exiterr.Message)
+	} else {
+		t.Fail()
+	}
+}
+
+func TestRootCommandOssiWithPathArgGosum(t *testing.T) {
+	_, err := executeCommand(rootCmd, "../packages/testdata/go.sum")
+	assert.NoError(t, err)
+}
+
 func TestRootCommandUnknownCommand(t *testing.T) {
 	output, err := executeCommand(rootCmd, "one", "two")
 	checkStringContains(t, output, "Error: unknown command \"one\" for \"nancy\"")
@@ -63,32 +80,4 @@ func TestRootCommandNoArgsInvalidStdInErrorExit(t *testing.T) {
 	serr, ok := err.(customerrors.ErrorExit)
 	assert.True(t, ok)
 	assert.Equal(t, 1, serr.ExitCode)
-}
-
-func TestRootCommandOssi(t *testing.T) {
-	oldStdin := os.Stdin
-	defer func() { os.Stdin = oldStdin }() // Restore original Stdin
-
-	// setup fake Stdin
-	tmpfile, err := ioutil.TempFile("", "example")
-	assert.NoError(t, err)
-	defer os.Remove(tmpfile.Name())
-	if _, err := tmpfile.Write([]byte("Tom")); err != nil {
-		assert.NoError(t, err)
-	}
-	if _, err := tmpfile.Seek(0, 0); err != nil {
-		assert.NoError(t, err)
-	}
-	os.Stdin = tmpfile
-	defer tmpfile.Close()
-
-	// run test in separate process
-	if os.Getenv("BE_CRASHER") == "1" {
-		_, _ = executeCommand(rootCmd, "")
-		return
-	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestRootCommandOssi")
-	cmd.Env = append(os.Environ(), "BE_CRASHER=1")
-	err = cmd.Run()
-	assert.NoError(t, err)
 }

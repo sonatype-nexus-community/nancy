@@ -57,7 +57,7 @@ a smooth experience as a Golang developer, using the best tools in the market!`,
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		LogLady.Info("Nancy parsing config for OSS Index")
-		ossIndexConfig, err := configuration.Parse(os.Args[1:])
+		ossIndexConfig, err := configuration.Parse(args)
 		if err != nil {
 			flag.Usage()
 			err = customerrors.ErrorExit{Err: err, ExitCode: 1}
@@ -69,6 +69,7 @@ a smooth experience as a Golang developer, using the best tools in the market!`,
 		LogLady.Info("Nancy finished parsing config for OSS Index")
 		return
 	},
+	Args: cobra.ArbitraryArgs, // allows "deprecated" Gopkg.lock or go.sum path args
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -93,7 +94,7 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.
