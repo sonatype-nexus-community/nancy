@@ -32,7 +32,6 @@ import (
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 
-	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
@@ -110,10 +109,6 @@ func doIq(iqArgs []string) (err error) {
 
 func printHeader(print bool) {
 	if print {
-		LogLady.Info("Attempting to print header")
-		figure.NewFigure("Nancy", "larry3d", true).Print()
-		figure.NewFigure("By Sonatype & Friends", "pepper", true).Print()
-
 		LogLady.WithFields(logrus.Fields{
 			"build_time":       buildversion.BuildTime,
 			"build_commit":     buildversion.BuildCommit,

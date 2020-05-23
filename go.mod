@@ -7,7 +7,6 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/beevik/etree v1.1.0
 	github.com/boltdb/bolt v1.3.1 // indirect
-	github.com/common-nighthawk/go-figure v0.0.0-20190529165535-67e0ed34491a
 	github.com/golang/dep v0.5.4
 	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/google/go-cmp v0.4.0 // indirect
