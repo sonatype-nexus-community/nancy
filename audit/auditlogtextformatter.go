@@ -69,7 +69,6 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 			sb.WriteString(au.Red("!!!!! WARNING !!!!!\nScanning cannot be completed on the following package(s) since they do not use semver.\n").String())
 
 			w := tabwriter.NewWriter(sb, 9, 3, 0, '\t', 0)
-			w.Init(sb, 9, 3, 0, '\t', 0)
 			w.Flush()
 
 			for k, v := range invalidPurls {
@@ -91,7 +90,6 @@ func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCou
 	au := aurora.NewAurora(!noColor)
 
 	w := tabwriter.NewWriter(sb, 9, 3, 0, '\t', 0)
-	w.Init(sb, 9, 3, 0, '\t', 0)
 	w.Flush()
 
 	sb.WriteString(fmt.Sprintf(
