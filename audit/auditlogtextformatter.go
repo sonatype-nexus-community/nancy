@@ -48,9 +48,6 @@ type AuditLogTextFormatter struct {
 }
 
 func logPackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
-	w := tabwriter.NewWriter(sb, 9, 3, 0, '\t', 0)
-	w.Flush()
-
 	au := aurora.NewAurora(!noColor)
 
 	sb.WriteString(
@@ -67,9 +64,6 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 		if len(invalidPurls) > 0 {
 			au := aurora.NewAurora(!noColor)
 			sb.WriteString(au.Red("!!!!! WARNING !!!!!\nScanning cannot be completed on the following package(s) since they do not use semver.\n").String())
-
-			w := tabwriter.NewWriter(sb, 9, 3, 0, '\t', 0)
-			w.Flush()
 
 			for k, v := range invalidPurls {
 				sb.WriteString(
@@ -88,10 +82,6 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 
 func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	au := aurora.NewAurora(!noColor)
-
-	w := tabwriter.NewWriter(sb, 9, 3, 0, '\t', 0)
-	w.Flush()
-
 	sb.WriteString(fmt.Sprintf(
 		"[%d/%d]\t%s\n%s \n",
 		idx,
@@ -178,6 +168,9 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		numVulnerable := entry.Data["num_vulnerable"].(int)
 
 		var sb strings.Builder
+
+		w := tabwriter.NewWriter(&sb, 9, 3, 0, '\t', 0)
+		w.Flush()
 
 		logInvalidSemVerWarning(&sb, *f.NoColor, *f.Quiet, invalidEntries)
 		nonVulnerablePackages, vulnerablePackages := splitPackages(auditedEntries)
