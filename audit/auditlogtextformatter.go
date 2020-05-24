@@ -22,6 +22,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -47,9 +48,13 @@ type AuditLogTextFormatter struct {
 }
 
 func logPackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
+	w := tabwriter.NewWriter(sb, 9, 3, 0, '\t', 0)
+	w.Flush()
+
 	au := aurora.NewAurora(!noColor)
+
 	sb.WriteString(
-		fmt.Sprintf("[%d/%d] %s\n",
+		fmt.Sprintf("[%d/%d]\t%s\n",
 			idx,
 			packageCount,
 			au.Bold(au.Green(coordinate.Coordinates)).String(),
@@ -63,9 +68,13 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 			au := aurora.NewAurora(!noColor)
 			sb.WriteString(au.Red("!!!!! WARNING !!!!!\nScanning cannot be completed on the following package(s) since they do not use semver.\n").String())
 
+			w := tabwriter.NewWriter(sb, 9, 3, 0, '\t', 0)
+			w.Init(sb, 9, 3, 0, '\t', 0)
+			w.Flush()
+
 			for k, v := range invalidPurls {
 				sb.WriteString(
-					fmt.Sprintf("[%d/%d] %s\n",
+					fmt.Sprintf("[%d/%d]\t%s\n",
 						k+1,
 						len(invalidPurls),
 						au.Bold(v.Coordinates).String(),
@@ -81,8 +90,12 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	au := aurora.NewAurora(!noColor)
 
+	w := tabwriter.NewWriter(sb, 9, 3, 0, '\t', 0)
+	w.Init(sb, 9, 3, 0, '\t', 0)
+	w.Flush()
+
 	sb.WriteString(fmt.Sprintf(
-		"[%d/%d] %s\n%s \n",
+		"[%d/%d]\t%s\n%s \n",
 		idx,
 		packageCount,
 		au.Bold(au.Red(coordinate.Coordinates)).String(),
