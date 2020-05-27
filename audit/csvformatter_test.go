@@ -50,7 +50,7 @@ Audited Count,Vulnerable Count,Build Version
 
 Audited Package(s)
 Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
-[2/2],vuln1,true,1,"[{""Id"":""123"",""Title"":""Vulnerability"",""Description"":""Description"",""CvssScore"":""7.88"",""CvssVector"":""What"",""Cve"":""CVE-123"",""Reference"":""Reference"",""Excluded"":false}]"
+[2/2],vuln1,true,1,"[{""ID"":""123"",""Title"":""Vulnerability"",""Description"":""Description"",""CvssScore"":""7.88"",""CvssVector"":""What"",""Cve"":""CVE-123"",""Reference"":""Reference"",""Excluded"":false}]"
 `
 	assert.Equal(t, expectedCsv, string(logMessage))
 }
@@ -85,7 +85,7 @@ Count,Package,Reason
 Audited Package(s)
 Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
 [1/2],good1,false,0,null
-[2/2],vuln1,true,1,"[{""Id"":""123"",""Title"":""Vulnerability"",""Description"":""Description"",""CvssScore"":""7.88"",""CvssVector"":""What"",""Cve"":""CVE-123"",""Reference"":""Reference"",""Excluded"":false}]"
+[2/2],vuln1,true,1,"[{""ID"":""123"",""Title"":""Vulnerability"",""Description"":""Description"",""CvssScore"":""7.88"",""CvssVector"":""What"",""Cve"":""CVE-123"",""Reference"":""Reference"",""Excluded"":false}]"
 `
 	assert.Equal(t, expectedCsv, string(logMessage))
 }
