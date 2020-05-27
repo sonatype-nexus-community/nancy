@@ -1,6 +1,6 @@
 <excludes>
-  <exclude>.circleci/circleci-readme.md</exclude>
-  <exclude>.github/**</exclude>
-  <exclude>Makefile</exclude>
-  <exclude>Dockerfile.goreleaser</exclude>
+  <exclude>src/.circleci/circleci-readme.md</exclude>
+  <exclude>src/.github/**</exclude>
+  <exclude>src/Makefile</exclude>
+  <exclude>src/Dockerfile.goreleaser</exclude>
 </excludes>
