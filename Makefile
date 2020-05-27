@@ -33,8 +33,8 @@ deps:
 	$(GOCMD) mod tidy
 
 headers:
-	$(GOCMD) get github.com/google/addlicense
-	addlicense -check -f ./header.txt .
+	$(GOCMD) get -u github.com/google/addlicense
+	addlicense -check -f ./header.txt ./*.go
 
 build: 
 	$(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
