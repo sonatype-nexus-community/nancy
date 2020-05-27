@@ -29,7 +29,7 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/shopspring/decimal"
 	. "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 )
 
 var (
@@ -101,7 +101,7 @@ func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCou
 			t.SetTitle(printColorBasedOnCvssScore(v.CvssScore, v.Title, noColor))
 			t.AppendRow([]interface{}{"Description", text.WrapSoft(v.Description, 75)})
 			t.AppendSeparator()
-			t.AppendRow([]interface{}{"OSS Index ID", v.Id})
+			t.AppendRow([]interface{}{"OSS Index ID", v.ID})
 			t.AppendSeparator()
 			t.AppendRow([]interface{}{"CVSS Score", fmt.Sprintf("%s/10 (%s)", v.CvssScore, scoreAssessment(v.CvssScore))})
 			t.AppendSeparator()

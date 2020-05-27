@@ -13,14 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
 package audit
 
 import (
-	log "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"github.com/sonatype-nexus-community/nancy/buildversion"
 )
 
 // LogResults will given a number of expected results and the results themselves, log the

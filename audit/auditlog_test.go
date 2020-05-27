@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/shopspring/decimal"
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/stretchr/testify/assert"
 )
 

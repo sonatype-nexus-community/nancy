@@ -27,21 +27,27 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	. "github.com/sonatype-nexus-community/nancy/logger"
-	"github.com/sonatype-nexus-community/nancy/types"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
+	"github.com/sonatype-nexus-community/go-sona-types/iq"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/iq"
-	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
+)
+
+var (
+	ossi *ossindex.Server
+	iqs  *iq.Server
 )
 
 func main() {
@@ -160,9 +166,18 @@ func processConfig(config configuration.Configuration) (err error) {
 		LogLady.Level = logrus.TraceLevel
 	}
 
+	ossi = ossindex.New(LogLady, types.Options{
+		Version:     buildversion.BuildVersion,
+		Tool:        "nancy-client",
+		Username:    config.Username,
+		Token:       config.Token,
+		DBCacheName: "nancy-cache",
+		TTL:         time.Now().Local().Add(time.Hour * 12),
+	})
+
 	if config.CleanCache {
 		LogLady.Info("Attempting to clean cache")
-		if err = ossindex.RemoveCacheDirectory(); err != nil {
+		if err = ossi.NoCacheNoProblems(); err != nil {
 			LogLady.WithField("error", err).Error("Error cleaning cache")
 			fmt.Printf("ERROR: cleaning cache: %v\n", err)
 			err = customerrors.ErrorExit{Err: err, ExitCode: 1}
@@ -228,6 +243,18 @@ func processIQConfig(config configuration.IqConfiguration) (err error) {
 		err = customerrors.NewErrorExitPrintHelp(fmt.Errorf("no IQ application id specified"), "Missing IQ application ID")
 		return
 	}
+
+	iqs = iq.New(LogLady, iq.Options{
+		Version:     buildversion.BuildVersion,
+		Tool:        "nancy-client",
+		User:        config.User,
+		Token:       config.Token,
+		Stage:       config.Stage,
+		Server:      config.Server,
+		MaxRetries:  config.MaxRetries,
+		Application: config.Application,
+		DBCacheName: "nancy-cache",
+	})
 
 	printHeader(true)
 
@@ -299,7 +326,7 @@ func doStdInAndParseForIQ(config configuration.IqConfiguration) (err error) {
 	}).Debug("Extracted purls")
 
 	LogLady.Info("Auditing purls with IQ Server")
-	err = auditWithIQServer(purls, config.Application, config)
+	err = auditWithIQServer(purls, config.Application)
 	return
 }
 
@@ -347,7 +374,7 @@ func doCheckExistenceAndParse(config configuration.Configuration) error {
 
 func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) error {
 	var packageCount = len(purls)
-	coordinates, err := ossindex.AuditPackagesWithOSSIndex(purls, &config)
+	coordinates, err := ossi.AuditPackages(purls)
 	if err != nil {
 		return customerrors.NewErrorExitPrintHelp(err, "Error auditing packages")
 	}
@@ -363,9 +390,9 @@ func checkOSSIndex(purls []string, invalidpurls []string, config configuration.C
 	return nil
 }
 
-func auditWithIQServer(purls []string, applicationID string, config configuration.IqConfiguration) error {
+func auditWithIQServer(purls []string, applicationID string) error {
 	LogLady.Debug("Sending purls to be Audited by IQ Server")
-	res, err := iq.AuditPackages(purls, applicationID, config)
+	res, err := iqs.AuditPackages(purls, applicationID)
 	if err != nil {
 		return customerrors.NewErrorExitPrintHelp(err, "Uh oh! There was an error with your request to Nexus IQ Server")
 	}
