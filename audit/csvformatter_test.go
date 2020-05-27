@@ -20,6 +20,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,7 +38,7 @@ func TestCsvOutputWhenQuiet(t *testing.T) {
 		"num_vulnerable": 1,
 		"version":        "development",
 	}
-	entry := Entry{Data: data}
+	entry := logrus.Entry{Data: data}
 
 	quiet := true
 	formatter := CSVFormatter{Quiet: &quiet}
@@ -67,7 +68,7 @@ func TestCsvOutput(t *testing.T) {
 		"num_vulnerable": 1,
 		"version":        "development",
 	}
-	entry := Entry{Data: data}
+	entry := logrus.Entry{Data: data}
 
 	quiet := false
 	formatter := CSVFormatter{Quiet: &quiet}
@@ -94,7 +95,7 @@ func TestCsvOutputWhenNotAuditLog(t *testing.T) {
 		"stuff":   1,
 		"another": "me",
 	}
-	entry := Entry{Data: data}
+	entry := logrus.Entry{Data: data}
 
 	formatter := CSVFormatter{}
 	logMessage, e := formatter.Format(&entry)
@@ -119,7 +120,7 @@ func TestCsvFormatter_FormatNoError(t *testing.T) {
 		"num_vulnerable": 0,
 		"version":        "theBuildVersion",
 	}
-	buf, err := formatter.Format(&Entry{Data: data})
+	buf, err := formatter.Format(&logrus.Entry{Data: data})
 	assert.NoError(t, err)
 	assert.Equal(t, "Summary\nAudited Count,Vulnerable Count,Build Version\n0,0,theBuildVersion\n", string(buf))
 }

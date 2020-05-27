@@ -20,7 +20,7 @@ import (
 	"errors"
 	"testing"
 
-	. "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,7 +30,7 @@ func TestFormatterErrorsIfEntryNotValid(t *testing.T) {
 		"stuff":   1,
 		"another": "me",
 	}
-	entry := Entry{Data: data}
+	entry := logrus.Entry{Data: data}
 
 	formatter := AuditLogTextFormatter{}
 	logMessage, e := formatter.Format(&entry)
@@ -48,7 +48,7 @@ func verifyFormatterSummaryLoudness(t *testing.T, quiet bool) {
 		"num_vulnerable": 0,
 		"version":        0,
 	}
-	entry := Entry{Data: data}
+	entry := logrus.Entry{Data: data}
 
 	formatter := AuditLogTextFormatter{Quiet: &quiet, NoColor: new(bool)}
 	logMessage, e := formatter.Format(&entry)

@@ -19,6 +19,7 @@ package audit
 import (
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +28,7 @@ func TestJsonOutpu(t *testing.T) {
 		"stuff":   1,
 		"another": "me",
 	}
-	entry := Entry{Data: data}
+	entry := logrus.Entry{Data: data}
 
 	formatter := JSONFormatter{}
 	logMessage, e := formatter.Format(&entry)
@@ -41,7 +42,7 @@ func TestJsonPrettyPrintOutpu(t *testing.T) {
 		"stuff":   1,
 		"another": "me",
 	}
-	entry := Entry{Data: data}
+	entry := logrus.Entry{Data: data}
 
 	formatter := JSONFormatter{PrettyPrint: true}
 	logMessage, e := formatter.Format(&entry)
