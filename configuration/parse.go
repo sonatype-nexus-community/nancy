@@ -144,7 +144,7 @@ func Parse(args []string) (Configuration, error) {
 		"json":        &audit.JSONFormatter{},
 		"json-pretty": &audit.JSONFormatter{PrettyPrint: true},
 		"text":        &audit.AuditLogTextFormatter{Quiet: &config.Quiet, NoColor: &config.NoColor},
-		"csv":         &audit.CsvFormatter{Quiet: &config.Quiet},
+		"csv":         &audit.CSVFormatter{Quiet: &config.Quiet},
 	}
 
 	flag.BoolVar(&config.Help, "help", false, "provides help text on how to use nancy")

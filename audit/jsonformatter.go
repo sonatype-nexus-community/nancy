@@ -27,7 +27,7 @@ type JSONFormatter struct {
 	PrettyPrint bool
 }
 
-// Format is used to print the results as JSON
+// Format is used to print the results as JSON, it returns a byte slice and is an implementation of Formatter interface on log
 func (f *JSONFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	// Note this doesn't include Time, Level and Message which are available on
 	// the Entry. Consult `godoc` on information about those fields or read the

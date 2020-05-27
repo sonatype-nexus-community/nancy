@@ -86,7 +86,7 @@ func TestConfigParse(t *testing.T) {
 		"output of json":              {args: []string{"-output=json"}, expectedConfig: Configuration{UseStdIn: true, Formatter: &audit.JSONFormatter{}}, expectedErr: nil},
 		"output of json modfile":      {args: []string{"-output=json", "/tmp/go14.sum"}, expectedConfig: Configuration{Formatter: &audit.JSONFormatter{}, Path: "/tmp/go14.sum"}, expectedErr: nil},
 		"output of json pretty print": {args: []string{"-output=json-pretty", "/tmp/go15.sum"}, expectedConfig: Configuration{Formatter: &audit.JSONFormatter{PrettyPrint: true}, Path: "/tmp/go15.sum"}, expectedErr: nil},
-		"output of csv":               {args: []string{"-output=csv", "/tmp/go16.sum"}, expectedConfig: Configuration{Formatter: &audit.CsvFormatter{Quiet: &boolFalse}, Path: "/tmp/go16.sum"}, expectedErr: nil},
+		"output of csv":               {args: []string{"-output=csv", "/tmp/go16.sum"}, expectedConfig: Configuration{Formatter: &audit.CSVFormatter{Quiet: &boolFalse}, Path: "/tmp/go16.sum"}, expectedErr: nil},
 		"output of text":              {args: []string{"-output=text", "/tmp/go17.sum"}, expectedConfig: Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go17.sum"}, expectedErr: nil},
 		"output of bad value":         {args: []string{"-output=aintgonnadoit", "/tmp/go18.sum"}, expectedConfig: Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go18.sum"}, expectedErr: nil},
 		"log level of info":           {args: []string{"-v"}, expectedConfig: Configuration{UseStdIn: true, Formatter: defaultAuditLogFormatter, Info: true}, expectedErr: nil},

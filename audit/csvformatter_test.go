@@ -41,7 +41,7 @@ func TestCsvOutputWhenQuiet(t *testing.T) {
 	entry := Entry{Data: data}
 
 	quiet := true
-	formatter := CsvFormatter{Quiet: &quiet}
+	formatter := CSVFormatter{Quiet: &quiet}
 	logMessage, e := formatter.Format(&entry)
 	assert.Nil(t, e)
 	expectedCsv := `Summary
@@ -71,7 +71,7 @@ func TestCsvOutput(t *testing.T) {
 	entry := Entry{Data: data}
 
 	quiet := false
-	formatter := CsvFormatter{Quiet: &quiet}
+	formatter := CSVFormatter{Quiet: &quiet}
 	logMessage, e := formatter.Format(&entry)
 	assert.Nil(t, e)
 	expectedCsv := `Summary
@@ -97,7 +97,7 @@ func TestCsvOutputWhenNotAuditLog(t *testing.T) {
 	}
 	entry := Entry{Data: data}
 
-	formatter := CsvFormatter{}
+	formatter := CSVFormatter{}
 	logMessage, e := formatter.Format(&entry)
 
 	assert.Nil(t, logMessage)
@@ -107,7 +107,7 @@ func TestCsvOutputWhenNotAuditLog(t *testing.T) {
 
 func TestCsvFormatter_FormatNoError(t *testing.T) {
 	quiet := true
-	formatter := CsvFormatter{Quiet: &quiet}
+	formatter := CSVFormatter{Quiet: &quiet}
 
 	data := map[string]interface{}{
 		"audited": []types.Coordinate{
