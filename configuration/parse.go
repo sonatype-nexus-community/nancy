@@ -141,8 +141,8 @@ func Parse(args []string) (Configuration, error) {
 	var outputFormat string
 
 	var outputFormats = map[string]logrus.Formatter{
-		"json":        &audit.JsonFormatter{},
-		"json-pretty": &audit.JsonFormatter{PrettyPrint: true},
+		"json":        &audit.JSONFormatter{},
+		"json-pretty": &audit.JSONFormatter{PrettyPrint: true},
 		"text":        &audit.AuditLogTextFormatter{Quiet: &config.Quiet, NoColor: &config.NoColor},
 		"csv":         &audit.CsvFormatter{Quiet: &config.Quiet},
 	}

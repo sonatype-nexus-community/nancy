@@ -30,7 +30,7 @@ func TestJsonOutpu(t *testing.T) {
 	}
 	entry := Entry{Data: data}
 
-	formatter := JsonFormatter{}
+	formatter := JSONFormatter{}
 	logMessage, e := formatter.Format(&entry)
 
 	assert.Nil(t, e)
@@ -44,7 +44,7 @@ func TestJsonPrettyPrintOutpu(t *testing.T) {
 	}
 	entry := Entry{Data: data}
 
-	formatter := JsonFormatter{PrettyPrint: true}
+	formatter := JSONFormatter{PrettyPrint: true}
 	logMessage, e := formatter.Format(&entry)
 
 	assert.Nil(t, e)
