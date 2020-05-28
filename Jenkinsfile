@@ -30,10 +30,12 @@ dockerizedBuildPipeline(
     '''
   },
   vulnerabilityScan: {
-    withCredentials([usernamePassword(credentialsId: 'policy.s integration account',
-      usernameVariable: 'IQ_USERNAME', passwordVariable: 'IQ_PASSWORD')]) {
-      sh 'go list -m all | ./nancy iq -application nancy -stage build -user $IQ_USERNAME -token $IQ_PASSWORD -server-url https://policy.ci.sonatype.dev'
-    }
+    withDockerImage(env.DOCKER_IMAGE_ID, {
+      withCredentials([usernamePassword(credentialsId: 'policy.s integration account',
+        usernameVariable: 'IQ_USERNAME', passwordVariable: 'IQ_PASSWORD')]) {
+        sh 'go list -m all | ./nancy iq -application nancy -stage build -user $IQ_USERNAME -token $IQ_PASSWORD -server-url https://policy.ci.sonatype.dev'
+      }
+    })
   },
   testResults: [ 'test-results.xml' ],
   onSuccess: {
