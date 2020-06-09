@@ -122,7 +122,7 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 				ratings.Rating = rating
 				source := types.Source{Name: "ossindex"}
 				source.URL = x.Reference
-				vuln := types.SbomVulnerability{ID: x.Cve, Source: source, Description: x.Description, Ref: v.Coordinates}
+				vuln := sbomVulnerability(x, v.Coordinates, source)
 				vuln.Ratings = append(vuln.Ratings, ratings)
 				vulns.Vulnerability = append(vulns.Vulnerability, vuln)
 			}
@@ -133,6 +133,23 @@ func processPurlsIntoSBOMSchema1_1(results []types.Coordinate) string {
 	}
 
 	return processAndReturnSbom(sbom)
+}
+
+func sbomVulnerability(vuln types.Vulnerability, coordinates string, source types.Source) types.SbomVulnerability {
+	if vuln.Cve != "" {
+		return types.SbomVulnerability{
+			ID:          vuln.Cve,
+			Source:      source,
+			Description: vuln.Description,
+			Ref:         coordinates,
+		}
+	}
+	return types.SbomVulnerability{
+		ID:          vuln.Cwe,
+		Source:      source,
+		Description: vuln.Description,
+		Ref:         coordinates,
+	}
 }
 
 func createSbomDocument() *types.Sbom {
