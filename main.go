@@ -17,7 +17,6 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"flag"
 	"fmt"
@@ -288,10 +287,13 @@ func doStdInAndParseForIQ(config configuration.IqConfiguration) (err error) {
 	LogLady.Info("Instantiating go.mod package")
 
 	mod := packages.Mod{}
-	scanner := bufio.NewScanner(os.Stdin)
 
 	LogLady.Info("Beginning to parse StdIn")
-	mod.ProjectList, _ = parse.GoList(scanner)
+	mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+	if err != nil {
+		LogLady.Error(err)
+		return
+	}
 	LogLady.WithFields(logrus.Fields{
 		"projectList": mod.ProjectList,
 	}).Debug("Obtained project list")
