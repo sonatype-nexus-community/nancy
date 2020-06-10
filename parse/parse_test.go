@@ -58,7 +58,7 @@ func TestGoListAgnostic(t *testing.T) {
 		t.Error(err)
 	}
 	if len(deps.Projects) != 48 {
-		t.Errorf("Unsuccessfully parsed go list -m all output, 48 dependencies were expected, but %d encountered", len(deps.Projects))
+		t.Errorf("Unsuccessfully parsed go list -json -m all output, 48 dependencies were expected, but %d encountered", len(deps.Projects))
 	}
 }
 
