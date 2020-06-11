@@ -84,6 +84,7 @@ func ParseIQ(args []string) (config IqConfiguration, err error) {
 	flag.Usage = func() {
 		_, _ = fmt.Fprintf(os.Stderr, `Usage:
 	go list -m all | nancy iq [options]
+	go list -json -m all | nancy iq [options]
 			
 Options:
 `)
@@ -165,6 +166,8 @@ func Parse(args []string) (Configuration, error) {
 		_, _ = fmt.Fprintf(os.Stderr, `Usage:
 	go list -m all | nancy [options]
 	go list -m all | nancy iq [options]
+	go list -json -m all | nancy [options]
+	go list -json -m all | nancy iq [options]
 	nancy config
 	nancy [options] </path/to/Gopkg.lock>
 	nancy [options] </path/to/go.sum>
