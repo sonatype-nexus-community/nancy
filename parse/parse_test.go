@@ -76,6 +76,22 @@ func TestGoListAgnostic(t *testing.T) {
 	if deps.Projects[0].Version != "v1.4.2" {
 		t.Errorf("Version expected to be v1.4.2, but encountered %s", deps.Projects[0].Version)
 	}
+
+	goListJSONReplaceFile, err := os.Open("testdata/golistjsonreplace.out")
+	if err != nil {
+		t.Error(err)
+	}
+
+	deps, err = GoListAgnostic(goListJSONReplaceFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 134 {
+		t.Errorf("Unsuccessfully parsed go list -m all output, 134 dependencies were expected, but %d encountered", len(deps.Projects))
+	}
+	if deps.Projects[0].Version != "v1.4.2" {
+		t.Errorf("Version expected to be v1.4.2, but encountered %s", deps.Projects[0].Version)
+	}
 }
 
 func TestGoListAll(t *testing.T) {
