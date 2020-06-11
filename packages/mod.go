@@ -21,14 +21,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
-	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 type Mod struct {
 	ProjectList types.ProjectList
 	GoSumPath   string
+	LogLady     *logrus.Logger
 }
 
 func (m Mod) ExtractPurlsFromManifest() (purls []string) {
@@ -42,7 +43,7 @@ func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 		}
 	}
 
-	purls = removeDuplicates(purls)
+	purls = m.removeDuplicates(purls)
 
 	return
 }
@@ -56,7 +57,7 @@ func (m Mod) ExtractPurlsFromManifestForIQ() (purls []string) {
 			purls = append(purls, purl)
 		}
 	}
-	purls = removeDuplicates(purls)
+	purls = m.removeDuplicates(purls)
 
 	return
 }
@@ -68,14 +69,14 @@ func (m Mod) CheckExistenceOfManifest() (bool, error) {
 	return true, nil
 }
 
-func removeDuplicates(purls []string) (dedupedPurls []string) {
+func (m Mod) removeDuplicates(purls []string) (dedupedPurls []string) {
 	encountered := map[string]bool{}
 
 	for _, v := range purls {
 		if encountered[v] {
-			LogLady.WithField("dep", v).Debug("Found duplicate dependency, eliminating it")
+			m.LogLady.WithField("dep", v).Debug("Found duplicate dependency, eliminating it")
 		} else {
-			LogLady.WithField("dep", v).Debug("Unique dependency, adding it")
+			m.LogLady.WithField("dep", v).Debug("Unique dependency, adding it")
 			encountered[v] = true
 			dedupedPurls = append(dedupedPurls, v)
 		}

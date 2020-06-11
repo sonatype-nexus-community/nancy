@@ -18,76 +18,37 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-const DefaultLogFilename = "nancy.combined.log"
-const TestLogfilename = "nancy.test.log"
+const defaultLogFilename = "nancy.combined.log"
 
-// DefaultLogFile can be overridden to use a different file name for upstream consumers
-var DefaultLogFile = DefaultLogFilename
+var DefaultLogFile = defaultLogFilename
 
-// LogLady can be obtained from outside the package, the name is a reference to the brilliant
-// actress in Twin Peaks
-var LogLady = logrus.New()
+var logLady *logrus.Logger
 
-func init() {
-	err := doInit(os.Args)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func doInit(args []string) (err error) {
-	if useTestLogFile(args) {
-		DefaultLogFile = TestLogfilename
-	}
-
-	LogLady.Level = logrus.InfoLevel
-	LogLady.Formatter = &logrus.JSONFormatter{}
-
-	location, err := LogFileLocation()
-	if err != nil {
-		return
-	}
-
-	file, err := os.OpenFile(location, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
-	if err != nil {
-		return
-	}
-	LogLady.Out = file
-
-	return
-}
-
-func stringPrefixInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if strings.Contains(b, a) {
-			return true
+// GetLogger will either return the existing logger, or setup a new logger
+func GetLogger(loggerFilename string, level int) *logrus.Logger {
+	if logLady == nil {
+		logLevel := getLoggerLevelFromConfig(level)
+		err := setupLogger(loggerFilename, &logLevel)
+		if err != nil {
+			panic(err)
 		}
 	}
-	return false
+	return logLady
 }
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func useTestLogFile(args []string) bool {
-	if stringPrefixInSlice("-test.", args) && !stringInSlice("-iq", args) {
-		return true
-	}
-	return false
+func PrintErrorAndLogLocation(err error) {
+	fmt.Println("Uh oh, an error occurred")
+	fmt.Printf("Error: %v\n", err)
+	location, _ := LogFileLocation()
+	fmt.Printf("Check log file at %s for more information\n", location)
 }
 
 // LogFileLocation will return the location on disk of the log file
@@ -99,4 +60,54 @@ func LogFileLocation() (result string, err error) {
 	}
 	result = path.Join(result, types.OssIndexDirName, DefaultLogFile)
 	return
+}
+
+func setupLogger(loggerFilename string, level *logrus.Level) (err error) {
+	logLady = logrus.New()
+
+	if loggerFilename != "" {
+		DefaultLogFile = loggerFilename
+	} else {
+		DefaultLogFile = defaultLogFilename
+	}
+
+	if level == nil {
+		logLady.Level = logrus.ErrorLevel
+	} else {
+		// Done because report caller adds 20-40% overhead per logrus docs, only set this when we want to debug
+		if *level > logrus.DebugLevel {
+			logLady.SetReportCaller(true)
+		}
+		logLady.Level = *level
+	}
+
+	logLady.Formatter = &logrus.JSONFormatter{DisableHTMLEscape: true}
+
+	location, err := LogFileLocation()
+	if err != nil {
+		return
+	}
+
+	file, err := os.OpenFile(location, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0666)
+	if err != nil {
+		return
+	}
+	logLady.Out = file
+
+	return
+}
+
+func getLoggerLevelFromConfig(level int) logrus.Level {
+	switch level {
+	case 1:
+		return logrus.WarnLevel
+	case 2:
+		return logrus.InfoLevel
+	case 3:
+		return logrus.DebugLevel
+	case 4:
+		return logrus.TraceLevel
+	default:
+		return logrus.ErrorLevel
+	}
 }

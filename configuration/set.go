@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	. "github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"gopkg.in/yaml.v2"
 )
@@ -43,52 +43,61 @@ type OSSIndexConfig struct {
 	Token    string `yaml:"Token"`
 }
 
-var (
+type Setter struct {
+	Options SetterOptions
+	logLady *logrus.Logger
+}
+
+type SetterOptions struct {
 	// HomeDir is exported so that in testing it can be set to a location like /tmp
 	HomeDir string
 	// ConfigLocation is exported so that in testing it can be used to test if the file has been written properly
 	ConfigLocation string
-)
+}
 
-func init() {
-	HomeDir, _ = os.UserHomeDir()
+func NewSetter(options SetterOptions, logger *logrus.Logger) *Setter {
+	options.HomeDir, _ = os.UserHomeDir()
+	return &Setter{
+		logLady: logger,
+		Options: options,
+	}
 }
 
 // GetConfigFromCommandLine is a method to obtain IQ or OSS Index config from the command line,
 // and then write it to disk.
-func GetConfigFromCommandLine(stdin io.Reader) (err error) {
-	LogLady.Info("Starting process to obtain config from user")
+func (w *Setter) GetConfigFromCommandLine(stdin io.Reader) (err error) {
+	w.logLady.Info("Starting process to obtain config from user")
 	reader := bufio.NewReader(stdin)
 	fmt.Print("Hi! What config can I help you set, IQ or OSS Index (values: iq, ossindex, enter for exit)? ")
 	configType, _ := reader.ReadString('\n')
 
 	switch str := strings.TrimSpace(configType); str {
 	case "iq":
-		LogLady.Info("User chose to set IQ Config, moving forward")
-		ConfigLocation = filepath.Join(HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
-		err = getAndSetIQConfig(reader)
+		w.logLady.Info("User chose to set IQ Config, moving forward")
+		w.Options.ConfigLocation = filepath.Join(w.Options.HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
+		err = w.getAndSetIQConfig(reader)
 	case "ossindex":
-		LogLady.Info("User chose to set OSS Index config, moving forward")
-		ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
-		err = getAndSetOSSIndexConfig(reader)
+		w.logLady.Info("User chose to set OSS Index config, moving forward")
+		w.Options.ConfigLocation = filepath.Join(w.Options.HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+		err = w.getAndSetOSSIndexConfig(reader)
 	case "":
 		// TODO should this return an error, because it means config setup was not completed?
 		return
 	default:
-		LogLady.Infof("User chose invalid config type: %s, will retry", str)
+		w.logLady.Infof("User chose invalid config type: %s, will retry", str)
 		fmt.Println("Invalid value, 'iq' and 'ossindex' are accepted values, try again!")
-		err = GetConfigFromCommandLine(stdin)
+		err = w.GetConfigFromCommandLine(stdin)
 	}
 
 	if err != nil {
-		LogLady.Error(err)
+		w.logLady.Error(err)
 		return
 	}
 	return
 }
 
-func getAndSetIQConfig(reader *bufio.Reader) (err error) {
-	LogLady.Info("Getting config for IQ Server from user")
+func (w *Setter) getAndSetIQConfig(reader *bufio.Reader) (err error) {
+	w.logLady.Info("Getting config for IQ Server from user")
 
 	iqConfig := IQConfig{Server: "http://localhost:8070", Username: "admin", Token: "admin123"}
 
@@ -105,21 +114,21 @@ func getAndSetIQConfig(reader *bufio.Reader) (err error) {
 	iqConfig.Token = emptyOrDefault(token, iqConfig.Token)
 
 	if iqConfig.Username == "admin" || iqConfig.Token == "admin123" {
-		LogLady.Info("Warning user of bad life choices, using default values for IQ Server username or token")
+		w.logLady.Info("Warning user of bad life choices, using default values for IQ Server username or token")
 		warnUserOfBadLifeChoices()
 		fmt.Print("[y/N]? ")
 		theChoice, _ := reader.ReadString('\n')
 		theChoice = emptyOrDefault(theChoice, "y")
 		if theChoice == "y" {
-			LogLady.Info("User chose to rectify their bad life choices, asking for config again")
-			err = getAndSetIQConfig(reader)
+			w.logLady.Info("User chose to rectify their bad life choices, asking for config again")
+			err = w.getAndSetIQConfig(reader)
 		} else {
-			LogLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
-			err = marshallAndWriteToDisk(iqConfig)
+			w.logLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
+			err = w.marshallAndWriteToDisk(iqConfig)
 		}
 	} else {
-		LogLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
-		err = marshallAndWriteToDisk(iqConfig)
+		w.logLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
+		err = w.marshallAndWriteToDisk(iqConfig)
 	}
 
 	if err != nil {
@@ -136,8 +145,8 @@ func emptyOrDefault(value string, defaultValue string) string {
 	return str
 }
 
-func getAndSetOSSIndexConfig(reader *bufio.Reader) (err error) {
-	LogLady.Info("Getting config for OSS Index from user")
+func (w *Setter) getAndSetOSSIndexConfig(reader *bufio.Reader) (err error) {
+	w.logLady.Info("Getting config for OSS Index from user")
 
 	ossIndexConfig := OSSIndexConfig{}
 
@@ -149,23 +158,23 @@ func getAndSetOSSIndexConfig(reader *bufio.Reader) (err error) {
 	ossIndexConfig.Token, _ = reader.ReadString('\n')
 	ossIndexConfig.Token = strings.Trim(strings.TrimSpace(ossIndexConfig.Token), "\n")
 
-	LogLady.Info("Successfully got OSS Index config from user, attempting to save to disk")
-	err = marshallAndWriteToDisk(ossIndexConfig)
+	w.logLady.Info("Successfully got OSS Index config from user, attempting to save to disk")
+	err = w.marshallAndWriteToDisk(ossIndexConfig)
 	if err != nil {
-		LogLady.Error(err)
+		w.logLady.Error(err)
 		return
 	}
 
 	return
 }
 
-func marshallAndWriteToDisk(config interface{}) (err error) {
+func (w *Setter) marshallAndWriteToDisk(config interface{}) (err error) {
 	d, err := yaml.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	base := filepath.Dir(ConfigLocation)
+	base := filepath.Dir(w.Options.ConfigLocation)
 
 	if _, err = os.Stat(base); os.IsNotExist(err) {
 		err = os.Mkdir(base, os.ModePerm)
@@ -174,13 +183,13 @@ func marshallAndWriteToDisk(config interface{}) (err error) {
 		}
 	}
 
-	err = ioutil.WriteFile(ConfigLocation, d, 0644)
+	err = ioutil.WriteFile(w.Options.ConfigLocation, d, 0644)
 	if err != nil {
 		return
 	}
 
-	LogLady.WithField("config_location", ConfigLocation).Info("Successfully wrote config to disk")
-	fmt.Printf("Successfully wrote config to: %s\n", ConfigLocation)
+	w.logLady.WithField("config_location", w.Options.ConfigLocation).Info("Successfully wrote config to disk")
+	fmt.Printf("Successfully wrote config to: %s\n", w.Options.ConfigLocation)
 	return
 }
 

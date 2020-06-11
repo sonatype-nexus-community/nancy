@@ -30,7 +30,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/audit"
-	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"gopkg.in/yaml.v2"
 )
@@ -69,7 +68,24 @@ type IqConfiguration struct {
 var unixComments = regexp.MustCompile(`#.*$`)
 var untilComment = regexp.MustCompile(`(until=)(.*)`)
 
-func ParseIQ(args []string) (config IqConfiguration, err error) {
+type Parser struct {
+	logLady *logrus.Logger
+	Options ParseOptions
+}
+
+type ParseOptions struct {
+	HomeDir        string
+	ConfigLocation string
+}
+
+func NewParser(options ParseOptions, logger *logrus.Logger) *Parser {
+	return &Parser{
+		Options: options,
+		logLady: logger,
+	}
+}
+
+func (p *Parser) IQ(args []string) (config IqConfiguration, err error) {
 	iqCommand := flag.NewFlagSet("iq", flag.ContinueOnError)
 	iqCommand.BoolVar(&config.Info, "v", false, "Set log level to Info")
 	iqCommand.BoolVar(&config.Debug, "vv", false, "Set log level to Debug")
@@ -90,11 +106,11 @@ Options:
 		iqCommand.PrintDefaults()
 	}
 
-	ConfigLocation = filepath.Join(HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
+	p.Options.ConfigLocation = filepath.Join(p.Options.HomeDir, types.IQServerDirName, types.IQServerConfigFileName)
 
-	err = loadIQConfigFromFile(ConfigLocation, &config)
+	err = p.loadIQConfigFromFile(&config)
 	if err != nil {
-		LogLady.Info("Unable to load config from file")
+		p.logLady.Info("Unable to load config from file")
 	}
 
 	err = iqCommand.Parse(args)
@@ -105,37 +121,37 @@ Options:
 	return config, err
 }
 
-func loadConfigFromFile(configLocation string, config *Configuration) error {
-	b, err := ioutil.ReadFile(configLocation)
+func (p *Parser) loadConfigFromFile(config *Configuration) error {
+	b, err := ioutil.ReadFile(p.Options.ConfigLocation)
 	if err != nil {
-		LogLady.WithField("error", err).Error("Unable to read OSS Index file")
+		p.logLady.WithField("error", err).Error("Unable to read OSS Index file")
 		return err
 	}
 	err = yaml.Unmarshal(b, config)
 	if err != nil {
-		LogLady.WithField("error", err).Error("Unable to unmarshal file into OSS Index config")
+		p.logLady.WithField("error", err).Error("Unable to unmarshal file into OSS Index config")
 		return err
 	}
 
 	return nil
 }
 
-func loadIQConfigFromFile(configLocation string, config *IqConfiguration) error {
-	b, err := ioutil.ReadFile(configLocation)
+func (p *Parser) loadIQConfigFromFile(config *IqConfiguration) error {
+	b, err := ioutil.ReadFile(p.Options.ConfigLocation)
 	if err != nil {
-		LogLady.WithField("error", err).Error("Unable to read IQ file")
+		p.logLady.WithField("error", err).Error("Unable to read IQ file")
 		return err
 	}
 	err = yaml.Unmarshal(b, config)
 	if err != nil {
-		LogLady.WithField("error", err).Error("Unable to unmarshal file into IQ config")
+		p.logLady.WithField("error", err).Error("Unable to unmarshal file into IQ config")
 		return err
 	}
 
 	return nil
 }
 
-func Parse(args []string) (Configuration, error) {
+func (p *Parser) OSSIndex(args []string) (Configuration, error) {
 	config := Configuration{}
 	var excludeVulnerabilityFilePath string
 	var outputFormat string
@@ -174,11 +190,11 @@ Options:
 		flag.PrintDefaults()
 	}
 
-	ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+	p.Options.ConfigLocation = filepath.Join(p.Options.HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 
-	err := loadConfigFromFile(ConfigLocation, &config)
+	err := p.loadConfigFromFile(&config)
 	if err != nil {
-		LogLady.Info("Unable to load config from file")
+		p.logLady.Info("Unable to load config from file")
 	}
 
 	err = flag.CommandLine.Parse(args)
