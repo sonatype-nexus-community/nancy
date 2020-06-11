@@ -71,7 +71,7 @@ func TestGoListAgnostic(t *testing.T) {
 		t.Error(err)
 	}
 	if len(deps.Projects) != 1 {
-		t.Errorf("Unsuccessfully parsed go list -json -m all output, 48 dependencies were expected, but %d encountered", len(deps.Projects))
+		t.Errorf("Unsuccessfully parsed go list -m all output, 1 dependency was expected, but %d encountered", len(deps.Projects))
 	}
 	if deps.Projects[0].Version != "v1.4.2" {
 		t.Errorf("Version expected to be v1.4.2, but encountered %s", deps.Projects[0].Version)
