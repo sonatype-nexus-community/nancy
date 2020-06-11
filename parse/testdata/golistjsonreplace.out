@@ -1,0 +1,1030 @@
+{
+	"Path": "github.com/sonatype-nexus-community/hashbrowns",
+	"Main": true,
+	"Dir": "/Users/darthhater/code/github.com/sonatype-nexus-community/hashbrowns",
+	"GoMod": "/Users/darthhater/code/github.com/sonatype-nexus-community/hashbrowns/go.mod",
+	"GoVersion": "1.14"
+}
+{
+	"Path": "github.com/gorilla/websocket",
+	"Version": "v1.4.0",
+	"Replace": {
+		"Path": "github.com/gorilla/websocket",
+		"Version": "v1.4.2",
+		"Time": "2020-03-19T17:50:51Z",
+		"Dir": "/Users/darthhater/go/pkg/mod/github.com/gorilla/websocket@v1.4.2",
+		"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/gorilla/websocket/@v/v1.4.2.mod"
+	},
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/gorilla/websocket@v1.4.2",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/gorilla/websocket/@v/v1.4.2.mod"
+}
+{
+	"Path": "cloud.google.com/go",
+	"Version": "v0.26.0",
+	"Time": "2018-08-07T10:25:35Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/cloud.google.com/go/@v/v0.26.0.mod"
+}
+{
+	"Path": "dmitri.shuralyov.com/gpu/mtl",
+	"Version": "v0.0.0-20190408044501-666a987793e9",
+	"Time": "2019-04-08T04:45:01Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/dmitri.shuralyov.com/gpu/mtl/@v/v0.0.0-20190408044501-666a987793e9.mod"
+}
+{
+	"Path": "github.com/BurntSushi/toml",
+	"Version": "v0.3.1",
+	"Time": "2018-08-15T10:47:33Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/!burnt!sushi/toml@v0.3.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/!burnt!sushi/toml/@v/v0.3.1.mod"
+}
+{
+	"Path": "github.com/BurntSushi/xgb",
+	"Version": "v0.0.0-20160522181843-27f122750802",
+	"Time": "2016-05-22T18:18:43Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/!burnt!sushi/xgb/@v/v0.0.0-20160522181843-27f122750802.mod"
+}
+{
+	"Path": "github.com/Flaque/filet",
+	"Version": "v0.0.0-20190209224823-fc4d33cfcf93",
+	"Time": "2019-02-09T22:48:23Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/!flaque/filet@v0.0.0-20190209224823-fc4d33cfcf93",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/!flaque/filet/@v/v0.0.0-20190209224823-fc4d33cfcf93.mod"
+}
+{
+	"Path": "github.com/Masterminds/semver",
+	"Version": "v0.0.0-20180403130225-3c92f33da7a8",
+	"Time": "2018-04-03T13:02:25Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/!masterminds/semver@v0.0.0-20180403130225-3c92f33da7a8",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/!masterminds/semver/@v/v0.0.0-20180403130225-3c92f33da7a8.mod"
+}
+{
+	"Path": "github.com/Masterminds/vcs",
+	"Version": "v1.13.1",
+	"Time": "2019-07-09T22:15:38Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/!masterminds/vcs@v1.13.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/!masterminds/vcs/@v/v1.13.1.mod"
+}
+{
+	"Path": "github.com/OneOfOne/xxhash",
+	"Version": "v1.2.2",
+	"Time": "2018-05-30T13:49:54Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/!one!of!one/xxhash/@v/v1.2.2.mod"
+}
+{
+	"Path": "github.com/alecthomas/template",
+	"Version": "v0.0.0-20160405071501-a0175ee3bccc",
+	"Time": "2016-04-05T07:15:01Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/alecthomas/template/@v/v0.0.0-20160405071501-a0175ee3bccc.mod"
+}
+{
+	"Path": "github.com/alecthomas/units",
+	"Version": "v0.0.0-20151022065526-2efee857e7cf",
+	"Time": "2015-10-22T06:55:26Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/alecthomas/units/@v/v0.0.0-20151022065526-2efee857e7cf.mod"
+}
+{
+	"Path": "github.com/armon/consul-api",
+	"Version": "v0.0.0-20180202201655-eb2c6b5be1b6",
+	"Time": "2018-02-02T20:16:55Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/armon/consul-api/@v/v0.0.0-20180202201655-eb2c6b5be1b6.mod"
+}
+{
+	"Path": "github.com/armon/go-radix",
+	"Version": "v1.0.0",
+	"Time": "2018-08-24T02:57:28Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/armon/go-radix@v1.0.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/armon/go-radix/@v/v1.0.0.mod"
+}
+{
+	"Path": "github.com/beevik/etree",
+	"Version": "v1.1.0",
+	"Time": "2019-02-02T20:17:29Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/beevik/etree@v1.1.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/beevik/etree/@v/v1.1.0.mod"
+}
+{
+	"Path": "github.com/beorn7/perks",
+	"Version": "v1.0.0",
+	"Time": "2019-04-14T22:11:40Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/beorn7/perks/@v/v1.0.0.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "github.com/boltdb/bolt",
+	"Version": "v1.3.1",
+	"Time": "2017-07-17T17:11:48Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/boltdb/bolt@v1.3.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/boltdb/bolt/@v/v1.3.1.mod"
+}
+{
+	"Path": "github.com/cespare/xxhash",
+	"Version": "v1.1.0",
+	"Time": "2018-09-10T06:45:31Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/cespare/xxhash/@v/v1.1.0.mod"
+}
+{
+	"Path": "github.com/client9/misspell",
+	"Version": "v0.3.4",
+	"Time": "2018-03-09T01:55:12Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/client9/misspell/@v/v0.3.4.mod"
+}
+{
+	"Path": "github.com/common-nighthawk/go-figure",
+	"Version": "v0.0.0-20190529165535-67e0ed34491a",
+	"Time": "2019-05-29T16:55:35Z",
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/common-nighthawk/go-figure@v0.0.0-20190529165535-67e0ed34491a",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/common-nighthawk/go-figure/@v/v0.0.0-20190529165535-67e0ed34491a.mod"
+}
+{
+	"Path": "github.com/coreos/bbolt",
+	"Version": "v1.3.2",
+	"Time": "2019-01-28T18:11:30Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/coreos/bbolt/@v/v1.3.2.mod"
+}
+{
+	"Path": "github.com/coreos/etcd",
+	"Version": "v3.3.13+incompatible",
+	"Time": "2019-05-02T17:22:46Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/coreos/etcd/@v/v3.3.13+incompatible.mod"
+}
+{
+	"Path": "github.com/coreos/go-semver",
+	"Version": "v0.2.0",
+	"Time": "2016-07-13T22:46:27Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/coreos/go-semver/@v/v0.2.0.mod"
+}
+{
+	"Path": "github.com/coreos/go-systemd",
+	"Version": "v0.0.0-20190321100706-95778dfbb74e",
+	"Time": "2019-03-21T10:07:06Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/coreos/go-systemd/@v/v0.0.0-20190321100706-95778dfbb74e.mod"
+}
+{
+	"Path": "github.com/coreos/pkg",
+	"Version": "v0.0.0-20180928190104-399ea9e2e55f",
+	"Time": "2018-09-28T19:01:04Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/coreos/pkg/@v/v0.0.0-20180928190104-399ea9e2e55f.mod"
+}
+{
+	"Path": "github.com/cpuguy83/go-md2man/v2",
+	"Version": "v2.0.0",
+	"Time": "2019-03-14T23:30:15Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/cpuguy83/go-md2man/v2/@v/v2.0.0.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "github.com/davecgh/go-spew",
+	"Version": "v1.1.1",
+	"Time": "2018-02-21T23:26:28Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/davecgh/go-spew@v1.1.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/davecgh/go-spew/@v/v1.1.1.mod"
+}
+{
+	"Path": "github.com/dgrijalva/jwt-go",
+	"Version": "v3.2.0+incompatible",
+	"Time": "2018-03-08T23:13:08Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/dgrijalva/jwt-go/@v/v3.2.0+incompatible.mod"
+}
+{
+	"Path": "github.com/dgryski/go-sip13",
+	"Version": "v0.0.0-20181026042036-e10d5fee7954",
+	"Time": "2018-10-26T04:20:36Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/dgryski/go-sip13/@v/v0.0.0-20181026042036-e10d5fee7954.mod"
+}
+{
+	"Path": "github.com/fsnotify/fsnotify",
+	"Version": "v1.4.9",
+	"Time": "2020-03-11T17:35:18Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/fsnotify/fsnotify@v1.4.9",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/fsnotify/fsnotify/@v/v1.4.9.mod",
+	"GoVersion": "1.13"
+}
+{
+	"Path": "github.com/ghodss/yaml",
+	"Version": "v1.0.0",
+	"Time": "2017-03-27T23:54:44Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/ghodss/yaml/@v/v1.0.0.mod"
+}
+{
+	"Path": "github.com/go-gl/glfw/v3.3/glfw",
+	"Version": "v0.0.0-20200222043503-6f7a984d4dc4",
+	"Time": "2020-02-22T04:35:03Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/go-gl/glfw/v3.3/glfw/@v/v0.0.0-20200222043503-6f7a984d4dc4.mod",
+	"GoVersion": "1.10"
+}
+{
+	"Path": "github.com/go-kit/kit",
+	"Version": "v0.8.0",
+	"Time": "2018-11-08T02:13:29Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/go-kit/kit/@v/v0.8.0.mod"
+}
+{
+	"Path": "github.com/go-logfmt/logfmt",
+	"Version": "v0.4.0",
+	"Time": "2018-11-22T01:56:15Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/go-logfmt/logfmt/@v/v0.4.0.mod"
+}
+{
+	"Path": "github.com/go-stack/stack",
+	"Version": "v1.8.0",
+	"Time": "2018-08-26T13:48:48Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/go-stack/stack@v1.8.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/go-stack/stack/@v/v1.8.0.mod"
+}
+{
+	"Path": "github.com/gogo/protobuf",
+	"Version": "v1.2.1",
+	"Time": "2019-02-18T06:30:03Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/gogo/protobuf/@v/v1.2.1.mod"
+}
+{
+	"Path": "github.com/golang/dep",
+	"Version": "v0.5.4",
+	"Time": "2019-06-13T19:24:58Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/golang/dep@v0.5.4",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/golang/dep/@v/v0.5.4.mod"
+}
+{
+	"Path": "github.com/golang/glog",
+	"Version": "v0.0.0-20160126235308-23def4e6c14b",
+	"Time": "2016-01-26T23:53:08Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/golang/glog/@v/v0.0.0-20160126235308-23def4e6c14b.mod"
+}
+{
+	"Path": "github.com/golang/groupcache",
+	"Version": "v0.0.0-20190129154638-5b532d6fd5ef",
+	"Time": "2019-01-29T15:46:38Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/golang/groupcache/@v/v0.0.0-20190129154638-5b532d6fd5ef.mod"
+}
+{
+	"Path": "github.com/golang/mock",
+	"Version": "v1.1.1",
+	"Time": "2018-04-05T21:54:04Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/golang/mock/@v/v1.1.1.mod"
+}
+{
+	"Path": "github.com/golang/protobuf",
+	"Version": "v1.3.1",
+	"Time": "2019-02-28T15:19:29Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/golang/protobuf@v1.3.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/golang/protobuf/@v/v1.3.1.mod"
+}
+{
+	"Path": "github.com/google/btree",
+	"Version": "v1.0.0",
+	"Time": "2018-08-13T15:31:12Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/google/btree/@v/v1.0.0.mod"
+}
+{
+	"Path": "github.com/google/go-cmp",
+	"Version": "v0.4.0",
+	"Time": "2019-12-16T21:18:14Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/google/go-cmp@v0.4.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/google/go-cmp/@v/v0.4.0.mod",
+	"GoVersion": "1.8"
+}
+{
+	"Path": "github.com/google/gofuzz",
+	"Version": "v1.0.0",
+	"Time": "2019-04-08T17:44:45Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/google/gofuzz/@v/v1.0.0.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "github.com/gopherjs/gopherjs",
+	"Version": "v0.0.0-20181017120253-0766667cb4d1",
+	"Time": "2018-10-17T12:02:53Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/gopherjs/gopherjs@v0.0.0-20181017120253-0766667cb4d1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/gopherjs/gopherjs/@v/v0.0.0-20181017120253-0766667cb4d1.mod"
+}
+{
+	"Path": "github.com/grpc-ecosystem/go-grpc-middleware",
+	"Version": "v1.0.0",
+	"Time": "2018-05-02T09:16:42Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/grpc-ecosystem/go-grpc-middleware/@v/v1.0.0.mod"
+}
+{
+	"Path": "github.com/grpc-ecosystem/go-grpc-prometheus",
+	"Version": "v1.2.0",
+	"Time": "2018-06-04T12:28:56Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/grpc-ecosystem/go-grpc-prometheus/@v/v1.2.0.mod"
+}
+{
+	"Path": "github.com/grpc-ecosystem/grpc-gateway",
+	"Version": "v1.9.0",
+	"Time": "2019-05-14T09:07:28Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/grpc-ecosystem/grpc-gateway/@v/v1.9.0.mod"
+}
+{
+	"Path": "github.com/hashicorp/hcl",
+	"Version": "v1.0.0",
+	"Time": "2018-08-26T00:51:36Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/hashicorp/hcl@v1.0.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/hashicorp/hcl/@v/v1.0.0.mod"
+}
+{
+	"Path": "github.com/inconshreveable/mousetrap",
+	"Version": "v1.0.0",
+	"Time": "2014-10-17T20:07:13Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/inconshreveable/mousetrap@v1.0.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/inconshreveable/mousetrap/@v/v1.0.0.mod"
+}
+{
+	"Path": "github.com/jarcoal/httpmock",
+	"Version": "v1.0.5",
+	"Time": "2020-03-17T17:24:54Z",
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/jarcoal/httpmock@v1.0.5",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/jarcoal/httpmock/@v/v1.0.5.mod",
+	"GoVersion": "1.7"
+}
+{
+	"Path": "github.com/jmank88/nuts",
+	"Version": "v0.3.0",
+	"Time": "2018-01-09T02:25:40Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/jmank88/nuts@v0.3.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/jmank88/nuts/@v/v0.3.0.mod"
+}
+{
+	"Path": "github.com/jonboulle/clockwork",
+	"Version": "v0.1.0",
+	"Time": "2016-06-15T17:50:15Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/jonboulle/clockwork/@v/v0.1.0.mod"
+}
+{
+	"Path": "github.com/json-iterator/go",
+	"Version": "v1.1.9",
+	"Time": "2019-12-21T03:10:28Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/json-iterator/go/@v/v1.1.9.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "github.com/jtolds/gls",
+	"Version": "v4.20.0+incompatible",
+	"Time": "2018-11-10T20:30:27Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/jtolds/gls@v4.20.0+incompatible",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/jtolds/gls/@v/v4.20.0+incompatible.mod"
+}
+{
+	"Path": "github.com/julienschmidt/httprouter",
+	"Version": "v1.2.0",
+	"Time": "2018-07-15T16:18:54Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/julienschmidt/httprouter/@v/v1.2.0.mod"
+}
+{
+	"Path": "github.com/kisielk/errcheck",
+	"Version": "v1.1.0",
+	"Time": "2018-05-22T14:10:03Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/kisielk/errcheck/@v/v1.1.0.mod"
+}
+{
+	"Path": "github.com/kisielk/gotool",
+	"Version": "v1.0.0",
+	"Time": "2018-02-21T18:54:26Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/kisielk/gotool/@v/v1.0.0.mod"
+}
+{
+	"Path": "github.com/konsorten/go-windows-terminal-sequences",
+	"Version": "v1.0.3",
+	"Time": "2020-04-28T12:16:39Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/konsorten/go-windows-terminal-sequences@v1.0.3",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/konsorten/go-windows-terminal-sequences/@v/v1.0.3.mod"
+}
+{
+	"Path": "github.com/kr/logfmt",
+	"Version": "v0.0.0-20140226030751-b84e30acd515",
+	"Time": "2014-02-26T03:07:51Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/kr/logfmt/@v/v0.0.0-20140226030751-b84e30acd515.mod"
+}
+{
+	"Path": "github.com/kr/pretty",
+	"Version": "v0.1.0",
+	"Time": "2018-05-06T08:33:45Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/kr/pretty@v0.1.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/kr/pretty/@v/v0.1.0.mod"
+}
+{
+	"Path": "github.com/kr/pty",
+	"Version": "v1.1.1",
+	"Time": "2018-01-13T18:08:13Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/kr/pty@v1.1.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/kr/pty/@v/v1.1.1.mod"
+}
+{
+	"Path": "github.com/kr/text",
+	"Version": "v0.1.0",
+	"Time": "2018-05-06T08:24:08Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/kr/text@v0.1.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/kr/text/@v/v0.1.0.mod"
+}
+{
+	"Path": "github.com/logrusorgru/aurora",
+	"Version": "v0.0.0-20190803045625-94edacc10f9b",
+	"Time": "2019-08-03T04:56:25Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/logrusorgru/aurora@v0.0.0-20190803045625-94edacc10f9b",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/logrusorgru/aurora/@v/v0.0.0-20190803045625-94edacc10f9b.mod"
+}
+{
+	"Path": "github.com/magiconair/properties",
+	"Version": "v1.8.1",
+	"Time": "2019-05-10T14:34:07Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/magiconair/properties@v1.8.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/magiconair/properties/@v/v1.8.1.mod"
+}
+{
+	"Path": "github.com/matttproud/golang_protobuf_extensions",
+	"Version": "v1.0.1",
+	"Time": "2016-04-24T11:30:07Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/matttproud/golang_protobuf_extensions/@v/v1.0.1.mod"
+}
+{
+	"Path": "github.com/mitchellh/go-homedir",
+	"Version": "v1.1.0",
+	"Time": "2019-01-27T04:21:35Z",
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/mitchellh/go-homedir@v1.1.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/mitchellh/go-homedir/@v/v1.1.0.mod"
+}
+{
+	"Path": "github.com/mitchellh/mapstructure",
+	"Version": "v1.3.0",
+	"Time": "2020-04-28T15:57:09Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/mitchellh/mapstructure@v1.3.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/mitchellh/mapstructure/@v/v1.3.0.mod",
+	"GoVersion": "1.14"
+}
+{
+	"Path": "github.com/modern-go/concurrent",
+	"Version": "v0.0.0-20180228061459-e0a39a4cb421",
+	"Time": "2018-02-28T06:14:59Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/modern-go/concurrent/@v/v0.0.0-20180228061459-e0a39a4cb421.mod"
+}
+{
+	"Path": "github.com/modern-go/reflect2",
+	"Version": "v1.0.1",
+	"Time": "2018-07-18T01:23:57Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/modern-go/reflect2/@v/v1.0.1.mod"
+}
+{
+	"Path": "github.com/mwitkow/go-conntrack",
+	"Version": "v0.0.0-20161129095857-cc309e4a2223",
+	"Time": "2016-11-29T09:58:57Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/mwitkow/go-conntrack/@v/v0.0.0-20161129095857-cc309e4a2223.mod"
+}
+{
+	"Path": "github.com/nightlyone/lockfile",
+	"Version": "v0.0.0-20180618180623-0ad87eef1443",
+	"Time": "2018-06-18T18:06:23Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/nightlyone/lockfile@v0.0.0-20180618180623-0ad87eef1443",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/nightlyone/lockfile/@v/v0.0.0-20180618180623-0ad87eef1443.mod"
+}
+{
+	"Path": "github.com/oklog/ulid",
+	"Version": "v1.3.1",
+	"Time": "2018-10-02T12:43:06Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/oklog/ulid/@v/v1.3.1.mod"
+}
+{
+	"Path": "github.com/package-url/packageurl-go",
+	"Version": "v0.1.0",
+	"Time": "2019-08-28T14:09:36Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/package-url/packageurl-go@v0.1.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/package-url/packageurl-go/@v/v0.1.0.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "github.com/pelletier/go-toml",
+	"Version": "v1.7.0",
+	"Time": "2020-04-03T11:10:45Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/pelletier/go-toml@v1.7.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/pelletier/go-toml/@v/v1.7.0.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "github.com/pkg/errors",
+	"Version": "v0.8.0",
+	"Time": "2016-09-29T01:48:01Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/pkg/errors@v0.8.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/pkg/errors/@v/v0.8.0.mod"
+}
+{
+	"Path": "github.com/pmezard/go-difflib",
+	"Version": "v1.0.0",
+	"Time": "2016-01-10T10:55:54Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/pmezard/go-difflib@v1.0.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/pmezard/go-difflib/@v/v1.0.0.mod"
+}
+{
+	"Path": "github.com/prometheus/client_golang",
+	"Version": "v0.9.3",
+	"Time": "2019-05-16T21:22:10Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/prometheus/client_golang/@v/v0.9.3.mod"
+}
+{
+	"Path": "github.com/prometheus/client_model",
+	"Version": "v0.0.0-20190129233127-fd36f4220a90",
+	"Time": "2019-01-29T23:31:27Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/prometheus/client_model/@v/v0.0.0-20190129233127-fd36f4220a90.mod",
+	"GoVersion": "1.9"
+}
+{
+	"Path": "github.com/prometheus/common",
+	"Version": "v0.4.0",
+	"Time": "2019-05-07T17:25:55Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/prometheus/common/@v/v0.4.0.mod"
+}
+{
+	"Path": "github.com/prometheus/procfs",
+	"Version": "v0.0.0-20190507164030-5867b95ac084",
+	"Time": "2019-05-07T16:40:30Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/prometheus/procfs/@v/v0.0.0-20190507164030-5867b95ac084.mod"
+}
+{
+	"Path": "github.com/prometheus/tsdb",
+	"Version": "v0.7.1",
+	"Time": "2019-04-24T12:20:45Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/prometheus/tsdb/@v/v0.7.1.mod"
+}
+{
+	"Path": "github.com/recoilme/pudge",
+	"Version": "v1.0.3",
+	"Time": "2019-09-30T08:51:08Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/recoilme/pudge@v1.0.3",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/recoilme/pudge/@v/v1.0.3.mod",
+	"GoVersion": "1.13"
+}
+{
+	"Path": "github.com/rogpeppe/fastuuid",
+	"Version": "v0.0.0-20150106093220-6724a57986af",
+	"Time": "2015-01-06T09:32:20Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/rogpeppe/fastuuid/@v/v0.0.0-20150106093220-6724a57986af.mod"
+}
+{
+	"Path": "github.com/russross/blackfriday/v2",
+	"Version": "v2.0.1",
+	"Time": "2018-09-20T17:16:15Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/russross/blackfriday/v2/@v/v2.0.1.mod"
+}
+{
+	"Path": "github.com/sdboyer/constext",
+	"Version": "v0.0.0-20170321163424-836a14457353",
+	"Time": "2017-03-21T16:34:24Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/sdboyer/constext@v0.0.0-20170321163424-836a14457353",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/sdboyer/constext/@v/v0.0.0-20170321163424-836a14457353.mod"
+}
+{
+	"Path": "github.com/shopspring/decimal",
+	"Version": "v1.2.0",
+	"Time": "2020-04-28T21:23:09Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/shopspring/decimal@v1.2.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/shopspring/decimal/@v/v1.2.0.mod",
+	"GoVersion": "1.13"
+}
+{
+	"Path": "github.com/shurcooL/sanitized_anchor_name",
+	"Version": "v1.0.0",
+	"Time": "2018-12-26T21:49:07Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/shurcoo!l/sanitized_anchor_name/@v/v1.0.0.mod"
+}
+{
+	"Path": "github.com/sirupsen/logrus",
+	"Version": "v1.5.0",
+	"Time": "2020-03-22T13:43:59Z",
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/sirupsen/logrus@v1.5.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/sirupsen/logrus/@v/v1.5.0.mod",
+	"GoVersion": "1.13"
+}
+{
+	"Path": "github.com/smartystreets/assertions",
+	"Version": "v0.0.0-20180927180507-b2de0cb4f26d",
+	"Time": "2018-09-27T18:05:07Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/smartystreets/assertions@v0.0.0-20180927180507-b2de0cb4f26d",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/smartystreets/assertions/@v/v0.0.0-20180927180507-b2de0cb4f26d.mod"
+}
+{
+	"Path": "github.com/smartystreets/goconvey",
+	"Version": "v1.6.4",
+	"Time": "2019-07-31T23:36:26Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/smartystreets/goconvey@v1.6.4",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/smartystreets/goconvey/@v/v1.6.4.mod"
+}
+{
+	"Path": "github.com/soheilhy/cmux",
+	"Version": "v0.1.4",
+	"Time": "2018-01-29T15:50:01Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/soheilhy/cmux/@v/v0.1.4.mod"
+}
+{
+	"Path": "github.com/sonatype-nexus-community/nancy",
+	"Version": "v0.2.3",
+	"Time": "2020-04-27T05:02:18Z",
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/sonatype-nexus-community/nancy@v0.2.3",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/sonatype-nexus-community/nancy/@v/v0.2.3.mod",
+	"GoVersion": "1.13"
+}
+{
+	"Path": "github.com/spaolacci/murmur3",
+	"Version": "v0.0.0-20180118202830-f09979ecbc72",
+	"Time": "2018-01-18T20:28:30Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/spaolacci/murmur3/@v/v0.0.0-20180118202830-f09979ecbc72.mod"
+}
+{
+	"Path": "github.com/spf13/afero",
+	"Version": "v1.2.2",
+	"Time": "2019-03-26T12:07:55Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/spf13/afero@v1.2.2",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/spf13/afero/@v/v1.2.2.mod"
+}
+{
+	"Path": "github.com/spf13/cast",
+	"Version": "v1.3.1",
+	"Time": "2019-12-18T07:28:14Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/spf13/cast@v1.3.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/spf13/cast/@v/v1.3.1.mod"
+}
+{
+	"Path": "github.com/spf13/cobra",
+	"Version": "v1.0.0",
+	"Time": "2020-04-10T19:56:28Z",
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/spf13/cobra@v1.0.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/spf13/cobra/@v/v1.0.0.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "github.com/spf13/jwalterweatherman",
+	"Version": "v1.1.0",
+	"Time": "2018-10-28T14:53:47Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/spf13/jwalterweatherman@v1.1.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/spf13/jwalterweatherman/@v/v1.1.0.mod"
+}
+{
+	"Path": "github.com/spf13/pflag",
+	"Version": "v1.0.5",
+	"Time": "2019-09-18T19:59:20Z",
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/spf13/pflag@v1.0.5",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/spf13/pflag/@v/v1.0.5.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "github.com/spf13/viper",
+	"Version": "v1.6.3",
+	"Time": "2020-04-09T18:17:36Z",
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/spf13/viper@v1.6.3",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/spf13/viper/@v/v1.6.3.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "github.com/stretchr/objx",
+	"Version": "v0.1.1",
+	"Time": "2018-01-25T22:19:50Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/stretchr/objx@v0.1.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/stretchr/objx/@v/v0.1.1.mod"
+}
+{
+	"Path": "github.com/stretchr/testify",
+	"Version": "v1.5.1",
+	"Time": "2020-02-19T20:56:11Z",
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/stretchr/testify@v1.5.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/stretchr/testify/@v/v1.5.1.mod",
+	"GoVersion": "1.13"
+}
+{
+	"Path": "github.com/subosito/gotenv",
+	"Version": "v1.2.0",
+	"Time": "2019-08-03T14:02:50Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/github.com/subosito/gotenv@v1.2.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/subosito/gotenv/@v/v1.2.0.mod"
+}
+{
+	"Path": "github.com/tmc/grpc-websocket-proxy",
+	"Version": "v0.0.0-20190109142713-0ad062ec5ee5",
+	"Time": "2019-01-09T14:27:13Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/tmc/grpc-websocket-proxy/@v/v0.0.0-20190109142713-0ad062ec5ee5.mod"
+}
+{
+	"Path": "github.com/ugorji/go",
+	"Version": "v1.1.4",
+	"Time": "2019-04-08T19:09:18Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/ugorji/go/@v/v1.1.4.mod"
+}
+{
+	"Path": "github.com/xiang90/probing",
+	"Version": "v0.0.0-20190116061207-43a291ad63a2",
+	"Time": "2019-01-16T06:12:07Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/xiang90/probing/@v/v0.0.0-20190116061207-43a291ad63a2.mod"
+}
+{
+	"Path": "github.com/xordataexchange/crypt",
+	"Version": "v0.0.3-0.20170626215501-b2862e3d0a77",
+	"Time": "2017-06-26T21:55:01Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/github.com/xordataexchange/crypt/@v/v0.0.3-0.20170626215501-b2862e3d0a77.mod"
+}
+{
+	"Path": "go.etcd.io/bbolt",
+	"Version": "v1.3.2",
+	"Time": "2019-01-28T18:11:30Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/go.etcd.io/bbolt/@v/v1.3.2.mod"
+}
+{
+	"Path": "go.uber.org/atomic",
+	"Version": "v1.4.0",
+	"Time": "2019-05-01T20:56:49Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/go.uber.org/atomic/@v/v1.4.0.mod"
+}
+{
+	"Path": "go.uber.org/multierr",
+	"Version": "v1.1.0",
+	"Time": "2017-06-30T17:54:37Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/go.uber.org/multierr/@v/v1.1.0.mod"
+}
+{
+	"Path": "go.uber.org/zap",
+	"Version": "v1.10.0",
+	"Time": "2019-04-30T01:48:40Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/go.uber.org/zap/@v/v1.10.0.mod"
+}
+{
+	"Path": "golang.org/x/crypto",
+	"Version": "v0.0.0-20191011191535-87dc89f01550",
+	"Time": "2019-10-11T19:15:35Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/crypto/@v/v0.0.0-20191011191535-87dc89f01550.mod"
+}
+{
+	"Path": "golang.org/x/exp",
+	"Version": "v0.0.0-20200513190911-00229845015e",
+	"Time": "2020-05-13T19:09:11Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/golang.org/x/exp@v0.0.0-20200513190911-00229845015e",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/exp/@v/v0.0.0-20200513190911-00229845015e.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "golang.org/x/image",
+	"Version": "v0.0.0-20190802002840-cff245a6509b",
+	"Time": "2019-08-02T00:28:40Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/image/@v/v0.0.0-20190802002840-cff245a6509b.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "golang.org/x/lint",
+	"Version": "v0.0.0-20190313153728-d0100b6bd8b3",
+	"Time": "2019-03-13T15:37:28Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/lint/@v/v0.0.0-20190313153728-d0100b6bd8b3.mod"
+}
+{
+	"Path": "golang.org/x/mobile",
+	"Version": "v0.0.0-20190719004257-d2bd2a29d028",
+	"Time": "2019-07-19T00:42:57Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/mobile/@v/v0.0.0-20190719004257-d2bd2a29d028.mod",
+	"GoVersion": "1.11"
+}
+{
+	"Path": "golang.org/x/mod",
+	"Version": "v0.1.1-0.20191107180719-034126e5016b",
+	"Time": "2019-11-07T18:07:19Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/golang.org/x/mod@v0.1.1-0.20191107180719-034126e5016b",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/mod/@v/v0.1.1-0.20191107180719-034126e5016b.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "golang.org/x/net",
+	"Version": "v0.0.0-20190620200207-3b0461eec859",
+	"Time": "2019-06-20T20:02:07Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/net/@v/v0.0.0-20190620200207-3b0461eec859.mod",
+	"GoVersion": "1.11"
+}
+{
+	"Path": "golang.org/x/oauth2",
+	"Version": "v0.0.0-20180821212333-d2e6202438be",
+	"Time": "2018-08-21T21:23:33Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/oauth2/@v/v0.0.0-20180821212333-d2e6202438be.mod"
+}
+{
+	"Path": "golang.org/x/sync",
+	"Version": "v0.0.0-20200317015054-43a5402ce75a",
+	"Time": "2020-03-17T01:50:54Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/golang.org/x/sync@v0.0.0-20200317015054-43a5402ce75a",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/sync/@v/v0.0.0-20200317015054-43a5402ce75a.mod"
+}
+{
+	"Path": "golang.org/x/sys",
+	"Version": "v0.0.0-20200430202703-d923437fa56d",
+	"Time": "2020-04-30T20:27:03Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/golang.org/x/sys@v0.0.0-20200430202703-d923437fa56d",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/sys/@v/v0.0.0-20200430202703-d923437fa56d.mod",
+	"GoVersion": "1.12"
+}
+{
+	"Path": "golang.org/x/text",
+	"Version": "v0.3.2",
+	"Time": "2019-04-25T21:42:06Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/golang.org/x/text@v0.3.2",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/text/@v/v0.3.2.mod"
+}
+{
+	"Path": "golang.org/x/time",
+	"Version": "v0.0.0-20190308202827-9d24e82272b4",
+	"Time": "2019-03-08T20:28:27Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/time/@v/v0.0.0-20190308202827-9d24e82272b4.mod"
+}
+{
+	"Path": "golang.org/x/tools",
+	"Version": "v0.0.0-20200207183749-b753a1ba74fa",
+	"Time": "2020-02-07T18:37:49Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/tools/@v/v0.0.0-20200207183749-b753a1ba74fa.mod",
+	"GoVersion": "1.11"
+}
+{
+	"Path": "golang.org/x/xerrors",
+	"Version": "v0.0.0-20191204190536-9bdfabe68543",
+	"Time": "2019-12-04T19:05:36Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/golang.org/x/xerrors@v0.0.0-20191204190536-9bdfabe68543",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/golang.org/x/xerrors/@v/v0.0.0-20191204190536-9bdfabe68543.mod",
+	"GoVersion": "1.11"
+}
+{
+	"Path": "google.golang.org/appengine",
+	"Version": "v1.1.0",
+	"Time": "2018-05-21T22:34:13Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/google.golang.org/appengine/@v/v1.1.0.mod"
+}
+{
+	"Path": "google.golang.org/genproto",
+	"Version": "v0.0.0-20180817151627-c66870c02cf8",
+	"Time": "2018-08-17T15:16:27Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/google.golang.org/genproto/@v/v0.0.0-20180817151627-c66870c02cf8.mod"
+}
+{
+	"Path": "google.golang.org/grpc",
+	"Version": "v1.21.0",
+	"Time": "2019-05-22T17:02:58Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/google.golang.org/grpc/@v/v1.21.0.mod"
+}
+{
+	"Path": "gopkg.in/alecthomas/kingpin.v2",
+	"Version": "v2.2.6",
+	"Time": "2017-12-17T18:08:38Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/gopkg.in/alecthomas/kingpin.v2/@v/v2.2.6.mod"
+}
+{
+	"Path": "gopkg.in/check.v1",
+	"Version": "v1.0.0-20180628173108-788fd7840127",
+	"Time": "2018-06-28T17:31:08Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/gopkg.in/check.v1@v1.0.0-20180628173108-788fd7840127",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/gopkg.in/check.v1/@v/v1.0.0-20180628173108-788fd7840127.mod"
+}
+{
+	"Path": "gopkg.in/go-playground/assert.v1",
+	"Version": "v1.2.1",
+	"Time": "2016-02-05T15:04:13Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/gopkg.in/go-playground/assert.v1@v1.2.1",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/gopkg.in/go-playground/assert.v1/@v/v1.2.1.mod"
+}
+{
+	"Path": "gopkg.in/ini.v1",
+	"Version": "v1.55.0",
+	"Time": "2020-03-15T12:54:19Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/gopkg.in/ini.v1@v1.55.0",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/gopkg.in/ini.v1/@v/v1.55.0.mod"
+}
+{
+	"Path": "gopkg.in/resty.v1",
+	"Version": "v1.12.0",
+	"Time": "2019-02-28T07:26:48Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/gopkg.in/resty.v1/@v/v1.12.0.mod"
+}
+{
+	"Path": "gopkg.in/yaml.v2",
+	"Version": "v2.2.8",
+	"Time": "2020-01-21T17:19:40Z",
+	"Indirect": true,
+	"Dir": "/Users/darthhater/go/pkg/mod/gopkg.in/yaml.v2@v2.2.8",
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/gopkg.in/yaml.v2/@v/v2.2.8.mod"
+}
+{
+	"Path": "honnef.co/go/tools",
+	"Version": "v0.0.0-20190102054323-c2f93a96b099",
+	"Time": "2019-01-02T05:43:23Z",
+	"Indirect": true,
+	"GoMod": "/Users/darthhater/go/pkg/mod/cache/download/honnef.co/go/tools/@v/v0.0.0-20190102054323-c2f93a96b099.mod"
+}
