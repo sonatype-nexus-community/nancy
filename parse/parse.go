@@ -126,7 +126,6 @@ func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectLi
 	s := strings.Split(text, " ")
 	if criteria(s) {
 		if len(s) > 3 {
-			fmt.Print(s)
 			deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[4]})
 		} else {
 			deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[1]})
