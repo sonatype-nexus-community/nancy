@@ -23,17 +23,6 @@ import (
 	"testing"
 )
 
-func TestGoSum(t *testing.T) {
-	deps, err := GoSum("testdata/go.sum")
-	if err != nil {
-		t.Error(err)
-	}
-
-	if len(deps.Projects) != 10 {
-		t.Error(deps)
-	}
-}
-
 func TestGoListAgnostic(t *testing.T) {
 	goListFile, err := os.Open("testdata/golist.out")
 	if err != nil {
@@ -121,12 +110,5 @@ golang.org/x/sys v0.0.0-20181228144115-9a3f9b0469bb`
 
 	if len(deps.Projects) != 16 {
 		t.Error(deps)
-	}
-}
-
-func TestGoSumError(t *testing.T) {
-	_, err := GoSum("../testdata/parse/go.notsum")
-	if err == nil {
-		t.Error(err)
 	}
 }

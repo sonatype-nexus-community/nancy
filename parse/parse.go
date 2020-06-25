@@ -22,15 +22,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-var goModDependencyCriteria = func(s []string) bool {
-	return len(s) > 1 && !strings.HasSuffix(s[1], "/go.mod")
-}
 var goListDependencyCriteria = func(s []string) bool {
 	return len(s) > 1
 }
@@ -103,22 +99,6 @@ func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 	dep.Name = mod.Path
 	dep.Version = mod.Version
 	return
-}
-
-// GoSum parses the go.sum file and returns an error if unsuccessful
-func GoSum(path string) (deps types.ProjectList, err error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return deps, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		parseSpaceSeparatedDependency(scanner, &deps, goModDependencyCriteria)
-	}
-
-	return deps, nil
 }
 
 func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectList, criteria func(s []string) bool) {
