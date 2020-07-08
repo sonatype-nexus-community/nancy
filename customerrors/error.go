@@ -46,7 +46,7 @@ func NewErrorExitPrintHelp(errCause error, message string) ErrorExit {
 
 	var logFile string
 	var logFileErr error
-	if logFile = logger.GetLogFileLocation(); logFileErr != nil {
+	if logFile, logFileErr = logger.LogFileLocation(); logFileErr != nil {
 		logFile = "unknown"
 	}
 
