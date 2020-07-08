@@ -18,8 +18,9 @@ package customerrors
 
 import (
 	"fmt"
+
 	"github.com/sonatype-nexus-community/nancy/buildversion"
-	. "github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/logger"
 )
 
 type ErrorExit struct {
@@ -40,12 +41,12 @@ func (ee ErrorExit) Error() string {
 
 func NewErrorExitPrintHelp(errCause error, message string) ErrorExit {
 	myErr := ErrorExit{message, errCause, 3}
-	LogLady.WithField("error", errCause).Error(message)
+	// LogLady.WithField("error", errCause).Error(message)
 	fmt.Println(myErr.Error())
 
 	var logFile string
 	var logFileErr error
-	if logFile, logFileErr = LogFileLocation(); logFileErr != nil {
+	if logFile = logger.GetLogFileLocation(); logFileErr != nil {
 		logFile = "unknown"
 	}
 

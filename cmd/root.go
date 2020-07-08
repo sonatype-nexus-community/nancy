@@ -28,11 +28,12 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/logger"
-	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -46,6 +47,8 @@ var (
 	configOssi                   types.Configuration
 	excludeVulnerabilityFilePath string
 	outputFormat                 string
+	log                          *logrus.Logger
+	ossIndex                     *ossindex.Server
 )
 
 var outputFormats = map[string]logrus.Formatter{
@@ -73,6 +76,8 @@ a smooth experience as a Golang developer, using the best tools in the market!`,
 				logger.PrintErrorAndLogLocation(err)
 			}
 		}()
+
+		log = logger.GetLogger("", configOssi.LogLevel)
 
 		err = processConfig()
 		if err != nil {
@@ -153,16 +158,18 @@ func processConfig() (err error) {
 	}
 
 	if configOssi.CleanCache {
-		if err := ossindex.RemoveCacheDirectory(); err != nil {
+		if err := ossIndex.NoCacheNoProblems(); err != nil {
 			fmt.Printf("ERROR: cleaning cache: %v\n", err)
 			os.Exit(1)
 		}
 		return
 	}
 
+	ossIndex = ossindex.Default(log)
+
 	printHeader(!configOssi.Quiet && reflect.TypeOf(configOssi.Formatter).String() == "*audit.AuditLogTextFormatter")
 
-	if err = doStdInAndParse(configOssi); err != nil {
+	if err = doStdInAndParse(); err != nil {
 		return
 	}
 
@@ -178,7 +185,7 @@ func printHeader(print bool) {
 	}
 }
 
-func doStdInAndParse(config types.Configuration) (err error) {
+func doStdInAndParse() (err error) {
 	if err = checkStdIn(); err != nil {
 		return err
 	}
@@ -190,27 +197,27 @@ func doStdInAndParse(config types.Configuration) (err error) {
 
 	var purls = mod.ExtractPurlsFromManifest()
 
-	err = checkOSSIndex(purls, nil, config)
+	err = checkOSSIndex(purls, nil)
 
 	return err
 }
 
-func checkOSSIndex(purls []string, invalidpurls []string, config types.Configuration) error {
+func checkOSSIndex(purls []string, invalidpurls []string) (err error) {
 	var packageCount = len(purls)
-	coordinates, err := ossindex.AuditPackagesWithOSSIndex(purls, &config)
+	coordinates, err := ossIndex.AuditPackages(purls)
 	if err != nil {
-		return customerrors.NewErrorExitPrintHelp(err, "Error auditing packages")
+		return
 	}
 
-	var invalidCoordinates []types.Coordinate
+	var invalidCoordinates []ossIndexTypes.Coordinate
 	for _, invalidpurl := range invalidpurls {
-		invalidCoordinates = append(invalidCoordinates, types.Coordinate{Coordinates: invalidpurl, InvalidSemVer: true})
+		invalidCoordinates = append(invalidCoordinates, ossIndexTypes.Coordinate{Coordinates: invalidpurl, InvalidSemVer: true})
 	}
 
-	if count := audit.LogResults(config.Formatter, packageCount, coordinates, invalidCoordinates, config.CveList.Cves); count > 0 {
+	if count := audit.LogResults(configOssi.Formatter, packageCount, coordinates, invalidCoordinates, configOssi.CveList.Cves); count > 0 {
 		os.Exit(count)
 	}
-	return nil
+	return
 }
 
 var stdInInvalid = customerrors.ErrorExit{ExitCode: 1, Message: "StdIn is invalid, either empty or another reason"}
