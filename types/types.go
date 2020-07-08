@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	decimal "github.com/shopspring/decimal"
+	"github.com/sirupsen/logrus"
 )
 
 // Helpful constants to pull strings we use more than once out of code
@@ -31,6 +32,28 @@ const (
 	IQServerDirName        = ".iqserver"
 	IQServerConfigFileName = ".iq-server-config"
 )
+
+type Configuration struct {
+	Version     bool
+	NoColor     bool
+	Quiet       bool
+	CleanCache  bool
+	CveList     CveListFlag
+	Path        string
+	Formatter   logrus.Formatter
+	LogLevel    int
+	Username    string `yaml:"Username"`
+	Token       string `yaml:"Token"`
+	Help        bool
+	User        string
+	Stage       string
+	Application string
+	Server      string
+	MaxRetries  int
+	Info        bool
+	Debug       bool
+	Trace       bool
+}
 
 type Vulnerability struct {
 	Id          string

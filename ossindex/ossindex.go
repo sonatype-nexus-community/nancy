@@ -21,12 +21,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/sonatype-nexus-community/nancy/configuration"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
+
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/ossindex/internal/cache"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -77,11 +77,11 @@ func AuditPackages(purls []string) ([]types.Coordinate, error) {
 }
 
 // AuditPackagesWithOSSIndex will given a list of Package URLs, run an OSS Index audit, and takes OSS Index configuration
-func AuditPackagesWithOSSIndex(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
+func AuditPackagesWithOSSIndex(purls []string, config *types.Configuration) ([]types.Coordinate, error) {
 	return doAuditPackages(purls, config)
 }
 
-func doAuditPackages(purls []string, config *configuration.Configuration) ([]types.Coordinate, error) {
+func doAuditPackages(purls []string, config *types.Configuration) ([]types.Coordinate, error) {
 	newPurls, results, err := dbCache.GetCacheValues(purls)
 	if err != nil {
 		return nil, customerrors.NewErrorExitPrintHelp(err, "Error initializing cache")
@@ -113,7 +113,7 @@ func doAuditPackages(purls []string, config *configuration.Configuration) ([]typ
 	return results, nil
 }
 
-func doRequestToOSSIndex(jsonStr []byte, config *configuration.Configuration) (coordinates []types.Coordinate, err error) {
+func doRequestToOSSIndex(jsonStr []byte, config *types.Configuration) (coordinates []types.Coordinate, err error) {
 	req, err := setupRequest(jsonStr, config)
 	if err != nil {
 		return
@@ -155,7 +155,7 @@ func doRequestToOSSIndex(jsonStr []byte, config *configuration.Configuration) (c
 	return
 }
 
-func setupRequest(jsonStr []byte, config *configuration.Configuration) (req *http.Request, err error) {
+func setupRequest(jsonStr []byte, config *types.Configuration) (req *http.Request, err error) {
 	LogLady.WithField("json_string", string(jsonStr)).Debug("Setting up new POST request to OSS Index")
 	req, err = http.NewRequest(
 		"POST",

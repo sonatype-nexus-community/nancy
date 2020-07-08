@@ -20,13 +20,16 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"os"
 	"path"
+	"reflect"
+	"strings"
+
 	"github.com/common-nighthawk/go-figure"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/ossindex"
@@ -34,18 +37,15 @@ import (
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/cobra"
-	"os"
-	"reflect"
-	"strings"
 
 	"github.com/spf13/viper"
 )
 
 var (
-	cfgFile string
-	configOssi configuration.Configuration
+	cfgFile                      string
+	configOssi                   types.Configuration
 	excludeVulnerabilityFilePath string
-	outputFormat string
+	outputFormat                 string
 )
 
 var outputFormats = map[string]logrus.Formatter{
@@ -178,7 +178,7 @@ func printHeader(print bool) {
 	}
 }
 
-func doStdInAndParse(config configuration.Configuration) (err error) {
+func doStdInAndParse(config types.Configuration) (err error) {
 	if err = checkStdIn(); err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func doStdInAndParse(config configuration.Configuration) (err error) {
 	return err
 }
 
-func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) error {
+func checkOSSIndex(purls []string, invalidpurls []string, config types.Configuration) error {
 	var packageCount = len(purls)
 	coordinates, err := ossindex.AuditPackagesWithOSSIndex(purls, &config)
 	if err != nil {
