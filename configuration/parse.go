@@ -20,16 +20,15 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"github.com/sonatype-nexus-community/nancy/audit"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/audit"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"gopkg.in/yaml.v2"
@@ -45,6 +44,7 @@ type Configuration struct {
 	CveList    types.CveListFlag
 	Path       string
 	Formatter  logrus.Formatter
+	LogLevel   int
 	Info       bool
 	Debug      bool
 	Trace      bool
@@ -105,7 +105,7 @@ Options:
 	return config, err
 }
 
-func loadConfigFromFile(configLocation string, config *Configuration) error {
+func LoadConfigFromFile(configLocation string, config *Configuration) error {
 	b, err := ioutil.ReadFile(configLocation)
 	if err != nil {
 		LogLady.WithField("error", err).Error("Unable to read OSS Index file")
@@ -147,46 +147,47 @@ func Parse(args []string) (Configuration, error) {
 		"csv":         &audit.CsvFormatter{Quiet: &config.Quiet},
 	}
 
-	flag.BoolVar(&config.Help, "help", false, "provides help text on how to use nancy")
-	flag.BoolVar(&config.NoColor, "no-color", false, "indicate output should not be colorized")
-	flag.BoolVar(&config.Quiet, "quiet", false, "indicate output should contain only packages with vulnerabilities")
-	flag.BoolVar(&config.Version, "version", false, "prints current nancy version")
-	flag.BoolVar(&config.CleanCache, "clean-cache", false, "Deletes local cache directory")
-	flag.BoolVar(&config.Info, "v", false, "Set log level to Info")
-	flag.BoolVar(&config.Debug, "vv", false, "Set log level to Debug")
-	flag.BoolVar(&config.Trace, "vvv", false, "Set log level to Trace")
-	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
-	flag.StringVar(&config.Username, "user", "", "Specify OSS Index username for request")
-	flag.StringVar(&config.Token, "token", "", "Specify OSS Index API token for request")
-	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
-	flag.StringVar(&outputFormat, "output", "text", "Styling for output format. "+fmt.Sprintf("%+q", reflect.ValueOf(outputFormats).MapKeys()))
-
-	flag.Usage = func() {
-		_, _ = fmt.Fprintf(os.Stderr, `Usage:
-	go list -m all | nancy [options]
-	go list -m all | nancy iq [options]
-	nancy config
-	nancy [options] </path/to/Gopkg.lock>
-	nancy [options] </path/to/go.sum>
-			
-Options:
-`)
-		flag.PrintDefaults()
-	}
+	//	flag.BoolVar(&config.Help, "help", false, "provides help text on how to use nancy")
+	//	flag.BoolVar(&config.NoColor, "no-color", false, "indicate output should not be colorized")
+	//	flag.BoolVar(&config.Quiet, "quiet", false, "indicate output should contain only packages with vulnerabilities")
+	//	flag.BoolVar(&config.Version, "version", false, "prints current nancy version")
+	//	flag.BoolVar(&config.CleanCache, "clean-cache", false, "Deletes local cache directory")
+	//	flag.BoolVar(&config.Info, "v", false, "Set log level to Info")
+	//	flag.BoolVar(&config.Debug, "vv", false, "Set log level to Debug")
+	//	flag.BoolVar(&config.Trace, "vvv", false, "Set log level to Trace")
+	//	flag.Var(&config.CveList, "exclude-vulnerability", "Comma separated list of CVEs to exclude")
+	//	flag.StringVar(&config.Username, "user", "", "Specify OSS Index username for request")
+	//	flag.StringVar(&config.Token, "token", "", "Specify OSS Index API token for request")
+	//	flag.StringVar(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
+	//	flag.StringVar(&outputFormat, "output", "text", "Styling for output format. "+fmt.Sprintf("%+q", reflect.ValueOf(outputFormats).MapKeys()))
+	//
+	//	flag.Usage = func() {
+	//		_, _ = fmt.Fprintf(os.Stderr, `Usage:
+	//	go list -m all | nancy [options]
+	//	go list -m all | nancy iq [options]
+	//	nancy config
+	//	nancy [options] </path/to/Gopkg.lock>
+	//	nancy [options] </path/to/go.sum>
+	//
+	//Options:
+	//`)
+	//		flag.PrintDefaults()
+	//	}
 
 	ConfigLocation = filepath.Join(HomeDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 
-	err := loadConfigFromFile(ConfigLocation, &config)
+	err := LoadConfigFromFile(ConfigLocation, &config)
 	if err != nil {
 		LogLady.Info("Unable to load config from file")
 	}
 
-	err = flag.CommandLine.Parse(args)
-	if err != nil {
-		return config, err
-	}
+	//err = flag.CommandLine.Parse(args)
+	//if err != nil {
+	//	return config, err
+	//}
 
-	modfilePath, err := getModfilePath()
+	//modfilePath, err := getModfilePath()
+	modfilePath, err := getModfilePathFromCmd(args)
 	if err != nil {
 		return config, err
 	}
@@ -205,12 +206,22 @@ Options:
 		config.Formatter = outputFormats["text"]
 	}
 
-	err = getCVEExcludesFromFile(&config, excludeVulnerabilityFilePath)
+	err = GetCVEExcludesFromFile(&config, excludeVulnerabilityFilePath)
 	if err != nil {
 		return config, err
 	}
 
 	return config, nil
+}
+
+func getModfilePathFromCmd(args []string) (modfilepath string, err error) {
+	if len(args) > 0 {
+		if len(args) != 1 {
+			return modfilepath, fmt.Errorf("wrong number of modfile paths: %s", args)
+		}
+		return args[0], err
+	}
+	return modfilepath, err
 }
 
 func getModfilePath() (modfilepath string, err error) {
@@ -226,7 +237,7 @@ func getModfilePath() (modfilepath string, err error) {
 	return modfilepath, err
 }
 
-func getCVEExcludesFromFile(config *Configuration, excludeVulnerabilityFilePath string) error {
+func GetCVEExcludesFromFile(config *Configuration, excludeVulnerabilityFilePath string) error {
 	fi, err := os.Stat(excludeVulnerabilityFilePath)
 	if (fi != nil && fi.IsDir()) || (err != nil && os.IsNotExist(err)) {
 		return nil

@@ -132,13 +132,13 @@ func processConfig(config configuration.Configuration) (err error) {
 		return
 	}
 
-	if config.Info {
+	if config.LogLevel == 1 || config.Info {
 		LogLady.Level = logrus.InfoLevel
 	}
-	if config.Debug {
+	if config.LogLevel == 2 || config.Debug {
 		LogLady.Level = logrus.DebugLevel
 	}
-	if config.Trace {
+	if config.LogLevel == 3 || config.Trace {
 		LogLady.Level = logrus.TraceLevel
 	}
 

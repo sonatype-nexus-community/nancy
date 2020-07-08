@@ -104,6 +104,8 @@ func (cve *CveListFlag) Set(value string) error {
 	return nil
 }
 
+func (cve *CveListFlag) Type() string { return "CveListFlag" }
+
 // IQ Types
 
 // StatusURLResult is a struct to let the consumer know what the response from Nexus IQ Server was
