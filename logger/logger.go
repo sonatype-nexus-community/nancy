@@ -21,6 +21,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -41,6 +42,13 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func PrintErrorAndLogLocation(err error) {
+	fmt.Println("Uh oh, an error occurred")
+	fmt.Printf("Error: %v\n", err)
+	location, _ := LogFileLocation()
+	fmt.Printf("Check log file at %s for more information\n", location)
 }
 
 func doInit(args []string) (err error) {

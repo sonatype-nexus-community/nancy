@@ -35,11 +35,8 @@ import (
 )
 
 type Configuration struct {
-	UseStdIn   bool
-	Help       bool
 	NoColor    bool
 	Quiet      bool
-	Version    bool
 	CleanCache bool
 	CveList    types.CveListFlag
 	Path       string
@@ -179,22 +176,6 @@ func Parse(args []string) (Configuration, error) {
 	err := LoadConfigFromFile(ConfigLocation, &config)
 	if err != nil {
 		LogLady.Info("Unable to load config from file")
-	}
-
-	//err = flag.CommandLine.Parse(args)
-	//if err != nil {
-	//	return config, err
-	//}
-
-	//modfilePath, err := getModfilePath()
-	modfilePath, err := getModfilePathFromCmd(args)
-	if err != nil {
-		return config, err
-	}
-	if len(modfilePath) > 0 {
-		config.Path = modfilePath
-	} else {
-		config.UseStdIn = true
 	}
 
 	if outputFormats[outputFormat] != nil {
