@@ -47,7 +47,7 @@ var (
 	configOssi                   types.Configuration
 	excludeVulnerabilityFilePath string
 	outputFormat                 string
-	log                          *logrus.Logger
+	logLady                      *logrus.Logger
 	ossIndex                     *ossindex.Server
 )
 
@@ -77,7 +77,7 @@ a smooth experience as a Golang developer, using the best tools in the market!`,
 			}
 		}()
 
-		log = logger.GetLogger("", configOssi.LogLevel)
+		logLady = logger.GetLogger("", configOssi.LogLevel)
 
 		err = processConfig()
 		if err != nil {
@@ -148,13 +148,13 @@ func processConfig() (err error) {
 
 	// @todo Change to use a switch statement
 	if configOssi.LogLevel == 1 || configOssi.Info {
-		// LogLady.Level = logrus.InfoLevel
+		logLady.Level = logrus.InfoLevel
 	}
 	if configOssi.LogLevel == 2 || configOssi.Debug {
-		// LogLady.Level = logrus.DebugLevel
+		logLady.Level = logrus.DebugLevel
 	}
 	if configOssi.LogLevel == 3 || configOssi.Trace {
-		// LogLady.Level = logrus.TraceLevel
+		logLady.Level = logrus.TraceLevel
 	}
 
 	if configOssi.CleanCache {
@@ -165,7 +165,7 @@ func processConfig() (err error) {
 		return
 	}
 
-	ossIndex = ossindex.Default(log)
+	ossIndex = ossindex.Default(logLady)
 
 	printHeader(!configOssi.Quiet && reflect.TypeOf(configOssi.Formatter).String() == "*audit.AuditLogTextFormatter")
 
