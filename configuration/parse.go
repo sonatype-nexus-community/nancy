@@ -224,7 +224,7 @@ func getModfilePathFromCmd(args []string) (modfilepath string, err error) {
 	return modfilepath, err
 }
 
-func getModfilePath() (modfilepath string, err error) {
+/*func getModfilePath() (modfilepath string, err error) {
 	if flag.CommandLine.NArg() > 0 {
 		nonFlagArgs := flag.CommandLine.Args()
 		if len(nonFlagArgs) != 1 {
@@ -236,7 +236,7 @@ func getModfilePath() (modfilepath string, err error) {
 	}
 	return modfilepath, err
 }
-
+*/
 func GetCVEExcludesFromFile(config *Configuration, excludeVulnerabilityFilePath string) error {
 	fi, err := os.Stat(excludeVulnerabilityFilePath)
 	if (fi != nil && fi.IsDir()) || (err != nil && os.IsNotExist(err)) {
