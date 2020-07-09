@@ -84,6 +84,11 @@ func init() {
 	iqCmd.Flags().StringVarP(&configIQ.Application, "application", "a", "", "Specify Nexus IQ public application ID for request")
 	iqCmd.Flags().StringVarP(&configIQ.Server, "host", "x", "", "Specify Nexus IQ server url for request")
 
+	// Bind viper to the flags passed in via the command line, so it will override config from file
+	viper.BindPFlag("username", iqCmd.Flags().Lookup("user"))
+	viper.BindPFlag("token", iqCmd.Flags().Lookup("token"))
+	viper.BindPFlag("server", iqCmd.Flags().Lookup("host"))
+
 	rootCmd.AddCommand(iqCmd)
 }
 
@@ -121,8 +126,6 @@ func auditWithIQServer(purls []string, applicationID string) error {
 		DBCacheName: "nancy-cache",
 		MaxRetries:  300,
 	})
-
-	fmt.Printf("%+v", iqServer.Options)
 
 	logLady.Debug("Sending purls to be Audited by IQ Server")
 	res, err := iqServer.AuditPackages(purls, applicationID)

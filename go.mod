@@ -27,4 +27,7 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 )
 
+replace github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
+replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
+
 go 1.13

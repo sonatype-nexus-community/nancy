@@ -17,7 +17,6 @@
 package cmd
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -137,6 +136,8 @@ func initConfig() {
 }
 
 func processConfig() (err error) {
+	ossIndex = ossindex.Default(logLady)
+
 	if outputFormats[outputFormat] != nil {
 		configOssi.Formatter = outputFormats[outputFormat]
 	} else {
@@ -165,8 +166,6 @@ func processConfig() (err error) {
 		return
 	}
 
-	ossIndex = ossindex.Default(logLady)
-
 	printHeader(!configOssi.Quiet && reflect.TypeOf(configOssi.Formatter).String() == "*audit.AuditLogTextFormatter")
 
 	if err = doStdInAndParse(); err != nil {
@@ -191,9 +190,8 @@ func doStdInAndParse() (err error) {
 	}
 
 	mod := packages.Mod{}
-	scanner := bufio.NewScanner(os.Stdin)
 
-	mod.ProjectList, _ = parse.GoList(scanner)
+	mod.ProjectList, _ = parse.GoListAgnostic(os.Stdin)
 
 	var purls = mod.ExtractPurlsFromManifest()
 
