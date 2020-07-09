@@ -5,7 +5,6 @@ require (
 	github.com/Masterminds/semver v0.0.0-20180403130225-3c92f33da7a8
 	github.com/Masterminds/vcs v1.13.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/beevik/etree v1.1.0
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/common-nighthawk/go-figure v0.0.0-20190529165535-67e0ed34491a
 	github.com/golang/dep v0.5.4
@@ -15,7 +14,6 @@ require (
 	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nightlyone/lockfile v0.0.0-20180618180623-0ad87eef1443 // indirect
-	github.com/package-url/packageurl-go v0.1.0
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	github.com/shopspring/decimal v1.2.0
@@ -26,7 +24,6 @@ require (
 	github.com/spf13/viper v1.6.3
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1
 	gopkg.in/yaml.v2 v2.3.0
 )
 

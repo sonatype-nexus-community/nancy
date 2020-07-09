@@ -19,15 +19,16 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/audit"
-	"github.com/sonatype-nexus-community/nancy/configuration"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/sonatype-nexus-community/nancy/audit"
+	"github.com/sonatype-nexus-community/nancy/configuration"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBadArgs(t *testing.T) {

@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/shopspring/decimal"
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,7 +59,7 @@ func createVulnerability() (vulnerability types.Vulnerability) {
 	vulnerability.CvssScore, _ = decimal.NewFromString("7.88")
 	vulnerability.CvssVector = "What"
 	vulnerability.Description = "Description"
-	vulnerability.Id = "123"
+	vulnerability.ID = "123"
 	vulnerability.Reference = "Reference"
 	vulnerability.Title = "Vulnerability"
 
