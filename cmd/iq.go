@@ -16,7 +16,6 @@
 package cmd
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -63,13 +62,18 @@ var iqCmd = &cobra.Command{
 		}
 
 		mod := packages.Mod{}
-		scanner := bufio.NewScanner(os.Stdin)
 
-		mod.ProjectList, _ = parse.GoList(scanner)
+		mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+		if err != nil {
+			panic(err)
+		}
 
 		var purls = mod.ExtractPurlsFromManifest()
 
 		err = auditWithIQServer(purls, configIQ.Application)
+		if err != nil {
+			panic(err)
+		}
 
 		return
 	},
