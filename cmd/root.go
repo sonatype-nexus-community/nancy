@@ -23,6 +23,7 @@ import (
 	"path"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/mitchellh/go-homedir"
@@ -136,7 +137,14 @@ func initConfig() {
 }
 
 func processConfig() (err error) {
-	ossIndex = ossindex.Default(logLady)
+	ossIndex = ossindex.New(logLady, ossIndexTypes.Options{
+		Username:    configOssi.Username,
+		Token:       configOssi.Token,
+		Tool:        "nancy-client",
+		Version:     buildversion.BuildVersion,
+		DBCacheName: "nancy-cache",
+		TTL:         time.Now().Local().Add(time.Hour * 12),
+	})
 
 	if outputFormats[outputFormat] != nil {
 		configOssi.Formatter = outputFormats[outputFormat]
