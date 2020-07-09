@@ -37,11 +37,14 @@ var (
 	iqServer *iq.Server
 )
 
-// iqCmd represents the iq command
 var iqCmd = &cobra.Command{
-	Use:   "iq",
-	Short: "",
-	Long:  ``,
+	Use: "iq",
+	Example: `
+go list -m -json all | nancy iq --application your_public_application_id --server http://your_iq_server_url:port --user your_user --token your_token --stage develop
+	`,
+	Short:         "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ Server'",
+	Long:          `nancy iq is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ Server', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
+	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -54,6 +57,8 @@ var iqCmd = &cobra.Command{
 				logger.PrintErrorAndLogLocation(err)
 			}
 		}()
+
+		printHeader(!configOssi.Quiet)
 
 		logLady = logger.GetLogger("", configOssi.LogLevel)
 
@@ -82,16 +87,16 @@ var iqCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initIQConfig)
 
-	iqCmd.Flags().StringVarP(&configIQ.User, "user", "u", "", "Specify Nexus IQ username for request")
-	iqCmd.Flags().StringVarP(&configIQ.Token, "token", "t", "", "Specify Nexus IQ token for request")
-	iqCmd.Flags().StringVarP(&configIQ.Stage, "stage", "s", "", "Specify Nexus IQ stage for request")
+	iqCmd.Flags().StringVarP(&configIQ.User, "username", "u", "admin", "Specify Nexus IQ username for request")
+	iqCmd.Flags().StringVarP(&configIQ.Token, "token", "t", "admin123", "Specify Nexus IQ token for request")
+	iqCmd.Flags().StringVarP(&configIQ.Stage, "stage", "s", "develop", "Specify Nexus IQ stage for request")
 	iqCmd.Flags().StringVarP(&configIQ.Application, "application", "a", "", "Specify Nexus IQ public application ID for request")
-	iqCmd.Flags().StringVarP(&configIQ.Server, "host", "x", "", "Specify Nexus IQ server url for request")
+	iqCmd.Flags().StringVarP(&configIQ.Server, "server-url", "x", "http://localhost:8070", "Specify Nexus IQ server url for request")
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	viper.BindPFlag("username", iqCmd.Flags().Lookup("user"))
+	viper.BindPFlag("username", iqCmd.Flags().Lookup("username"))
 	viper.BindPFlag("token", iqCmd.Flags().Lookup("token"))
-	viper.BindPFlag("server", iqCmd.Flags().Lookup("host"))
+	viper.BindPFlag("server", iqCmd.Flags().Lookup("server"))
 
 	rootCmd.AddCommand(iqCmd)
 }
@@ -111,8 +116,6 @@ func initIQConfig() {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(types.IQServerConfigFileName)
 	}
-
-	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err == nil {
 		// TODO: Add log statements for config
@@ -148,10 +151,9 @@ func auditWithIQServer(purls []string, applicationID string) error {
 		fmt.Println("Wonderbar! No policy violations reported for this audit!")
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
 		return nil
-	} else {
-		logLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
-		fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
-		fmt.Println("Report URL: ", res.ReportHTMLURL)
-		return customerrors.ErrorExit{ExitCode: 1}
 	}
+	logLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
+	fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
+	fmt.Println("Report URL: ", res.ReportHTMLURL)
+	return customerrors.ErrorExit{ExitCode: 1}
 }

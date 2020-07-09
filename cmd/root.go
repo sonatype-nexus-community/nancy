@@ -60,7 +60,7 @@ var outputFormats = map[string]logrus.Formatter{
 
 var rootCmd = &cobra.Command{
 	Use:   "nancy",
-	Short: "Check for vulnerabilities in your Golang dependencies",
+	Short: "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
@@ -129,8 +129,6 @@ func initConfig() {
 		viper.SetConfigName(types.OssIndexConfigFileName)
 	}
 
-	viper.AutomaticEnv()
-
 	if err := viper.ReadInConfig(); err == nil {
 		// TODO: Add log statements for config
 	}
@@ -138,8 +136,8 @@ func initConfig() {
 
 func processConfig() (err error) {
 	ossIndex = ossindex.New(logLady, ossIndexTypes.Options{
-		Username:    configOssi.Username,
-		Token:       configOssi.Token,
+		Username:    viper.GetString("username"),
+		Token:       viper.GetString("token"),
 		Tool:        "nancy-client",
 		Version:     buildversion.BuildVersion,
 		DBCacheName: "nancy-cache",
