@@ -26,7 +26,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 
 	. "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 )
 
 type CsvFormatter struct {

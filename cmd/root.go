@@ -17,11 +17,13 @@
 package cmd
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
 	"path"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -49,14 +51,10 @@ var (
 	outputFormat                 string
 	logLady                      *logrus.Logger
 	ossIndex                     *ossindex.Server
+	unixComments                 = regexp.MustCompile(`#.*$`)
+	untilComment                 = regexp.MustCompile(`(until=)(.*)`)
+	stdInInvalid                 = customerrors.ErrorExit{ExitCode: 1, Message: "StdIn is invalid, either empty or another reason"}
 )
-
-var outputFormats = map[string]logrus.Formatter{
-	"json":        audit.JsonFormatter{},
-	"json-pretty": audit.JsonFormatter{PrettyPrint: true},
-	"text":        audit.AuditLogTextFormatter{Quiet: configOssi.Quiet, NoColor: configOssi.NoColor},
-	"csv":         audit.CsvFormatter{Quiet: configOssi.Quiet},
-}
 
 var rootCmd = &cobra.Command{
 	Use:   "nancy",
@@ -101,6 +99,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().CountVarP(&configOssi.LogLevel, "", "v", "Set log level, multiple v's is more verbose")
+	rootCmd.PersistentFlags().BoolVar(&configOssi.Version, "version", false, "Get the version")
 	rootCmd.PersistentFlags().BoolVarP(&configOssi.Quiet, "quiet", "q", false, "indicate output should contain only packages with vulnerabilities")
 	rootCmd.Flags().BoolVarP(&configOssi.NoColor, "no-color", "n", false, "indicate output should not be colorized")
 	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
@@ -108,7 +107,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&configOssi.Username, "username", "u", "", "Specify OSS Index username for request")
 	rootCmd.Flags().StringVarP(&configOssi.Token, "token", "t", "", "Specify OSS Index API token for request")
 	rootCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
-	rootCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. "+fmt.Sprintf("%+q", reflect.ValueOf(outputFormats).MapKeys()))
+	rootCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
 	viper.BindPFlag("username", rootCmd.Flags().Lookup("username"))
@@ -146,13 +145,20 @@ func processConfig() (err error) {
 		TTL:         time.Now().Local().Add(time.Hour * 12),
 	})
 
-	if outputFormats[outputFormat] != nil {
-		configOssi.Formatter = outputFormats[outputFormat]
-	} else {
+	switch format := outputFormat; format {
+	case "text":
+		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: configOssi.Quiet, NoColor: configOssi.NoColor}
+	case "json":
+		configOssi.Formatter = audit.JsonFormatter{}
+	case "json-pretty":
+		configOssi.Formatter = audit.JsonFormatter{PrettyPrint: true}
+	case "csv":
+		configOssi.Formatter = audit.CsvFormatter{Quiet: configOssi.Quiet}
+	default:
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-		fmt.Println("!!! Output format of", strings.TrimSpace(outputFormat), "is not valid. Defaulting to text output")
+		fmt.Println("!!! Output format of", strings.TrimSpace(format), "is not valid. Defaulting to text output")
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-		configOssi.Formatter = outputFormats["text"]
+		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: configOssi.Quiet, NoColor: configOssi.NoColor}
 	}
 
 	// @todo Change to use a switch statement
@@ -176,11 +182,63 @@ func processConfig() (err error) {
 
 	printHeader(!configOssi.Quiet && reflect.TypeOf(configOssi.Formatter).String() == "audit.AuditLogTextFormatter")
 
+	err = getCVEExcludesFromFile(excludeVulnerabilityFilePath)
+
 	if err = doStdInAndParse(); err != nil {
 		return
 	}
 
 	return
+}
+
+func getCVEExcludesFromFile(excludeVulnerabilityFilePath string) error {
+	fi, err := os.Stat(excludeVulnerabilityFilePath)
+	if (fi != nil && fi.IsDir()) || (err != nil && os.IsNotExist(err)) {
+		return nil
+	}
+	file, err := os.Open(excludeVulnerabilityFilePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		ogLine := scanner.Text()
+		err := determineIfLineIsExclusion(ogLine)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func determineIfLineIsExclusion(ogLine string) error {
+	line := unixComments.ReplaceAllString(ogLine, "")
+	until := untilComment.FindStringSubmatch(line)
+	line = untilComment.ReplaceAllString(line, "")
+	cveOnly := strings.TrimSpace(line)
+
+	if len(cveOnly) > 0 {
+		if until != nil {
+			parseDate, err := time.Parse("2006-01-02", strings.TrimSpace(until[2]))
+			if err != nil {
+				return fmt.Errorf("failed to parse until at line %q. Expected format is 'until=yyyy-MM-dd'", ogLine)
+			}
+			if parseDate.After(time.Now()) {
+				configOssi.CveList.Cves = append(configOssi.CveList.Cves, cveOnly)
+			}
+		} else {
+			configOssi.CveList.Cves = append(configOssi.CveList.Cves, cveOnly)
+		}
+	}
+
+	return nil
 }
 
 func printHeader(print bool) {
@@ -225,8 +283,6 @@ func checkOSSIndex(purls []string, invalidpurls []string) (err error) {
 	}
 	return
 }
-
-var stdInInvalid = customerrors.ErrorExit{ExitCode: 1, Message: "StdIn is invalid, either empty or another reason"}
 
 func checkStdIn() (err error) {
 	stat, _ := os.Stdin.Stat()
