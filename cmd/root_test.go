@@ -146,10 +146,10 @@ var quiet = false
 var testDefaultFormatter = audit.AuditLogTextFormatter{Quiet: &quiet, NoColor: &noColor}
 
 func TestRootCommandLogVerbosity(t *testing.T) {
-	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: &testDefaultFormatter})
-	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: &testDefaultFormatter, LogLevel: 1}, "-v")
-	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: &testDefaultFormatter, LogLevel: 2}, "-vv")
-	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: &testDefaultFormatter, LogLevel: 3}, "-vvv")
+	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: testDefaultFormatter})
+	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: testDefaultFormatter, LogLevel: 1}, "-v")
+	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: testDefaultFormatter, LogLevel: 2}, "-vv")
+	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: testDefaultFormatter, LogLevel: 3}, "-vvv")
 }
 
 func setup() {
@@ -178,8 +178,8 @@ func TestConfigOssi(t *testing.T) {
 	boolFalse := false
 	boolTrue := true
 
-	defaultAuditLogFormatter := &audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolFalse}
-	quietDefaultFormatter := &audit.AuditLogTextFormatter{Quiet: &boolTrue, NoColor: &boolFalse}
+	defaultAuditLogFormatter := audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolFalse}
+	quietDefaultFormatter := audit.AuditLogTextFormatter{Quiet: &boolTrue, NoColor: &boolFalse}
 
 	tests := map[string]struct {
 		args           []string
@@ -192,8 +192,8 @@ func TestConfigOssi(t *testing.T) {
 		//"help":                                   {args: []string{"--help"}, expectedConfig: configuration.Configuration{UseStdIn: true, Help: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
 		// todo Fix help test
 		//"help modilfe":                           {args: []string{"--help", "/tmp/go2.sum"}, expectedConfig: configuration.Configuration{Help: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
-		"no color":                                {args: []string{"--no-color", "/tmp/go2.sum"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: &audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
-		"no color modfile":                        {args: []string{"--no-color", "/tmp/go2.sum"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: &audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
+		"no color":                                {args: []string{"--no-color", "/tmp/go2.sum"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
+		"no color modfile":                        {args: []string{"--no-color", "/tmp/go2.sum"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
 		"quiet":                                   {args: []string{"--quiet"}, expectedConfig: types.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Formatter: quietDefaultFormatter}, expectedErr: stdInInvalid},
 		"quiet modfile":                           {args: []string{"--quiet", "/tmp/go3.sum"}, expectedConfig: types.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go3.sum", Formatter: quietDefaultFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go3.sum")},
 		"version":                                 {args: []string{"--version"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 0}},
@@ -214,10 +214,10 @@ func TestConfigOssi(t *testing.T) {
 		"exclude vulnerabilities when has untils":                                    {args: []string{"--exclude-vulnerability-file=" + untilsFile.Name(), "/tmp/go15.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Path: "/tmp/go15.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
 		"exclude vulnerabilities when has invalid value in untils":                   {args: []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name(), "/tmp/go16.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go16.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
 		"exclude vulnerabilities when has invalid date in untils":                    {args: []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name(), "/tmp/go17.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go17.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidDateUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
-		"output of json":              {args: []string{"--output=json"}, expectedConfig: types.Configuration{Formatter: &audit.JsonFormatter{}}, expectedErr: stdInInvalid},
-		"output of json modfile":      {args: []string{"--output=json", "/tmp/go14.sum"}, expectedConfig: types.Configuration{Formatter: &audit.JsonFormatter{}, Path: "/tmp/go14.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
-		"output of json pretty print": {args: []string{"--output=json-pretty", "/tmp/go15.sum"}, expectedConfig: types.Configuration{Formatter: &audit.JsonFormatter{PrettyPrint: true}, Path: "/tmp/go15.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
-		"output of csv":               {args: []string{"--output=csv", "/tmp/go16.sum"}, expectedConfig: types.Configuration{Formatter: &audit.CsvFormatter{Quiet: &boolFalse}, Path: "/tmp/go16.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go16.sum")},
+		"output of json":              {args: []string{"--output=json"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}}, expectedErr: stdInInvalid},
+		"output of json modfile":      {args: []string{"--output=json", "/tmp/go14.sum"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}, Path: "/tmp/go14.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
+		"output of json pretty print": {args: []string{"--output=json-pretty", "/tmp/go15.sum"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}, Path: "/tmp/go15.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
+		"output of csv":               {args: []string{"--output=csv", "/tmp/go16.sum"}, expectedConfig: types.Configuration{Formatter: audit.CsvFormatter{Quiet: &boolFalse}, Path: "/tmp/go16.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go16.sum")},
 		"output of text":              {args: []string{"--output=text", "/tmp/go17.sum"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go17.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go17.sum")},
 		"output of bad value":         {args: []string{"--output=aintgonnadoit", "/tmp/go18.sum"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go18.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go18.sum")},
 		"log level of info":           {args: []string{"-v"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, expectedErr: stdInInvalid},

@@ -45,43 +45,45 @@ go list -m -json all | nancy iq --application your_public_application_id --serve
 	Short:         "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ Server'",
 	Long:          `nancy iq is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ Server', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
 	SilenceErrors: true,
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				var ok bool
-				err, ok = r.(error)
-				if !ok {
-					err = fmt.Errorf("pkg: %v", r)
-				}
+	RunE:          doIQ,
+}
 
-				logger.PrintErrorAndLogLocation(err)
+func doIQ(cmd *cobra.Command, args []string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if !ok {
+				err = fmt.Errorf("pkg: %v", r)
 			}
-		}()
 
-		printHeader(!configOssi.Quiet)
-
-		logLady = logger.GetLogger("", configOssi.LogLevel)
-
-		if err = checkStdIn(); err != nil {
-			panic(err)
+			logger.PrintErrorAndLogLocation(err)
 		}
+	}()
 
-		mod := packages.Mod{}
+	printHeader(!configOssi.Quiet)
 
-		mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
-		if err != nil {
-			panic(err)
-		}
+	logLady = logger.GetLogger("", configOssi.LogLevel)
 
-		var purls = mod.ExtractPurlsFromManifest()
+	if err = checkStdIn(); err != nil {
+		panic(err)
+	}
 
-		err = auditWithIQServer(purls, configIQ.Application)
-		if err != nil {
-			panic(err)
-		}
+	mod := packages.Mod{}
 
-		return
-	},
+	mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+	if err != nil {
+		panic(err)
+	}
+
+	var purls = mod.ExtractPurlsFromManifest()
+
+	err = auditWithIQServer(purls, configIQ.Application)
+	if err != nil {
+		panic(err)
+	}
+
+	return
 }
 
 func init() {

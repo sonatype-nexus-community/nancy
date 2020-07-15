@@ -21,8 +21,9 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"strconv"
+
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 
 	. "github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -32,7 +33,7 @@ type CsvFormatter struct {
 	Quiet *bool
 }
 
-func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
+func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
 	// Note this doesn't include Time, Level and Message which are available on
 	// the Entry. Consult `godoc` on information about those fields or read the
 	// source of the official loggers.
@@ -113,13 +114,11 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 		w.Flush()
 
 		return buf.Bytes(), nil
-	} else {
-		return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
 	}
-
+	return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
 }
 
-func (f *CsvFormatter) write(w *csv.Writer, line []string) error {
+func (f CsvFormatter) write(w *csv.Writer, line []string) error {
 	if err := w.Write(line); err != nil {
 		return customerrors.NewErrorExitPrintHelp(err, "Failed to write data to csv")
 	}

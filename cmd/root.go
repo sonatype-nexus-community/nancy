@@ -52,10 +52,10 @@ var (
 )
 
 var outputFormats = map[string]logrus.Formatter{
-	"json":        &audit.JsonFormatter{},
-	"json-pretty": &audit.JsonFormatter{PrettyPrint: true},
-	"text":        &audit.AuditLogTextFormatter{Quiet: &configOssi.Quiet, NoColor: &configOssi.NoColor},
-	"csv":         &audit.CsvFormatter{Quiet: &configOssi.Quiet},
+	"json":        audit.JsonFormatter{},
+	"json-pretty": audit.JsonFormatter{PrettyPrint: true},
+	"text":        audit.AuditLogTextFormatter{Quiet: &configOssi.Quiet, NoColor: &configOssi.NoColor},
+	"csv":         audit.CsvFormatter{Quiet: &configOssi.Quiet},
 }
 
 var rootCmd = &cobra.Command{
@@ -64,28 +64,30 @@ var rootCmd = &cobra.Command{
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				var ok bool
-				err, ok = r.(error)
-				if !ok {
-					err = fmt.Errorf("pkg: %v", r)
-				}
+	RunE: doOSSI,
+}
 
-				logger.PrintErrorAndLogLocation(err)
+func doOSSI(cmd *cobra.Command, args []string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if !ok {
+				err = fmt.Errorf("pkg: %v", r)
 			}
-		}()
 
-		logLady = logger.GetLogger("", configOssi.LogLevel)
-
-		err = processConfig()
-		if err != nil {
-			panic(err)
+			logger.PrintErrorAndLogLocation(err)
 		}
+	}()
 
-		return
-	},
+	logLady = logger.GetLogger("", configOssi.LogLevel)
+
+	err = processConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	return
 }
 
 func Execute() (err error) {
@@ -172,7 +174,7 @@ func processConfig() (err error) {
 		return
 	}
 
-	printHeader(!configOssi.Quiet && reflect.TypeOf(configOssi.Formatter).String() == "*audit.AuditLogTextFormatter")
+	printHeader(!configOssi.Quiet && reflect.TypeOf(configOssi.Formatter).String() == "audit.AuditLogTextFormatter")
 
 	if err = doStdInAndParse(); err != nil {
 		return

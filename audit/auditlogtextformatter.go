@@ -154,7 +154,7 @@ func groupAndPrint(vulnerable []types.Coordinate, nonVulnerable []types.Coordina
 	}
 }
 
-func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
+func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 	auditedEntries := entry.Data["audited"]
 	invalidEntries := entry.Data["invalid"]
 	packageCount := entry.Data["num_audited"]

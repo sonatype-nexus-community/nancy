@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
 package cmd
 
 import (
@@ -29,24 +28,26 @@ var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "",
 	Long:  ``,
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				var ok bool
-				err, ok = r.(error)
-				if !ok {
-					err = fmt.Errorf("pkg: %v", r)
-				}
+	RunE:  doConfig,
+}
 
-				logger.PrintErrorAndLogLocation(err)
+func doConfig(cmd *cobra.Command, args []string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if !ok {
+				err = fmt.Errorf("pkg: %v", r)
 			}
-		}()
 
-		if err = configuration.GetConfigFromCommandLine(os.Stdin); err != nil {
-			panic(err)
+			logger.PrintErrorAndLogLocation(err)
 		}
-		return
-	},
+	}()
+
+	if err = configuration.GetConfigFromCommandLine(os.Stdin); err != nil {
+		panic(err)
+	}
+	return
 }
 
 func init() {
