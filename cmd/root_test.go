@@ -203,7 +203,7 @@ func TestConfigOssi(t *testing.T) {
 		"exclude vulnerabilities when has invalid date in untils":                    {args: []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidDateUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
 		"output of json":              {args: []string{"--output=json"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}}, expectedErr: nil},
 		"output of json pretty print": {args: []string{"--output=json-pretty"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}, Path: ""}, expectedErr: nil},
-		"output of csv":               {args: []string{"--output=csv"}, expectedConfig: types.Configuration{Formatter: audit.CsvFormatter{Quiet: &boolFalse}, Path: ""}, expectedErr: nil},
+		"output of csv":               {args: []string{"--output=csv"}, expectedConfig: types.Configuration{Formatter: audit.CsvFormatter{Quiet: boolFalse}, Path: ""}, expectedErr: nil},
 		"output of text":              {args: []string{"--output=text"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
 		"output of bad value":         {args: []string{"--output=aintgonnadoit"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
 		"log level of info":           {args: []string{"-v"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, expectedErr: nil},
@@ -213,6 +213,8 @@ func TestConfigOssi(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			configOssi = types.Configuration{}
+
 			content := []byte("Testing")
 			tmpFile, err := ioutil.TempFile("", "tempfile")
 			if err != nil {
