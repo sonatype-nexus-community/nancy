@@ -28,7 +28,6 @@ import (
 	"testing"
 
 	"github.com/sonatype-nexus-community/nancy/audit"
-	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/cobra"
@@ -36,19 +35,14 @@ import (
 )
 
 func executeCommand(root *cobra.Command, args ...string) (output string, err error) {
-	_, output, err = executeCommandC(root, args...)
-	return output, err
-}
-
-func executeCommandC(root *cobra.Command, args ...string) (c *cobra.Command, output string, err error) {
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetErr(buf)
 	root.SetArgs(args)
 
-	c, err = root.ExecuteC()
+	err = root.Execute()
 
-	return c, buf.String(), err
+	return buf.String(), err
 }
 
 func checkStringContains(t *testing.T, got, substr string) {
@@ -92,22 +86,15 @@ func TestRootCommandNoArgsInvalidStdInErrorExit(t *testing.T) {
 }
 
 func validateConfigOssi(t *testing.T, expectedError error, expectedConfig types.Configuration, args ...string) {
-	// setup default global config
-	origConfig := configOssi
-	defer func() {
-		configOssi = origConfig
-	}()
-	configOssi = types.Configuration{}
-
 	// @todo fix hack below!!!!!, maybe submit bug and/or patch to Cobra about it
-	if len(args) == 0 {
-		// cobra command adds os arg[0] if command has empty args. see: cobra.Command.go -> line: 914
-		origOsArg1 := os.Args[0]
-		os.Args[0] = "cobra.test"
-		defer func() {
-			os.Args[0] = origOsArg1
-		}()
-	}
+	// if len(args) == 0 {
+	// 	// cobra command adds os arg[0] if command has empty args. see: cobra.Command.go -> line: 914
+	// 	origOsArg1 := os.Args[0]
+	// 	os.Args[0] = "cobra.test"
+	// 	defer func() {
+	// 		os.Args[0] = origOsArg1
+	// 	}()
+	// }
 
 	_, err := executeCommand(rootCmd, args...)
 
@@ -153,8 +140,6 @@ func TestRootCommandLogVerbosity(t *testing.T) {
 }
 
 func setup() {
-	// Set HomeDir to a nonsensical location to avoid loading file based config
-	configuration.HomeDir = "/doesnt/exist"
 	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
 }
 
@@ -186,40 +171,41 @@ func TestConfigOssi(t *testing.T) {
 		expectedConfig types.Configuration
 		expectedErr    error
 	}{
-		"defaults":         {args: []string{}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
-		"defaults modfile": {args: []string{"/tmp/go.sum"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go.sum", Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 3, Err: &os.PathError{Op: "stat", Path: "/tmp/go.sum", Err: fmt.Errorf("no such file or directory")}, Message: "No go.sum found at path: /tmp/go.sum"}},
+		// TODO: likely not needed
+		// "defaults modfile": {args: []string{"/tmp/go.sum"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go.sum", Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 3, Err: &os.PathError{Op: "stat", Path: "/tmp/go.sum", Err: fmt.Errorf("no such file or directory")}, Message: "No go.sum found at path: /tmp/go.sum"}},
 		// todo Fix help test
 		//"help":                                   {args: []string{"--help"}, expectedConfig: configuration.Configuration{UseStdIn: true, Help: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
 		// todo Fix help test
 		//"help modilfe":                           {args: []string{"--help", "/tmp/go2.sum"}, expectedConfig: configuration.Configuration{Help: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
-		"no color":                                {args: []string{"--no-color", "/tmp/go2.sum"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
-		"no color modfile":                        {args: []string{"--no-color", "/tmp/go2.sum"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
-		"quiet":                                   {args: []string{"--quiet"}, expectedConfig: types.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Formatter: quietDefaultFormatter}, expectedErr: stdInInvalid},
-		"quiet modfile":                           {args: []string{"--quiet", "/tmp/go3.sum"}, expectedConfig: types.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go3.sum", Formatter: quietDefaultFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go3.sum")},
-		"version":                                 {args: []string{"--version"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 0}},
-		"version modfile":                         {args: []string{"--version", "/tmp/go4.sum"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Path: "/tmp/go4.sum", Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 0}},
-		"exclude vulnerabilities":                 {args: []string{"--exclude-vulnerability=CVE123,CVE988"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
-		"exclude vulnerabilities modfile":         {args: []string{"--exclude-vulnerability=CVE123,CVE988", "/tmp/go5.sum"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Path: "/tmp/go5.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go5.sum")},
-		"std in as input":                         {args: []string{}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
-		"path but invalid arg":                    {args: []string{"--invalid", "/tmp/go6.sum"}, expectedConfig: types.Configuration{}, expectedErr: errors.New("unknown flag: --invalid")},
-		"multiple paths":                          {args: []string{"/tmp/go6.sum", "/tmp/another"}, expectedConfig: types.Configuration{}, expectedErr: customerrors.ErrorExit{ExitCode: 1, Err: errors.New("wrong number of modfile paths: [/tmp/go6.sum /tmp/another]"), Message: "wrong number of modfile paths: [/tmp/go6.sum /tmp/another]"}},
-		"exclude vulnerabilities with sane file":  {args: []string{"--exclude-vulnerability-file=" + file.Name(), "/tmp/go7.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go7.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go7.sum")},
-		"exclude vulnerabilities when file empty": {args: []string{"--exclude-vulnerability-file=" + emptyFile.Name(), "/tmp/go8.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go8.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go8.sum")},
-		"exclude vulnerabilities when file has tons of newlines":                     {args: []string{"--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name(), "/tmp/go9.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go9.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go9.sum")},
-		"exclude vulnerabilities are combined with file and args values":             {args: []string{"--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name(), "/tmp/go10.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go10.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go10.sum")},
-		"exclude vulnerabilities file not found doesn't matter":                      {args: []string{"--exclude-vulnerability-file=/blah-blah-doesnt-exists", "/tmp/go11.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go11.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go11.sum")},
-		"exclude vulnerabilities passed as directory doesn't matter":                 {args: []string{"--exclude-vulnerability-file=" + dir, "/tmp/go12.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go12.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go12.sum")},
-		"exclude vulnerabilities doesn't need to be passed if default value is used": {args: []string{"/tmp/go13.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go13.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go13.sum")},
-		"exclude vulnerabilities when has comments":                                  {args: []string{"--exclude-vulnerability-file=" + commentedFile.Name(), "/tmp/go14.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Path: "/tmp/go14.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
-		"exclude vulnerabilities when has untils":                                    {args: []string{"--exclude-vulnerability-file=" + untilsFile.Name(), "/tmp/go15.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Path: "/tmp/go15.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
-		"exclude vulnerabilities when has invalid value in untils":                   {args: []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name(), "/tmp/go16.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go16.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
-		"exclude vulnerabilities when has invalid date in untils":                    {args: []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name(), "/tmp/go17.sum"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go17.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidDateUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
+		// "no color modfile":                        {args: []string{"--no-color", "/tmp/go2.sum"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
+		// "quiet modfile":                           {args: []string{"--quiet", "/tmp/go3.sum"}, expectedConfig: types.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go3.sum", Formatter: quietDefaultFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go3.sum")},
+		// "exclude vulnerabilities modfile":        {args: []string{"--exclude-vulnerability=CVE123,CVE988", "/tmp/go5.sum"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Path: "/tmp/go5.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go5.sum")},
+		// "version modfile":                        {args: []string{"--version", "/tmp/go4.sum"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Path: "/tmp/go4.sum", Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 0}},
+		// 		"path but invalid arg":                   {args: []string{"--invalid", "/tmp/go6.sum"}, expectedConfig: types.Configuration{}, expectedErr: errors.New("unknown flag: --invalid")},
+		// 		"multiple paths":                         {args: []string{"/tmp/go6.sum", "/tmp/another"}, expectedConfig: types.Configuration{}, expectedErr: customerrors.ErrorExit{ExitCode: 1, Err: errors.New("wrong number of modfile paths: [/tmp/go6.sum /tmp/another]"), Message: "wrong number of modfile paths: [/tmp/go6.sum /tmp/another]"}},
+		// 		"output of json modfile":      {args: []string{"--output=json", "/tmp/go14.sum"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}, Path: "/tmp/go14.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
+		"defaults":                               {args: []string{}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
+		"no color":                               {args: []string{"--no-color"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "", Formatter: audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
+		"quiet":                                  {args: []string{"--quiet"}, expectedConfig: types.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Formatter: quietDefaultFormatter}, expectedErr: stdInInvalid},
+		"version":                                {args: []string{"--version"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 0}},
+		"exclude vulnerabilities":                {args: []string{"--exclude-vulnerability=CVE123,CVE988"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
+		"std in as input":                        {args: []string{}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
+		"exclude vulnerabilities with sane file": {args: []string{"--exclude-vulnerability-file=" + file.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go7.sum")},
+		"exclude vulnerabilities when file empty":                                    {args: []string{"--exclude-vulnerability-file=" + emptyFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go8.sum")},
+		"exclude vulnerabilities when file has tons of newlines":                     {args: []string{"--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go9.sum")},
+		"exclude vulnerabilities are combined with file and args values":             {args: []string{"--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go10.sum")},
+		"exclude vulnerabilities file not found doesn't matter":                      {args: []string{"--exclude-vulnerability-file=/blah-blah-doesnt-exists"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go11.sum")},
+		"exclude vulnerabilities passed as directory doesn't matter":                 {args: []string{"--exclude-vulnerability-file=" + dir}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go12.sum")},
+		"exclude vulnerabilities doesn't need to be passed if default value is used": {args: []string{}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go13.sum")},
+		"exclude vulnerabilities when has comments":                                  {args: []string{"--exclude-vulnerability-file=" + commentedFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
+		"exclude vulnerabilities when has untils":                                    {args: []string{"--exclude-vulnerability-file=" + untilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
+		"exclude vulnerabilities when has invalid value in untils":                   {args: []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
+		"exclude vulnerabilities when has invalid date in untils":                    {args: []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidDateUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
 		"output of json":              {args: []string{"--output=json"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}}, expectedErr: stdInInvalid},
-		"output of json modfile":      {args: []string{"--output=json", "/tmp/go14.sum"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}, Path: "/tmp/go14.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
-		"output of json pretty print": {args: []string{"--output=json-pretty", "/tmp/go15.sum"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}, Path: "/tmp/go15.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
-		"output of csv":               {args: []string{"--output=csv", "/tmp/go16.sum"}, expectedConfig: types.Configuration{Formatter: audit.CsvFormatter{Quiet: &boolFalse}, Path: "/tmp/go16.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go16.sum")},
-		"output of text":              {args: []string{"--output=text", "/tmp/go17.sum"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go17.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go17.sum")},
-		"output of bad value":         {args: []string{"--output=aintgonnadoit", "/tmp/go18.sum"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go18.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go18.sum")},
+		"output of json pretty print": {args: []string{"--output=json-pretty"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
+		"output of csv":               {args: []string{"--output=csv"}, expectedConfig: types.Configuration{Formatter: audit.CsvFormatter{Quiet: &boolFalse}, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go16.sum")},
+		"output of text":              {args: []string{"--output=text"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go17.sum")},
+		"output of bad value":         {args: []string{"--output=aintgonnadoit"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go18.sum")},
 		"log level of info":           {args: []string{"-v"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, expectedErr: stdInInvalid},
 		"log level of debug":          {args: []string{"-vv"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, expectedErr: stdInInvalid},
 		"log level of trace":          {args: []string{"-vvv"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, expectedErr: stdInInvalid},
@@ -227,6 +213,30 @@ func TestConfigOssi(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			content := []byte("Testing")
+			tmpFile, err := ioutil.TempFile("", "tempfile")
+			if err != nil {
+				t.Error(err)
+			}
+
+			defer os.Remove(tmpFile.Name())
+
+			if _, err := tmpFile.Write(content); err != nil {
+				t.Error(err)
+			}
+
+			if _, err := tmpFile.Seek(0, 0); err != nil {
+				t.Error(err)
+			}
+
+			oldStdIn := os.Stdin
+
+			defer func() {
+				os.Stdin = oldStdIn
+			}()
+
+			os.Stdin = tmpFile
+
 			setup()
 
 			if name == "exclude vulnerabilities doesn't need to be passed if default value is used" {
@@ -240,7 +250,10 @@ func TestConfigOssi(t *testing.T) {
 			//zzz start here---
 			//if name == "multiple paths" {
 			validateConfigOssi(t, test.expectedErr, test.expectedConfig, test.args...)
-			//}
+
+			if err := tmpFile.Close(); err != nil {
+				t.Error(err)
+			}
 		})
 	}
 }
