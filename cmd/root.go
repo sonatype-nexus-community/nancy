@@ -54,8 +54,8 @@ var (
 var outputFormats = map[string]logrus.Formatter{
 	"json":        audit.JsonFormatter{},
 	"json-pretty": audit.JsonFormatter{PrettyPrint: true},
-	"text":        audit.AuditLogTextFormatter{Quiet: &configOssi.Quiet, NoColor: &configOssi.NoColor},
-	"csv":         audit.CsvFormatter{Quiet: &configOssi.Quiet},
+	"text":        audit.AuditLogTextFormatter{Quiet: configOssi.Quiet, NoColor: configOssi.NoColor},
+	"csv":         audit.CsvFormatter{Quiet: configOssi.Quiet},
 }
 
 var rootCmd = &cobra.Command{

@@ -30,7 +30,7 @@ import (
 )
 
 type CsvFormatter struct {
-	Quiet *bool
+	Quiet bool
 }
 
 func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
@@ -69,7 +69,7 @@ func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
 			return nil, err
 		}
 
-		if !*f.Quiet {
+		if !f.Quiet {
 			invalidCount := len(invalidEntries)
 			if invalidCount > 0 {
 				if err = f.write(w, []string{""}); err != nil {
@@ -90,7 +90,7 @@ func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
 			}
 		}
 
-		if !*f.Quiet || numVulnerable > 0 {
+		if !f.Quiet || numVulnerable > 0 {
 			if err = f.write(w, []string{""}); err != nil {
 				return nil, err
 			}
@@ -103,7 +103,7 @@ func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
 		}
 		for i := 1; i <= len(auditedEntries); i++ {
 			auditEntry := auditedEntries[i-1]
-			if auditEntry.IsVulnerable() || !*f.Quiet {
+			if auditEntry.IsVulnerable() || !f.Quiet {
 				jsonVulns, _ := json.Marshal(auditEntry.Vulnerabilities)
 				if err = f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(packageCount) + "]", auditEntry.Coordinates, strconv.FormatBool(auditEntry.IsVulnerable()), strconv.Itoa(len(auditEntry.Vulnerabilities)), string(jsonVulns)}); err != nil {
 					return nil, err

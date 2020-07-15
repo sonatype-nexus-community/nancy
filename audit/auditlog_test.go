@@ -71,7 +71,7 @@ func TestLogResultsWithVulnerabilitiesNoColor(t *testing.T) {
 	coordinates := createCoordinates(projects, true)
 	noColor := true
 	quiet := false
-	i := LogResults(&AuditLogTextFormatter{NoColor: &noColor, Quiet: &quiet}, 20, coordinates, []types.Coordinate{}, []string{})
+	i := LogResults(&AuditLogTextFormatter{NoColor: noColor, Quiet: quiet}, 20, coordinates, []types.Coordinate{}, []string{})
 
 	if i != projects {
 		t.Errorf("Expected %d vulnerabilites but found %d", projects, i)
@@ -83,7 +83,7 @@ func TestLogResultsWithoutVulnerabilitiesNoColor(t *testing.T) {
 	coordinates := createCoordinates(projects, false)
 	noColor := true
 	quiet := false
-	i := LogResults(&AuditLogTextFormatter{NoColor: &noColor, Quiet: &quiet}, 20, coordinates, []types.Coordinate{}, []string{})
+	i := LogResults(&AuditLogTextFormatter{NoColor: noColor, Quiet: quiet}, 20, coordinates, []types.Coordinate{}, []string{})
 
 	if i != 0 {
 		t.Errorf("Expected %d vulnerabilites but found %d", 0, i)
@@ -95,7 +95,7 @@ func TestLogResultsWithVulnerabilitiesColor(t *testing.T) {
 	coordinates := createCoordinates(projects, true)
 	noColor := false
 	quiet := false
-	i := LogResults(&AuditLogTextFormatter{NoColor: &noColor, Quiet: &quiet}, 20, coordinates, []types.Coordinate{}, []string{})
+	i := LogResults(&AuditLogTextFormatter{NoColor: noColor, Quiet: quiet}, 20, coordinates, []types.Coordinate{}, []string{})
 
 	if i != projects {
 		t.Errorf("Expected %d vulnerabilites but found %d", projects, i)
@@ -107,7 +107,7 @@ func TestLogResultsWithoutVulnerabilitiesColor(t *testing.T) {
 	coordinates := createCoordinates(projects, false)
 	noColor := false
 	quiet := false
-	i := LogResults(&AuditLogTextFormatter{NoColor: &noColor, Quiet: &quiet}, 20, coordinates, []types.Coordinate{}, []string{})
+	i := LogResults(&AuditLogTextFormatter{NoColor: noColor, Quiet: quiet}, 20, coordinates, []types.Coordinate{}, []string{})
 
 	if i != 0 {
 		t.Errorf("Expected %d vulnerabilites but found %d", 0, i)
@@ -119,7 +119,7 @@ func TestLogResultsWithAllVulnerabilitiesExcluded(t *testing.T) {
 	coordinates := createCoordinates(projects, true)
 	noColor := false
 	quiet := false
-	i := LogResults(&AuditLogTextFormatter{NoColor: &noColor, Quiet: &quiet}, 20, coordinates, []types.Coordinate{}, []string{"CVE-123"})
+	i := LogResults(&AuditLogTextFormatter{NoColor: noColor, Quiet: quiet}, 20, coordinates, []types.Coordinate{}, []string{"CVE-123"})
 	assert.Equal(t, 0, i)
 }
 
@@ -128,6 +128,6 @@ func TestLogResultsWithNoVulnerabilitiesExcluded(t *testing.T) {
 	coordinates := createCoordinates(projects, true)
 	noColor := false
 	quiet := false
-	i := LogResults(&AuditLogTextFormatter{NoColor: &noColor, Quiet: &quiet}, 20, coordinates, []types.Coordinate{}, []string{"CVE-456"})
+	i := LogResults(&AuditLogTextFormatter{NoColor: noColor, Quiet: quiet}, 20, coordinates, []types.Coordinate{}, []string{"CVE-456"})
 	assert.Equal(t, projects, i)
 }

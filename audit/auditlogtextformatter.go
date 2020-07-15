@@ -42,8 +42,8 @@ func init() {
 }
 
 type AuditLogTextFormatter struct {
-	Quiet   *bool
-	NoColor *bool
+	Quiet   bool
+	NoColor bool
 }
 
 func logPackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
@@ -168,12 +168,12 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 
 		var sb strings.Builder
 
-		logInvalidSemVerWarning(&sb, *f.NoColor, *f.Quiet, invalidEntries)
+		logInvalidSemVerWarning(&sb, f.NoColor, f.Quiet, invalidEntries)
 		nonVulnerablePackages, vulnerablePackages := splitPackages(auditedEntries)
 
-		groupAndPrint(vulnerablePackages, nonVulnerablePackages, *f.Quiet, *f.NoColor, &sb)
+		groupAndPrint(vulnerablePackages, nonVulnerablePackages, f.Quiet, f.NoColor, &sb)
 
-		au := aurora.NewAurora(!*f.NoColor)
+		au := aurora.NewAurora(!f.NoColor)
 		t := table.NewWriter()
 		t.SetStyle(table.StyleBold)
 		t.SetTitle("Summary")

@@ -50,7 +50,7 @@ func verifyFormatterSummaryLoudness(t *testing.T, quiet bool) {
 	}
 	entry := Entry{Data: data}
 
-	formatter := AuditLogTextFormatter{Quiet: &quiet, NoColor: new(bool)}
+	formatter := AuditLogTextFormatter{Quiet: quiet, NoColor: false}
 	logMessage, e := formatter.Format(&entry)
 
 	assert.Nil(t, e)

@@ -130,7 +130,7 @@ func compareErrorExit(t *testing.T, expectedErrExit error, actualErrExit error) 
 
 var noColor = false
 var quiet = false
-var testDefaultFormatter = audit.AuditLogTextFormatter{Quiet: &quiet, NoColor: &noColor}
+var testDefaultFormatter = audit.AuditLogTextFormatter{Quiet: quiet, NoColor: noColor}
 
 func TestRootCommandLogVerbosity(t *testing.T) {
 	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: testDefaultFormatter})
@@ -163,8 +163,8 @@ func TestConfigOssi(t *testing.T) {
 	boolFalse := false
 	boolTrue := true
 
-	defaultAuditLogFormatter := audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolFalse}
-	quietDefaultFormatter := audit.AuditLogTextFormatter{Quiet: &boolTrue, NoColor: &boolFalse}
+	defaultAuditLogFormatter := audit.AuditLogTextFormatter{Quiet: boolFalse, NoColor: boolFalse}
+	quietDefaultFormatter := audit.AuditLogTextFormatter{Quiet: boolTrue, NoColor: boolFalse}
 
 	tests := map[string]struct {
 		args           []string
@@ -184,31 +184,31 @@ func TestConfigOssi(t *testing.T) {
 		// 		"path but invalid arg":                   {args: []string{"--invalid", "/tmp/go6.sum"}, expectedConfig: types.Configuration{}, expectedErr: errors.New("unknown flag: --invalid")},
 		// 		"multiple paths":                         {args: []string{"/tmp/go6.sum", "/tmp/another"}, expectedConfig: types.Configuration{}, expectedErr: customerrors.ErrorExit{ExitCode: 1, Err: errors.New("wrong number of modfile paths: [/tmp/go6.sum /tmp/another]"), Message: "wrong number of modfile paths: [/tmp/go6.sum /tmp/another]"}},
 		// 		"output of json modfile":      {args: []string{"--output=json", "/tmp/go14.sum"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}, Path: "/tmp/go14.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
-		"defaults":                               {args: []string{}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
-		"no color":                               {args: []string{"--no-color"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "", Formatter: audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
-		"quiet":                                  {args: []string{"--quiet"}, expectedConfig: types.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Formatter: quietDefaultFormatter}, expectedErr: stdInInvalid},
+		"defaults":                               {args: []string{}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
+		"no color":                               {args: []string{"--no-color"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "", Formatter: audit.AuditLogTextFormatter{Quiet: boolFalse, NoColor: boolTrue}}, expectedErr: nil},
+		"quiet":                                  {args: []string{"--quiet"}, expectedConfig: types.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Formatter: quietDefaultFormatter}, expectedErr: nil},
 		"version":                                {args: []string{"--version"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 0}},
-		"exclude vulnerabilities":                {args: []string{"--exclude-vulnerability=CVE123,CVE988"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
-		"std in as input":                        {args: []string{}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
-		"exclude vulnerabilities with sane file": {args: []string{"--exclude-vulnerability-file=" + file.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go7.sum")},
-		"exclude vulnerabilities when file empty":                                    {args: []string{"--exclude-vulnerability-file=" + emptyFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go8.sum")},
-		"exclude vulnerabilities when file has tons of newlines":                     {args: []string{"--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go9.sum")},
-		"exclude vulnerabilities are combined with file and args values":             {args: []string{"--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go10.sum")},
-		"exclude vulnerabilities file not found doesn't matter":                      {args: []string{"--exclude-vulnerability-file=/blah-blah-doesnt-exists"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go11.sum")},
-		"exclude vulnerabilities passed as directory doesn't matter":                 {args: []string{"--exclude-vulnerability-file=" + dir}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go12.sum")},
-		"exclude vulnerabilities doesn't need to be passed if default value is used": {args: []string{}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go13.sum")},
-		"exclude vulnerabilities when has comments":                                  {args: []string{"--exclude-vulnerability-file=" + commentedFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
-		"exclude vulnerabilities when has untils":                                    {args: []string{"--exclude-vulnerability-file=" + untilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
+		"exclude vulnerabilities":                {args: []string{"--exclude-vulnerability=CVE123,CVE988"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
+		"std in as input":                        {args: []string{}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter}, expectedErr: nil},
+		"exclude vulnerabilities with sane file": {args: []string{"--exclude-vulnerability-file=" + file.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
+		"exclude vulnerabilities when file empty":                                    {args: []string{"--exclude-vulnerability-file=" + emptyFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
+		"exclude vulnerabilities when file has tons of newlines":                     {args: []string{"--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
+		"exclude vulnerabilities are combined with file and args values":             {args: []string{"--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
+		"exclude vulnerabilities file not found doesn't matter":                      {args: []string{"--exclude-vulnerability-file=/blah-blah-doesnt-exists"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
+		"exclude vulnerabilities passed as directory doesn't matter":                 {args: []string{"--exclude-vulnerability-file=" + dir}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
+		"exclude vulnerabilities doesn't need to be passed if default value is used": {args: []string{}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
+		"exclude vulnerabilities when has comments":                                  {args: []string{"--exclude-vulnerability-file=" + commentedFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: nil},
+		"exclude vulnerabilities when has untils":                                    {args: []string{"--exclude-vulnerability-file=" + untilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: nil},
 		"exclude vulnerabilities when has invalid value in untils":                   {args: []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
 		"exclude vulnerabilities when has invalid date in untils":                    {args: []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Path: "", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidDateUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
-		"output of json":              {args: []string{"--output=json"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}}, expectedErr: stdInInvalid},
-		"output of json pretty print": {args: []string{"--output=json-pretty"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
-		"output of csv":               {args: []string{"--output=csv"}, expectedConfig: types.Configuration{Formatter: audit.CsvFormatter{Quiet: &boolFalse}, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go16.sum")},
-		"output of text":              {args: []string{"--output=text"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go17.sum")},
-		"output of bad value":         {args: []string{"--output=aintgonnadoit"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go18.sum")},
-		"log level of info":           {args: []string{"-v"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, expectedErr: stdInInvalid},
-		"log level of debug":          {args: []string{"-vv"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, expectedErr: stdInInvalid},
-		"log level of trace":          {args: []string{"-vvv"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, expectedErr: stdInInvalid},
+		"output of json":              {args: []string{"--output=json"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}}, expectedErr: nil},
+		"output of json pretty print": {args: []string{"--output=json-pretty"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}, Path: ""}, expectedErr: nil},
+		"output of csv":               {args: []string{"--output=csv"}, expectedConfig: types.Configuration{Formatter: audit.CsvFormatter{Quiet: &boolFalse}, Path: ""}, expectedErr: nil},
+		"output of text":              {args: []string{"--output=text"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
+		"output of bad value":         {args: []string{"--output=aintgonnadoit"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, Path: ""}, expectedErr: nil},
+		"log level of info":           {args: []string{"-v"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, expectedErr: nil},
+		"log level of debug":          {args: []string{"-vv"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, expectedErr: nil},
+		"log level of trace":          {args: []string{"-vvv"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, expectedErr: nil},
 	}
 
 	for name, test := range tests {
@@ -247,8 +247,7 @@ func TestConfigOssi(t *testing.T) {
 				}
 				defer os.Remove(defaultFileName)
 			}
-			//zzz start here---
-			//if name == "multiple paths" {
+
 			validateConfigOssi(t, test.expectedErr, test.expectedConfig, test.args...)
 
 			if err := tmpFile.Close(); err != nil {
