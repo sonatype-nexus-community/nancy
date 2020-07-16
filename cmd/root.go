@@ -91,7 +91,7 @@ func doOSSI(cmd *cobra.Command, args []string) (err error) {
 
 func Execute() (err error) {
 	if err = rootCmd.Execute(); err != nil {
-		return
+		os.Exit(1)
 	}
 	return
 }
@@ -135,6 +135,7 @@ func initConfig() {
 
 	if err := viper.ReadInConfig(); err == nil {
 		// TODO: Add log statements for config
+		fmt.Printf("Todo: Add log statement for OSSI config\n")
 	}
 }
 
@@ -185,7 +186,9 @@ func processConfig() (err error) {
 
 	printHeader(!configOssi.Quiet && reflect.TypeOf(configOssi.Formatter).String() == "audit.AuditLogTextFormatter")
 
-	err = getCVEExcludesFromFile(excludeVulnerabilityFilePath)
+	if err = getCVEExcludesFromFile(excludeVulnerabilityFilePath); err != nil {
+		return
+	}
 
 	if err = doStdInAndParse(); err != nil {
 		return

@@ -17,7 +17,6 @@
 package cmd
 
 import (
-	"bufio"
 	"bytes"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -205,15 +204,11 @@ func TestConfigOssi_exclude_vulnerabilities_when_has_untils(t *testing.T) {
 
 func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_value_in_untils(t *testing.T) {
 	invalidUntilsFile, _ := os.Open(testdataDir + "/untilsInvaild")
-	invalidUntilLine, _ := bufio.NewReader(invalidUntilsFile).ReadString('\n')
-	invalidUntilLine = strings.TrimSpace(invalidUntilLine)
 	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name()}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_date_in_untils(t *testing.T) {
 	invalidDateUntilsFile, _ := os.Open(testdataDir + "/untilsBadDateFormat")
-	invalidDateUntilLine, _ := bufio.NewReader(invalidDateUntilsFile).ReadString('\n')
-	invalidDateUntilLine = strings.TrimSpace(invalidDateUntilLine)
 	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name()}...)
 }
 

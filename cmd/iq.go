@@ -122,6 +122,7 @@ func initIQConfig() {
 
 	if err := viper.ReadInConfig(); err == nil {
 		// TODO: Add log statements for config
+		fmt.Printf("Todo: Add log statement for IQ config\n")
 	}
 }
 

@@ -21,5 +21,5 @@ import (
 )
 
 func main() {
-	cmd.Execute()
+	_ = cmd.Execute()
 }
