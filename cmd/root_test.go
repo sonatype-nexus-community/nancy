@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"bytes"
+	"flag"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
@@ -241,5 +242,7 @@ func TestConfigOssi_log_level_of_debug(t *testing.T) {
 }
 
 func TestConfigOssi_log_level_of_trace(t *testing.T) {
+	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
+
 	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, []string{"-vvv"}...)
 }

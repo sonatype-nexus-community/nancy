@@ -186,10 +186,12 @@ func processConfig() (err error) {
 
 	printHeader(!configOssi.Quiet && reflect.TypeOf(configOssi.Formatter).String() == "audit.AuditLogTextFormatter")
 
-	if err = getCVEExcludesFromFile(excludeVulnerabilityFilePath); err != nil {
-		return
-	}
-
+	// todo: should errors from this call be ignored
+	_ = getCVEExcludesFromFile(excludeVulnerabilityFilePath)
+	/*	if err = getCVEExcludesFromFile(excludeVulnerabilityFilePath); err != nil {
+			return
+		}
+	*/
 	if err = doStdInAndParse(); err != nil {
 		return
 	}
