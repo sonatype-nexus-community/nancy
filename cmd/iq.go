@@ -48,6 +48,7 @@ go list -m -json all | nancy iq --application your_public_application_id --serve
 	RunE:          doIQ,
 }
 
+//noinspection GoUnusedParameter
 func doIQ(cmd *cobra.Command, args []string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -96,9 +97,9 @@ func init() {
 	iqCmd.Flags().StringVarP(&configIQ.Server, "server-url", "x", "http://localhost:8070", "Specify Nexus IQ server url for request")
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	viper.BindPFlag("username", iqCmd.Flags().Lookup("username"))
-	viper.BindPFlag("token", iqCmd.Flags().Lookup("token"))
-	viper.BindPFlag("server", iqCmd.Flags().Lookup("server"))
+	_ = viper.BindPFlag("username", iqCmd.Flags().Lookup("username"))
+	_ = viper.BindPFlag("token", iqCmd.Flags().Lookup("token"))
+	_ = viper.BindPFlag("server", iqCmd.Flags().Lookup("server"))
 
 	rootCmd.AddCommand(iqCmd)
 }

@@ -40,8 +40,7 @@ func TestCsvOutputWhenQuiet(t *testing.T) {
 	}
 	entry := Entry{Data: data}
 
-	quiet := true
-	formatter := CsvFormatter{Quiet: quiet}
+	formatter := CsvFormatter{Quiet: true}
 	logMessage, e := formatter.Format(&entry)
 	assert.Nil(t, e)
 	expectedCsv := `Summary
@@ -50,7 +49,7 @@ Audited Count,Vulnerable Count,Build Version
 
 Audited Package(s)
 Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
-[2/2],vuln1,true,1,"[{""Id"":""123"",""Title"":""Vulnerability"",""Description"":""Description"",""CvssScore"":""7.88"",""CvssVector"":""What"",""Cve"":""CVE-123"",""Reference"":""Reference"",""Excluded"":false}]"
+[2/2],vuln1,true,1,"[{""ID"":""123"",""Title"":""Vulnerability"",""Description"":""Description"",""CvssScore"":""7.88"",""CvssVector"":""What"",""Cve"":""CVE-123"",""Reference"":""Reference"",""Excluded"":false}]"
 `
 	assert.Equal(t, expectedCsv, string(logMessage))
 }
@@ -70,8 +69,7 @@ func TestCsvOutput(t *testing.T) {
 	}
 	entry := Entry{Data: data}
 
-	quiet := false
-	formatter := CsvFormatter{Quiet: quiet}
+	formatter := CsvFormatter{}
 	logMessage, e := formatter.Format(&entry)
 	assert.Nil(t, e)
 	expectedCsv := `Summary
@@ -85,7 +83,7 @@ Count,Package,Reason
 Audited Package(s)
 Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
 [1/2],good1,false,0,null
-[2/2],vuln1,true,1,"[{""Id"":""123"",""Title"":""Vulnerability"",""Description"":""Description"",""CvssScore"":""7.88"",""CvssVector"":""What"",""Cve"":""CVE-123"",""Reference"":""Reference"",""Excluded"":false}]"
+[2/2],vuln1,true,1,"[{""ID"":""123"",""Title"":""Vulnerability"",""Description"":""Description"",""CvssScore"":""7.88"",""CvssVector"":""What"",""Cve"":""CVE-123"",""Reference"":""Reference"",""Excluded"":false}]"
 `
 	assert.Equal(t, expectedCsv, string(logMessage))
 }
@@ -106,8 +104,7 @@ func TestCsvOutputWhenNotAuditLog(t *testing.T) {
 }
 
 func TestCsvFormatter_FormatNoError(t *testing.T) {
-	quiet := true
-	formatter := CsvFormatter{Quiet: quiet}
+	formatter := CsvFormatter{Quiet: true}
 
 	data := map[string]interface{}{
 		"audited": []types.Coordinate{

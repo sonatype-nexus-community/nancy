@@ -31,6 +31,7 @@ var configCmd = &cobra.Command{
 	RunE:  doConfig,
 }
 
+//noinspection GoUnusedParameter
 func doConfig(cmd *cobra.Command, args []string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {

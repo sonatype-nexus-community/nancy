@@ -65,6 +65,7 @@ a smooth experience as a Golang developer, using the best tools in the market!`,
 	RunE: doOSSI,
 }
 
+//noinspection GoUnusedParameter
 func doOSSI(cmd *cobra.Command, args []string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -95,6 +96,8 @@ func Execute() (err error) {
 	return
 }
 
+const defaultExcludeFilePath = "./.nancy-ignore"
+
 func init() {
 	cobra.OnInitialize(initConfig)
 
@@ -106,12 +109,12 @@ func init() {
 	rootCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs to exclude")
 	rootCmd.Flags().StringVarP(&configOssi.Username, "username", "u", "", "Specify OSS Index username for request")
 	rootCmd.Flags().StringVarP(&configOssi.Token, "token", "t", "", "Specify OSS Index API token for request")
-	rootCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", "./.nancy-ignore", "Path to a file containing newline separated CVEs to be excluded")
+	rootCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs to be excluded")
 	rootCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	viper.BindPFlag("username", rootCmd.Flags().Lookup("username"))
-	viper.BindPFlag("token", rootCmd.Flags().Lookup("token"))
+	_ = viper.BindPFlag("username", rootCmd.Flags().Lookup("username"))
+	_ = viper.BindPFlag("token", rootCmd.Flags().Lookup("token"))
 }
 
 func initConfig() {
@@ -200,7 +203,9 @@ func getCVEExcludesFromFile(excludeVulnerabilityFilePath string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {

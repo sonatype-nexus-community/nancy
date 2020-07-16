@@ -19,9 +19,7 @@ package cmd
 import (
 	"bufio"
 	"bytes"
-	"errors"
-	"flag"
-	"fmt"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -30,7 +28,6 @@ import (
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,25 +48,6 @@ func checkStringContains(t *testing.T, got, substr string) {
 	}
 }
 
-func TestRootCommandOssiWithPathArgGopkglockOutsideGopath(t *testing.T) {
-	dirToGopkglock := "../packages/testdata"
-	pathToGopkglock := dirToGopkglock + "/Gopkg.lock"
-	_, err := executeCommand(rootCmd, pathToGopkglock)
-	assert.Error(t, err)
-	if exiterr, ok := err.(customerrors.ErrorExit); ok {
-		assert.Equal(t, 3, exiterr.ExitCode)
-		assert.Equal(t, fmt.Sprintf("both %s and %s are not within any known GOPATH", dirToGopkglock, dirToGopkglock), exiterr.Err.Error())
-		assert.Equal(t, fmt.Sprintf("could not read lock at path %s", pathToGopkglock), exiterr.Message)
-	} else {
-		t.Fail()
-	}
-}
-
-func TestRootCommandOssiWithPathArgGosum(t *testing.T) {
-	_, err := executeCommand(rootCmd, "../packages/testdata/go.sum")
-	assert.NoError(t, err)
-}
-
 func TestRootCommandUnknownCommand(t *testing.T) {
 	output, err := executeCommand(rootCmd, "one", "two")
 	checkStringContains(t, output, "Error: unknown command \"one\" for \"nancy\"")
@@ -85,171 +63,188 @@ func TestRootCommandNoArgsInvalidStdInErrorExit(t *testing.T) {
 	assert.Equal(t, 1, serr.ExitCode)
 }
 
-func validateConfigOssi(t *testing.T, expectedError error, expectedConfig types.Configuration, args ...string) {
-	// @todo fix hack below!!!!!, maybe submit bug and/or patch to Cobra about it
-	// if len(args) == 0 {
-	// 	// cobra command adds os arg[0] if command has empty args. see: cobra.Command.go -> line: 914
-	// 	origOsArg1 := os.Args[0]
-	// 	os.Args[0] = "cobra.test"
-	// 	defer func() {
-	// 		os.Args[0] = origOsArg1
-	// 	}()
-	// }
+func createFakeStdIn(t *testing.T) (oldStdIn *os.File, tmpFile *os.File) {
+	content := []byte("Testing")
+	tmpFile, err := ioutil.TempFile("", "tempfile")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if _, err := tmpFile.Write(content); err != nil {
+		t.Error(err)
+	}
+
+	if _, err := tmpFile.Seek(0, 0); err != nil {
+		t.Error(err)
+	}
+
+	oldStdIn = os.Stdin
+
+	os.Stdin = tmpFile
+	return oldStdIn, tmpFile
+}
+
+func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args ...string) {
+	oldStdIn, tmpFile := createFakeStdIn(t)
+	defer func() {
+		os.Stdin = oldStdIn
+		tmpFile.Name()
+	}()
+
+	// @todo Special case for empty args tests. maybe submit bug and/or patch to Cobra about it
+	// this issue only occurs when running tests individually
+	if len(args) == 0 {
+		// cobra command adds os arg[0] if command has empty testArgs. see: cobra.Command.go -> line: 914
+		origFirstOsArg := os.Args[0]
+		os.Args[0] = "cobra.test"
+		defer func() {
+			os.Args[0] = origFirstOsArg
+		}()
+	}
+
+	configOssi = types.Configuration{}
 
 	_, err := executeCommand(rootCmd, args...)
-
-	var ee customerrors.ErrorExit
-	if errors.As(expectedError, &ee) && errors.As(err, &ee) {
-		// special case comparison for ErrorExit type where errCause may be of type we can't duplicate
-		// compare string of errCause
-		compareErrorExit(t, expectedError, err)
-	} else {
-		assert.Equal(t, expectedError, err)
-	}
+	assert.Nil(t, err)
 	assert.Equal(t, expectedConfig, configOssi)
 }
 
-func compareErrorExit(t *testing.T, expectedErrExit error, actualErrExit error) {
-	var eExpected customerrors.ErrorExit
-	assert.True(t, errors.As(expectedErrExit, &eExpected))
-
-	var eActual customerrors.ErrorExit
-	assert.True(t, errors.As(actualErrExit, &eActual))
-
-	assert.Equal(t, eExpected.ExitCode, eActual.ExitCode)
-	assert.Equal(t, eExpected.Message, eActual.Message)
-
-	if eExpected.Err == nil {
-		assert.Nil(t, eActual.Err)
-	} else {
-		// special case comparison for ErrorExit type where errCause may be of a type we can't duplicate, so we
-		// compare string representation of errCause
-		assert.Equal(t, eExpected.Err.Error(), eActual.Err.Error())
-	}
-}
-
-var noColor = false
-var quiet = false
-var testDefaultFormatter = audit.AuditLogTextFormatter{Quiet: quiet, NoColor: noColor}
+var defaultAuditLogFormatter = audit.AuditLogTextFormatter{}
 
 func TestRootCommandLogVerbosity(t *testing.T) {
-	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: testDefaultFormatter})
-	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: testDefaultFormatter, LogLevel: 1}, "-v")
-	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: testDefaultFormatter, LogLevel: 2}, "-vv")
-	validateConfigOssi(t, stdInInvalid, types.Configuration{Formatter: testDefaultFormatter, LogLevel: 3}, "-vvv")
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, "")
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, "-v")
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, "-vv")
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, "-vvv")
 }
 
-func setup() {
-	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
+func TestConfigOssi_defaults(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{}...)
 }
 
-func TestConfigOssi(t *testing.T) {
-	const testdataDir = "../configuration/testdata"
+func TestConfigOssi_no_color(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{NoColor: true, Formatter: audit.AuditLogTextFormatter{NoColor: true}}, []string{"--no-color"}...)
+}
+
+func TestConfigOssi_quiet(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Quiet: true, Formatter: audit.AuditLogTextFormatter{Quiet: true}}, []string{"--quiet"}...)
+}
+
+func TestConfigOssi_version(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Version: true, Formatter: defaultAuditLogFormatter}, []string{"--version"}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability=CVE123,CVE988"}...)
+}
+
+func TestConfigOssi_stdIn_as_input(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{}...)
+}
+
+const testdataDir = "../configuration/testdata"
+
+func TestConfigOssi_exclude_vulnerabilities_with_sane_file(t *testing.T) {
 	file, _ := os.Open(testdataDir + "/normalIgnore")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + file.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_file_empty(t *testing.T) {
 	emptyFile, _ := os.Open(testdataDir + "/emptyFile")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + emptyFile.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_has_tons_of_newlines(t *testing.T) {
 	lotsOfRandomNewlinesFile, _ := os.Open(testdataDir + "/lotsOfRandomWhitespace")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_are_combined_with_file_and_args_values(t *testing.T) {
+	lotsOfRandomNewlinesFile, _ := os.Open(testdataDir + "/lotsOfRandomWhitespace")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_file_not_found_does_not_matter(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=/blah-blah-doesnt-exists"}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_passed_as_directory_does_not_matter(t *testing.T) {
+	dir, _ := ioutil.TempDir("", "prefix")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + dir}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_does_not_need_to_be_passed_if_default_value_is_used(t *testing.T) {
+	defaultFileName := ".nancy-ignore"
+	err := ioutil.WriteFile(defaultFileName, []byte("DEF-111\nDEF-222"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = os.Remove(defaultFileName)
+	}()
+
+	// reset exclude file path, is changed by prior tests
+	origExcludeVulnerabilityFilePath := excludeVulnerabilityFilePath
+	defer func() {
+		excludeVulnerabilityFilePath = origExcludeVulnerabilityFilePath
+	}()
+	excludeVulnerabilityFilePath = defaultExcludeFilePath
+
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter}, []string{}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_has_comments(t *testing.T) {
 	commentedFile, _ := os.Open(testdataDir + "/commented")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + commentedFile.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_has_untils(t *testing.T) {
 	untilsFile, _ := os.Open(testdataDir + "/untilsAndComments")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + untilsFile.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_value_in_untils(t *testing.T) {
 	invalidUntilsFile, _ := os.Open(testdataDir + "/untilsInvaild")
 	invalidUntilLine, _ := bufio.NewReader(invalidUntilsFile).ReadString('\n')
 	invalidUntilLine = strings.TrimSpace(invalidUntilLine)
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name()}...)
+}
 
+func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_date_in_untils(t *testing.T) {
 	invalidDateUntilsFile, _ := os.Open(testdataDir + "/untilsBadDateFormat")
 	invalidDateUntilLine, _ := bufio.NewReader(invalidDateUntilsFile).ReadString('\n')
 	invalidDateUntilLine = strings.TrimSpace(invalidDateUntilLine)
-
-	dir, _ := ioutil.TempDir("", "prefix")
-
-	boolFalse := false
-	boolTrue := true
-
-	defaultAuditLogFormatter := audit.AuditLogTextFormatter{Quiet: boolFalse, NoColor: boolFalse}
-	quietDefaultFormatter := audit.AuditLogTextFormatter{Quiet: boolTrue, NoColor: boolFalse}
-
-	tests := map[string]struct {
-		args           []string
-		expectedConfig types.Configuration
-		expectedErr    error
-	}{
-		"defaults":                               {args: []string{}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"no color":                               {args: []string{"--no-color"}, expectedConfig: types.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: audit.AuditLogTextFormatter{Quiet: boolFalse, NoColor: boolTrue}}, expectedErr: nil},
-		"quiet":                                  {args: []string{"--quiet"}, expectedConfig: types.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Formatter: quietDefaultFormatter}, expectedErr: nil},
-		"version":                                {args: []string{"--version"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 0}},
-		"exclude vulnerabilities":                {args: []string{"--exclude-vulnerability=CVE123,CVE988"}, expectedConfig: types.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"std in as input":                        {args: []string{}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities with sane file": {args: []string{"--exclude-vulnerability-file=" + file.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities when file empty":                                    {args: []string{"--exclude-vulnerability-file=" + emptyFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities when file has tons of newlines":                     {args: []string{"--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities are combined with file and args values":             {args: []string{"--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities file not found doesn't matter":                      {args: []string{"--exclude-vulnerability-file=/blah-blah-doesnt-exists"}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities passed as directory doesn't matter":                 {args: []string{"--exclude-vulnerability-file=" + dir}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities doesn't need to be passed if default value is used": {args: []string{}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities when has comments":                                  {args: []string{"--exclude-vulnerability-file=" + commentedFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities when has untils":                                    {args: []string{"--exclude-vulnerability-file=" + untilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"exclude vulnerabilities when has invalid value in untils":                   {args: []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
-		"exclude vulnerabilities when has invalid date in untils":                    {args: []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name()}, expectedConfig: types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidDateUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
-		"output of json":              {args: []string{"--output=json"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{}}, expectedErr: nil},
-		"output of json pretty print": {args: []string{"--output=json-pretty"}, expectedConfig: types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}}, expectedErr: nil},
-		"output of csv":               {args: []string{"--output=csv"}, expectedConfig: types.Configuration{Formatter: audit.CsvFormatter{Quiet: boolFalse}}, expectedErr: nil},
-		"output of text":              {args: []string{"--output=text"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		// "output of bad value":         {args: []string{"--output=aintgonnadoit"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		"log level of info":  {args: []string{"-v"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, expectedErr: nil},
-		"log level of debug": {args: []string{"-vv"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, expectedErr: nil},
-		"log level of trace": {args: []string{"-vvv"}, expectedConfig: types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, expectedErr: nil},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			configOssi = types.Configuration{}
-
-			content := []byte("Testing")
-			tmpFile, err := ioutil.TempFile("", "tempfile")
-			if err != nil {
-				t.Error(err)
-			}
-
-			defer os.Remove(tmpFile.Name())
-
-			if _, err := tmpFile.Write(content); err != nil {
-				t.Error(err)
-			}
-
-			if _, err := tmpFile.Seek(0, 0); err != nil {
-				t.Error(err)
-			}
-
-			oldStdIn := os.Stdin
-
-			defer func() {
-				os.Stdin = oldStdIn
-			}()
-
-			os.Stdin = tmpFile
-
-			setup()
-
-			if name == "exclude vulnerabilities doesn't need to be passed if default value is used" {
-				defaultFileName := ".nancy-ignore"
-				err := ioutil.WriteFile(defaultFileName, []byte("DEF-111\nDEF-222"), 0644)
-				if err != nil {
-					t.Fatal(err)
-				}
-				defer os.Remove(defaultFileName)
-			}
-
-			validateConfigOssi(t, test.expectedErr, test.expectedConfig, test.args...)
-
-			if err := tmpFile.Close(); err != nil {
-				t.Error(err)
-			}
-		})
-	}
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name()}...)
 }
 
-func createCustomErrorInvalidPathArg(path string) customerrors.ErrorExit {
-	return customerrors.ErrorExit{ExitCode: 3, Message: "invalid path arg: " + path}
+func TestConfigOssi_output_of_json(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: audit.JsonFormatter{}}, []string{"--output=json"}...)
 }
 
-func createCustomErrorWithErrMsg(exitCode int, err error) customerrors.ErrorExit {
-	return customerrors.ErrorExit{ExitCode: exitCode, Err: err, Message: err.Error()}
+func TestConfigOssi_output_of_json_pretty_print(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}}, []string{"--output=json-pretty"}...)
+}
+
+func TestConfigOssi_output_of_csv(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: audit.CsvFormatter{}}, []string{"--output=csv"}...)
+}
+
+func TestConfigOssi_output_of_text(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{"--output=text"}...)
+}
+
+func TestConfigOssi_output_of_bad_value(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{"--output=aintgonnadoit"}...)
+}
+
+func TestConfigOssi_log_level_of_info(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, []string{"-v"}...)
+}
+
+func TestConfigOssi_log_level_of_debug(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, []string{"-vv"}...)
+}
+
+func TestConfigOssi_log_level_of_trace(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, []string{"-vvv"}...)
 }
