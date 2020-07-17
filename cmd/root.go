@@ -57,7 +57,8 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "nancy",
+	Version: buildversion.BuildVersion,
+	Use:     "nancy",
 	Example: `  Typical usage will pipe the output of 'go list -m all' to 'nancy':
   go list -m all | nancy [flags]
   go list -m all | nancy iq [flags]

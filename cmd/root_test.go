@@ -19,6 +19,7 @@ package cmd
 import (
 	"bytes"
 	"flag"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
@@ -131,7 +132,7 @@ func TestConfigOssi_quiet(t *testing.T) {
 }
 
 func TestConfigOssi_version(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Version: true, Formatter: defaultAuditLogFormatter}, []string{"--version"}...)
+	validateConfigOssi(t, types.Configuration{Version: true, Formatter: logrus.Formatter(nil)}, []string{"--version"}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities(t *testing.T) {
