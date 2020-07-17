@@ -38,12 +38,11 @@ var (
 )
 
 var iqCmd = &cobra.Command{
-	Use:           "iq",
-	Example:       `  go list -m -json all | nancy iq --application your_public_application_id --server http://your_iq_server_url:port --user your_user --token your_token --stage develop`,
-	Short:         "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ Server'",
-	Long:          `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ Server', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
-	SilenceErrors: true,
-	RunE:          doIQ,
+	Use:     "iq",
+	Example: `  go list -m -json all | nancy iq --application your_public_application_id --server http://your_iq_server_url:port --user your_user --token your_token --stage develop`,
+	Short:   "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ Server'",
+	Long:    `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ Server', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
+	RunE:    doIQ,
 }
 
 //noinspection GoUnusedParameter
@@ -91,7 +90,12 @@ func init() {
 	iqCmd.Flags().StringVarP(&configIQ.User, "username", "u", "admin", "Specify Nexus IQ username for request")
 	iqCmd.Flags().StringVarP(&configIQ.Token, "token", "t", "admin123", "Specify Nexus IQ token for request")
 	iqCmd.Flags().StringVarP(&configIQ.Stage, "stage", "s", "develop", "Specify Nexus IQ stage for request")
+
 	iqCmd.Flags().StringVarP(&configIQ.Application, "application", "a", "", "Specify Nexus IQ public application ID for request")
+	if err := iqCmd.MarkFlagRequired("application"); err != nil {
+		panic(err)
+	}
+
 	iqCmd.Flags().StringVarP(&configIQ.Server, "server-url", "x", "http://localhost:8070", "Specify Nexus IQ server url for request")
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
