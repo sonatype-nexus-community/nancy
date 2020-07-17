@@ -38,12 +38,10 @@ var (
 )
 
 var iqCmd = &cobra.Command{
-	Use: "iq",
-	Example: `
-go list -m -json all | nancy iq --application your_public_application_id --server http://your_iq_server_url:port --user your_user --token your_token --stage develop
-	`,
+	Use:           "iq",
+	Example:       `  go list -m -json all | nancy iq --application your_public_application_id --server http://your_iq_server_url:port --user your_user --token your_token --stage develop`,
 	Short:         "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ Server'",
-	Long:          `nancy iq is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ Server', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
+	Long:          `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ Server', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
 	SilenceErrors: true,
 	RunE:          doIQ,
 }

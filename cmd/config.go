@@ -26,9 +26,10 @@ import (
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "",
-	Long:  ``,
-	RunE:  doConfig,
+	Short: "Setup credentials to use when connecting to services",
+	Long: `Save credentials for reuse in connecting to various backend services.
+The config command will prompt for the type of credentials to save.`,
+	RunE: doConfig,
 }
 
 //noinspection GoUnusedParameter
