@@ -46,10 +46,10 @@ func TestInitIQConfig(t *testing.T) {
 	tempDir := setupConfig(t)
 	defer resetConfig(t, tempDir)
 
-	cfgDir := path.Join(tempDir, types.OssIndexDirName)
+	cfgDir := path.Join(tempDir, types.IQServerDirName)
 	assert.Nil(t, os.Mkdir(cfgDir, 0700))
 
-	cfgFile = path.Join(tempDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+	cfgFile = path.Join(tempDir, types.IQServerDirName, types.IQServerConfigFileName)
 
 	const credentials = "username: iqUsername\n" +
 		"token: iqToken\n" +
