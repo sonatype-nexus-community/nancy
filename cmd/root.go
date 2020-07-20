@@ -123,9 +123,12 @@ func init() {
 	_ = viper.BindPFlag("token", rootCmd.Flags().Lookup("token"))
 }
 
+const configTypeYaml = "yaml"
+
 func initConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
+		viper.SetConfigType(configTypeYaml)
 	} else {
 		home, err := homedir.Dir()
 		if err != nil {
@@ -135,7 +138,7 @@ func initConfig() {
 		configPath := path.Join(home, types.OssIndexDirName)
 
 		viper.AddConfigPath(configPath)
-		viper.SetConfigType("yaml")
+		viper.SetConfigType(configTypeYaml)
 		viper.SetConfigName(types.OssIndexConfigFileName)
 	}
 

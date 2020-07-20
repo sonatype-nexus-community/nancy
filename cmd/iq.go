@@ -109,6 +109,7 @@ func init() {
 func initIQConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
+		viper.SetConfigType(configTypeYaml)
 	} else {
 		home, err := homedir.Dir()
 		if err != nil {

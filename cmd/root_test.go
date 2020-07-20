@@ -20,9 +20,12 @@ import (
 	"bytes"
 	"flag"
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 	"testing"
 
@@ -246,4 +249,40 @@ func TestConfigOssi_log_level_of_trace(t *testing.T) {
 	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
 
 	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, []string{"-vvv"}...)
+}
+
+func setupConfig(t *testing.T) (tempDir string) {
+	tempDir, err := ioutil.TempDir("", "config-test")
+	assert.NoError(t, err)
+	configuration.HomeDir = tempDir
+	return tempDir
+}
+
+func resetConfig(t *testing.T, tempDir string) {
+	var err error
+	configuration.HomeDir, err = os.UserHomeDir()
+	assert.NoError(t, err)
+	_ = os.RemoveAll(tempDir)
+}
+
+func TestInitConfig(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
+	tempDir := setupConfig(t)
+	defer resetConfig(t, tempDir)
+
+	cfgDir := path.Join(tempDir, types.OssIndexDirName)
+	assert.Nil(t, os.Mkdir(cfgDir, 0700))
+
+	cfgFile = path.Join(tempDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+
+	const credentials = "Username: ossiUsername\n" +
+		"Token: ossiToken"
+	assert.Nil(t, ioutil.WriteFile(cfgFile, []byte(credentials), 0644))
+
+	initConfig()
+
+	assert.Equal(t, "ossiUsername", viper.GetString("Username"))
+	assert.Equal(t, "ossiToken", viper.GetString("Token"))
 }
