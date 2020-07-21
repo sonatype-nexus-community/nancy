@@ -253,6 +253,10 @@ func TestConfigOssi_log_level_of_trace(t *testing.T) {
 	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, []string{"-vvv"}...)
 }
 
+func TestConfigOssi_cleanCache(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, CleanCache: true}, []string{"--clean-cache"}...)
+}
+
 func setupConfig(t *testing.T) (tempDir string) {
 	tempDir, err := ioutil.TempDir("", "config-test")
 	assert.NoError(t, err)
