@@ -19,15 +19,16 @@ package cmd
 import (
 	"bytes"
 	"flag"
-	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/configuration"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 	"testing"
+
+	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/configuration"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
@@ -92,7 +93,8 @@ func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args .
 	oldStdIn, tmpFile := createFakeStdIn(t)
 	defer func() {
 		os.Stdin = oldStdIn
-		tmpFile.Name()
+		_ = tmpFile.Close()
+		os.Remove(tmpFile.Name())
 	}()
 
 	// @todo Special case for empty args tests. maybe submit bug and/or patch to Cobra about it
