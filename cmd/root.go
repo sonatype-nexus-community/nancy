@@ -186,9 +186,9 @@ func processConfig() (err error) {
 	}
 
 	if configOssi.CleanCache {
-		if err := ossIndex.NoCacheNoProblems(); err != nil {
+		if err = ossIndex.NoCacheNoProblems(); err != nil {
 			fmt.Printf("ERROR: cleaning cache: %v\n", err)
-			os.Exit(1)
+			return
 		}
 		return
 	}
