@@ -32,9 +32,42 @@ import (
 	"github.com/spf13/viper"
 )
 
+type iIQServer interface {
+	AuditPackages(purls []string, applicationID string) (iq.StatusURLResult, error)
+}
+
+type iqServerFactory interface {
+	create() iIQServer
+}
+
+type iqServerWrapper struct {
+	iqServerWrapped *iq.Server
+}
+
+func (wrapper iqServerWrapper) AuditPackages(purls []string, applicationID string) (iq.StatusURLResult, error) {
+	return wrapper.iqServerWrapped.AuditPackages(purls, applicationID)
+}
+
+type iqFactory struct{}
+
+func (iqFactory) create() iIQServer {
+	iqServer := iq.New(logLady, iq.Options{
+		User:        configIQ.User,
+		Token:       configIQ.Token,
+		Application: configIQ.Application,
+		Stage:       configIQ.Stage,
+		Server:      configIQ.Server,
+		Tool:        "nancy-client",
+		DBCacheName: "nancy-cache",
+		MaxRetries:  300,
+	})
+	wrapped := iqServerWrapper{iqServerWrapped: iqServer}
+	return wrapped
+}
+
 var (
-	configIQ types.Configuration
-	iqServer *iq.Server
+	configIQ  types.Configuration
+	iqCreator iqServerFactory = iqFactory{}
 )
 
 var iqCmd = &cobra.Command{
@@ -130,16 +163,7 @@ func initIQConfig() {
 }
 
 func auditWithIQServer(purls []string, applicationID string) error {
-	iqServer = iq.New(logLady, iq.Options{
-		User:        configIQ.User,
-		Token:       configIQ.Token,
-		Application: configIQ.Application,
-		Stage:       configIQ.Stage,
-		Server:      configIQ.Server,
-		Tool:        "nancy-client",
-		DBCacheName: "nancy-cache",
-		MaxRetries:  300,
-	})
+	iqServer := iqCreator.create()
 
 	logLady.Debug("Sending purls to be Audited by IQ Server")
 	res, err := iqServer.AuditPackages(purls, applicationID)

@@ -69,7 +69,10 @@ func TestRootCommandNoArgsInvalidStdInErrorExit(t *testing.T) {
 }
 
 func createFakeStdIn(t *testing.T) (oldStdIn *os.File, tmpFile *os.File) {
-	content := []byte("Testing")
+	return createFakeStdInWithString(t, "Testing")
+}
+func createFakeStdInWithString(t *testing.T, inputString string) (oldStdIn *os.File, tmpFile *os.File) {
+	content := []byte(inputString)
 	tmpFile, err := ioutil.TempFile("", "tempfile")
 	if err != nil {
 		t.Error(err)
@@ -94,7 +97,7 @@ func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args .
 	defer func() {
 		os.Stdin = oldStdIn
 		_ = tmpFile.Close()
-		os.Remove(tmpFile.Name())
+		_ = os.Remove(tmpFile.Name())
 	}()
 
 	// @todo Special case for empty args tests. maybe submit bug and/or patch to Cobra about it
