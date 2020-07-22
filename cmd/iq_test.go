@@ -73,10 +73,10 @@ var testPurls = []string{
 }
 
 type iqFactoryMock struct {
-	mockIqServer iIQServer
+	mockIqServer iq.IServer
 }
 
-func (f iqFactoryMock) create() iIQServer {
+func (f iqFactoryMock) create() iq.IServer {
 	return f.mockIqServer
 }
 

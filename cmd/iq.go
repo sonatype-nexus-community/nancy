@@ -32,25 +32,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-type iIQServer interface {
-	AuditPackages(purls []string, applicationID string) (iq.StatusURLResult, error)
-}
-
 type iqServerFactory interface {
-	create() iIQServer
-}
-
-type iqServerWrapper struct {
-	iqServerWrapped *iq.Server
-}
-
-func (wrapper iqServerWrapper) AuditPackages(purls []string, applicationID string) (iq.StatusURLResult, error) {
-	return wrapper.iqServerWrapped.AuditPackages(purls, applicationID)
+	create() iq.IServer
 }
 
 type iqFactory struct{}
 
-func (iqFactory) create() iIQServer {
+func (iqFactory) create() iq.IServer {
 	iqServer := iq.New(logLady, iq.Options{
 		User:        configIQ.User,
 		Token:       configIQ.Token,
@@ -61,8 +49,7 @@ func (iqFactory) create() iIQServer {
 		DBCacheName: "nancy-cache",
 		MaxRetries:  300,
 	})
-	wrapped := iqServerWrapper{iqServerWrapped: iqServer}
-	return wrapped
+	return iqServer
 }
 
 var (
