@@ -95,9 +95,9 @@ func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 	defer func() {
 		iqCreator = origIqCreator
 	}()
-	logLady = logger.GetLogger("", configOssi.LogLevel)
-
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{}, apErr: fmt.Errorf("forced error")}}
+
+	logLady = logger.GetLogger("", configOssi.LogLevel)
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -112,9 +112,9 @@ func TestAuditWithIQServerResponseError(t *testing.T) {
 	defer func() {
 		iqCreator = origIqCreator
 	}()
-	logLady = logger.GetLogger("", configOssi.LogLevel)
-
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
+
+	logLady = logger.GetLogger("", configOssi.LogLevel)
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -130,9 +130,9 @@ func TestAuditWithIQServerPolicyActionNotFailure(t *testing.T) {
 	defer func() {
 		iqCreator = origIqCreator
 	}()
-	logLady = logger.GetLogger("", configOssi.LogLevel)
-
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{}}}
+
+	logLady = logger.GetLogger("", configOssi.LogLevel)
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -144,9 +144,9 @@ func TestAuditWithIQServerPolicyActionFailure(t *testing.T) {
 	defer func() {
 		iqCreator = origIqCreator
 	}()
-	logLady = logger.GetLogger("", configOssi.LogLevel)
-
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{PolicyAction: "Failure"}}}
+
+	logLady = logger.GetLogger("", configOssi.LogLevel)
 
 	err := auditWithIQServer(testPurls, "testapp")
 
