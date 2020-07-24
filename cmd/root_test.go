@@ -20,17 +20,19 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
-	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
-	"github.com/sonatype-nexus-community/nancy/logger"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 	"testing"
 
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/types"
+
 	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -349,7 +351,9 @@ func TestCheckOSSIndexNoVulnerabilities(t *testing.T) {
 		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{}},
 	}}}
 
-	logLady = logger.GetLogger("", configOssi.LogLevel)
+	logLady, _ = test.NewNullLogger()
+
+	configOssi.Formatter = &logrus.TextFormatter{}
 	/*	outputFormat = "text"
 		assert.Nil(t, processConfig())
 	*/
