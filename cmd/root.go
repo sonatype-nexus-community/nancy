@@ -46,16 +46,34 @@ import (
 	"github.com/spf13/viper"
 )
 
+type ossiServerFactory interface {
+	create() ossindex.IServer
+}
+
+type ossiFactory struct{}
+
+func (ossiFactory) create() ossindex.IServer {
+	server := ossindex.New(logLady, ossIndexTypes.Options{
+		Username:    viper.GetString("username"),
+		Token:       viper.GetString("token"),
+		Tool:        "nancy-client",
+		Version:     buildversion.BuildVersion,
+		DBCacheName: "nancy-cache",
+		TTL:         time.Now().Local().Add(time.Hour * 12),
+	})
+	return server
+}
+
 var (
 	cfgFile                      string
 	configOssi                   types.Configuration
 	excludeVulnerabilityFilePath string
 	outputFormat                 string
 	logLady                      *logrus.Logger
-	ossIndex                     *ossindex.Server
-	unixComments                 = regexp.MustCompile(`#.*$`)
-	untilComment                 = regexp.MustCompile(`(until=)(.*)`)
-	stdInInvalid                 = customerrors.ErrorExit{ExitCode: 1, Message: "StdIn is invalid, either empty or another reason"}
+	ossiCreator                  ossiServerFactory = ossiFactory{}
+	unixComments                                   = regexp.MustCompile(`#.*$`)
+	untilComment                                   = regexp.MustCompile(`(until=)(.*)`)
+	stdInInvalid                                   = customerrors.ErrorExit{ExitCode: 1, Message: "StdIn is invalid, either empty or another reason"}
 )
 
 var rootCmd = &cobra.Command{
@@ -152,15 +170,6 @@ func initConfig() {
 }
 
 func processConfig() (err error) {
-	ossIndex = ossindex.New(logLady, ossIndexTypes.Options{
-		Username:    viper.GetString("username"),
-		Token:       viper.GetString("token"),
-		Tool:        "nancy-client",
-		Version:     buildversion.BuildVersion,
-		DBCacheName: "nancy-cache",
-		TTL:         time.Now().Local().Add(time.Hour * 12),
-	})
-
 	switch format := outputFormat; format {
 	case "text":
 		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: configOssi.Quiet, NoColor: configOssi.NoColor}
@@ -188,6 +197,8 @@ func processConfig() (err error) {
 		logLady.Level = logrus.TraceLevel
 	}
 
+	ossIndex := ossiCreator.create()
+
 	if configOssi.CleanCache {
 		if err = ossIndex.NoCacheNoProblems(); err != nil {
 			fmt.Printf("ERROR: cleaning cache: %v\n", err)
@@ -206,11 +217,11 @@ func processConfig() (err error) {
 	*/
 
 	if configOssi.Path != "" && strings.Contains(configOssi.Path, "Gopkg.lock") {
-		if err = doDepAndParse(configOssi.Path); err != nil {
+		if err = doDepAndParse(ossIndex, configOssi.Path); err != nil {
 			return
 		}
 	} else {
-		if err = doStdInAndParse(); err != nil {
+		if err = doStdInAndParse(ossIndex); err != nil {
 			return
 		}
 	}
@@ -218,7 +229,7 @@ func processConfig() (err error) {
 	return
 }
 
-func doDepAndParse(path string) (err error) {
+func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
 	workingDir := filepath.Dir(path)
 	if workingDir == "." {
 		workingDir, _ = os.Getwd()
@@ -240,7 +251,7 @@ func doDepAndParse(path string) (err error) {
 
 	purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
 
-	err = checkOSSIndex(purls, invalidPurls)
+	err = checkOSSIndex(ossIndex, purls, invalidPurls)
 	if err != nil {
 		return
 	}
@@ -309,7 +320,7 @@ func printHeader(print bool) {
 	}
 }
 
-func doStdInAndParse() (err error) {
+func doStdInAndParse(ossIndex ossindex.IServer) (err error) {
 	if err = checkStdIn(); err != nil {
 		return err
 	}
@@ -320,12 +331,12 @@ func doStdInAndParse() (err error) {
 
 	var purls = mod.ExtractPurlsFromManifest()
 
-	err = checkOSSIndex(purls, nil)
+	err = checkOSSIndex(ossIndex, purls, nil)
 
 	return err
 }
 
-func checkOSSIndex(purls []string, invalidpurls []string) (err error) {
+func checkOSSIndex(ossIndex ossindex.IServer, purls []string, invalidpurls []string) (err error) {
 	var packageCount = len(purls)
 	coordinates, err := ossIndex.AuditPackages(purls)
 	if err != nil {
@@ -339,6 +350,9 @@ func checkOSSIndex(purls []string, invalidpurls []string) (err error) {
 
 	if count := audit.LogResults(configOssi.Formatter, packageCount, coordinates, invalidCoordinates, configOssi.CveList.Cves); count > 0 {
 		os.Exit(count)
+		// #todo Fix me
+		//err = customerrors.ErrorExit{ExitCode: count}
+		return
 	}
 	return
 }

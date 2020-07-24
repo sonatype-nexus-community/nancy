@@ -19,6 +19,11 @@ package cmd
 import (
 	"bytes"
 	"flag"
+	"fmt"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/types"
 	"io/ioutil"
 	"os"
 	"path"
@@ -32,7 +37,6 @@ import (
 
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -294,4 +298,61 @@ func TestInitConfig(t *testing.T) {
 
 	assert.Equal(t, "ossiUsername", viper.GetString("Username"))
 	assert.Equal(t, "ossiToken", viper.GetString("Token"))
+}
+
+type ossiFactoryMock struct {
+	mockOssiServer ossindex.IServer
+}
+
+func (f ossiFactoryMock) create() ossindex.IServer {
+	return f.mockOssiServer
+}
+
+type mockOssiServer struct {
+	apResults []ossIndexTypes.Coordinate
+	apErr     error
+}
+
+//noinspection GoUnusedParameter
+func (s mockOssiServer) AuditPackages(purls []string) ([]ossIndexTypes.Coordinate, error) {
+	return s.apResults, s.apErr
+}
+func (s mockOssiServer) NoCacheNoProblems() error {
+	return s.apErr
+}
+
+// use compiler to ensure interface is implemented by mock
+var _ ossindex.IServer = (*mockOssiServer)(nil)
+
+func TestCheckOSSIndexAuditPackagesError(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	expectedError := fmt.Errorf("forced error")
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apErr: expectedError}}
+
+	logLady = logger.GetLogger("", configOssi.LogLevel)
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Equal(t, expectedError, err)
+}
+
+func TestCheckOSSIndexNoVulnerabilities(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	expectedError := fmt.Errorf("forced error")
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apResults: []ossIndexTypes.Coordinate{
+		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{}},
+		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{}},
+	}}}
+
+	logLady = logger.GetLogger("", configOssi.LogLevel)
+	/*	outputFormat = "text"
+		assert.Nil(t, processConfig())
+	*/
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Equal(t, expectedError, err)
 }

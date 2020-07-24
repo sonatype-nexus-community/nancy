@@ -90,6 +90,9 @@ func (s mockIqServer) AuditPackages(purls []string, applicationID string) (iq.St
 	return s.apStatusUrlResult, s.apErr
 }
 
+// use compiler to ensure interface is implemented by mock
+var _ iq.IServer = (*mockIqServer)(nil)
+
 func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 	origIqCreator := iqCreator
 	defer func() {
