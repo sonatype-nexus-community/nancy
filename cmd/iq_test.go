@@ -86,7 +86,7 @@ type mockIqServer struct {
 }
 
 //noinspection GoUnusedParameter
-func (s mockIqServer) AuditPackages(purls []string, applicationID string) (statusUrlResult iq.StatusURLResult, err error) {
+func (s mockIqServer) AuditPackages(purls []string, applicationID string) (iq.StatusURLResult, error) {
 	return s.apStatusUrlResult, s.apErr
 }
 
