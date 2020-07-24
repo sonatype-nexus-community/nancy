@@ -22,12 +22,14 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/common-nighthawk/go-figure"
+	"github.com/golang/dep"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
@@ -113,6 +115,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&configOssi.NoColor, "no-color", "n", false, "indicate output should not be colorized")
 	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
 	rootCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs to exclude")
+	rootCmd.Flags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep Gopkg.lock file for scanning")
 	rootCmd.Flags().StringVarP(&configOssi.Username, "username", "u", "", "Specify OSS Index username for request")
 	rootCmd.Flags().StringVarP(&configOssi.Token, "token", "t", "", "Specify OSS Index API token for request")
 	rootCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs to be excluded")
@@ -201,7 +204,44 @@ func processConfig() (err error) {
 			return
 		}
 	*/
-	if err = doStdInAndParse(); err != nil {
+
+	if configOssi.Path != "" && strings.Contains(configOssi.Path, "Gopkg.lock") {
+		if err = doDepAndParse(configOssi.Path); err != nil {
+			return
+		}
+	} else {
+		if err = doStdInAndParse(); err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func doDepAndParse(path string) (err error) {
+	workingDir := filepath.Dir(path)
+	if workingDir == "." {
+		workingDir, _ = os.Getwd()
+	}
+	getenv := os.Getenv("GOPATH")
+	ctx := dep.Ctx{
+		WorkingDir: workingDir,
+		GOPATHs:    []string{getenv},
+	}
+	project, err := ctx.LoadProject()
+	if err != nil {
+		return
+	}
+
+	if project.Lock == nil {
+		err = fmt.Errorf("dep failed to parse lock file and returned nil, nancy could not continue due to dep failure")
+		return
+	}
+
+	purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
+
+	err = checkOSSIndex(purls, invalidPurls)
+	if err != nil {
 		return
 	}
 
