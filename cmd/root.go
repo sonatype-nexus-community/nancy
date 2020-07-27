@@ -109,8 +109,10 @@ func doOSSI(cmd *cobra.Command, args []string) (err error) {
 
 	err = processConfig()
 	if err != nil {
-		if _, ok := err.(customerrors.ErrorExit); ok == true {
-			return
+		// odd. linter was not happy when I replaced errExit with _. shrug
+		if errExit, ok := err.(customerrors.ErrorExit); ok {
+			//return err
+			return errExit
 		} else {
 			panic(err)
 		}
@@ -121,7 +123,7 @@ func doOSSI(cmd *cobra.Command, args []string) (err error) {
 
 func Execute() (err error) {
 	if err = rootCmd.Execute(); err != nil {
-		if errExit, ok := err.(customerrors.ErrorExit); ok == true {
+		if errExit, ok := err.(customerrors.ErrorExit); ok {
 			os.Exit(errExit.ExitCode)
 		} else {
 			os.Exit(1)
