@@ -28,7 +28,6 @@ import (
 
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
 	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
-	"github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 
 	"github.com/sirupsen/logrus"
@@ -331,10 +330,10 @@ func TestCheckOSSIndexAuditPackagesError(t *testing.T) {
 	defer func() {
 		ossiCreator = origCreator
 	}()
+	logLady, _ = test.NewNullLogger()
+
 	expectedError := fmt.Errorf("forced error")
 	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apErr: expectedError}}
-
-	logLady = logger.GetLogger("", configOssi.LogLevel)
 
 	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
 	assert.Equal(t, expectedError, err)
@@ -345,18 +344,73 @@ func TestCheckOSSIndexNoVulnerabilities(t *testing.T) {
 	defer func() {
 		ossiCreator = origCreator
 	}()
-	expectedError := fmt.Errorf("forced error")
-	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apResults: []ossIndexTypes.Coordinate{
-		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{}},
-		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{}},
-	}}}
-
 	logLady, _ = test.NewNullLogger()
-
 	configOssi.Formatter = &logrus.TextFormatter{}
-	/*	outputFormat = "text"
-		assert.Nil(t, processConfig())
-	*/
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{}}
+
 	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
-	assert.Equal(t, expectedError, err)
+	assert.Nil(t, err)
+}
+
+func TestCheckOSSIndexOneVulnerability(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apResults: []ossIndexTypes.Coordinate{
+		{Coordinates: "coord1"},
+		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}}}}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Equal(t, customerrors.ErrorExit{ExitCode: 1}, err)
+}
+
+func TestCheckOSSIndexTwoVulnerabilities(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apResults: []ossIndexTypes.Coordinate{
+		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}},
+		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}}}}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Equal(t, customerrors.ErrorExit{ExitCode: 2}, err)
+}
+
+func TestCheckOSSIndexTwoVulnerabilitiesOnOneCoordinate(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apResults: []ossIndexTypes.Coordinate{
+		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{{}, {}}},
+		{Coordinates: "coord2"}}}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Equal(t, customerrors.ErrorExit{ExitCode: 1}, err)
+}
+
+func TestCheckOSSIndexWithInvalidPurl(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, []string{"bogusPurl"})
+	assert.Nil(t, err)
 }

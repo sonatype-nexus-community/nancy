@@ -109,7 +109,11 @@ func doOSSI(cmd *cobra.Command, args []string) (err error) {
 
 	err = processConfig()
 	if err != nil {
-		panic(err)
+		if _, ok := err.(customerrors.ErrorExit); ok == true {
+			return
+		} else {
+			panic(err)
+		}
 	}
 
 	return
@@ -117,7 +121,11 @@ func doOSSI(cmd *cobra.Command, args []string) (err error) {
 
 func Execute() (err error) {
 	if err = rootCmd.Execute(); err != nil {
-		os.Exit(1)
+		if errExit, ok := err.(customerrors.ErrorExit); ok == true {
+			os.Exit(errExit.ExitCode)
+		} else {
+			os.Exit(1)
+		}
 	}
 	return
 }
@@ -349,9 +357,7 @@ func checkOSSIndex(ossIndex ossindex.IServer, purls []string, invalidpurls []str
 	}
 
 	if count := audit.LogResults(configOssi.Formatter, packageCount, coordinates, invalidCoordinates, configOssi.CveList.Cves); count > 0 {
-		os.Exit(count)
-		// #todo Fix me
-		//err = customerrors.ErrorExit{ExitCode: count}
+		err = customerrors.ErrorExit{ExitCode: count}
 		return
 	}
 	return
