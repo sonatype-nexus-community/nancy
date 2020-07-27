@@ -18,9 +18,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -98,9 +98,9 @@ func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 	defer func() {
 		iqCreator = origIqCreator
 	}()
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{}, apErr: fmt.Errorf("forced error")}}
+	logLady, _ = test.NewNullLogger()
 
-	logLady = logger.GetLogger("", configOssi.LogLevel)
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{}, apErr: fmt.Errorf("forced error")}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -115,9 +115,9 @@ func TestAuditWithIQServerResponseError(t *testing.T) {
 	defer func() {
 		iqCreator = origIqCreator
 	}()
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
+	logLady, _ = test.NewNullLogger()
 
-	logLady = logger.GetLogger("", configOssi.LogLevel)
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -133,9 +133,9 @@ func TestAuditWithIQServerPolicyActionNotFailure(t *testing.T) {
 	defer func() {
 		iqCreator = origIqCreator
 	}()
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{}}}
+	logLady, _ = test.NewNullLogger()
 
-	logLady = logger.GetLogger("", configOssi.LogLevel)
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{}}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -147,9 +147,9 @@ func TestAuditWithIQServerPolicyActionFailure(t *testing.T) {
 	defer func() {
 		iqCreator = origIqCreator
 	}()
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{PolicyAction: "Failure"}}}
+	logLady, _ = test.NewNullLogger()
 
-	logLady = logger.GetLogger("", configOssi.LogLevel)
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{PolicyAction: "Failure"}}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
