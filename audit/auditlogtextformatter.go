@@ -181,6 +181,7 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		t.AppendSeparator()
 		t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(numVulnerable)))})
 		sb.WriteString(t.Render())
+		sb.WriteString("\n")
 
 		return []byte(sb.String()), nil
 	}
