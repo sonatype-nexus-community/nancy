@@ -78,9 +78,34 @@ func TestRootCommandInvalidPath(t *testing.T) {
 }
 
 func TestProcessConfigInvalidStdIn(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
 	configOssi = types.Configuration{}
 	err := processConfig()
 	assert.Equal(t, stdInInvalid, err)
+}
+
+func TestProcessConfigCleanCacheError(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	configOssi = types.Configuration{CleanCache: true}
+
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	expectedError := fmt.Errorf("forced clean cache error")
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apErr: expectedError}}
+
+	err := processConfig()
+	assert.Equal(t, expectedError, err)
 }
 
 func createFakeStdIn(t *testing.T) (oldStdIn *os.File, tmpFile *os.File) {
@@ -126,6 +151,10 @@ func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args .
 		}()
 	}
 
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
 	configOssi = types.Configuration{}
 
 	_, err := executeCommand(rootCmd, args...)
@@ -426,9 +455,13 @@ func TestCheckOSSIndexWithInvalidPurl(t *testing.T) {
 }
 
 func TestOssiCreatorOptions(t *testing.T) {
-	logLady, _ = test.NewNullLogger()
-
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
 	ossIndex := ossiCreator.create()
+
+	logLady, _ = test.NewNullLogger()
 
 	ossIndexServer, ok := ossIndex.(*ossindex.Server)
 	assert.True(t, ok)
