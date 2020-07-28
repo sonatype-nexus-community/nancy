@@ -160,7 +160,7 @@ func TestAuditWithIQServerPolicyActionFailure(t *testing.T) {
 
 func TestDoIqInvalidStdIn(t *testing.T) {
 	err := doIQ(iqCmd, []string{})
-	assert.Equal(t, customerrors.ErrorExit{ExitCode: 1, Message: "StdIn is invalid, either empty or another reason"}, err)
+	assert.Equal(t, stdInInvalid, err)
 }
 
 func TestDoIqParseGoListError(t *testing.T) {

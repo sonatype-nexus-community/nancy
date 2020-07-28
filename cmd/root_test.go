@@ -58,6 +58,12 @@ func checkStringContains(t *testing.T, got, substr string) {
 	}
 }
 
+func TestRootCommandNoArgs(t *testing.T) {
+	_, err := executeCommand(rootCmd, "")
+	assert.NotNil(t, err)
+	assert.Equal(t, stdInInvalid, err)
+}
+
 func TestRootCommandUnknownCommand(t *testing.T) {
 	output, err := executeCommand(rootCmd, "one", "two")
 	checkStringContains(t, output, "Error: unknown command \"one\" for \"nancy\"")

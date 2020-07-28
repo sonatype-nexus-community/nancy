@@ -72,7 +72,7 @@ var (
 	ossiCreator                  ossiServerFactory = ossiFactory{}
 	unixComments                                   = regexp.MustCompile(`#.*$`)
 	untilComment                                   = regexp.MustCompile(`(until=)(.*)`)
-	stdInInvalid                                   = customerrors.ErrorExit{ExitCode: 1, Message: "StdIn is invalid, either empty or another reason"}
+	stdInInvalid                                   = fmt.Errorf("StdIn is invalid, either empty or another reason")
 )
 
 var rootCmd = &cobra.Command{
