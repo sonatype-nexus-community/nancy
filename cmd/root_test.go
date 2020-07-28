@@ -125,7 +125,14 @@ func TestProcessConfigPath(t *testing.T) {
 	ossiCreator = &ossiFactoryMock{}
 
 	err := processConfig()
+	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), " are not within any known GOPATH"))
+}
+
+func TestDoDepAndParseInvalidPath(t *testing.T) {
+	err := doDepAndParse(ossiFactoryMock{}.create(), "bogusPath")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "could not find project"))
 }
 
 func createFakeStdIn(t *testing.T) (oldStdIn *os.File, tmpFile *os.File) {
