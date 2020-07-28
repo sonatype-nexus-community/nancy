@@ -160,6 +160,7 @@ func auditWithIQServer(purls []string, applicationID string) error {
 	iqServer := iqCreator.create()
 
 	logLady.Debug("Sending purls to be Audited by IQ Server")
+	// go-sona-types library now takes care of querying both ossi and iq with reformatted purls as needed (to v or not to v).
 	res, err := iqServer.AuditPackages(purls, applicationID)
 	if err != nil {
 		return customerrors.ErrorExit{ExitCode: 3, Err: err}

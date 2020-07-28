@@ -17,11 +17,8 @@
 package packages
 
 import (
-	"fmt"
-	"os"
 	"strings"
 
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -33,7 +30,8 @@ type Mod struct {
 func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 	for _, s := range m.ProjectList.Projects {
 		if len(s.Version) > 0 { // There must be a version we can use
-			// OSS Index no likey v before version, IQ does though, comment left so I will never forget
+			// OSS Index no likey v before version, IQ does though, comment left so I will never forget.
+			// go-sona-types library now takes care of querying both ossi and iq with reformatted purls as needed (to v or not to v).
 			version := strings.Replace(s.Version, "v", "", -1)
 			version = strings.Replace(version, "+incompatible", "", -1)
 			var purl = "pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version
@@ -44,27 +42,6 @@ func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 	purls = removeDuplicates(purls)
 
 	return
-}
-
-func (m Mod) ExtractPurlsFromManifestForIQ() (purls []string) {
-	for _, s := range m.ProjectList.Projects {
-		if len(s.Version) > 0 { // There must be a version we can use
-			var version = s.Version
-			version = strings.Replace(version, "+incompatible", "", -1)
-			var purl = "pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version
-			purls = append(purls, purl)
-		}
-	}
-	purls = removeDuplicates(purls)
-
-	return
-}
-
-func (m Mod) CheckExistenceOfManifest() (bool, error) {
-	if _, err := os.Stat(m.GoSumPath); os.IsNotExist(err) {
-		return false, customerrors.NewErrorExitPrintHelp(err, fmt.Sprint("No go.sum found at path: "+m.GoSumPath))
-	}
-	return true, nil
 }
 
 func removeDuplicates(purls []string) (dedupedPurls []string) {
