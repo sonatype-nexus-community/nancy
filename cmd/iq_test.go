@@ -100,7 +100,7 @@ func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{}, apErr: fmt.Errorf("forced error")}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apErr: fmt.Errorf("forced error")}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -174,21 +174,6 @@ func TestDoIqParseGoListError(t *testing.T) {
 	err := doIQ(iqCmd, []string{})
 	assert.NotNil(t, err)
 	checkStringContains(t, err.Error(), "index out of range")
-}
-
-func TestDoIqAuditError(t *testing.T) {
-	oldStdIn, tmpFile := createFakeStdIn(t)
-	defer func() {
-		os.Stdin = oldStdIn
-		_ = tmpFile.Close()
-		_ = os.Remove(tmpFile.Name())
-	}()
-
-	err := doIQ(iqCmd, []string{})
-	typedError, ok := err.(customerrors.ErrorExit)
-	assert.True(t, ok)
-	assert.Equal(t, "", typedError.Message)
-	assert.Equal(t, 3, typedError.ExitCode)
 }
 
 func TestIqCreatorOptions(t *testing.T) {

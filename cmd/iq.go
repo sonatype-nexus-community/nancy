@@ -97,7 +97,11 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 
 	err = auditWithIQServer(purls, configIQ.IQApplication)
 	if err != nil {
-		panic(err)
+		if errExit, ok := err.(customerrors.ErrorExit); ok {
+			os.Exit(errExit.ExitCode)
+		} else {
+			panic(err)
+		}
 	}
 
 	return
