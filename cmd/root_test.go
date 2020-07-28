@@ -108,6 +108,26 @@ func TestProcessConfigCleanCacheError(t *testing.T) {
 	assert.Equal(t, expectedError, err)
 }
 
+func TestProcessConfigPath(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	configOssi = types.Configuration{Path: "../packages/testdata/Gopkg.lock", Quiet: true}
+
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	ossiCreator = &ossiFactoryMock{}
+
+	err := processConfig()
+	assert.True(t, strings.Contains(err.Error(), " are not within any known GOPATH"))
+}
+
 func createFakeStdIn(t *testing.T) (oldStdIn *os.File, tmpFile *os.File) {
 	return createFakeStdInWithString(t, "Testing")
 }
