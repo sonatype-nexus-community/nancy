@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	decimal "github.com/shopspring/decimal"
+	"github.com/shopspring/decimal"
 	"github.com/sirupsen/logrus"
 )
 
@@ -49,25 +49,26 @@ type GoListModule struct {
 }
 
 type Configuration struct {
-	Version     bool
-	NoColor     bool
-	Quiet       bool
-	CleanCache  bool
-	CveList     CveListFlag
-	Path        string
-	Formatter   logrus.Formatter
-	LogLevel    int
-	Username    string `yaml:"Username"`
-	Token       string `yaml:"Token"`
-	Help        bool
-	User        string
-	Stage       string
-	Application string
-	Server      string
-	MaxRetries  int
-	Info        bool
-	Debug       bool
-	Trace       bool
+	Version       bool
+	NoColor       bool
+	Quiet         bool
+	CleanCache    bool
+	CveList       CveListFlag
+	Path          string
+	Formatter     logrus.Formatter
+	LogLevel      int
+	Username      string
+	Token         string
+	Help          bool
+	IQUsername    string
+	IQToken       string
+	IQStage       string
+	IQApplication string
+	IQServer      string
+	MaxRetries    int
+	Info          bool
+	Debug         bool
+	Trace         bool
 }
 
 type Vulnerability struct {

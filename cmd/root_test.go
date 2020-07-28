@@ -65,12 +65,16 @@ func TestRootCommandUnknownCommand(t *testing.T) {
 	checkStringContains(t, err.Error(), "unknown command \"one\" for \"nancy\"")
 }
 
-func TestRootCommandNoArgsInvalidStdInErrorExit(t *testing.T) {
-	_, err := executeCommand(rootCmd, "")
+func TestRootCommandInvalidPath(t *testing.T) {
+	_, err := executeCommand(rootCmd, "--path", "invalidPath")
+	assert.Error(t, err)
+	checkStringContains(t, err.Error(), "invalid path value. must point to 'Gopkg.lock' file. path: ")
+}
 
-	serr, ok := err.(customerrors.ErrorExit)
-	assert.True(t, ok)
-	assert.Equal(t, 1, serr.ExitCode)
+func TestProcessConfigInvalidStdIn(t *testing.T) {
+	configOssi = types.Configuration{}
+	err := processConfig()
+	assert.Equal(t, stdInInvalid, err)
 }
 
 func createFakeStdIn(t *testing.T) (oldStdIn *os.File, tmpFile *os.File) {
@@ -291,14 +295,14 @@ func TestInitConfig(t *testing.T) {
 
 	cfgFile = path.Join(tempDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 
-	const credentials = "Username: ossiUsername\n" +
-		"Token: ossiToken"
+	const credentials = "IQUsername: ossiUsername\n" +
+		"IQToken: ossiToken"
 	assert.Nil(t, ioutil.WriteFile(cfgFile, []byte(credentials), 0644))
 
 	initConfig()
 
-	assert.Equal(t, "ossiUsername", viper.GetString("Username"))
-	assert.Equal(t, "ossiToken", viper.GetString("Token"))
+	assert.Equal(t, "ossiUsername", viper.GetString("IQUsername"))
+	assert.Equal(t, "ossiToken", viper.GetString("IQToken"))
 }
 
 type ossiFactoryMock struct {
@@ -413,4 +417,15 @@ func TestCheckOSSIndexWithInvalidPurl(t *testing.T) {
 
 	err := checkOSSIndex(ossiCreator.create(), testPurls, []string{"bogusPurl"})
 	assert.Nil(t, err)
+}
+
+func TestOssiCreatorOptions(t *testing.T) {
+	logLady, _ = test.NewNullLogger()
+
+	ossIndex := ossiCreator.create()
+
+	ossIndexServer, ok := ossIndex.(*ossindex.Server)
+	assert.True(t, ok)
+	assert.Equal(t, "", ossIndexServer.Options.Username)
+	assert.Equal(t, "", ossIndexServer.Options.Token)
 }

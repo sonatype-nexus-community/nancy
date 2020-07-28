@@ -33,9 +33,9 @@ import (
 
 // IQConfig is a struct for holding IQ Configuration, and for writing it to yaml
 type IQConfig struct {
-	Server   string `yaml:"Server"`
-	Username string `yaml:"Username"`
-	Token    string `yaml:"Token"`
+	IQServer   string `yaml:"IQServer"`
+	IQUsername string `yaml:"IQUsername"`
+	IQToken    string `yaml:"IQToken"`
 }
 
 // OSSIndexConfig is a struct for holding OSS Index Configuration, and for writing it to yaml
@@ -93,21 +93,21 @@ func GetConfigFromCommandLine(stdin io.Reader) (err error) {
 func getAndSetIQConfig(reader *bufio.Reader) (err error) {
 	logLady.Info("Getting config for IQ Server from user")
 
-	iqConfig := IQConfig{Server: "http://localhost:8070", Username: "admin", Token: "admin123"}
+	iqConfig := IQConfig{IQServer: "http://localhost:8070", IQUsername: "admin", IQToken: "admin123"}
 
 	fmt.Print("What is the address of your Nexus IQ Server (default: http://localhost:8070)? ")
 	server, _ := reader.ReadString('\n')
-	iqConfig.Server = emptyOrDefault(server, iqConfig.Server)
+	iqConfig.IQServer = emptyOrDefault(server, iqConfig.IQServer)
 
 	fmt.Print("What username do you want to authenticate as (default: admin)? ")
 	username, _ := reader.ReadString('\n')
-	iqConfig.Username = emptyOrDefault(username, iqConfig.Username)
+	iqConfig.IQUsername = emptyOrDefault(username, iqConfig.IQUsername)
 
 	fmt.Print("What token do you want to use (default: admin123)? ")
 	token, _ := reader.ReadString('\n')
-	iqConfig.Token = emptyOrDefault(token, iqConfig.Token)
+	iqConfig.IQToken = emptyOrDefault(token, iqConfig.IQToken)
 
-	if iqConfig.Username == "admin" || iqConfig.Token == "admin123" {
+	if iqConfig.IQUsername == "admin" || iqConfig.IQToken == "admin123" {
 		logLady.Info("Warning user of bad life choices, using default values for IQ Server username or token")
 		warnUserOfBadLifeChoices()
 		fmt.Print("[y/N]? ")

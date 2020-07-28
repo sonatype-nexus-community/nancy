@@ -36,7 +36,12 @@ func (ee ErrorExit) Error() string {
 	} else {
 		errString = ""
 	}
-	return fmt.Sprintf("exit code: %d - %s - error: %s", ee.ExitCode, ee.Message, errString)
+
+	if ee.Message != "" {
+		return fmt.Sprintf("exit code: %d - %s - error: %s", ee.ExitCode, ee.Message, errString)
+	} else {
+		return fmt.Sprintf("exit code: %d - error: %s", ee.ExitCode, errString)
+	}
 }
 
 func NewErrorExitPrintHelp(errCause error, message string) ErrorExit {

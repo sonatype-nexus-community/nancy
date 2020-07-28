@@ -20,7 +20,6 @@ import (
 	"os"
 
 	"github.com/sonatype-nexus-community/nancy/configuration"
-	"github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -41,8 +40,6 @@ func doConfig(cmd *cobra.Command, args []string) (err error) {
 			if !ok {
 				err = fmt.Errorf("pkg: %v", r)
 			}
-
-			logger.PrintErrorAndLogLocation(err)
 		}
 	}()
 

@@ -32,14 +32,14 @@ import (
 
 func TestIqApplicationFlagMissing(t *testing.T) {
 	output, err := executeCommand(rootCmd, "iq")
-	checkStringContains(t, output, "Error: required flag(s) \"application\" not set")
+	checkStringContains(t, output, "Error: required flag(s) \"iqapplication\" not set")
 	assert.NotNil(t, err)
-	checkStringContains(t, err.Error(), "required flag(s) \"application\" not set")
+	checkStringContains(t, err.Error(), "required flag(s) \"iqapplication\" not set")
 }
 
 func TestIqHelp(t *testing.T) {
 	output, err := executeCommand(rootCmd, "iq", "--help")
-	checkStringContains(t, output, "go list -m -json all | nancy iq --application your_public_application_id --server ")
+	checkStringContains(t, output, "go list -m -json all | nancy iq --iqapplication your_public_application_id --iqserver ")
 	assert.Nil(t, err)
 }
 
@@ -106,7 +106,7 @@ func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 
 	typedError, ok := err.(customerrors.ErrorExit)
 	assert.True(t, ok)
-	assert.Equal(t, "Uh oh! There was an error with your request to Nexus IQ Server", typedError.Message)
+	assert.Equal(t, "", typedError.Message)
 	assert.Equal(t, 3, typedError.ExitCode)
 }
 
@@ -123,7 +123,7 @@ func TestAuditWithIQServerResponseError(t *testing.T) {
 
 	typedError, ok := err.(customerrors.ErrorExit)
 	assert.True(t, ok)
-	assert.Equal(t, "Uh oh! There was an error with your request to Nexus IQ Server", typedError.Message)
+	assert.Equal(t, "", typedError.Message)
 	assert.Equal(t, 3, typedError.ExitCode)
 	assert.Equal(t, "resErrMsg", typedError.Err.Error())
 }
@@ -187,6 +187,18 @@ func TestDoIqAuditError(t *testing.T) {
 	err := doIQ(iqCmd, []string{})
 	typedError, ok := err.(customerrors.ErrorExit)
 	assert.True(t, ok)
-	assert.Equal(t, "Uh oh! There was an error with your request to Nexus IQ Server", typedError.Message)
+	assert.Equal(t, "", typedError.Message)
 	assert.Equal(t, 3, typedError.ExitCode)
+}
+
+func TestIqCreatorOptions(t *testing.T) {
+	logLady, _ = test.NewNullLogger()
+
+	iqServer := iqCreator.create()
+
+	ossIndexServer, ok := iqServer.(*iq.Server)
+	assert.True(t, ok)
+	assert.Equal(t, "admin", ossIndexServer.Options.User)
+	assert.Equal(t, "admin123", ossIndexServer.Options.Token)
+	assert.Equal(t, "http://localhost:8070", ossIndexServer.Options.Server)
 }

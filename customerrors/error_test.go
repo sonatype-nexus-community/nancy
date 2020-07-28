@@ -29,7 +29,7 @@ func TestError(t *testing.T) {
 		ErrorExit{Message: "MyMessage", Err: fmt.Errorf("MyError")}.Error())
 	assert.Equal(t, "exit code: 0 - MyMessage - error: ",
 		ErrorExit{Message: "MyMessage"}.Error())
-	assert.Equal(t, "exit code: 0 -  - error: ",
+	assert.Equal(t, "exit code: 0 - error: ",
 		ErrorExit{}.Error())
 }
 
@@ -38,6 +38,6 @@ func TestNewErrorExitPrintHelp(t *testing.T) {
 		NewErrorExitPrintHelp(fmt.Errorf("MyError"), "MyMessage").Error())
 	assert.Equal(t, "exit code: 3 - MyMessage - error: ",
 		NewErrorExitPrintHelp(nil, "MyMessage").Error())
-	assert.Equal(t, "exit code: 3 -  - error: ",
+	assert.Equal(t, "exit code: 3 - error: ",
 		NewErrorExitPrintHelp(nil, "").Error())
 }

@@ -40,11 +40,11 @@ type iqFactory struct{}
 
 func (iqFactory) create() iq.IServer {
 	iqServer := iq.New(logLady, iq.Options{
-		User:        configIQ.User,
-		Token:       configIQ.Token,
-		Application: configIQ.Application,
-		Stage:       configIQ.Stage,
-		Server:      configIQ.Server,
+		User:        configIQ.IQUsername,
+		Token:       configIQ.IQToken,
+		Application: configIQ.IQApplication,
+		Stage:       configIQ.IQStage,
+		Server:      configIQ.IQServer,
 		Tool:        "nancy-client",
 		DBCacheName: "nancy-cache",
 		MaxRetries:  300,
@@ -59,9 +59,10 @@ var (
 
 var iqCmd = &cobra.Command{
 	Use:     "iq",
-	Example: `  go list -m -json all | nancy iq --application your_public_application_id --server http://your_iq_server_url:port --user your_user --token your_token --stage develop`,
-	Short:   "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ Server'",
-	Long:    `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ Server', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
+	Example: `  go list -m -json all | nancy iq --iqapplication your_public_application_id --iqserver http://your_iq_server_url:port --iqusername your_user --iqtoken your_token --iqstage develop`,
+	Short:   "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'",
+	Long:    `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
+	PreRun:  func(cmd *cobra.Command, args []string) { bindViperIq(cmd) },
 	RunE:    doIQ,
 }
 
@@ -74,8 +75,6 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 			if !ok {
 				err = fmt.Errorf("pkg: %v", r)
 			}
-
-			logger.PrintErrorAndLogLocation(err)
 		}
 	}()
 
@@ -96,7 +95,7 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 
 	var purls = mod.ExtractPurlsFromManifest()
 
-	err = auditWithIQServer(purls, configIQ.Application)
+	err = auditWithIQServer(purls, configIQ.IQApplication)
 	if err != nil {
 		panic(err)
 	}
@@ -107,23 +106,27 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 func init() {
 	cobra.OnInitialize(initIQConfig)
 
-	iqCmd.Flags().StringVarP(&configIQ.User, "username", "u", "admin", "Specify Nexus IQ username for request")
-	iqCmd.Flags().StringVarP(&configIQ.Token, "token", "t", "admin123", "Specify Nexus IQ token for request")
-	iqCmd.Flags().StringVarP(&configIQ.Stage, "stage", "s", "develop", "Specify Nexus IQ stage for request")
+	iqCmd.Flags().StringVarP(&configIQ.IQUsername, "iqusername", "u", "admin", "Specify Nexus IQ username for request")
+	iqCmd.Flags().StringVarP(&configIQ.IQToken, "iqtoken", "t", "admin123", "Specify Nexus IQ token for request")
+	iqCmd.Flags().StringVarP(&configIQ.IQStage, "iqstage", "s", "develop", "Specify Nexus IQ stage for request")
 
-	iqCmd.Flags().StringVarP(&configIQ.Application, "application", "a", "", "Specify Nexus IQ public application ID for request")
-	if err := iqCmd.MarkFlagRequired("application"); err != nil {
+	iqCmd.Flags().StringVarP(&configIQ.IQApplication, "iqapplication", "a", "", "Specify Nexus IQ public application ID for request")
+	if err := iqCmd.MarkFlagRequired("iqapplication"); err != nil {
 		panic(err)
 	}
 
-	iqCmd.Flags().StringVarP(&configIQ.Server, "server-url", "x", "http://localhost:8070", "Specify Nexus IQ server url for request")
-
-	// Bind viper to the flags passed in via the command line, so it will override config from file
-	_ = viper.BindPFlag("username", iqCmd.Flags().Lookup("username"))
-	_ = viper.BindPFlag("token", iqCmd.Flags().Lookup("token"))
-	_ = viper.BindPFlag("server", iqCmd.Flags().Lookup("server"))
+	iqCmd.Flags().StringVarP(&configIQ.IQServer, "iqserver-url", "x", "http://localhost:8070", "Specify Nexus IQ server url for request")
 
 	rootCmd.AddCommand(iqCmd)
+}
+
+func bindViperIq(cmd *cobra.Command) {
+	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
+
+	// Bind viper to the flags passed in via the command line, so it will override config from file
+	_ = viper.BindPFlag("iqusername", cmd.Flags().Lookup("iqusername"))
+	_ = viper.BindPFlag("iqtoken", cmd.Flags().Lookup("iqtoken"))
+	_ = viper.BindPFlag("iqserver", cmd.Flags().Lookup("iqserver"))
 }
 
 func initIQConfig() {
@@ -155,13 +158,13 @@ func auditWithIQServer(purls []string, applicationID string) error {
 	logLady.Debug("Sending purls to be Audited by IQ Server")
 	res, err := iqServer.AuditPackages(purls, applicationID)
 	if err != nil {
-		return customerrors.NewErrorExitPrintHelp(err, "Uh oh! There was an error with your request to Nexus IQ Server")
+		return customerrors.ErrorExit{ExitCode: 3, Err: err}
 	}
 
 	fmt.Println()
 	if res.IsError {
 		logLady.WithField("res", res).Error("An error occurred with the request to IQ Server")
-		return customerrors.NewErrorExitPrintHelp(errors.New(res.ErrorMessage), "Uh oh! There was an error with your request to Nexus IQ Server")
+		return customerrors.ErrorExit{ExitCode: 3, Err: errors.New(res.ErrorMessage)}
 	}
 
 	if res.PolicyAction != "Failure" {

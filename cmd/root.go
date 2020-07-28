@@ -18,7 +18,6 @@ package cmd
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"os"
 	"path"
@@ -88,7 +87,8 @@ var rootCmd = &cobra.Command{
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
-	RunE: doOSSI,
+	PreRun: func(cmd *cobra.Command, args []string) { bindViper(cmd) },
+	RunE:   doOSSI,
 }
 
 //noinspection GoUnusedParameter
@@ -100,8 +100,6 @@ func doOSSI(cmd *cobra.Command, args []string) (err error) {
 			if !ok {
 				err = fmt.Errorf("pkg: %v", r)
 			}
-
-			logger.PrintErrorAndLogLocation(err)
 		}
 	}()
 
@@ -109,10 +107,8 @@ func doOSSI(cmd *cobra.Command, args []string) (err error) {
 
 	err = processConfig()
 	if err != nil {
-		// odd. linter was not happy when I replaced errExit with _. shrug
 		if errExit, ok := err.(customerrors.ErrorExit); ok {
-			//return err
-			return errExit
+			os.Exit(errExit.ExitCode)
 		} else {
 			panic(err)
 		}
@@ -139,7 +135,7 @@ func init() {
 
 	rootCmd.PersistentFlags().CountVarP(&configOssi.LogLevel, "", "v", "Set log level, multiple v's is more verbose")
 	rootCmd.PersistentFlags().BoolVar(&configOssi.Version, "version", false, "Get the version")
-	rootCmd.PersistentFlags().BoolVarP(&configOssi.Quiet, "quiet", "q", false, "indicate output should contain only packages with vulnerabilities")
+	rootCmd.PersistentFlags().BoolVarP(&configOssi.Quiet, "quiet", "q", true, "indicate output should contain only packages with vulnerabilities")
 	rootCmd.Flags().BoolVarP(&configOssi.NoColor, "no-color", "n", false, "indicate output should not be colorized")
 	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
 	rootCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs to exclude")
@@ -148,10 +144,14 @@ func init() {
 	rootCmd.Flags().StringVarP(&configOssi.Token, "token", "t", "", "Specify OSS Index API token for request")
 	rootCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs to be excluded")
 	rootCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
+}
+
+func bindViper(cmd *cobra.Command) {
+	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	_ = viper.BindPFlag("username", rootCmd.Flags().Lookup("username"))
-	_ = viper.BindPFlag("token", rootCmd.Flags().Lookup("token"))
+	_ = viper.BindPFlag("username", cmd.Flags().Lookup("username"))
+	_ = viper.BindPFlag("token", cmd.Flags().Lookup("token"))
 }
 
 const configTypeYaml = "yaml"
@@ -226,7 +226,11 @@ func processConfig() (err error) {
 		}
 	*/
 
-	if configOssi.Path != "" && strings.Contains(configOssi.Path, "Gopkg.lock") {
+	if configOssi.Path != "" {
+		if !strings.Contains(configOssi.Path, "Gopkg.lock") {
+			err = fmt.Errorf("invalid path value. must point to 'Gopkg.lock' file. path: %s", configOssi.Path)
+			return
+		}
 		if err = doDepAndParse(ossIndex, configOssi.Path); err != nil {
 			return
 		}
@@ -369,7 +373,6 @@ func checkStdIn() (err error) {
 	stat, _ := os.Stdin.Stat()
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 	} else {
-		flag.Usage()
 		err = stdInInvalid
 	}
 	return
