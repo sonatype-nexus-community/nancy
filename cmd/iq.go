@@ -102,7 +102,6 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	err = auditWithIQServer(purls, configIQ.IQApplication)
 	if err != nil {
 		if errExit, ok := err.(customerrors.ErrorExit); ok {
-			fmt.Printf("**** exit code path\n")
 			os.Exit(errExit.ExitCode)
 		} else {
 			logLady.WithError(err).Error("unexpected error in iq cmd")
