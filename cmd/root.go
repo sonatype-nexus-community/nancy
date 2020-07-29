@@ -362,10 +362,21 @@ func doStdInAndParse(ossIndex ossindex.IServer) (err error) {
 
 	mod := packages.Mod{}
 
-	mod.ProjectList, _ = parse.GoListAgnostic(os.Stdin)
+	mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+	if err != nil {
+		logLady.Error(err)
+		return
+	}
+	logLady.WithFields(logrus.Fields{
+		"projectList": mod.ProjectList,
+	}).Debug("Obtained project list")
 
 	var purls = mod.ExtractPurlsFromManifest()
+	logLady.WithFields(logrus.Fields{
+		"purls": purls,
+	}).Debug("Extracted purls")
 
+	logLady.Info("Auditing purls with OSS Index")
 	err = checkOSSIndex(ossIndex, purls, nil)
 
 	return err
@@ -393,8 +404,10 @@ func checkOSSIndex(ossIndex ossindex.IServer, purls []string, invalidpurls []str
 func checkStdIn() (err error) {
 	stat, _ := os.Stdin.Stat()
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
+		logLady.Info("StdIn is valid")
 	} else {
 		err = stdInInvalid
+		logLady.Error(err)
 	}
 	return
 }
