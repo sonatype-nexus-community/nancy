@@ -18,13 +18,13 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/sonatype-nexus-community/nancy/logger"
 	"os"
 	"path"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -79,10 +79,10 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 		}
 	}()
 
-	printHeader(!configOssi.Quiet)
-
 	logLady = logger.GetLogger("", configOssi.LogLevel)
 	logLady.Info("Nancy parsing config for IQ")
+
+	printHeader(!configOssi.Quiet)
 
 	if err = checkStdIn(); err != nil {
 		logLady.WithError(err).Error("unexpected error in iq cmd")

@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -337,6 +338,14 @@ func printHeader(print bool) {
 
 		fmt.Println("Nancy version: " + buildversion.BuildVersion)
 	}
+
+	logLady.WithFields(logrus.Fields{
+		"build_time":       buildversion.BuildTime,
+		"build_commit":     buildversion.BuildCommit,
+		"version":          buildversion.BuildVersion,
+		"operating_system": runtime.GOOS,
+		"architecture":     runtime.GOARCH,
+	}).Info("Printing Nancy version")
 }
 
 func doStdInAndParse(ossIndex ossindex.IServer) (err error) {
