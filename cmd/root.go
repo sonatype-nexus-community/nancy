@@ -110,12 +110,15 @@ func doOSSI(cmd *cobra.Command, args []string) (err error) {
 	err = processConfig()
 	if err != nil {
 		if errExit, ok := err.(customerrors.ErrorExit); ok {
+			logLady.Info(fmt.Sprintf("Nancy finished parsing config for OSS Index, vulnerability found. exit code: %d", errExit.ExitCode))
 			os.Exit(errExit.ExitCode)
 		} else {
+			logLady.WithError(err).Error("unexpected error in root cmd")
 			panic(err)
 		}
 	}
 
+	logLady.Info("Nancy finished parsing config for OSS Index")
 	return
 }
 
