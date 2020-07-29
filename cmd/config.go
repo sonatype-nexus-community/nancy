@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"os"
 
 	"github.com/sonatype-nexus-community/nancy/configuration"
@@ -40,6 +41,7 @@ func doConfig(cmd *cobra.Command, args []string) (err error) {
 			if !ok {
 				err = fmt.Errorf("pkg: %v", r)
 			}
+			err = customerrors.ErrorShowLogPath{Err: err}
 		}
 	}()
 

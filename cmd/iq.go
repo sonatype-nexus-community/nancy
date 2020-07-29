@@ -82,8 +82,10 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	printHeader(!configOssi.Quiet)
 
 	logLady = logger.GetLogger("", configOssi.LogLevel)
+	logLady.Info("Nancy parsing config for IQ")
 
 	if err = checkStdIn(); err != nil {
+		logLady.WithError(err).Error("unexpected error in iq cmd")
 		panic(err)
 	}
 
@@ -91,6 +93,7 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 
 	mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
 	if err != nil {
+		logLady.WithError(err).Error("unexpected error in iq cmd")
 		panic(err)
 	}
 
@@ -99,8 +102,10 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	err = auditWithIQServer(purls, configIQ.IQApplication)
 	if err != nil {
 		if errExit, ok := err.(customerrors.ErrorExit); ok {
+			fmt.Printf("**** exit code path\n")
 			os.Exit(errExit.ExitCode)
 		} else {
+			logLady.WithError(err).Error("unexpected error in iq cmd")
 			panic(err)
 		}
 	}
@@ -164,13 +169,13 @@ func auditWithIQServer(purls []string, applicationID string) error {
 	// go-sona-types library now takes care of querying both ossi and iq with reformatted purls as needed (to v or not to v).
 	res, err := iqServer.AuditPackages(purls, applicationID)
 	if err != nil {
-		return customerrors.ErrorExit{ExitCode: 3, Err: err}
+		return err
 	}
 
 	fmt.Println()
 	if res.IsError {
 		logLady.WithField("res", res).Error("An error occurred with the request to IQ Server")
-		return customerrors.ErrorExit{ExitCode: 3, Err: errors.New(res.ErrorMessage)}
+		return errors.New(res.ErrorMessage)
 	}
 
 	if res.PolicyAction != "Failure" {

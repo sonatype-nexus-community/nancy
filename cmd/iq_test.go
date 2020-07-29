@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
@@ -100,14 +101,13 @@ func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apErr: fmt.Errorf("forced error")}}
+	expectedErr := fmt.Errorf("forced error")
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apErr: expectedErr}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
-	typedError, ok := err.(customerrors.ErrorExit)
-	assert.True(t, ok)
-	assert.Equal(t, "", typedError.Message)
-	assert.Equal(t, 3, typedError.ExitCode)
+	assert.Error(t, err)
+	assert.Equal(t, expectedErr, err)
 }
 
 func TestAuditWithIQServerResponseError(t *testing.T) {
@@ -121,11 +121,8 @@ func TestAuditWithIQServerResponseError(t *testing.T) {
 
 	err := auditWithIQServer(testPurls, "testapp")
 
-	typedError, ok := err.(customerrors.ErrorExit)
-	assert.True(t, ok)
-	assert.Equal(t, "", typedError.Message)
-	assert.Equal(t, 3, typedError.ExitCode)
-	assert.Equal(t, "resErrMsg", typedError.Err.Error())
+	assert.Error(t, err)
+	assert.Equal(t, errors.New("resErrMsg"), err)
 }
 
 func TestAuditWithIQServerPolicyActionNotFailure(t *testing.T) {
