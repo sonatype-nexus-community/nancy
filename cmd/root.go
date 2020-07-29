@@ -216,10 +216,13 @@ func processConfig() (err error) {
 	ossIndex := ossiCreator.create()
 
 	if configOssi.CleanCache {
+		logLady.Info("Attempting to clean cache")
 		if err = ossIndex.NoCacheNoProblems(); err != nil {
+			logLady.WithField("error", err).Error("Error cleaning cache")
 			fmt.Printf("ERROR: cleaning cache: %v\n", err)
 			return
 		}
+		logLady.Info("Cache cleaned")
 		return
 	}
 
@@ -233,14 +236,18 @@ func processConfig() (err error) {
 	*/
 
 	if configOssi.Path != "" {
+		logLady.Info("Parsing config for file based scan")
 		if !strings.Contains(configOssi.Path, "Gopkg.lock") {
 			err = fmt.Errorf("invalid path value. must point to 'Gopkg.lock' file. path: %s", configOssi.Path)
+			logLady.WithField("error", err).Error("Path error in file based scan")
 			return
 		}
 		if err = doDepAndParse(ossIndex, configOssi.Path); err != nil {
+			logLady.WithField("error", err).Error("Error in file based scan")
 			return
 		}
 	} else {
+		logLady.Info("Parsing config for StdIn")
 		if err = doStdInAndParse(ossIndex); err != nil {
 			return
 		}
