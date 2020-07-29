@@ -23,6 +23,21 @@ import (
 	"github.com/sonatype-nexus-community/nancy/logger"
 )
 
+type ErrorShowLogPath struct {
+	Err error
+}
+
+func (es ErrorShowLogPath) Error() string {
+	var errString string
+	if es.Err != nil {
+		errString = es.Err.Error()
+	} else {
+		errString = ""
+	}
+
+	return errString + "\n" + getLogFileMessage()
+}
+
 type ErrorExit struct {
 	Message  string
 	Err      error
@@ -49,13 +64,17 @@ func NewErrorExitPrintHelp(errCause error, message string) ErrorExit {
 	// LogLady.WithField("error", errCause).Error(message)
 	fmt.Println(myErr.Error())
 
+	fmt.Print(getLogFileMessage())
+	return myErr
+}
+
+func getLogFileMessage() string {
 	var logFile string
 	var logFileErr error
 	if logFile, logFileErr = logger.LogFileLocation(); logFileErr != nil {
 		logFile = "unknown"
 	}
 
-	fmt.Printf("For more information, check the log file at %s\n", logFile)
-	fmt.Println("nancy version:", buildversion.BuildVersion)
-	return myErr
+	return fmt.Sprintf("For more information, check the log file at %s\n"+
+		"nancy version: %s\n", logFile, buildversion.BuildVersion)
 }

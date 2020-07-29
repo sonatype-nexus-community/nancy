@@ -61,7 +61,7 @@ func checkStringContains(t *testing.T, got, substr string) {
 func TestRootCommandNoArgs(t *testing.T) {
 	_, err := executeCommand(rootCmd, "")
 	assert.NotNil(t, err)
-	assert.Equal(t, stdInInvalid, err)
+	assert.Equal(t, customerrors.ErrorShowLogPath{Err: stdInInvalid}, err)
 }
 
 func TestRootCommandUnknownCommand(t *testing.T) {

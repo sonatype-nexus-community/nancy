@@ -75,6 +75,7 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 			if !ok {
 				err = fmt.Errorf("pkg: %v", r)
 			}
+			err = customerrors.ErrorShowLogPath{Err: err}
 		}
 	}()
 

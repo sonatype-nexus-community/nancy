@@ -22,7 +22,7 @@ import (
 	"testing"
 )
 
-func TestError(t *testing.T) {
+func TestErrorExit(t *testing.T) {
 	assert.Equal(t, "exit code: 2 - MyMessage - error: MyError",
 		ErrorExit{Message: "MyMessage", Err: fmt.Errorf("MyError"), ExitCode: 2}.Error())
 	assert.Equal(t, "exit code: 0 - MyMessage - error: MyError",
@@ -40,4 +40,11 @@ func TestNewErrorExitPrintHelp(t *testing.T) {
 		NewErrorExitPrintHelp(nil, "MyMessage").Error())
 	assert.Equal(t, "exit code: 3 - error: ",
 		NewErrorExitPrintHelp(nil, "").Error())
+}
+
+func TestErrorShowLogPath(t *testing.T) {
+	assert.Equal(t, "MyError\n"+getLogFileMessage(),
+		ErrorShowLogPath{Err: fmt.Errorf("MyError")}.Error())
+	assert.Equal(t, "\n"+getLogFileMessage(),
+		ErrorShowLogPath{}.Error())
 }

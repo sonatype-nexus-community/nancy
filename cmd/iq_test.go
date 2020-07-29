@@ -55,16 +55,16 @@ func TestInitIQConfig(t *testing.T) {
 
 	cfgFile = path.Join(tempDir, types.IQServerDirName, types.IQServerConfigFileName)
 
-	const credentials = "username: iqUsername\n" +
-		"token: iqToken\n" +
-		"server: iqServer"
+	const credentials = "IQUsername: iqUsername\n" +
+		"IQToken: iqToken\n" +
+		"IQServer: iqServer"
 	assert.Nil(t, ioutil.WriteFile(cfgFile, []byte(credentials), 0644))
 
 	initIQConfig()
 
-	assert.Equal(t, "iqUsername", viper.GetString("username"))
-	assert.Equal(t, "iqToken", viper.GetString("token"))
-	assert.Equal(t, "iqServer", viper.GetString("server"))
+	assert.Equal(t, "iqUsername", viper.GetString("iqusername"))
+	assert.Equal(t, "iqToken", viper.GetString("iqtoken"))
+	assert.Equal(t, "iqServer", viper.GetString("iqserver"))
 }
 
 var testPurls = []string{
@@ -160,7 +160,7 @@ func TestAuditWithIQServerPolicyActionFailure(t *testing.T) {
 
 func TestDoIqInvalidStdIn(t *testing.T) {
 	err := doIQ(iqCmd, []string{})
-	assert.Equal(t, stdInInvalid, err)
+	assert.Equal(t, customerrors.ErrorShowLogPath{Err: stdInInvalid}, err)
 }
 
 func TestDoIqParseGoListError(t *testing.T) {
