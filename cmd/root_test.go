@@ -357,14 +357,14 @@ func TestInitConfig(t *testing.T) {
 
 	cfgFile = path.Join(tempDir, types.OssIndexDirName, types.OssIndexConfigFileName)
 
-	const credentials = "IQUsername: ossiUsername\n" +
-		"IQToken: ossiToken"
+	const credentials = "Username: ossiUsername\n" +
+		"Token: ossiToken"
 	assert.Nil(t, ioutil.WriteFile(cfgFile, []byte(credentials), 0644))
 
 	initConfig()
 
-	assert.Equal(t, "ossiUsername", viper.GetString("IQUsername"))
-	assert.Equal(t, "ossiToken", viper.GetString("IQToken"))
+	assert.Equal(t, "ossiUsername", viper.GetString("Username"))
+	assert.Equal(t, "ossiToken", viper.GetString("Token"))
 }
 
 type ossiFactoryMock struct {
