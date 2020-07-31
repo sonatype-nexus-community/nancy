@@ -534,3 +534,9 @@ func TestOssiCreatorOptionsLogging(t *testing.T) {
 	logLady.Level = logrus.DebugLevel
 	ossiCreator.create()
 }
+
+func TestCleanUserName(t *testing.T) {
+	assert.Equal(t, "***hidden***", cleanUserName(""))
+	assert.Equal(t, "1***hidden***1", cleanUserName("1"))
+	assert.Equal(t, "1***hidden***2", cleanUserName("12"))
+}
