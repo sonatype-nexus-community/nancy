@@ -18,6 +18,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/logger"
 	"os"
 	"path"
@@ -40,26 +42,45 @@ type iqFactory struct{}
 
 func (iqFactory) create() iq.IServer {
 	iqServer := iq.New(logLady, iq.Options{
-		User:        configIQ.IQUsername,
-		Token:       configIQ.IQToken,
-		Application: configIQ.IQApplication,
-		Stage:       configIQ.IQStage,
-		Server:      configIQ.IQServer,
-		Tool:        "nancy-client",
-		DBCacheName: "nancy-cache",
-		MaxRetries:  300,
+		User:          viper.GetString(configuration.YamlKeyIQUsername),
+		Token:         viper.GetString(configuration.YamlKeyIQToken),
+		Application:   configIQ.IQApplication,
+		Stage:         configIQ.IQStage,
+		Server:        viper.GetString(configuration.YamlKeyIQServer),
+		OSSIndexUser:  viper.GetString(configuration.YamlKeyUsername),
+		OSSIndexToken: viper.GetString(configuration.YamlKeyToken),
+		Tool:          "nancy-client",
+		DBCacheName:   "nancy-cache",
+		MaxRetries:    300,
 	})
+
+	if logLady != nil && logLady.IsLevelEnabled(logrus.DebugLevel) {
+		sanitizedOptions := iq.Options{
+			User:          cleanUserName(iqServer.Options.User),
+			Token:         "***hidden***",
+			Application:   iqServer.Options.Application,
+			Stage:         iqServer.Options.Application,
+			OSSIndexUser:  cleanUserName(iqServer.Options.OSSIndexUser),
+			OSSIndexToken: "***hidden***",
+			Tool:          iqServer.Options.Tool,
+			DBCacheName:   iqServer.Options.DBCacheName,
+			MaxRetries:    iqServer.Options.MaxRetries,
+		}
+		logLady.WithField("iqServer", sanitizedOptions).Debug("Created iqServer server")
+	}
+
 	return iqServer
 }
 
 var (
+	cfgFileIQ string
 	configIQ  types.Configuration
 	iqCreator iqServerFactory = iqFactory{}
 )
 
 var iqCmd = &cobra.Command{
 	Use:     "iq",
-	Example: `  go list -m -json all | nancy iq --iqapplication your_public_application_id --iqserver http://your_iq_server_url:port --iqusername your_user --iqtoken your_token --iqstage develop`,
+	Example: `  go list -m -json all | nancy iq --` + flagNameIqApplication + ` your_public_application_id --` + flagNameIqServerUrl + ` http://your_iq_server_url:port --` + flagNameIqUsername + ` your_user --` + flagNameIqToken + ` your_token --` + flagNameIqStage + ` develop`,
 	Short:   "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'",
 	Long:    `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
 	PreRun:  func(cmd *cobra.Command, args []string) { bindViperIq(cmd) },
@@ -112,19 +133,25 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
+const flagNameIqUsername = "iq-username"
+const flagNameIqToken = "iq-token"
+const flagNameIqStage = "iq-stage"
+const flagNameIqApplication = "iq-application"
+const flagNameIqServerUrl = "iq-server-url"
+
 func init() {
 	cobra.OnInitialize(initIQConfig)
 
-	iqCmd.Flags().StringVarP(&configIQ.IQUsername, "iqusername", "u", "admin", "Specify Nexus IQ username for request")
-	iqCmd.Flags().StringVarP(&configIQ.IQToken, "iqtoken", "t", "admin123", "Specify Nexus IQ token for request")
-	iqCmd.Flags().StringVarP(&configIQ.IQStage, "iqstage", "s", "develop", "Specify Nexus IQ stage for request")
+	iqCmd.Flags().StringVarP(&configIQ.IQUsername, flagNameIqUsername, "l", "admin", "Specify Nexus IQ username for request")
+	iqCmd.Flags().StringVarP(&configIQ.IQToken, flagNameIqToken, "p", "admin123", "Specify Nexus IQ token for request")
+	iqCmd.Flags().StringVarP(&configIQ.IQStage, flagNameIqStage, "s", "develop", "Specify Nexus IQ stage for request")
 
-	iqCmd.Flags().StringVarP(&configIQ.IQApplication, "iqapplication", "a", "", "Specify Nexus IQ public application ID for request")
-	if err := iqCmd.MarkFlagRequired("iqapplication"); err != nil {
+	iqCmd.Flags().StringVarP(&configIQ.IQApplication, flagNameIqApplication, "a", "", "Specify Nexus IQ public application ID for request")
+	if err := iqCmd.MarkFlagRequired(flagNameIqApplication); err != nil {
 		panic(err)
 	}
 
-	iqCmd.Flags().StringVarP(&configIQ.IQServer, "iqserver-url", "x", "http://localhost:8070", "Specify Nexus IQ server url for request")
+	iqCmd.Flags().StringVarP(&configIQ.IQServer, flagNameIqServerUrl, "x", "http://localhost:8070", "Specify Nexus IQ server url for request")
 
 	rootCmd.AddCommand(iqCmd)
 }
@@ -132,15 +159,24 @@ func init() {
 func bindViperIq(cmd *cobra.Command) {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
+	// need to ensure ossi CLI flags will override ossi config file values when running IQ command
+	bindViper(cmd)
+
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	_ = viper.BindPFlag("iqusername", cmd.Flags().Lookup("iqusername"))
-	_ = viper.BindPFlag("iqtoken", cmd.Flags().Lookup("iqtoken"))
-	_ = viper.BindPFlag("iqserver", cmd.Flags().Lookup("iqserver"))
+	if err := viper.BindPFlag(configuration.YamlKeyIQUsername, cmd.Flags().Lookup(flagNameIqUsername)); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag(configuration.YamlKeyIQToken, cmd.Flags().Lookup(flagNameIqToken)); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag(configuration.YamlKeyIQServer, cmd.Flags().Lookup(flagNameIqServerUrl)); err != nil {
+		panic(err)
+	}
 }
 
 func initIQConfig() {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
+	if cfgFileIQ != "" {
+		viper.SetConfigFile(cfgFileIQ)
 		viper.SetConfigType(configTypeYaml)
 	} else {
 		home, err := homedir.Dir()
@@ -155,9 +191,9 @@ func initIQConfig() {
 		viper.SetConfigName(types.IQServerConfigFileName)
 	}
 
-	if err := viper.ReadInConfig(); err == nil {
-		// TODO: Add log statements for config
-		fmt.Printf("Todo: Add log statement for IQ config\n")
+	// 'merge' IQ config here, since we also need OSSI config, and load order is not guaranteed
+	if err := viper.MergeInConfig(); err != nil {
+		panic(err)
 	}
 }
 

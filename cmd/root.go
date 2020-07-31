@@ -19,6 +19,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/sonatype-nexus-community/nancy/configuration"
 	"os"
 	"path"
 	"path/filepath"
@@ -54,14 +55,37 @@ type ossiFactory struct{}
 
 func (ossiFactory) create() ossindex.IServer {
 	server := ossindex.New(logLady, ossIndexTypes.Options{
-		Username:    viper.GetString("username"),
-		Token:       viper.GetString("token"),
+		Username:    viper.GetString(configuration.YamlKeyUsername),
+		Token:       viper.GetString(configuration.YamlKeyToken),
 		Tool:        "nancy-client",
 		Version:     buildversion.BuildVersion,
 		DBCacheName: "nancy-cache",
 		TTL:         time.Now().Local().Add(time.Hour * 12),
 	})
+
+	if logLady != nil && logLady.IsLevelEnabled(logrus.DebugLevel) {
+		sanitizedOptions := ossIndexTypes.Options{
+			Username:    cleanUserName(server.Options.Username),
+			Token:       "***hidden***",
+			Tool:        server.Options.Tool,
+			Version:     server.Options.Version,
+			DBCacheName: server.Options.DBCacheName,
+			TTL:         server.Options.TTL,
+		}
+		logLady.WithField("ossiServer", sanitizedOptions).Debug("Created ossiIndex server")
+	}
 	return server
+}
+
+func cleanUserName(origUsername string) string {
+	runes := []rune(origUsername)
+	cleanUsername := "***hidden***"
+	if len(runes) > 0 {
+		first := string(runes[0])
+		last := string(runes[len(runes)-1])
+		cleanUsername = first + "***hidden***" + last
+	}
+	return cleanUsername
 }
 
 var (
@@ -146,8 +170,8 @@ func init() {
 	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
 	rootCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs to exclude")
 	rootCmd.Flags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep Gopkg.lock file for scanning")
-	rootCmd.Flags().StringVarP(&configOssi.Username, "username", "u", "", "Specify OSS Index username for request")
-	rootCmd.Flags().StringVarP(&configOssi.Token, "token", "t", "", "Specify OSS Index API token for request")
+	rootCmd.PersistentFlags().StringVarP(&configOssi.Username, "username", "u", "", "Specify OSS Index username for request")
+	rootCmd.PersistentFlags().StringVarP(&configOssi.Token, "token", "t", "", "Specify OSS Index API token for request")
 	rootCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs to be excluded")
 	rootCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
 }
@@ -156,8 +180,12 @@ func bindViper(cmd *cobra.Command) {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	_ = viper.BindPFlag("username", cmd.Flags().Lookup("username"))
-	_ = viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+	if err := viper.BindPFlag(configuration.YamlKeyUsername, cmd.Flags().Lookup("username")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag(configuration.YamlKeyToken, cmd.Flags().Lookup("token")); err != nil {
+		panic(err)
+	}
 }
 
 const configTypeYaml = "yaml"
@@ -179,9 +207,9 @@ func initConfig() {
 		viper.SetConfigName(types.OssIndexConfigFileName)
 	}
 
-	if err := viper.ReadInConfig(); err == nil {
-		// TODO: Add log statements for config
-		fmt.Printf("Todo: Add log statement for OSSI config\n")
+	// 'merge' OSSI config here, since IQ cmd also need OSSI config, and init order is not guaranteed
+	if err := viper.MergeInConfig(); err != nil {
+		panic(err)
 	}
 }
 

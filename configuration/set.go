@@ -31,12 +31,21 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// these consts must match their associated yaml tag below. for use where tag name matters, like viper
+const YamlKeyIQServer = "IQServer"
+const YamlKeyIQUsername = "IQUsername"
+const YamlKeyIQToken = "IQToken"
+
 // IQConfig is a struct for holding IQ Configuration, and for writing it to yaml
 type IQConfig struct {
 	IQServer   string `yaml:"IQServer"`
 	IQUsername string `yaml:"IQUsername"`
 	IQToken    string `yaml:"IQToken"`
 }
+
+// these consts must match their associated yaml tag below. for use where tag name matters, like viper
+const YamlKeyUsername = "Username"
+const YamlKeyToken = "Token"
 
 // OSSIndexConfig is a struct for holding OSS Index Configuration, and for writing it to yaml
 type OSSIndexConfig struct {

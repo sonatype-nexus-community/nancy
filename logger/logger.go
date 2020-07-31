@@ -18,7 +18,6 @@
 package logger
 
 import (
-	"fmt"
 	"os"
 	"path"
 
@@ -42,14 +41,6 @@ func GetLogger(loggerFilename string, level int) *logrus.Logger {
 		}
 	}
 	return logLady
-}
-
-// PrintErrorAndLogLocation will print an error and give you the location of the log file
-func PrintErrorAndLogLocation(err error) {
-	fmt.Println("Uh oh, an error occurred")
-	fmt.Printf("Error: %v\n", err)
-	location, _ := LogFileLocation()
-	fmt.Printf("Check log file at %s for more information\n", location)
 }
 
 // LogFileLocation will return the location on disk of the log file

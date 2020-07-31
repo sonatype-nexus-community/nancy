@@ -352,19 +352,34 @@ func TestInitConfig(t *testing.T) {
 	tempDir := setupConfig(t)
 	defer resetConfig(t, tempDir)
 
+	setupTestOSSIConfigFileValues(t, tempDir)
+	defer func() {
+		resetOSSIConfigFile()
+	}()
+
+	initConfig()
+
+	assert.Equal(t, "ossiUsernameValue", viper.GetString(configuration.YamlKeyUsername))
+	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.YamlKeyToken))
+}
+
+func setupTestOSSIConfigFile(t *testing.T, tempDir string) {
 	cfgDir := path.Join(tempDir, types.OssIndexDirName)
 	assert.Nil(t, os.Mkdir(cfgDir, 0700))
 
 	cfgFile = path.Join(tempDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+}
 
-	const credentials = "Username: ossiUsername\n" +
-		"Token: ossiToken"
+func resetOSSIConfigFile() {
+	cfgFile = ""
+}
+
+func setupTestOSSIConfigFileValues(t *testing.T, tempDir string) {
+	setupTestOSSIConfigFile(t, tempDir)
+
+	const credentials = configuration.YamlKeyUsername + ": ossiUsernameValue\n" +
+		configuration.YamlKeyToken + ": ossiTokenValue"
 	assert.Nil(t, ioutil.WriteFile(cfgFile, []byte(credentials), 0644))
-
-	initConfig()
-
-	assert.Equal(t, "ossiUsername", viper.GetString("Username"))
-	assert.Equal(t, "ossiToken", viper.GetString("Token"))
 }
 
 type ossiFactoryMock struct {
@@ -488,10 +503,14 @@ func TestOssiCreatorOptions(t *testing.T) {
 	}()
 	ossIndex := ossiCreator.create()
 
-	logLady, _ = test.NewNullLogger()
-
 	ossIndexServer, ok := ossIndex.(*ossindex.Server)
 	assert.True(t, ok)
 	assert.Equal(t, "", ossIndexServer.Options.Username)
 	assert.Equal(t, "", ossIndexServer.Options.Token)
+}
+
+func TestOssiCreatorOptionsLogging(t *testing.T) {
+	logLady, _ = test.NewNullLogger()
+	logLady.Level = logrus.DebugLevel
+	ossiCreator.create()
 }

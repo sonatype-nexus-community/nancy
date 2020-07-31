@@ -19,8 +19,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
+	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/viper"
@@ -33,15 +35,25 @@ import (
 
 func TestIqApplicationFlagMissing(t *testing.T) {
 	output, err := executeCommand(rootCmd, "iq")
-	checkStringContains(t, output, "Error: required flag(s) \"iqapplication\" not set")
+	checkStringContains(t, output, "Error: required flag(s) \""+flagNameIqApplication+"\" not set")
 	assert.NotNil(t, err)
-	checkStringContains(t, err.Error(), "required flag(s) \"iqapplication\" not set")
+	checkStringContains(t, err.Error(), "required flag(s) \""+flagNameIqApplication+"\" not set")
 }
 
 func TestIqHelp(t *testing.T) {
 	output, err := executeCommand(rootCmd, "iq", "--help")
-	checkStringContains(t, output, "go list -m -json all | nancy iq --iqapplication your_public_application_id --iqserver ")
+	checkStringContains(t, output, "go list -m -json all | nancy iq --"+flagNameIqApplication+" your_public_application_id --"+flagNameIqServerUrl+" ")
 	assert.Nil(t, err)
+}
+
+func setupIQConfigFile(t *testing.T, tempDir string) {
+	cfgDirIQ := path.Join(tempDir, types.IQServerDirName)
+	assert.Nil(t, os.Mkdir(cfgDirIQ, 0700))
+
+	cfgFileIQ = path.Join(tempDir, types.IQServerDirName, types.IQServerConfigFileName)
+}
+func resetIQConfigFile() {
+	cfgFileIQ = ""
 }
 
 func TestInitIQConfig(t *testing.T) {
@@ -51,21 +63,32 @@ func TestInitIQConfig(t *testing.T) {
 	tempDir := setupConfig(t)
 	defer resetConfig(t, tempDir)
 
-	cfgDir := path.Join(tempDir, types.IQServerDirName)
-	assert.Nil(t, os.Mkdir(cfgDir, 0700))
+	setupTestOSSIConfigFileValues(t, tempDir)
+	defer func() {
+		resetOSSIConfigFile()
+	}()
 
-	cfgFile = path.Join(tempDir, types.IQServerDirName, types.IQServerConfigFileName)
+	setupIQConfigFile(t, tempDir)
+	defer func() {
+		resetIQConfigFile()
+	}()
 
-	const credentials = "IQUsername: iqUsername\n" +
-		"IQToken: iqToken\n" +
-		"IQServer: iqServer"
-	assert.Nil(t, ioutil.WriteFile(cfgFile, []byte(credentials), 0644))
+	const credentials = configuration.YamlKeyIQUsername + ": iqUsernameValue\n" +
+		configuration.YamlKeyIQToken + ": iqTokenValue\n" +
+		configuration.YamlKeyIQServer + ": iqServerValue"
+	assert.Nil(t, ioutil.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
+	// init order is not guaranteed
 	initIQConfig()
+	initConfig()
 
-	assert.Equal(t, "iqUsername", viper.GetString("iqusername"))
-	assert.Equal(t, "iqToken", viper.GetString("iqtoken"))
-	assert.Equal(t, "iqServer", viper.GetString("iqserver"))
+	// verify the OSSI stuff, since we will call both OSSI and IQ
+	assert.Equal(t, "ossiUsernameValue", viper.GetString(configuration.YamlKeyUsername))
+	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.YamlKeyToken))
+	// verify the IQ stuff
+	assert.Equal(t, "iqUsernameValue", viper.GetString(configuration.YamlKeyIQUsername))
+	assert.Equal(t, "iqTokenValue", viper.GetString(configuration.YamlKeyIQToken))
+	assert.Equal(t, "iqServerValue", viper.GetString(configuration.YamlKeyIQServer))
 }
 
 var testPurls = []string{
@@ -173,8 +196,26 @@ func TestDoIqParseGoListError(t *testing.T) {
 	checkStringContains(t, err.Error(), "index out of range")
 }
 
-func TestIqCreatorOptions(t *testing.T) {
+func TestIqCreatorDefaultOptions(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
+	tempDir := setupConfig(t)
+	defer resetConfig(t, tempDir)
+
+	// setup empty config files
+	setupTestOSSIConfigFile(t, tempDir)
+	defer func() {
+		resetOSSIConfigFile()
+	}()
+	setupIQConfigFile(t, tempDir)
+	defer func() {
+		resetIQConfigFile()
+	}()
+
 	logLady, _ = test.NewNullLogger()
+
+	bindViperIq(iqCmd)
 
 	iqServer := iqCreator.create()
 
@@ -183,4 +224,12 @@ func TestIqCreatorOptions(t *testing.T) {
 	assert.Equal(t, "admin", ossIndexServer.Options.User)
 	assert.Equal(t, "admin123", ossIndexServer.Options.Token)
 	assert.Equal(t, "http://localhost:8070", ossIndexServer.Options.Server)
+	assert.Equal(t, "", ossIndexServer.Options.OSSIndexUser)
+	assert.Equal(t, "", ossIndexServer.Options.OSSIndexToken)
+}
+
+func TestIqCreatorOptionsLogging(t *testing.T) {
+	logLady, _ = test.NewNullLogger()
+	logLady.Level = logrus.DebugLevel
+	iqCreator.create()
 }
