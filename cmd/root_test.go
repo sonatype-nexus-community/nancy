@@ -363,6 +363,26 @@ func TestInitConfig(t *testing.T) {
 	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.YamlKeyToken))
 }
 
+func TestInitConfigWithNoConfigFile(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
+	tempDir := setupConfig(t)
+	defer resetConfig(t, tempDir)
+
+	setupTestOSSIConfigFileValues(t, tempDir)
+	defer func() {
+		resetOSSIConfigFile()
+	}()
+	// delete the config file
+	assert.NoError(t, os.Remove(cfgFile))
+
+	initConfig()
+
+	assert.Equal(t, "", viper.GetString(configuration.YamlKeyUsername))
+	assert.Equal(t, "", viper.GetString(configuration.YamlKeyToken))
+}
+
 func setupTestOSSIConfigFile(t *testing.T, tempDir string) {
 	cfgDir := path.Join(tempDir, types.OssIndexDirName)
 	assert.Nil(t, os.Mkdir(cfgDir, 0700))

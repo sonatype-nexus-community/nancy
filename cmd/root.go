@@ -191,9 +191,11 @@ func bindViper(cmd *cobra.Command) {
 const configTypeYaml = "yaml"
 
 func initConfig() {
+	var cfgFileToCheck string
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 		viper.SetConfigType(configTypeYaml)
+		cfgFileToCheck = cfgFile
 	} else {
 		home, err := homedir.Dir()
 		if err != nil {
@@ -205,12 +207,24 @@ func initConfig() {
 		viper.AddConfigPath(configPath)
 		viper.SetConfigType(configTypeYaml)
 		viper.SetConfigName(types.OssIndexConfigFileName)
+
+		cfgFileToCheck = path.Join(configPath, types.OssIndexConfigFileName)
 	}
 
-	// 'merge' OSSI config here, since IQ cmd also need OSSI config, and init order is not guaranteed
-	if err := viper.MergeInConfig(); err != nil {
-		panic(err)
+	if fileExists(cfgFileToCheck) {
+		// 'merge' OSSI config here, since IQ cmd also need OSSI config, and init order is not guaranteed
+		if err := viper.MergeInConfig(); err != nil {
+			panic(err)
+		}
 	}
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func processConfig() (err error) {

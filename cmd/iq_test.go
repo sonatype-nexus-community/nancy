@@ -91,6 +91,44 @@ func TestInitIQConfig(t *testing.T) {
 	assert.Equal(t, "iqServerValue", viper.GetString(configuration.YamlKeyIQServer))
 }
 
+func TestInitIQConfigWithNoConfigFile(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
+	tempDir := setupConfig(t)
+	defer resetConfig(t, tempDir)
+
+	setupTestOSSIConfigFileValues(t, tempDir)
+	defer func() {
+		resetOSSIConfigFile()
+	}()
+
+	setupIQConfigFile(t, tempDir)
+	defer func() {
+		resetIQConfigFile()
+	}()
+	const credentials = configuration.YamlKeyIQUsername + ": iqUsernameValue\n" +
+		configuration.YamlKeyIQToken + ": iqTokenValue\n" +
+		configuration.YamlKeyIQServer + ": iqServerValue"
+	assert.Nil(t, ioutil.WriteFile(cfgFileIQ, []byte(credentials), 0644))
+
+	// delete the config files
+	assert.NoError(t, os.Remove(cfgFile))
+	assert.NoError(t, os.Remove(cfgFileIQ))
+
+	// init order is not guaranteed
+	initIQConfig()
+	initConfig()
+
+	// verify the OSSI stuff, since we will call both OSSI and IQ
+	assert.Equal(t, "", viper.GetString(configuration.YamlKeyUsername))
+	assert.Equal(t, "", viper.GetString(configuration.YamlKeyToken))
+	// verify the IQ stuff
+	assert.Equal(t, "", viper.GetString(configuration.YamlKeyIQUsername))
+	assert.Equal(t, "", viper.GetString(configuration.YamlKeyIQToken))
+	assert.Equal(t, "", viper.GetString(configuration.YamlKeyIQServer))
+}
+
 var testPurls = []string{
 	"pkg:golang/github.com/go-yaml/yaml@v2.2.2",
 	"pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",

@@ -175,9 +175,11 @@ func bindViperIq(cmd *cobra.Command) {
 }
 
 func initIQConfig() {
+	var cfgFileToCheck string
 	if cfgFileIQ != "" {
 		viper.SetConfigFile(cfgFileIQ)
 		viper.SetConfigType(configTypeYaml)
+		cfgFileToCheck = cfgFileIQ
 	} else {
 		home, err := homedir.Dir()
 		if err != nil {
@@ -189,11 +191,15 @@ func initIQConfig() {
 		viper.AddConfigPath(configPath)
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(types.IQServerConfigFileName)
+
+		cfgFileToCheck = path.Join(configPath, types.IQServerConfigFileName)
 	}
 
-	// 'merge' IQ config here, since we also need OSSI config, and load order is not guaranteed
-	if err := viper.MergeInConfig(); err != nil {
-		panic(err)
+	if fileExists(cfgFileToCheck) {
+		// 'merge' IQ config here, since we also need OSSI config, and load order is not guaranteed
+		if err := viper.MergeInConfig(); err != nil {
+			panic(err)
+		}
 	}
 }
 
