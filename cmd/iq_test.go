@@ -143,13 +143,13 @@ func (f iqFactoryMock) create() iq.IServer {
 }
 
 type mockIqServer struct {
-	apStatusUrlResult iq.StatusURLResult
+	apStatusURLResult iq.StatusURLResult
 	apErr             error
 }
 
 //noinspection GoUnusedParameter
 func (s mockIqServer) AuditPackages(purls []string, applicationID string) (iq.StatusURLResult, error) {
-	return s.apStatusUrlResult, s.apErr
+	return s.apStatusURLResult, s.apErr
 }
 
 // use compiler to ensure interface is implemented by mock
@@ -178,7 +178,7 @@ func TestAuditWithIQServerResponseError(t *testing.T) {
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusURLResult: iq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -193,7 +193,7 @@ func TestAuditWithIQServerPolicyActionNotFailure(t *testing.T) {
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusURLResult: iq.StatusURLResult{}}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -207,7 +207,7 @@ func TestAuditWithIQServerPolicyActionFailure(t *testing.T) {
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusUrlResult: iq.StatusURLResult{PolicyAction: "Failure"}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusURLResult: iq.StatusURLResult{PolicyAction: "Failure"}}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
