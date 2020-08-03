@@ -102,7 +102,7 @@ func TestProcessConfigCleanCacheError(t *testing.T) {
 	defer func() {
 		ossiCreator = origCreator
 	}()
-	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apErr: expectedError}}
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesErr: expectedError}}
 
 	err := processConfig()
 	assert.Equal(t, expectedError, err)
@@ -411,16 +411,16 @@ func (f ossiFactoryMock) create() ossindex.IServer {
 }
 
 type mockOssiServer struct {
-	apResults []ossIndexTypes.Coordinate
-	apErr     error
+	auditPackagesResults []ossIndexTypes.Coordinate
+	auditPackagesErr     error
 }
 
 //noinspection GoUnusedParameter
 func (s mockOssiServer) AuditPackages(purls []string) ([]ossIndexTypes.Coordinate, error) {
-	return s.apResults, s.apErr
+	return s.auditPackagesResults, s.auditPackagesErr
 }
 func (s mockOssiServer) NoCacheNoProblems() error {
-	return s.apErr
+	return s.auditPackagesErr
 }
 
 // use compiler to ensure interface is implemented by mock
@@ -434,7 +434,7 @@ func TestCheckOSSIndexAuditPackagesError(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 
 	expectedError := fmt.Errorf("forced error")
-	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apErr: expectedError}}
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesErr: expectedError}}
 
 	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
 	assert.Equal(t, expectedError, err)
@@ -462,7 +462,7 @@ func TestCheckOSSIndexOneVulnerability(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
 
-	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apResults: []ossIndexTypes.Coordinate{
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []ossIndexTypes.Coordinate{
 		{Coordinates: "coord1"},
 		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}}}}}
 
@@ -478,7 +478,7 @@ func TestCheckOSSIndexTwoVulnerabilities(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
 
-	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apResults: []ossIndexTypes.Coordinate{
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []ossIndexTypes.Coordinate{
 		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}},
 		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}}}}}
 
@@ -494,7 +494,7 @@ func TestCheckOSSIndexTwoVulnerabilitiesOnOneCoordinate(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
 
-	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{apResults: []ossIndexTypes.Coordinate{
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []ossIndexTypes.Coordinate{
 		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{{}, {}}},
 		{Coordinates: "coord2"}}}}
 

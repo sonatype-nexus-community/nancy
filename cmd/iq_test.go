@@ -143,13 +143,13 @@ func (f iqFactoryMock) create() iq.IServer {
 }
 
 type mockIqServer struct {
-	apStatusURLResult iq.StatusURLResult
-	apErr             error
+	auditPackagesStatusURLResult iq.StatusURLResult
+	auditPackagesErr             error
 }
 
 //noinspection GoUnusedParameter
 func (s mockIqServer) AuditPackages(purls []string, applicationID string) (iq.StatusURLResult, error) {
-	return s.apStatusURLResult, s.apErr
+	return s.auditPackagesStatusURLResult, s.auditPackagesErr
 }
 
 // use compiler to ensure interface is implemented by mock
@@ -163,7 +163,7 @@ func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 
 	expectedErr := fmt.Errorf("forced error")
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apErr: expectedErr}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesErr: expectedErr}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -178,7 +178,7 @@ func TestAuditWithIQServerResponseError(t *testing.T) {
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusURLResult: iq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -193,7 +193,7 @@ func TestAuditWithIQServerPolicyActionNotFailure(t *testing.T) {
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusURLResult: iq.StatusURLResult{}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{}}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
@@ -207,7 +207,7 @@ func TestAuditWithIQServerPolicyActionFailure(t *testing.T) {
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{apStatusURLResult: iq.StatusURLResult{PolicyAction: "Failure"}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{PolicyAction: "Failure"}}}
 
 	err := auditWithIQServer(testPurls, "testapp")
 
