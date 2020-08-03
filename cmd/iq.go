@@ -191,7 +191,7 @@ func initIQConfig() {
 		configPath := path.Join(home, types.IQServerDirName)
 
 		viper.AddConfigPath(configPath)
-		viper.SetConfigType("yaml")
+		viper.SetConfigType(configTypeYaml)
 		viper.SetConfigName(types.IQServerConfigFileName)
 
 		cfgFileToCheck = path.Join(configPath, types.IQServerConfigFileName)
