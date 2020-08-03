@@ -12,6 +12,9 @@ dist/
 # ci config for local ci build
 .circleci/local-config.yml
 
+# VS Code
+.vscode
+
 ### Vim ###
 # Swap
 [._]*.s[a-v][a-z]
@@ -20,4 +23,3 @@ dist/
 [._]s[a-rt-v][a-z]
 [._]ss[a-gi-z]
 [._]sw[a-p]
-
