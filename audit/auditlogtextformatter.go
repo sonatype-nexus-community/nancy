@@ -170,9 +170,9 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		var sb strings.Builder
 
 		w := tabwriter.NewWriter(&sb, 9, 3, 0, '\t', 0)
-		w.Flush()
+		_ = w.Flush()
 
-		logInvalidSemVerWarning(&sb, *f.NoColor, *f.Quiet, invalidEntries)
+		logInvalidSemVerWarning(&sb, f.NoColor, f.Quiet, invalidEntries)
 		nonVulnerablePackages, vulnerablePackages := splitPackages(auditedEntries)
 
 		groupAndPrint(vulnerablePackages, nonVulnerablePackages, f.Quiet, f.NoColor, &sb)
