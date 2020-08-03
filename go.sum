@@ -167,6 +167,8 @@ github.com/sonatype-nexus-community/go-sona-types v0.0.1 h1:PE2r3N5+nJPRUKzWTzjM
 github.com/sonatype-nexus-community/go-sona-types v0.0.1/go.mod h1:voGD7LEwz9TSvjZWNxST56pFPa0hdNQ71WsuMwBki3k=
 github.com/sonatype-nexus-community/go-sona-types v0.0.2 h1:F6dq9gVBTH+E86PJUuh7gptRu0nnaVLiWdYenD1/n0w=
 github.com/sonatype-nexus-community/go-sona-types v0.0.2/go.mod h1:voGD7LEwz9TSvjZWNxST56pFPa0hdNQ71WsuMwBki3k=
+github.com/sonatype-nexus-community/go-sona-types v0.0.4 h1:X8tsbeP+hf1JYSsEeybr/0uxZF8rBEgC9zXyMlhDrdM=
+github.com/sonatype-nexus-community/go-sona-types v0.0.4/go.mod h1:voGD7LEwz9TSvjZWNxST56pFPa0hdNQ71WsuMwBki3k=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/spf13/afero v1.1.2/go.mod h1:j4pytiNVoe2o6bmDsKpLACNPDBIoEAkihy7loJ1B0CQ=
 github.com/spf13/afero v1.2.2 h1:5jhuqJyZCZf2JRofRvN/nIFgIWNzPa3/Vz8mYylgbWc=
