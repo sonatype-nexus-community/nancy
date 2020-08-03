@@ -244,14 +244,12 @@ func processConfig() (err error) {
 		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: configOssi.Quiet, NoColor: configOssi.NoColor}
 	}
 
-	// @todo Change to use a switch statement
-	if configOssi.LogLevel == 1 || configOssi.Info {
+	switch configOssi.LogLevel {
+	case 1:
 		logLady.Level = logrus.InfoLevel
-	}
-	if configOssi.LogLevel == 2 || configOssi.Debug {
+	case 2:
 		logLady.Level = logrus.DebugLevel
-	}
-	if configOssi.LogLevel == 3 || configOssi.Trace {
+	case 3:
 		logLady.Level = logrus.TraceLevel
 	}
 

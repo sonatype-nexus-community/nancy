@@ -66,9 +66,6 @@ type Configuration struct {
 	IQApplication string
 	IQServer      string
 	MaxRetries    int
-	Info          bool
-	Debug         bool
-	Trace         bool
 }
 
 type Vulnerability struct {
