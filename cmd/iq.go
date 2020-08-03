@@ -133,11 +133,13 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
-const flagNameIqUsername = "iq-username"
-const flagNameIqToken = "iq-token"
-const flagNameIqStage = "iq-stage"
-const flagNameIqApplication = "iq-application"
-const flagNameIqServerUrl = "iq-server-url"
+const (
+	flagNameIqUsername    = "iq-username"
+	flagNameIqToken       = "iq-token"
+	flagNameIqStage       = "iq-stage"
+	flagNameIqApplication = "iq-application"
+	flagNameIqServerUrl   = "iq-server-url"
+)
 
 func init() {
 	cobra.OnInitialize(initIQConfig)
