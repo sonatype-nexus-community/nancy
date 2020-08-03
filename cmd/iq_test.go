@@ -73,9 +73,9 @@ func TestInitIQConfig(t *testing.T) {
 		resetIQConfigFile()
 	}()
 
-	const credentials = configuration.YamlKeyIQUsername + ": iqUsernameValue\n" +
-		configuration.YamlKeyIQToken + ": iqTokenValue\n" +
-		configuration.YamlKeyIQServer + ": iqServerValue"
+	credentials := fmt.Sprintf("%s: %s\n", configuration.YamlKeyIQUsername, "iqUsernameValue") +
+		fmt.Sprintf("%s: %s\n", configuration.YamlKeyIQToken, "iqTokenValue") +
+		fmt.Sprintf("%s: %s\n", configuration.YamlKeyIQServer, "iqServerValue")
 	assert.Nil(t, ioutil.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
 	// init order is not guaranteed
@@ -107,9 +107,9 @@ func TestInitIQConfigWithNoConfigFile(t *testing.T) {
 	defer func() {
 		resetIQConfigFile()
 	}()
-	const credentials = configuration.YamlKeyIQUsername + ": iqUsernameValue\n" +
-		configuration.YamlKeyIQToken + ": iqTokenValue\n" +
-		configuration.YamlKeyIQServer + ": iqServerValue"
+	credentials := fmt.Sprintf("%s: %s\n", configuration.YamlKeyIQUsername, "iqUsernameValue") +
+		fmt.Sprintf("%s: %s\n", configuration.YamlKeyIQToken, "iqTokenValue") +
+		fmt.Sprintf("%s: %s\n", configuration.YamlKeyIQServer, "iqServerValue")
 	assert.Nil(t, ioutil.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
 	// delete the config files
