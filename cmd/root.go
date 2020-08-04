@@ -63,17 +63,15 @@ func (ossiFactory) create() ossindex.IServer {
 		TTL:         time.Now().Local().Add(time.Hour * 12),
 	})
 
-	if logLady != nil && logLady.IsLevelEnabled(logrus.DebugLevel) {
-		sanitizedOptions := ossIndexTypes.Options{
-			Username:    cleanUserName(server.Options.Username),
-			Token:       "***hidden***",
-			Tool:        server.Options.Tool,
-			Version:     server.Options.Version,
-			DBCacheName: server.Options.DBCacheName,
-			TTL:         server.Options.TTL,
-		}
-		logLady.WithField("ossiServer", sanitizedOptions).Debug("Created ossiIndex server")
-	}
+	logLady.WithField("ossiServer", ossIndexTypes.Options{
+		Username:    cleanUserName(server.Options.Username),
+		Token:       "***hidden***",
+		Tool:        server.Options.Tool,
+		Version:     server.Options.Version,
+		DBCacheName: server.Options.DBCacheName,
+		TTL:         server.Options.TTL,
+	}).Debug("Created ossiIndex server")
+
 	return server
 }
 

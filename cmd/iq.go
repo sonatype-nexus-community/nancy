@@ -18,7 +18,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/configuration"
 	"github.com/sonatype-nexus-community/nancy/logger"
 	"os"
@@ -54,20 +53,17 @@ func (iqFactory) create() iq.IServer {
 		MaxRetries:    300,
 	})
 
-	if logLady != nil && logLady.IsLevelEnabled(logrus.DebugLevel) {
-		sanitizedOptions := iq.Options{
-			User:          cleanUserName(iqServer.Options.User),
-			Token:         "***hidden***",
-			Application:   iqServer.Options.Application,
-			Stage:         iqServer.Options.Application,
-			OSSIndexUser:  cleanUserName(iqServer.Options.OSSIndexUser),
-			OSSIndexToken: "***hidden***",
-			Tool:          iqServer.Options.Tool,
-			DBCacheName:   iqServer.Options.DBCacheName,
-			MaxRetries:    iqServer.Options.MaxRetries,
-		}
-		logLady.WithField("iqServer", sanitizedOptions).Debug("Created iqServer server")
-	}
+	logLady.WithField("iqServer", iq.Options{
+		User:          cleanUserName(iqServer.Options.User),
+		Token:         "***hidden***",
+		Application:   iqServer.Options.Application,
+		Stage:         iqServer.Options.Application,
+		OSSIndexUser:  cleanUserName(iqServer.Options.OSSIndexUser),
+		OSSIndexToken: "***hidden***",
+		Tool:          iqServer.Options.Tool,
+		DBCacheName:   iqServer.Options.DBCacheName,
+		MaxRetries:    iqServer.Options.MaxRetries,
+	}).Debug("Created iqServer server")
 
 	return iqServer
 }
