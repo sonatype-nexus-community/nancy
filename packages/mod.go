@@ -49,9 +49,11 @@ func removeDuplicates(purls []string) (dedupedPurls []string) {
 
 	for _, v := range purls {
 		if encountered[v] {
-			// LogLady.WithField("dep", v).Debug("Found duplicate dependency, eliminating it")
+			// TODO: restore logging
+			// logLady.WithField("dep", v).Debug("Found duplicate dependency, eliminating it")
 		} else {
-			// LogLady.WithField("dep", v).Debug("Unique dependency, adding it")
+			// TODO: restore logging
+			// logLady.WithField("dep", v).Debug("Unique dependency, adding it")
 			encountered[v] = true
 			dedupedPurls = append(dedupedPurls, v)
 		}
