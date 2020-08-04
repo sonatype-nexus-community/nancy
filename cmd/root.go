@@ -95,7 +95,7 @@ var (
 	ossiCreator                  ossiServerFactory = ossiFactory{}
 	unixComments                                   = regexp.MustCompile(`#.*$`)
 	untilComment                                   = regexp.MustCompile(`(until=)(.*)`)
-	stdInInvalid                                   = fmt.Errorf("StdIn is invalid, either empty or another reason")
+	stdInInvalid                                   = fmt.Errorf("StdIn is invalid or empty. Did you forget to pipe 'go list' to nancy?")
 )
 
 var rootCmd = &cobra.Command{
