@@ -71,8 +71,8 @@ func TestGetConfigFromCommandLineIqServer(t *testing.T) {
 		t.Errorf("Test failed: %s", err.Error())
 	}
 
-	if iqConfig.Username != "admin" && iqConfig.Token != "admin123" && iqConfig.Server != "http://localhost:8070" {
-		t.Errorf("Config not set properly, expected 'admin', 'admin123' and 'http://localhost:8070' but got %s, %s and %s", iqConfig.Username, iqConfig.Token, iqConfig.Server)
+	if iqConfig.IQUsername != "admin" && iqConfig.IQToken != "admin123" && iqConfig.IQServer != "http://localhost:8070" {
+		t.Errorf("Config not set properly, expected 'admin', 'admin123' and 'http://localhost:8070' but got %s, %s and %s", iqConfig.IQUsername, iqConfig.IQToken, iqConfig.IQServer)
 	}
 }
 
@@ -97,7 +97,7 @@ func TestGetConfigFromCommandLineIqServerWithLoopToResetConfig(t *testing.T) {
 		t.Errorf("Test failed: %s", err.Error())
 	}
 
-	if iqConfig.Username != "admin1" && iqConfig.Token != "admin1234" && iqConfig.Server != "http://localhost:8080" {
-		t.Errorf("Config not set properly, expected 'admin1', 'admin1234' and 'http://localhost:8080' but got %s, %s and %s", iqConfig.Username, iqConfig.Token, iqConfig.Server)
+	if iqConfig.IQUsername != "admin1" && iqConfig.IQToken != "admin1234" && iqConfig.IQServer != "http://localhost:8080" {
+		t.Errorf("Config not set properly, expected 'admin1', 'admin1234' and 'http://localhost:8080' but got %s, %s and %s", iqConfig.IQUsername, iqConfig.IQToken, iqConfig.IQServer)
 	}
 }

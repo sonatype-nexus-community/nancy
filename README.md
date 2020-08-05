@@ -30,11 +30,15 @@
 
 ### Usage
 
+`nancy` currently works for projects that use `dep` or `go mod` for dependencies.
+
 ```
  ~ > nancy
 Usage:
         go list -m all | nancy [options]
         go list -m all | nancy iq [options]
+        go list -json -m all | nancy [options]
+        go list -json -m all | nancy iq [options]
         nancy config
         nancy [options] </path/to/Gopkg.lock>
         nancy [options] </path/to/go.sum>
@@ -69,6 +73,7 @@ Options:
 $ > nancy iq
 Usage:
         go list -m all | nancy iq [options]
+        go list -json -m all | nancy iq [options]
 
 Options:
   -application string
@@ -90,7 +95,21 @@ Options:
         Set log level to Trace
 ```
 
-`nancy` currently works for projects that use `dep` or `go mod` for dependencies.
+#### What is the best usage of Nancy?
+
+There are four different ways to use Nancy:
+
+Preferred (will be around in Nancy 1.0.0)
+- `go list -json -m all | nancy`
+- `nancy /path/to/Gopkg.lock`
+
+Unpreferred (will be deprecated in Nancy 1.0.0)
+- `go list -m all | nancy`
+- `nancy /path/to/go.sum`
+
+The reasons for this are myriad, and are:
+- `go.sum` files are not lockfiles, they can contain many entries that your project no longer uses, and are thus, not totally reliable for a source of "what is my project using right now". We have yet to remove this functionality, mostly so we can gracefully remove it when Nancy 1.0.0 arrives (soon!)
+- `go list -m all` as a command is great! However, it outputs everything as plain text. Using `-json` in combo with it gives us a data structure that we can parse easily, and will allow us to implement some cool new features over time!
 
 #### Homebrew usage
 

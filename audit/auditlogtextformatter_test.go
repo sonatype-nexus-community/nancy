@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	. "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,12 +50,12 @@ func verifyFormatterSummaryLoudness(t *testing.T, quiet bool) {
 	}
 	entry := Entry{Data: data}
 
-	formatter := AuditLogTextFormatter{Quiet: &quiet, NoColor: new(bool)}
+	formatter := AuditLogTextFormatter{Quiet: quiet, NoColor: false}
 	logMessage, e := formatter.Format(&entry)
 
 	assert.Nil(t, e)
 
-	expectedSummary := "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ Summary                     ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━┫\n┃ Audited Dependencies    ┃ 0 ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━┫\n┃ Vulnerable Dependencies ┃ \x1b[1;31m0\x1b[0m ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━┛"
+	expectedSummary := "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ Summary                     ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━┫\n┃ Audited Dependencies    ┃ 0 ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━┫\n┃ Vulnerable Dependencies ┃ \x1b[1;31m0\x1b[0m ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━┛\n"
 	if !quiet {
 		expectedSummary = "\nNon Vulnerable Packages\n\n" + expectedSummary
 	}

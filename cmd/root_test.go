@@ -17,37 +17,39 @@
 package cmd
 
 import (
-	"bufio"
 	"bytes"
-	"errors"
 	"flag"
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/audit"
-	"github.com/sonatype-nexus-community/nancy/configuration"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 	"testing"
+
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"github.com/sonatype-nexus-community/nancy/types"
+
+	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/sonatype-nexus-community/nancy/configuration"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/sonatype-nexus-community/nancy/audit"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/stretchr/testify/assert"
 )
 
 func executeCommand(root *cobra.Command, args ...string) (output string, err error) {
-	_, output, err = executeCommandC(root, args...)
-	return output, err
-}
-
-func executeCommandC(root *cobra.Command, args ...string) (c *cobra.Command, output string, err error) {
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetErr(buf)
 	root.SetArgs(args)
 
-	c, err = root.ExecuteC()
+	err = root.Execute()
 
-	return c, buf.String(), err
+	return buf.String(), err
 }
 
 func checkStringContains(t *testing.T, got, substr string) {
@@ -56,23 +58,10 @@ func checkStringContains(t *testing.T, got, substr string) {
 	}
 }
 
-func TestRootCommandOssiWithPathArgGopkglockOutsideGopath(t *testing.T) {
-	dirToGopkglock := "../packages/testdata"
-	pathToGopkglock := dirToGopkglock + "/Gopkg.lock"
-	_, err := executeCommand(rootCmd, pathToGopkglock)
-	assert.Error(t, err)
-	if exiterr, ok := err.(customerrors.ErrorExit); ok {
-		assert.Equal(t, 3, exiterr.ExitCode)
-		assert.Equal(t, fmt.Sprintf("both %s and %s are not within any known GOPATH", dirToGopkglock, dirToGopkglock), exiterr.Err.Error())
-		assert.Equal(t, fmt.Sprintf("could not read lock at path %s", pathToGopkglock), exiterr.Message)
-	} else {
-		t.Fail()
-	}
-}
-
-func TestRootCommandOssiWithPathArgGosum(t *testing.T) {
-	_, err := executeCommand(rootCmd, "../packages/testdata/go.sum")
-	assert.NoError(t, err)
+func TestRootCommandNoArgs(t *testing.T) {
+	_, err := executeCommand(rootCmd, "")
+	assert.NotNil(t, err)
+	assert.Equal(t, customerrors.ErrorShowLogPath{Err: stdInInvalid}, err)
 }
 
 func TestRootCommandUnknownCommand(t *testing.T) {
@@ -82,172 +71,563 @@ func TestRootCommandUnknownCommand(t *testing.T) {
 	checkStringContains(t, err.Error(), "unknown command \"one\" for \"nancy\"")
 }
 
-func TestRootCommandNoArgsInvalidStdInErrorExit(t *testing.T) {
-	_, err := executeCommand(rootCmd, "")
-
-	serr, ok := err.(customerrors.ErrorExit)
-	assert.True(t, ok)
-	assert.Equal(t, 1, serr.ExitCode)
+func TestRootCommandInvalidPath(t *testing.T) {
+	_, err := executeCommand(rootCmd, "--path", "invalidPath")
+	assert.Error(t, err)
+	checkStringContains(t, err.Error(), "invalid path value. must point to 'Gopkg.lock' file. path: ")
 }
 
-func validateConfigOssi(t *testing.T, expectedError error, expectedConfig configuration.Configuration, args ...string) {
-	// setup default global config
+func TestProcessConfigInvalidStdIn(t *testing.T) {
 	origConfig := configOssi
 	defer func() {
 		configOssi = origConfig
 	}()
-	configOssi = configuration.Configuration{}
+	configOssi = types.Configuration{}
+	err := processConfig()
+	assert.Equal(t, stdInInvalid, err)
+}
 
-	// @todo fix hack below!!!!!, maybe submit bug and/or patch to Cobra about it
+func TestProcessConfigCleanCacheError(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	configOssi = types.Configuration{CleanCache: true}
+
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	expectedError := fmt.Errorf("forced clean cache error")
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesErr: expectedError}}
+
+	err := processConfig()
+	assert.Equal(t, expectedError, err)
+}
+
+func TestProcessConfigPath(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	configOssi = types.Configuration{Path: "../packages/testdata/Gopkg.lock"}
+
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	ossiCreator = &ossiFactoryMock{}
+
+	err := processConfig()
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), " are not within any known GOPATH"))
+}
+
+func TestGetIsQuiet(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+
+	// all false defaults to quiet
+	configOssi = types.Configuration{}
+	assert.Equal(t, true, getIsQuiet())
+
+	configOssi = types.Configuration{Quiet: true}
+	assert.Equal(t, true, getIsQuiet())
+
+	configOssi = types.Configuration{Loud: true}
+	assert.Equal(t, false, getIsQuiet())
+
+	// loud overrides quiet - feel the noise
+	configOssi = types.Configuration{Quiet: true, Loud: true}
+	assert.Equal(t, false, getIsQuiet())
+}
+
+func TestProcessConfigWithVolumeEnabledFormatters(t *testing.T) {
+	// cobra default - can't depend on state of configOssi during concurrent tests
+	//validateFormatterVolume(t, configOssi, audit.AuditLogTextFormatter{Quiet: true})
+
+	origOutputFormat := outputFormat
+	defer func() {
+		outputFormat = origOutputFormat
+	}()
+
+	outputFormat = "" // default format
+	// empty config
+	validateFormatterVolume(t, types.Configuration{}, audit.AuditLogTextFormatter{Quiet: true})
+	// not quiet, will not be loud - gotta want the volume baby. e.g. --quiet=false
+	validateFormatterVolume(t, types.Configuration{Quiet: false}, audit.AuditLogTextFormatter{Quiet: true})
+	// loud overrides quiet - feel the noise
+	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	// loud is loud
+	validateFormatterVolume(t, types.Configuration{Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	// not loud is quiet
+	validateFormatterVolume(t, types.Configuration{Loud: false}, audit.AuditLogTextFormatter{Quiet: true})
+
+	outputFormat = "text" // explicit text format
+	// empty config
+	validateFormatterVolume(t, types.Configuration{}, audit.AuditLogTextFormatter{Quiet: true})
+	// not quiet, will not be loud - gotta want the volume baby. e.g. --quiet=false
+	validateFormatterVolume(t, types.Configuration{Quiet: false}, audit.AuditLogTextFormatter{Quiet: true})
+	// loud overrides quiet - feel the noise
+	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	// loud is loud
+	validateFormatterVolume(t, types.Configuration{Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	// not loud is quiet
+	validateFormatterVolume(t, types.Configuration{Loud: false}, audit.AuditLogTextFormatter{Quiet: true})
+
+	outputFormat = "csv" // csv format
+	// empty config
+	validateFormatterVolume(t, types.Configuration{}, audit.CsvFormatter{Quiet: true})
+	// not quiet, will not be loud - gotta want the volume baby. e.g. --quiet=false
+	validateFormatterVolume(t, types.Configuration{Quiet: false}, audit.CsvFormatter{Quiet: true})
+	// loud overrides quiet - feel the noise
+	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true}, audit.CsvFormatter{Quiet: false})
+	// loud is loud
+	validateFormatterVolume(t, types.Configuration{Loud: true}, audit.CsvFormatter{Quiet: false})
+	// not loud is quiet
+	validateFormatterVolume(t, types.Configuration{Loud: false}, audit.CsvFormatter{Quiet: true})
+}
+
+func validateFormatterVolume(t *testing.T, testConfig types.Configuration, expectedFormatter logrus.Formatter) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	configOssi = testConfig
+
+	logLady, _ = test.NewNullLogger()
+
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	ossiCreator = &ossiFactoryMock{}
+
+	err := processConfig()
+	assert.Equal(t, stdInInvalid, err)
+	assert.Equal(t, expectedFormatter, configOssi.Formatter)
+}
+
+func TestDoDepAndParseInvalidPath(t *testing.T) {
+	err := doDepAndParse(ossiFactoryMock{}.create(), "bogusPath")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "could not find project"))
+}
+
+func createFakeStdIn(t *testing.T) (oldStdIn *os.File, tmpFile *os.File) {
+	return createFakeStdInWithString(t, "Testing")
+}
+func createFakeStdInWithString(t *testing.T, inputString string) (oldStdIn *os.File, tmpFile *os.File) {
+	content := []byte(inputString)
+	tmpFile, err := ioutil.TempFile("", "tempfile")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if _, err := tmpFile.Write(content); err != nil {
+		t.Error(err)
+	}
+
+	if _, err := tmpFile.Seek(0, 0); err != nil {
+		t.Error(err)
+	}
+
+	oldStdIn = os.Stdin
+
+	os.Stdin = tmpFile
+	return oldStdIn, tmpFile
+}
+
+func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args ...string) {
+	oldStdIn, tmpFile := createFakeStdIn(t)
+	defer func() {
+		os.Stdin = oldStdIn
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
+	}()
+
+	// @todo Special case for empty args tests. maybe submit bug and/or patch to Cobra about it
+	// this issue only occurs when running tests individually
 	if len(args) == 0 {
-		// cobra command adds os arg[0] if command has empty args. see: cobra.Command.go -> line: 914
-		origOsArg1 := os.Args[0]
+		// cobra command adds os arg[0] if command has empty testArgs. see: cobra.Command.go -> line: 914
+		origFirstOsArg := os.Args[0]
 		os.Args[0] = "cobra.test"
 		defer func() {
-			os.Args[0] = origOsArg1
+			os.Args[0] = origFirstOsArg
 		}()
 	}
 
-	_, err := executeCommand(rootCmd, args...)
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	configOssi = types.Configuration{}
 
-	var ee customerrors.ErrorExit
-	if errors.As(expectedError, &ee) && errors.As(err, &ee) {
-		// special case comparison for ErrorExit type where errCause may be of type we can't duplicate
-		// compare string of errCause
-		compareErrorExit(t, expectedError, err)
-	} else {
-		assert.Equal(t, expectedError, err)
-	}
+	_, err := executeCommand(rootCmd, args...)
+	assert.Nil(t, err)
 	assert.Equal(t, expectedConfig, configOssi)
 }
 
-func compareErrorExit(t *testing.T, expectedErrExit error, actualErrExit error) {
-	var eExpected customerrors.ErrorExit
-	assert.True(t, errors.As(expectedErrExit, &eExpected))
-
-	var eActual customerrors.ErrorExit
-	assert.True(t, errors.As(actualErrExit, &eActual))
-
-	assert.Equal(t, eExpected.ExitCode, eActual.ExitCode)
-	assert.Equal(t, eExpected.Message, eActual.Message)
-
-	if eExpected.Err == nil {
-		assert.Nil(t, eActual.Err)
-	} else {
-		// special case comparison for ErrorExit type where errCause may be of a type we can't duplicate, so we
-		// compare string representation of errCause
-		assert.Equal(t, eExpected.Err.Error(), eActual.Err.Error())
-	}
-}
-
-var noColor = false
-var quiet = false
-var testDefaultFormatter = audit.AuditLogTextFormatter{Quiet: &quiet, NoColor: &noColor}
+var defaultAuditLogFormatter = audit.AuditLogTextFormatter{Quiet: true}
 
 func TestRootCommandLogVerbosity(t *testing.T) {
-	validateConfigOssi(t, stdInInvalid, configuration.Configuration{UseStdIn: true, Formatter: &testDefaultFormatter})
-	validateConfigOssi(t, stdInInvalid, configuration.Configuration{UseStdIn: true, Formatter: &testDefaultFormatter, LogLevel: 1}, "-v")
-	validateConfigOssi(t, stdInInvalid, configuration.Configuration{UseStdIn: true, Formatter: &testDefaultFormatter, LogLevel: 2}, "-vv")
-	validateConfigOssi(t, stdInInvalid, configuration.Configuration{UseStdIn: true, Formatter: &testDefaultFormatter, LogLevel: 3}, "-vvv")
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, "")
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, "-v")
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, "-vv")
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, "-vvv")
 }
 
-func setup() {
-	// Set HomeDir to a nonsensical location to avoid loading file based config
-	configuration.HomeDir = "/doesnt/exist"
-	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
+func TestConfigOssi_defaults(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{}...)
 }
 
-func TestConfigOssi(t *testing.T) {
-	const testdataDir = "../configuration/testdata"
+func TestConfigOssi_no_color(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{NoColor: true, Formatter: audit.AuditLogTextFormatter{NoColor: true, Quiet: true}}, []string{"--no-color"}...)
+}
+
+func TestConfigOssi_quiet(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Quiet: true, Formatter: audit.AuditLogTextFormatter{Quiet: true}}, []string{"--quiet"}...)
+}
+
+func TestConfigOssi_loud(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Loud: true, Formatter: audit.AuditLogTextFormatter{Quiet: false}}, []string{"--loud"}...)
+}
+
+func TestConfigOssi_version(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Version: true, Formatter: logrus.Formatter(nil)}, []string{"--version"}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability=CVE123,CVE988"}...)
+}
+
+func TestConfigOssi_stdIn_as_input(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{}...)
+}
+
+const testdataDir = "../configuration/testdata"
+
+func TestConfigOssi_exclude_vulnerabilities_with_sane_file(t *testing.T) {
 	file, _ := os.Open(testdataDir + "/normalIgnore")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + file.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_file_empty(t *testing.T) {
 	emptyFile, _ := os.Open(testdataDir + "/emptyFile")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + emptyFile.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_has_tons_of_newlines(t *testing.T) {
 	lotsOfRandomNewlinesFile, _ := os.Open(testdataDir + "/lotsOfRandomWhitespace")
-	commentedFile, _ := os.Open(testdataDir + "/commented")
-	untilsFile, _ := os.Open(testdataDir + "/untilsAndComments")
-	invalidUntilsFile, _ := os.Open(testdataDir + "/untilsInvaild")
-	invalidUntilLine, _ := bufio.NewReader(invalidUntilsFile).ReadString('\n')
-	invalidUntilLine = strings.TrimSpace(invalidUntilLine)
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}...)
+}
 
-	invalidDateUntilsFile, _ := os.Open(testdataDir + "/untilsBadDateFormat")
-	invalidDateUntilLine, _ := bufio.NewReader(invalidDateUntilsFile).ReadString('\n')
-	invalidDateUntilLine = strings.TrimSpace(invalidDateUntilLine)
+func TestConfigOssi_exclude_vulnerabilities_are_combined_with_file_and_args_values(t *testing.T) {
+	lotsOfRandomNewlinesFile, _ := os.Open(testdataDir + "/lotsOfRandomWhitespace")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}...)
+}
 
+func TestConfigOssi_exclude_vulnerabilities_file_not_found_does_not_matter(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=/blah-blah-doesnt-exists"}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_passed_as_directory_does_not_matter(t *testing.T) {
 	dir, _ := ioutil.TempDir("", "prefix")
-
-	boolFalse := false
-	boolTrue := true
-
-	defaultAuditLogFormatter := &audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolFalse}
-	quietDefaultFormatter := &audit.AuditLogTextFormatter{Quiet: &boolTrue, NoColor: &boolFalse}
-
-	tests := map[string]struct {
-		args           []string
-		expectedConfig configuration.Configuration
-		expectedErr    error
-	}{
-		"defaults":         {args: []string{}, expectedConfig: configuration.Configuration{UseStdIn: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
-		"defaults modfile": {args: []string{"/tmp/go.sum"}, expectedConfig: configuration.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go.sum", Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 3, Err: &os.PathError{Op: "stat", Path: "/tmp/go.sum", Err: fmt.Errorf("no such file or directory")}, Message: "No go.sum found at path: /tmp/go.sum"}},
-		// todo Fix help test
-		//"help":                                   {args: []string{"--help"}, expectedConfig: configuration.Configuration{UseStdIn: true, Help: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: nil},
-		// todo Fix help test
-		//"help modilfe":                           {args: []string{"--help", "/tmp/go2.sum"}, expectedConfig: configuration.Configuration{Help: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
-		"no color":                                {args: []string{"--no-color", "/tmp/go2.sum"}, expectedConfig: configuration.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: &audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
-		"no color modfile":                        {args: []string{"--no-color", "/tmp/go2.sum"}, expectedConfig: configuration.Configuration{NoColor: true, Quiet: false, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go2.sum", Formatter: &audit.AuditLogTextFormatter{Quiet: &boolFalse, NoColor: &boolTrue}}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go2.sum")},
-		"quiet":                                   {args: []string{"--quiet"}, expectedConfig: configuration.Configuration{UseStdIn: true, NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Formatter: quietDefaultFormatter}, expectedErr: stdInInvalid},
-		"quiet modfile":                           {args: []string{"--quiet", "/tmp/go3.sum"}, expectedConfig: configuration.Configuration{NoColor: false, Quiet: true, Version: false, CveList: types.CveListFlag{}, Path: "/tmp/go3.sum", Formatter: quietDefaultFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go3.sum")},
-		"version":                                 {args: []string{"--version"}, expectedConfig: configuration.Configuration{UseStdIn: true, NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 0}},
-		"version modfile":                         {args: []string{"--version", "/tmp/go4.sum"}, expectedConfig: configuration.Configuration{NoColor: false, Quiet: false, Version: true, CveList: types.CveListFlag{}, Path: "/tmp/go4.sum", Formatter: defaultAuditLogFormatter}, expectedErr: customerrors.ErrorExit{ExitCode: 0}},
-		"exclude vulnerabilities":                 {args: []string{"--exclude-vulnerability=CVE123,CVE988"}, expectedConfig: configuration.Configuration{UseStdIn: true, NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
-		"exclude vulnerabilities modfile":         {args: []string{"--exclude-vulnerability=CVE123,CVE988", "/tmp/go5.sum"}, expectedConfig: configuration.Configuration{NoColor: false, Quiet: false, Version: false, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Path: "/tmp/go5.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go5.sum")},
-		"std in as input":                         {args: []string{}, expectedConfig: configuration.Configuration{UseStdIn: true, Formatter: defaultAuditLogFormatter}, expectedErr: stdInInvalid},
-		"path but invalid arg":                    {args: []string{"--invalid", "/tmp/go6.sum"}, expectedConfig: configuration.Configuration{}, expectedErr: errors.New("unknown flag: --invalid")},
-		"multiple paths":                          {args: []string{"/tmp/go6.sum", "/tmp/another"}, expectedConfig: configuration.Configuration{}, expectedErr: customerrors.ErrorExit{ExitCode: 1, Err: errors.New("wrong number of modfile paths: [/tmp/go6.sum /tmp/another]"), Message: "wrong number of modfile paths: [/tmp/go6.sum /tmp/another]"}},
-		"exclude vulnerabilities with sane file":  {args: []string{"--exclude-vulnerability-file=" + file.Name(), "/tmp/go7.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go7.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go7.sum")},
-		"exclude vulnerabilities when file empty": {args: []string{"--exclude-vulnerability-file=" + emptyFile.Name(), "/tmp/go8.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go8.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go8.sum")},
-		"exclude vulnerabilities when file has tons of newlines":                     {args: []string{"--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name(), "/tmp/go9.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go9.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go9.sum")},
-		"exclude vulnerabilities are combined with file and args values":             {args: []string{"--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name(), "/tmp/go10.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go10.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go10.sum")},
-		"exclude vulnerabilities file not found doesn't matter":                      {args: []string{"--exclude-vulnerability-file=/blah-blah-doesnt-exists", "/tmp/go11.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go11.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go11.sum")},
-		"exclude vulnerabilities passed as directory doesn't matter":                 {args: []string{"--exclude-vulnerability-file=" + dir, "/tmp/go12.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go12.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go12.sum")},
-		"exclude vulnerabilities doesn't need to be passed if default value is used": {args: []string{"/tmp/go13.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter, Path: "/tmp/go13.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go13.sum")},
-		"exclude vulnerabilities when has comments":                                  {args: []string{"--exclude-vulnerability-file=" + commentedFile.Name(), "/tmp/go14.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Path: "/tmp/go14.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
-		"exclude vulnerabilities when has untils":                                    {args: []string{"--exclude-vulnerability-file=" + untilsFile.Name(), "/tmp/go15.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Path: "/tmp/go15.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
-		"exclude vulnerabilities when has invalid value in untils":                   {args: []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name(), "/tmp/go16.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go16.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
-		"exclude vulnerabilities when has invalid date in untils":                    {args: []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name(), "/tmp/go17.sum"}, expectedConfig: configuration.Configuration{CveList: types.CveListFlag{}, Path: "/tmp/go17.sum", Formatter: defaultAuditLogFormatter}, expectedErr: createCustomErrorWithErrMsg(1, errors.New("failed to parse until at line \""+invalidDateUntilLine+"\". Expected format is 'until=yyyy-MM-dd'"))},
-		"output of json":              {args: []string{"--output=json"}, expectedConfig: configuration.Configuration{UseStdIn: true, Formatter: &audit.JsonFormatter{}}, expectedErr: stdInInvalid},
-		"output of json modfile":      {args: []string{"--output=json", "/tmp/go14.sum"}, expectedConfig: configuration.Configuration{Formatter: &audit.JsonFormatter{}, Path: "/tmp/go14.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go14.sum")},
-		"output of json pretty print": {args: []string{"--output=json-pretty", "/tmp/go15.sum"}, expectedConfig: configuration.Configuration{Formatter: &audit.JsonFormatter{PrettyPrint: true}, Path: "/tmp/go15.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go15.sum")},
-		"output of csv":               {args: []string{"--output=csv", "/tmp/go16.sum"}, expectedConfig: configuration.Configuration{Formatter: &audit.CsvFormatter{Quiet: &boolFalse}, Path: "/tmp/go16.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go16.sum")},
-		"output of text":              {args: []string{"--output=text", "/tmp/go17.sum"}, expectedConfig: configuration.Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go17.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go17.sum")},
-		"output of bad value":         {args: []string{"--output=aintgonnadoit", "/tmp/go18.sum"}, expectedConfig: configuration.Configuration{Formatter: defaultAuditLogFormatter, Path: "/tmp/go18.sum"}, expectedErr: createCustomErrorInvalidPathArg("/tmp/go18.sum")},
-		"log level of info":           {args: []string{"-v"}, expectedConfig: configuration.Configuration{UseStdIn: true, Formatter: defaultAuditLogFormatter, LogLevel: 1}, expectedErr: stdInInvalid},
-		"log level of debug":          {args: []string{"-vv"}, expectedConfig: configuration.Configuration{UseStdIn: true, Formatter: defaultAuditLogFormatter, LogLevel: 2}, expectedErr: stdInInvalid},
-		"log level of trace":          {args: []string{"-vvv"}, expectedConfig: configuration.Configuration{UseStdIn: true, Formatter: defaultAuditLogFormatter, LogLevel: 3}, expectedErr: stdInInvalid},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			setup()
-
-			if name == "exclude vulnerabilities doesn't need to be passed if default value is used" {
-				defaultFileName := ".nancy-ignore"
-				err := ioutil.WriteFile(defaultFileName, []byte("DEF-111\nDEF-222"), 0644)
-				if err != nil {
-					t.Fatal(err)
-				}
-				defer os.Remove(defaultFileName)
-			}
-			//zzz start here---
-			//if name == "multiple paths" {
-			validateConfigOssi(t, test.expectedErr, test.expectedConfig, test.args...)
-			//}
-		})
-	}
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + dir}...)
 }
 
-func createCustomErrorInvalidPathArg(path string) customerrors.ErrorExit {
-	return customerrors.ErrorExit{ExitCode: 3, Message: "invalid path arg: " + path}
+func TestConfigOssi_exclude_vulnerabilities_does_not_need_to_be_passed_if_default_value_is_used(t *testing.T) {
+	defaultFileName := ".nancy-ignore"
+	err := ioutil.WriteFile(defaultFileName, []byte("DEF-111\nDEF-222"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = os.Remove(defaultFileName)
+	}()
+
+	// reset exclude file path, is changed by prior tests
+	origExcludeVulnerabilityFilePath := excludeVulnerabilityFilePath
+	defer func() {
+		excludeVulnerabilityFilePath = origExcludeVulnerabilityFilePath
+	}()
+	excludeVulnerabilityFilePath = defaultExcludeFilePath
+
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter}, []string{}...)
 }
 
-func createCustomErrorWithErrMsg(exitCode int, err error) customerrors.ErrorExit {
-	return customerrors.ErrorExit{ExitCode: exitCode, Err: err, Message: err.Error()}
+func TestConfigOssi_exclude_vulnerabilities_when_has_comments(t *testing.T) {
+	commentedFile, _ := os.Open(testdataDir + "/commented")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + commentedFile.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_has_untils(t *testing.T) {
+	untilsFile, _ := os.Open(testdataDir + "/untilsAndComments")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + untilsFile.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_value_in_untils(t *testing.T) {
+	invalidUntilsFile, _ := os.Open(testdataDir + "/untilsInvaild")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name()}...)
+}
+
+func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_date_in_untils(t *testing.T) {
+	invalidDateUntilsFile, _ := os.Open(testdataDir + "/untilsBadDateFormat")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name()}...)
+}
+
+func TestConfigOssi_output_of_json(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: audit.JsonFormatter{}}, []string{"--output=json"}...)
+}
+
+func TestConfigOssi_output_of_json_pretty_print(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}}, []string{"--output=json-pretty"}...)
+}
+
+func TestConfigOssi_output_of_csv(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: audit.CsvFormatter{Quiet: true}}, []string{"--output=csv"}...)
+}
+
+func TestConfigOssi_output_of_text(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{"--output=text"}...)
+}
+
+func TestConfigOssi_output_of_bad_value(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{"--output=aintgonnadoit"}...)
+}
+
+func TestConfigOssi_log_level_of_info(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, []string{"-v"}...)
+}
+
+func TestConfigOssi_log_level_of_debug(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, []string{"-vv"}...)
+}
+
+func TestConfigOssi_log_level_of_trace(t *testing.T) {
+	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
+
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, []string{"-vvv"}...)
+}
+
+func TestConfigOssi_cleanCache(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, CleanCache: true}, []string{"--clean-cache"}...)
+}
+
+func setupConfig(t *testing.T) (tempDir string) {
+	tempDir, err := ioutil.TempDir("", "config-test")
+	assert.NoError(t, err)
+	configuration.HomeDir = tempDir
+	return tempDir
+}
+
+func resetConfig(t *testing.T, tempDir string) {
+	var err error
+	configuration.HomeDir, err = os.UserHomeDir()
+	assert.NoError(t, err)
+	_ = os.RemoveAll(tempDir)
+}
+
+func TestInitConfig(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
+	tempDir := setupConfig(t)
+	defer resetConfig(t, tempDir)
+
+	setupTestOSSIConfigFileValues(t, tempDir)
+	defer func() {
+		resetOSSIConfigFile()
+	}()
+
+	initConfig()
+
+	assert.Equal(t, "ossiUsernameValue", viper.GetString(configuration.YamlKeyUsername))
+	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.YamlKeyToken))
+}
+
+func TestInitConfigWithNoConfigFile(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
+	tempDir := setupConfig(t)
+	defer resetConfig(t, tempDir)
+
+	setupTestOSSIConfigFileValues(t, tempDir)
+	defer func() {
+		resetOSSIConfigFile()
+	}()
+	// delete the config file
+	assert.NoError(t, os.Remove(cfgFile))
+
+	initConfig()
+
+	assert.Equal(t, "", viper.GetString(configuration.YamlKeyUsername))
+	assert.Equal(t, "", viper.GetString(configuration.YamlKeyToken))
+}
+
+func setupTestOSSIConfigFile(t *testing.T, tempDir string) {
+	cfgDir := path.Join(tempDir, types.OssIndexDirName)
+	assert.Nil(t, os.Mkdir(cfgDir, 0700))
+
+	cfgFile = path.Join(tempDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+}
+
+func resetOSSIConfigFile() {
+	cfgFile = ""
+}
+
+func setupTestOSSIConfigFileValues(t *testing.T, tempDir string) {
+	setupTestOSSIConfigFile(t, tempDir)
+
+	const credentials = configuration.YamlKeyUsername + ": ossiUsernameValue\n" +
+		configuration.YamlKeyToken + ": ossiTokenValue"
+	assert.Nil(t, ioutil.WriteFile(cfgFile, []byte(credentials), 0644))
+}
+
+type ossiFactoryMock struct {
+	mockOssiServer ossindex.IServer
+}
+
+func (f ossiFactoryMock) create() ossindex.IServer {
+	return f.mockOssiServer
+}
+
+type mockOssiServer struct {
+	auditPackagesResults []ossIndexTypes.Coordinate
+	auditPackagesErr     error
+}
+
+//noinspection GoUnusedParameter
+func (s mockOssiServer) AuditPackages(purls []string) ([]ossIndexTypes.Coordinate, error) {
+	return s.auditPackagesResults, s.auditPackagesErr
+}
+func (s mockOssiServer) NoCacheNoProblems() error {
+	return s.auditPackagesErr
+}
+
+// use compiler to ensure interface is implemented by mock
+var _ ossindex.IServer = (*mockOssiServer)(nil)
+
+func TestCheckOSSIndexAuditPackagesError(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+
+	expectedError := fmt.Errorf("forced error")
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesErr: expectedError}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Equal(t, expectedError, err)
+}
+
+func TestCheckOSSIndexNoVulnerabilities(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Nil(t, err)
+}
+
+func TestCheckOSSIndexOneVulnerability(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []ossIndexTypes.Coordinate{
+		{Coordinates: "coord1"},
+		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}}}}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Equal(t, customerrors.ErrorExit{ExitCode: 1}, err)
+}
+
+func TestCheckOSSIndexTwoVulnerabilities(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []ossIndexTypes.Coordinate{
+		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}},
+		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}}}}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Equal(t, customerrors.ErrorExit{ExitCode: 2}, err)
+}
+
+func TestCheckOSSIndexTwoVulnerabilitiesOnOneCoordinate(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []ossIndexTypes.Coordinate{
+		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{{}, {}}},
+		{Coordinates: "coord2"}}}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
+	assert.Equal(t, customerrors.ErrorExit{ExitCode: 1}, err)
+}
+
+func TestCheckOSSIndexWithInvalidPurl(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+	configOssi.Formatter = &logrus.TextFormatter{}
+
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{}}
+
+	err := checkOSSIndex(ossiCreator.create(), testPurls, []string{"bogusPurl"})
+	assert.Nil(t, err)
+}
+
+func TestOssiCreatorOptions(t *testing.T) {
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	ossIndex := ossiCreator.create()
+
+	ossIndexServer, ok := ossIndex.(*ossindex.Server)
+	assert.True(t, ok)
+	assert.Equal(t, "", ossIndexServer.Options.Username)
+	assert.Equal(t, "", ossIndexServer.Options.Token)
+}
+
+func TestOssiCreatorOptionsLogging(t *testing.T) {
+	logLady, _ = test.NewNullLogger()
+	logLady.Level = logrus.DebugLevel
+	ossiCreator.create()
+}
+
+func TestCleanUserName(t *testing.T) {
+	assert.Equal(t, "***hidden***", cleanUserName(""))
+	assert.Equal(t, "1***hidden***1", cleanUserName("1"))
+	assert.Equal(t, "1***hidden***2", cleanUserName("12"))
 }

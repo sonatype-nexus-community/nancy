@@ -21,18 +21,19 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"strconv"
 
+	"github.com/sonatype-nexus-community/nancy/customerrors"
+
 	. "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 )
 
 type CsvFormatter struct {
-	Quiet *bool
+	Quiet bool
 }
 
-func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
+func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
 	// Note this doesn't include Time, Level and Message which are available on
 	// the Entry. Consult `godoc` on information about those fields or read the
 	// source of the official loggers.
@@ -68,7 +69,7 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 			return nil, err
 		}
 
-		if !*f.Quiet {
+		if !f.Quiet {
 			invalidCount := len(invalidEntries)
 			if invalidCount > 0 {
 				if err = f.write(w, []string{""}); err != nil {
@@ -89,7 +90,7 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 			}
 		}
 
-		if !*f.Quiet || numVulnerable > 0 {
+		if !f.Quiet || numVulnerable > 0 {
 			if err = f.write(w, []string{""}); err != nil {
 				return nil, err
 			}
@@ -102,7 +103,7 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 		}
 		for i := 1; i <= len(auditedEntries); i++ {
 			auditEntry := auditedEntries[i-1]
-			if auditEntry.IsVulnerable() || !*f.Quiet {
+			if auditEntry.IsVulnerable() || !f.Quiet {
 				jsonVulns, _ := json.Marshal(auditEntry.Vulnerabilities)
 				if err = f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(packageCount) + "]", auditEntry.Coordinates, strconv.FormatBool(auditEntry.IsVulnerable()), strconv.Itoa(len(auditEntry.Vulnerabilities)), string(jsonVulns)}); err != nil {
 					return nil, err
@@ -113,13 +114,11 @@ func (f *CsvFormatter) Format(entry *Entry) ([]byte, error) {
 		w.Flush()
 
 		return buf.Bytes(), nil
-	} else {
-		return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
 	}
-
+	return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
 }
 
-func (f *CsvFormatter) write(w *csv.Writer, line []string) error {
+func (f CsvFormatter) write(w *csv.Writer, line []string) error {
 	if err := w.Write(line); err != nil {
 		return customerrors.NewErrorExitPrintHelp(err, "Failed to write data to csv")
 	}

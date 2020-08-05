@@ -20,8 +20,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"strings"
+	"time"
 
-	decimal "github.com/shopspring/decimal"
+	"github.com/shopspring/decimal"
+	"github.com/sirupsen/logrus"
 )
 
 // Helpful constants to pull strings we use more than once out of code
@@ -32,6 +34,41 @@ const (
 	IQServerConfigFileName = ".iq-server-config"
 )
 
+type GoListModule struct {
+	Path      string        // module path
+	Version   string        // module version
+	Versions  []string      // available module versions (with -versions)
+	Replace   *GoListModule // replaced by this module
+	Time      *time.Time    // time version was created
+	Update    *GoListModule // available update, if any (with -u)
+	Main      bool          // is this the main module?
+	Indirect  bool          // is this module only an indirect dependency of main module?
+	Dir       string        // directory holding files for this module, if any
+	GoMod     string        // path to go.mod file for this module, if any
+	GoVersion string        // go version used in module
+}
+
+type Configuration struct {
+	Version       bool
+	NoColor       bool
+	Quiet         bool
+	Loud          bool
+	CleanCache    bool
+	CveList       CveListFlag
+	Path          string
+	Formatter     logrus.Formatter
+	LogLevel      int
+	Username      string
+	Token         string
+	Help          bool
+	IQUsername    string
+	IQToken       string
+	IQStage       string
+	IQApplication string
+	IQServer      string
+	MaxRetries    int
+}
+
 type Vulnerability struct {
 	Id          string
 	Title       string
@@ -39,6 +76,7 @@ type Vulnerability struct {
 	CvssScore   decimal.Decimal
 	CvssVector  string
 	Cve         string
+	Cwe         string
 	Reference   string
 	Excluded    bool
 }
@@ -46,7 +84,7 @@ type Vulnerability struct {
 //Mark the given vulnerability as excluded if it appears in the exclusion list
 func (v *Vulnerability) maybeExcludeVulnerability(exclusions []string) {
 	for _, ex := range exclusions {
-		if v.Cve == ex || v.Id == ex {
+		if v.Cve == ex || v.Id == ex || v.Cwe == ex {
 			v.Excluded = true
 		}
 	}
@@ -97,6 +135,7 @@ func (cve *CveListFlag) String() string {
 
 func (cve *CveListFlag) Set(value string) error {
 	if len(cve.Cves) > 0 {
+		//goland:noinspection GoErrorStringFormat
 		return fmt.Errorf("The CVE Exclude Flag is already set")
 	}
 	cve.Cves = strings.Split(strings.ReplaceAll(value, " ", ""), ",")

@@ -22,13 +22,14 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/logrusorgru/aurora"
 	"github.com/shopspring/decimal"
 	. "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 )
 
 var (
@@ -42,14 +43,15 @@ func init() {
 }
 
 type AuditLogTextFormatter struct {
-	Quiet   *bool
-	NoColor *bool
+	Quiet   bool
+	NoColor bool
 }
 
 func logPackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	au := aurora.NewAurora(!noColor)
+
 	sb.WriteString(
-		fmt.Sprintf("[%d/%d] %s\n",
+		fmt.Sprintf("[%d/%d]\t%s\n",
 			idx,
 			packageCount,
 			au.Bold(au.Green(coordinate.Coordinates)).String(),
@@ -65,7 +67,7 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 
 			for k, v := range invalidPurls {
 				sb.WriteString(
-					fmt.Sprintf("[%d/%d] %s\n",
+					fmt.Sprintf("[%d/%d]\t%s\n",
 						k+1,
 						len(invalidPurls),
 						au.Bold(v.Coordinates).String(),
@@ -80,9 +82,8 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 
 func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
 	au := aurora.NewAurora(!noColor)
-
 	sb.WriteString(fmt.Sprintf(
-		"[%d/%d] %s\n%s \n",
+		"[%d/%d]\t%s\n%s \n",
 		idx,
 		packageCount,
 		au.Bold(au.Red(coordinate.Coordinates)).String(),
@@ -100,7 +101,7 @@ func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCou
 			t.SetTitle(printColorBasedOnCvssScore(v.CvssScore, v.Title, noColor))
 			t.AppendRow([]interface{}{"Description", text.WrapSoft(v.Description, 75)})
 			t.AppendSeparator()
-			t.AppendRow([]interface{}{"OSS Index ID", v.Id})
+			t.AppendRow([]interface{}{"OSS Index ID", v.ID})
 			t.AppendSeparator()
 			t.AppendRow([]interface{}{"CVSS Score", fmt.Sprintf("%s/10 (%s)", v.CvssScore, scoreAssessment(v.CvssScore))})
 			t.AppendSeparator()
@@ -154,7 +155,7 @@ func groupAndPrint(vulnerable []types.Coordinate, nonVulnerable []types.Coordina
 	}
 }
 
-func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
+func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 	auditedEntries := entry.Data["audited"]
 	invalidEntries := entry.Data["invalid"]
 	packageCount := entry.Data["num_audited"]
@@ -168,12 +169,15 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 
 		var sb strings.Builder
 
-		logInvalidSemVerWarning(&sb, *f.NoColor, *f.Quiet, invalidEntries)
+		w := tabwriter.NewWriter(&sb, 9, 3, 0, '\t', 0)
+		_ = w.Flush()
+
+		logInvalidSemVerWarning(&sb, f.NoColor, f.Quiet, invalidEntries)
 		nonVulnerablePackages, vulnerablePackages := splitPackages(auditedEntries)
 
-		groupAndPrint(vulnerablePackages, nonVulnerablePackages, *f.Quiet, *f.NoColor, &sb)
+		groupAndPrint(vulnerablePackages, nonVulnerablePackages, f.Quiet, f.NoColor, &sb)
 
-		au := aurora.NewAurora(!*f.NoColor)
+		au := aurora.NewAurora(!f.NoColor)
 		t := table.NewWriter()
 		t.SetStyle(table.StyleBold)
 		t.SetTitle("Summary")
@@ -181,6 +185,7 @@ func (f *AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		t.AppendSeparator()
 		t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(numVulnerable)))})
 		sb.WriteString(t.Render())
+		sb.WriteString("\n")
 
 		return []byte(sb.String()), nil
 	}
