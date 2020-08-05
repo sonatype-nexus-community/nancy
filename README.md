@@ -169,8 +169,8 @@ This can be handy for testing your account out, or if you want to override your 
 
 You can run `nancy` in a quiet manner, only getting back a list of vulnerable components by running:
 
-* `./nancy -quiet /path/to/your/Gopkg.lock `
-* `./nancy -quiet /path/to/your/go.sum `
+* `./nancy -quiet /path/to/your/Gopkg.lock`
+* `go list -json -m all | ./nancy -quiet`
 
 #### Exclude vulnerabilities
 
@@ -183,14 +183,14 @@ We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or
 
 ##### Via CLI flag
 * `./nancy -exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 /path/to/your/Gopkg.lock`
-* `./nancy -exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 /path/to/your/go.sum`
+* `go list -json -m all | ./nancy -exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2`
 
 ##### Via file
 By default if a file named `.nancy-ignore` exists in the same directory that nancy is run it will use it, will no other options need to be passed.
 
 If you would like to define the path to the file you can use the following
 * `./nancy -exclude-vulnerability-file=/path/to/your/exclude-file /path/to/your/Gopkg.lock`
-* `./nancy -exclude-vulnerability-file=/path/to/your/exclude-file /path/to/your/go.sum`  
+* `go list -json -m all | ./nancy -exclude-vulnerability-file=/path/to/your/exclude-file`
 
 The file format requires each vulnerability that you want to exclude to be on a separate line. Comments are allowed in the file as well to help provide context when needed. See an example file below.
 

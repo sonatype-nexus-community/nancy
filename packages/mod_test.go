@@ -22,8 +22,6 @@ import (
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-var testGoSumName = "testdata/go.sum"
-
 // Simulate calling parse.GopkgLock()
 func getProjectList() (projectList types.ProjectList) {
 	appendProject("github.com/AndreasBriese/bbloom", "", &projectList)
@@ -65,7 +63,6 @@ func appendProject(name string, version string, projectList *types.ProjectList) 
 
 func TestModExtractPurlsFromManifest(t *testing.T) {
 	mod := Mod{}
-	mod.GoSumPath = testGoSumName
 	mod.ProjectList = getProjectList()
 
 	result := mod.ExtractPurlsFromManifest()
@@ -76,7 +73,6 @@ func TestModExtractPurlsFromManifest(t *testing.T) {
 
 func TestModExtractPurlsFromManifestDuplicates(t *testing.T) {
 	mod := Mod{}
-	mod.GoSumPath = testGoSumName
 	mod.ProjectList = getProjectListDuplicates()
 
 	result := mod.ExtractPurlsFromManifest()
