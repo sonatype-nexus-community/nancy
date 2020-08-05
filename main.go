@@ -331,23 +331,9 @@ func doCheckExistenceAndParse(config configuration.Configuration) error {
 		purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
 
 		return checkOSSIndex(purls, invalidPurls, config)
-	case strings.Contains(config.Path, "go.sum"):
-		mod := packages.Mod{}
-		mod.GoSumPath = config.Path
-		manifestExists, err := mod.CheckExistenceOfManifest()
-		if err != nil {
-			return err
-		}
-		if manifestExists {
-			mod.ProjectList, _ = parse.GoSum(config.Path)
-			var purls = mod.ExtractPurlsFromManifest()
-
-			return checkOSSIndex(purls, nil, config)
-		}
 	default:
 		return customerrors.ErrorExit{ExitCode: 3}
 	}
-	return nil
 }
 
 func checkOSSIndex(purls []string, invalidpurls []string, config configuration.Configuration) error {

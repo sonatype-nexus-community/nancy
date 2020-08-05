@@ -17,18 +17,14 @@
 package packages
 
 import (
-	"fmt"
-	"os"
 	"strings"
 
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 type Mod struct {
 	ProjectList types.ProjectList
-	GoSumPath   string
 }
 
 func (m Mod) ExtractPurlsFromManifest() (purls []string) {
@@ -59,13 +55,6 @@ func (m Mod) ExtractPurlsFromManifestForIQ() (purls []string) {
 	purls = removeDuplicates(purls)
 
 	return
-}
-
-func (m Mod) CheckExistenceOfManifest() (bool, error) {
-	if _, err := os.Stat(m.GoSumPath); os.IsNotExist(err) {
-		return false, customerrors.NewErrorExitPrintHelp(err, fmt.Sprint("No go.sum found at path: "+m.GoSumPath))
-	}
-	return true, nil
 }
 
 func removeDuplicates(purls []string) (dedupedPurls []string) {

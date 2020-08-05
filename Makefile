@@ -44,6 +44,5 @@ test: build
 
 integration-test: build
 	cd packages/testdata && ../../$(BINARY_NAME) Gopkg.lock && cd -
-	./$(BINARY_NAME) go.sum
 	go list -m all | ./$(BINARY_NAME)
 	go list -m all > deps.out && ./$(BINARY_NAME) < deps.out

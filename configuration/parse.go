@@ -170,7 +170,6 @@ func Parse(args []string) (Configuration, error) {
 	go list -json -m all | nancy iq [options]
 	nancy config
 	nancy [options] </path/to/Gopkg.lock>
-	nancy [options] </path/to/go.sum>
 			
 Options:
 `)
@@ -189,7 +188,7 @@ Options:
 		return config, err
 	}
 
-	modfilePath, err := getModfilePath()
+	modfilePath, err := getFilePath()
 	if err != nil {
 		return config, err
 	}
@@ -216,11 +215,11 @@ Options:
 	return config, nil
 }
 
-func getModfilePath() (modfilepath string, err error) {
+func getFilePath() (modfilepath string, err error) {
 	if flag.CommandLine.NArg() > 0 {
 		nonFlagArgs := flag.CommandLine.Args()
 		if len(nonFlagArgs) != 1 {
-			return modfilepath, fmt.Errorf("wrong number of modfile paths: %s", nonFlagArgs)
+			return modfilepath, fmt.Errorf("wrong number of paths: %s. only expected 1.", nonFlagArgs)
 		}
 		for _, nonFlagArg := range nonFlagArgs {
 			return nonFlagArg, err
