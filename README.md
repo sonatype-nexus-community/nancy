@@ -130,7 +130,7 @@ You can see more about the formulae, etc... at [this repo](https://github.com/so
 
 `nancy` now comes in a boat! For ease of use, we've dockerized `nancy`. To use our Dockerfile:
 
-`go list -m all | docker run -i sonatypecommunity/nancy:latest`
+`go list -m all | docker run --rm -i sonatypecommunity/nancy:latest`
 
 We publish a few different flavors for convenience:
 
