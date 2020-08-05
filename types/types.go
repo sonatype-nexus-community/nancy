@@ -52,6 +52,7 @@ type Configuration struct {
 	Version       bool
 	NoColor       bool
 	Quiet         bool
+	Loud          bool
 	CleanCache    bool
 	CveList       CveListFlag
 	Path          string
@@ -134,6 +135,7 @@ func (cve *CveListFlag) String() string {
 
 func (cve *CveListFlag) Set(value string) error {
 	if len(cve.Cves) > 0 {
+		//goland:noinspection GoErrorStringFormat
 		return fmt.Errorf("The CVE Exclude Flag is already set")
 	}
 	cve.Cves = strings.Split(strings.ReplaceAll(value, " ", ""), ",")

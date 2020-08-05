@@ -86,6 +86,7 @@ func cleanUserName(origUsername string) string {
 	return cleanUsername
 }
 
+//goland:noinspection GoErrorStringFormat
 var (
 	cfgFile                      string
 	configOssi                   types.Configuration
@@ -164,6 +165,7 @@ func init() {
 	rootCmd.PersistentFlags().CountVarP(&configOssi.LogLevel, "", "v", "Set log level, multiple v's is more verbose")
 	rootCmd.PersistentFlags().BoolVarP(&configOssi.Version, "version", "V", false, "Get the version")
 	rootCmd.PersistentFlags().BoolVarP(&configOssi.Quiet, "quiet", "q", true, "indicate output should contain only packages with vulnerabilities")
+	rootCmd.PersistentFlags().BoolVar(&configOssi.Loud, "loud", false, "indicate output should include non-vulnerable packages")
 	rootCmd.Flags().BoolVarP(&configOssi.NoColor, "no-color", "n", false, "indicate output should not be colorized")
 	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
 	rootCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs to exclude")
@@ -226,20 +228,22 @@ func fileExists(filename string) bool {
 }
 
 func processConfig() (err error) {
+	isQuiet := getIsQuiet()
+
 	switch format := outputFormat; format {
 	case "text":
-		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: configOssi.Quiet, NoColor: configOssi.NoColor}
+		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: isQuiet, NoColor: configOssi.NoColor}
 	case "json":
 		configOssi.Formatter = audit.JsonFormatter{}
 	case "json-pretty":
 		configOssi.Formatter = audit.JsonFormatter{PrettyPrint: true}
 	case "csv":
-		configOssi.Formatter = audit.CsvFormatter{Quiet: configOssi.Quiet}
+		configOssi.Formatter = audit.CsvFormatter{Quiet: isQuiet}
 	default:
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		fmt.Println("!!! Output format of", strings.TrimSpace(format), "is not valid. Defaulting to text output")
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: configOssi.Quiet, NoColor: configOssi.NoColor}
+		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: isQuiet, NoColor: configOssi.NoColor}
 	}
 
 	switch configOssi.LogLevel {
@@ -264,7 +268,7 @@ func processConfig() (err error) {
 		return
 	}
 
-	printHeader(!configOssi.Quiet && reflect.TypeOf(configOssi.Formatter).String() == "audit.AuditLogTextFormatter")
+	printHeader(!getIsQuiet() && reflect.TypeOf(configOssi.Formatter).String() == "audit.AuditLogTextFormatter")
 
 	// todo: should errors from this call be ignored
 	_ = getCVEExcludesFromFile(excludeVulnerabilityFilePath)
@@ -292,6 +296,19 @@ func processConfig() (err error) {
 	}
 
 	return
+}
+
+func getIsQuiet() bool {
+	var isQuiet bool
+	switch {
+	case configOssi.Loud:
+		isQuiet = false
+	case configOssi.Quiet:
+		isQuiet = true
+	default:
+		isQuiet = true
+	}
+	return isQuiet
 }
 
 func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {

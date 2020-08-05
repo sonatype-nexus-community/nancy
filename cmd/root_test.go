@@ -113,7 +113,7 @@ func TestProcessConfigPath(t *testing.T) {
 	defer func() {
 		configOssi = origConfig
 	}()
-	configOssi = types.Configuration{Path: "../packages/testdata/Gopkg.lock", Quiet: true}
+	configOssi = types.Configuration{Path: "../packages/testdata/Gopkg.lock"}
 
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
@@ -127,6 +127,93 @@ func TestProcessConfigPath(t *testing.T) {
 	err := processConfig()
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), " are not within any known GOPATH"))
+}
+
+func TestGetIsQuiet(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+
+	// all false defaults to quiet
+	configOssi = types.Configuration{}
+	assert.Equal(t, true, getIsQuiet())
+
+	configOssi = types.Configuration{Quiet: true}
+	assert.Equal(t, true, getIsQuiet())
+
+	configOssi = types.Configuration{Loud: true}
+	assert.Equal(t, false, getIsQuiet())
+
+	// loud overrides quiet - feel the noise
+	configOssi = types.Configuration{Quiet: true, Loud: true}
+	assert.Equal(t, false, getIsQuiet())
+}
+
+func TestProcessConfigWithVolumeEnabledFormatters(t *testing.T) {
+	// cobra default - can't depend on state of configOssi during concurrent tests
+	//validateFormatterVolume(t, configOssi, audit.AuditLogTextFormatter{Quiet: true})
+
+	origOutputFormat := outputFormat
+	defer func() {
+		outputFormat = origOutputFormat
+	}()
+
+	outputFormat = "" // default format
+	// empty config
+	validateFormatterVolume(t, types.Configuration{}, audit.AuditLogTextFormatter{Quiet: true})
+	// not quiet, will not be loud - gotta want the volume baby. e.g. --quiet=false
+	validateFormatterVolume(t, types.Configuration{Quiet: false}, audit.AuditLogTextFormatter{Quiet: true})
+	// loud overrides quiet - feel the noise
+	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	// loud is loud
+	validateFormatterVolume(t, types.Configuration{Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	// not loud is quiet
+	validateFormatterVolume(t, types.Configuration{Loud: false}, audit.AuditLogTextFormatter{Quiet: true})
+
+	outputFormat = "text" // explicit text format
+	// empty config
+	validateFormatterVolume(t, types.Configuration{}, audit.AuditLogTextFormatter{Quiet: true})
+	// not quiet, will not be loud - gotta want the volume baby. e.g. --quiet=false
+	validateFormatterVolume(t, types.Configuration{Quiet: false}, audit.AuditLogTextFormatter{Quiet: true})
+	// loud overrides quiet - feel the noise
+	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	// loud is loud
+	validateFormatterVolume(t, types.Configuration{Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	// not loud is quiet
+	validateFormatterVolume(t, types.Configuration{Loud: false}, audit.AuditLogTextFormatter{Quiet: true})
+
+	outputFormat = "csv" // csv format
+	// empty config
+	validateFormatterVolume(t, types.Configuration{}, audit.CsvFormatter{Quiet: true})
+	// not quiet, will not be loud - gotta want the volume baby. e.g. --quiet=false
+	validateFormatterVolume(t, types.Configuration{Quiet: false}, audit.CsvFormatter{Quiet: true})
+	// loud overrides quiet - feel the noise
+	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true}, audit.CsvFormatter{Quiet: false})
+	// loud is loud
+	validateFormatterVolume(t, types.Configuration{Loud: true}, audit.CsvFormatter{Quiet: false})
+	// not loud is quiet
+	validateFormatterVolume(t, types.Configuration{Loud: false}, audit.CsvFormatter{Quiet: true})
+}
+
+func validateFormatterVolume(t *testing.T, testConfig types.Configuration, expectedFormatter logrus.Formatter) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	configOssi = testConfig
+
+	logLady, _ = test.NewNullLogger()
+
+	origCreator := ossiCreator
+	defer func() {
+		ossiCreator = origCreator
+	}()
+	ossiCreator = &ossiFactoryMock{}
+
+	err := processConfig()
+	assert.Equal(t, stdInInvalid, err)
+	assert.Equal(t, expectedFormatter, configOssi.Formatter)
 }
 
 func TestDoDepAndParseInvalidPath(t *testing.T) {
@@ -189,7 +276,7 @@ func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args .
 	assert.Equal(t, expectedConfig, configOssi)
 }
 
-var defaultAuditLogFormatter = audit.AuditLogTextFormatter{}
+var defaultAuditLogFormatter = audit.AuditLogTextFormatter{Quiet: true}
 
 func TestRootCommandLogVerbosity(t *testing.T) {
 	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, "")
@@ -203,11 +290,15 @@ func TestConfigOssi_defaults(t *testing.T) {
 }
 
 func TestConfigOssi_no_color(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{NoColor: true, Formatter: audit.AuditLogTextFormatter{NoColor: true}}, []string{"--no-color"}...)
+	validateConfigOssi(t, types.Configuration{NoColor: true, Formatter: audit.AuditLogTextFormatter{NoColor: true, Quiet: true}}, []string{"--no-color"}...)
 }
 
 func TestConfigOssi_quiet(t *testing.T) {
 	validateConfigOssi(t, types.Configuration{Quiet: true, Formatter: audit.AuditLogTextFormatter{Quiet: true}}, []string{"--quiet"}...)
+}
+
+func TestConfigOssi_loud(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{Loud: true, Formatter: audit.AuditLogTextFormatter{Quiet: false}}, []string{"--loud"}...)
 }
 
 func TestConfigOssi_version(t *testing.T) {
@@ -302,7 +393,7 @@ func TestConfigOssi_output_of_json_pretty_print(t *testing.T) {
 }
 
 func TestConfigOssi_output_of_csv(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: audit.CsvFormatter{}}, []string{"--output=csv"}...)
+	validateConfigOssi(t, types.Configuration{Formatter: audit.CsvFormatter{Quiet: true}}, []string{"--output=csv"}...)
 }
 
 func TestConfigOssi_output_of_text(t *testing.T) {
