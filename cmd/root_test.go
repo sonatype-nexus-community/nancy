@@ -313,7 +313,7 @@ func TestConfigOssi_stdIn_as_input(t *testing.T) {
 	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{}...)
 }
 
-const testdataDir = "../configuration/testdata"
+const testdataDir = "../internal/configuration/testdata"
 
 func TestConfigOssi_exclude_vulnerabilities_with_sane_file(t *testing.T) {
 	file, _ := os.Open(testdataDir + "/normalIgnore")
