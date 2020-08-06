@@ -32,12 +32,12 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/sonatype-nexus-community/nancy/configuration"
+	"github.com/sonatype-nexus-community/nancy/internal/configuration"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/sonatype-nexus-community/nancy/audit"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/stretchr/testify/assert"
 )
 

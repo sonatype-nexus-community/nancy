@@ -17,10 +17,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"os"
 
-	"github.com/sonatype-nexus-community/nancy/configuration"
+	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
+
+	"github.com/sonatype-nexus-community/nancy/internal/configuration"
 	"github.com/spf13/cobra"
 )
 

@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"gopkg.in/yaml.v2"
 )

@@ -18,14 +18,15 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/configuration"
-	"github.com/sonatype-nexus-community/nancy/logger"
 	"os"
 	"path"
 
+	"github.com/sonatype-nexus-community/nancy/internal/configuration"
+	"github.com/sonatype-nexus-community/nancy/internal/logger"
+
 	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"

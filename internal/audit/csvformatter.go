@@ -23,7 +23,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 
 	. "github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"

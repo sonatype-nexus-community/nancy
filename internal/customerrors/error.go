@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/internal/logger"
 )
 
 type ErrorShowLogPath struct {
