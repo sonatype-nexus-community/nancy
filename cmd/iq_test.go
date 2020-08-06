@@ -19,18 +19,19 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/sonatype-nexus-community/go-sona-types/iq"
-	"github.com/sonatype-nexus-community/nancy/configuration"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/sonatype-nexus-community/go-sona-types/iq"
+	"github.com/sonatype-nexus-community/nancy/internal/configuration"
+	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
+	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIqApplicationFlagMissing(t *testing.T) {

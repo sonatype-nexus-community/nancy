@@ -36,7 +36,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/sonatype-nexus-community/nancy/audit"
+	"github.com/sonatype-nexus-community/nancy/internal/audit"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/stretchr/testify/assert"
 )
