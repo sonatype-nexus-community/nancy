@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -28,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/nancy/logger"
 	. "github.com/sonatype-nexus-community/nancy/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 
@@ -49,6 +51,8 @@ func main() {
 	var err error
 	if len(os.Args) > 1 && os.Args[1] == "iq" {
 		err = doIq(os.Args[2:])
+	} else if len(os.Args) > 1 && os.Args[1] == "log" {
+		printLog()
 	} else if len(os.Args) > 1 && os.Args[1] == "config" {
 		err = doConfig(os.Stdin)
 	} else {
@@ -64,6 +68,12 @@ func main() {
 			os.Exit(4)
 		}
 	}
+}
+
+func printLog() {
+	file, _ := os.Open(logger.GetLogFileLocation())
+	b, _ := ioutil.ReadAll(file)
+	fmt.Println(string(b))
 }
 
 func doOssi(ossiArgs []string) (err error) {
