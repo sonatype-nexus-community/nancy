@@ -165,12 +165,13 @@ You can also set the user and token via the command line like so:
 
 This can be handy for testing your account out, or if you want to override your set config with a different user.
 
-#### Quiet mode
+#### Loud mode
 
-You can run `nancy` in a quiet manner, only getting back a list of vulnerable components by running:
+By default, `nancy` runs in a "quiet" mode, only displaying a list of vulnerable components. 
+You can run `nancy` in a loud manner, showing all components by running:
 
-* `./nancy -quiet /path/to/your/Gopkg.lock`
-* `go list -json -m all | ./nancy -quiet`
+* `./nancy --loud -p /path/to/your/Gopkg.lock`
+* `go list -json -m all | ./nancy --loud`
 
 #### Exclude vulnerabilities
 
