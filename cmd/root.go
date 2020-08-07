@@ -299,16 +299,7 @@ func processConfig() (err error) {
 }
 
 func getIsQuiet() bool {
-	var isQuiet bool
-	switch {
-	case configOssi.Loud:
-		isQuiet = false
-	case configOssi.Quiet:
-		isQuiet = true
-	default:
-		isQuiet = true
-	}
-	return isQuiet
+	return !configOssi.Loud
 }
 
 func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
