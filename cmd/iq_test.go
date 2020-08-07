@@ -108,9 +108,10 @@ func TestInitIQConfigWithNoConfigFile(t *testing.T) {
 	defer func() {
 		resetIQConfigFile()
 	}()
-	credentials := fmt.Sprintf("%s: %s\n", configuration.YamlKeyIQUsername, "iqUsernameValue") +
-		fmt.Sprintf("%s: %s\n", configuration.YamlKeyIQToken, "iqTokenValue") +
-		fmt.Sprintf("%s: %s\n", configuration.YamlKeyIQServer, "iqServerValue")
+	credentials := fmt.Sprintf("%s: %s\n%s: %s\n%s: %s\n",
+		configuration.YamlKeyIQUsername, "iqUsernameValue",
+		configuration.YamlKeyIQToken, "iqTokenValue",
+		configuration.YamlKeyIQServer, "iqServerValue")
 	assert.Nil(t, ioutil.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
 	// delete the config files
