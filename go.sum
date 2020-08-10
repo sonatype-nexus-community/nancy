@@ -163,12 +163,6 @@ github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d/go.mod h1
 github.com/smartystreets/goconvey v1.6.4 h1:fv0U8FUIMPNf1L9lnHLvLhgicrIVChEkdzIKYqbNC9s=
 github.com/smartystreets/goconvey v1.6.4/go.mod h1:syvi0/a8iFYH4r/RixwvyeAJjdLS9QV7WQ/tjFTllLA=
 github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4kGIyLM=
-github.com/sonatype-nexus-community/go-sona-types v0.0.1 h1:PE2r3N5+nJPRUKzWTzjMRnt/zYsOyNrgCmzf6suZqC0=
-github.com/sonatype-nexus-community/go-sona-types v0.0.1/go.mod h1:voGD7LEwz9TSvjZWNxST56pFPa0hdNQ71WsuMwBki3k=
-github.com/sonatype-nexus-community/go-sona-types v0.0.2 h1:F6dq9gVBTH+E86PJUuh7gptRu0nnaVLiWdYenD1/n0w=
-github.com/sonatype-nexus-community/go-sona-types v0.0.2/go.mod h1:voGD7LEwz9TSvjZWNxST56pFPa0hdNQ71WsuMwBki3k=
-github.com/sonatype-nexus-community/go-sona-types v0.0.4 h1:X8tsbeP+hf1JYSsEeybr/0uxZF8rBEgC9zXyMlhDrdM=
-github.com/sonatype-nexus-community/go-sona-types v0.0.4/go.mod h1:voGD7LEwz9TSvjZWNxST56pFPa0hdNQ71WsuMwBki3k=
 github.com/sonatype-nexus-community/go-sona-types v0.0.5 h1:u8YRtQBRC8iuPOXBfgAdIBndi3A+9qI8tIxtrion/OM=
 github.com/sonatype-nexus-community/go-sona-types v0.0.5/go.mod h1:voGD7LEwz9TSvjZWNxST56pFPa0hdNQ71WsuMwBki3k=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=

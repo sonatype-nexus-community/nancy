@@ -32,12 +32,12 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/sonatype-nexus-community/nancy/configuration"
+	"github.com/sonatype-nexus-community/nancy/internal/configuration"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/sonatype-nexus-community/nancy/audit"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/nancy/internal/audit"
+	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -313,7 +313,7 @@ func TestConfigOssi_stdIn_as_input(t *testing.T) {
 	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{}...)
 }
 
-const testdataDir = "../configuration/testdata"
+const testdataDir = "../internal/configuration/testdata"
 
 func TestConfigOssi_exclude_vulnerabilities_with_sane_file(t *testing.T) {
 	file, _ := os.Open(testdataDir + "/normalIgnore")
