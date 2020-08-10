@@ -18,6 +18,8 @@ package audit
 
 import (
 	"errors"
+	"github.com/shopspring/decimal"
+	"strings"
 	"testing"
 
 	. "github.com/sirupsen/logrus"
@@ -65,4 +67,49 @@ func verifyFormatterSummaryLoudness(t *testing.T, quiet bool) {
 func TestFormatterSummary(t *testing.T) {
 	verifyFormatterSummaryLoudness(t, false)
 	verifyFormatterSummaryLoudness(t, true)
+}
+
+func TestFormatterLogInvalidSemVerWarning(t *testing.T) {
+	entry := Entry{Data: map[string]interface{}{
+		"audited": []types.Coordinate{},
+		"invalid": []types.Coordinate{
+			{
+				Coordinates: "MyInvalidCoords",
+			},
+		},
+		"num_audited":    0,
+		"num_vulnerable": 0,
+		"version":        0,
+	}}
+	formatter := AuditLogTextFormatter{NoColor: true}
+	logMessage, e := formatter.Format(&entry)
+	assert.Nil(t, e)
+
+	expectedMessagePrefix := `!!!!! WARNING !!!!!
+Scanning cannot be completed on the following package(s) since they do not use semver.
+[1/1]	MyInvalidCoords
+
+`
+	assert.True(t, strings.HasPrefix(string(logMessage), expectedMessagePrefix))
+}
+
+func TestPrintColorBasedOnCvssScore(t *testing.T) {
+	assert.Equal(t, "\x1b[1;31m\x1b[0m", printColorBasedOnCvssScore(decimal.New(9, 0), "", false))
+	assert.Equal(t, "", printColorBasedOnCvssScore(decimal.New(9, 0), "", true))
+
+	assert.Equal(t, "\x1b[31m\x1b[0m", printColorBasedOnCvssScore(decimal.New(7, 0), "", false))
+	assert.Equal(t, "", printColorBasedOnCvssScore(decimal.New(7, 0), "", true))
+
+	assert.Equal(t, "\x1b[33m\x1b[0m", printColorBasedOnCvssScore(decimal.New(4, 0), "", false))
+	assert.Equal(t, "", printColorBasedOnCvssScore(decimal.New(4, 0), "", true))
+
+	assert.Equal(t, "\x1b[32m\x1b[0m", printColorBasedOnCvssScore(decimal.New(0, 0), "", false))
+	assert.Equal(t, "", printColorBasedOnCvssScore(decimal.New(0, 0), "", true))
+}
+
+func TestScoreAssessment(t *testing.T) {
+	assert.Equal(t, "Critical", scoreAssessment(decimal.New(9, 0)))
+	assert.Equal(t, "High", scoreAssessment(decimal.New(7, 0)))
+	assert.Equal(t, "Medium", scoreAssessment(decimal.New(4, 0)))
+	assert.Equal(t, "Low", scoreAssessment(decimal.New(0, 0)))
 }
