@@ -16,7 +16,11 @@
 
 package types
 
-import "testing"
+import (
+	"errors"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestCveRemoveWhiteSpace(t *testing.T) {
 	cve := CveListFlag{}
@@ -33,4 +37,11 @@ func TestCveRemoveWhiteSpace(t *testing.T) {
 			t.Errorf("Slices do not match")
 		}
 	}
+}
+
+func TestSetWhenExcludeAlreadySet(t *testing.T) {
+	cve := CveListFlag{
+		Cves: []string{""},
+	}
+	assert.Equal(t, errors.New("The CVE Exclude Flag is already set"), cve.Set(""))
 }
