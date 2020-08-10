@@ -36,14 +36,14 @@ import (
 
 func TestIqApplicationFlagMissing(t *testing.T) {
 	output, err := executeCommand(rootCmd, "iq")
-	checkStringContains(t, output, "Error: required flag(s) \""+flagNameIqApplication+"\" not set")
+	assert.Contains(t, output, "Error: required flag(s) \""+flagNameIqApplication+"\" not set")
 	assert.NotNil(t, err)
-	checkStringContains(t, err.Error(), "required flag(s) \""+flagNameIqApplication+"\" not set")
+	assert.Contains(t, err.Error(), "required flag(s) \""+flagNameIqApplication+"\" not set")
 }
 
 func TestIqHelp(t *testing.T) {
 	output, err := executeCommand(rootCmd, "iq", "--help")
-	checkStringContains(t, output, "go list -json -m all | nancy iq --"+flagNameIqApplication+" your_public_application_id --"+flagNameIqServerUrl+" ")
+	assert.Contains(t, output, "go list -json -m all | nancy iq --"+flagNameIqApplication+" your_public_application_id --"+flagNameIqServerUrl+" ")
 	assert.Nil(t, err)
 }
 
@@ -234,7 +234,45 @@ func TestDoIqParseGoListError(t *testing.T) {
 
 	err := doIQ(iqCmd, []string{})
 	assert.NotNil(t, err)
-	checkStringContains(t, err.Error(), "index out of range")
+	assert.Contains(t, err.Error(), "index out of range")
+}
+
+func TestDoIqWithIqServerError(t *testing.T) {
+	oldStdIn, tmpFile := createFakeStdInWithString(t, "")
+	defer func() {
+		os.Stdin = oldStdIn
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
+	}()
+
+	err := doIQ(iqCmd, []string{})
+	assert.NotNil(t, err)
+
+	typedError, ok := err.(customerrors.ErrorShowLogPath)
+	assert.True(t, ok)
+
+	typedErrorCause, ok := typedError.Err.(*iq.ServerError)
+	assert.True(t, ok)
+	assert.Contains(t, typedErrorCause.Error(), "There was an error communicating with Nexus IQ Server to get your internal application ID")
+}
+
+func TestDoIqHappyPath(t *testing.T) {
+	oldStdIn, tmpFile := createFakeStdInWithString(t, "")
+	defer func() {
+		os.Stdin = oldStdIn
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
+	}()
+
+	origIqCreator := iqCreator
+	defer func() {
+		iqCreator = origIqCreator
+	}()
+
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{}}
+
+	err := doIQ(iqCmd, []string{})
+	assert.Nil(t, err)
 }
 
 func TestIqCreatorDefaultOptions(t *testing.T) {

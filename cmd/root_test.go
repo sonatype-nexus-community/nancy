@@ -52,12 +52,6 @@ func executeCommand(root *cobra.Command, args ...string) (output string, err err
 	return buf.String(), err
 }
 
-func checkStringContains(t *testing.T, got, substr string) {
-	if !strings.Contains(got, substr) {
-		t.Errorf("Expected to contain: \n %v\nGot:\n %v\n", substr, got)
-	}
-}
-
 func TestRootCommandNoArgs(t *testing.T) {
 	_, err := executeCommand(rootCmd, "")
 	assert.NotNil(t, err)
@@ -66,15 +60,16 @@ func TestRootCommandNoArgs(t *testing.T) {
 
 func TestRootCommandUnknownCommand(t *testing.T) {
 	output, err := executeCommand(rootCmd, "one", "two")
-	checkStringContains(t, output, "Error: unknown command \"one\" for \"nancy\"")
+	assert.Contains(t, output, "Error: unknown command \"one\" for \"nancy\"")
+
 	assert.NotNil(t, err)
-	checkStringContains(t, err.Error(), "unknown command \"one\" for \"nancy\"")
+	assert.Contains(t, err.Error(), "unknown command \"one\" for \"nancy\"")
 }
 
 func TestRootCommandInvalidPath(t *testing.T) {
 	_, err := executeCommand(rootCmd, "--path", "invalidPath")
 	assert.Error(t, err)
-	checkStringContains(t, err.Error(), "invalid path value. must point to 'Gopkg.lock' file. path: ")
+	assert.Contains(t, err.Error(), "invalid path value. must point to 'Gopkg.lock' file. path: ")
 }
 
 func TestProcessConfigInvalidStdIn(t *testing.T) {
