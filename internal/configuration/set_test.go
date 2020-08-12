@@ -34,19 +34,19 @@ func TestGetConfigFromCommandLineOssIndex(t *testing.T) {
 		t.Errorf("Test failed: %s", err.Error())
 	}
 
-	var ossIndexConfig OSSIndexConfig
-
 	b, err := ioutil.ReadFile(ConfigLocation)
 	if err != nil {
 		t.Errorf("Test failed: %s", err.Error())
 	}
-	err = yaml.Unmarshal(b, &ossIndexConfig)
+
+	var confMarshallOssi ConfMarshallOssi
+	err = yaml.Unmarshal(b, &confMarshallOssi)
 	if err != nil {
 		t.Errorf("Test failed: %s", err.Error())
 	}
 
-	if ossIndexConfig.Username != "testuser" && ossIndexConfig.Token != "token" {
-		t.Errorf("Config not set properly, expected 'testuser' && 'token' but got %s and %s", ossIndexConfig.Username, ossIndexConfig.Token)
+	if confMarshallOssi.Ossi.Username != "testuser" && confMarshallOssi.Ossi.Token != "token" {
+		t.Errorf("Config not set properly, expected 'testuser' && 'token' but got '%s' and '%s'", confMarshallOssi.Ossi.Username, confMarshallOssi.Ossi.Token)
 	}
 }
 
@@ -60,19 +60,19 @@ func TestGetConfigFromCommandLineIqServer(t *testing.T) {
 		t.Errorf("Test failed: %s", err.Error())
 	}
 
-	var iqConfig IQConfig
-
 	b, err := ioutil.ReadFile(ConfigLocation)
 	if err != nil {
 		t.Errorf("Test failed: %s", err.Error())
 	}
-	err = yaml.Unmarshal(b, &iqConfig)
+
+	var confMarshallIq ConfMarshallIq
+	err = yaml.Unmarshal(b, &confMarshallIq)
 	if err != nil {
 		t.Errorf("Test failed: %s", err.Error())
 	}
 
-	if iqConfig.IQUsername != "admin" && iqConfig.IQToken != "admin123" && iqConfig.IQServer != "http://localhost:8070" {
-		t.Errorf("Config not set properly, expected 'admin', 'admin123' and 'http://localhost:8070' but got %s, %s and %s", iqConfig.IQUsername, iqConfig.IQToken, iqConfig.IQServer)
+	if confMarshallIq.Iq.IQUsername != "admin" && confMarshallIq.Iq.IQToken != "admin123" && confMarshallIq.Iq.IQServer != "http://localhost:8070" {
+		t.Errorf("Config not set properly, expected 'admin', 'admin123' and 'http://localhost:8070' but got %s, %s and %s", confMarshallIq.Iq.IQUsername, confMarshallIq.Iq.IQToken, confMarshallIq.Iq.IQServer)
 	}
 }
 
@@ -86,18 +86,18 @@ func TestGetConfigFromCommandLineIqServerWithLoopToResetConfig(t *testing.T) {
 		t.Errorf("Test failed: %s", err.Error())
 	}
 
-	var iqConfig IQConfig
-
 	b, err := ioutil.ReadFile(ConfigLocation)
 	if err != nil {
 		t.Errorf("Test failed: %s", err.Error())
 	}
-	err = yaml.Unmarshal(b, &iqConfig)
+
+	var confMarshallIq ConfMarshallIq
+	err = yaml.Unmarshal(b, &confMarshallIq)
 	if err != nil {
 		t.Errorf("Test failed: %s", err.Error())
 	}
 
-	if iqConfig.IQUsername != "admin1" && iqConfig.IQToken != "admin1234" && iqConfig.IQServer != "http://localhost:8080" {
-		t.Errorf("Config not set properly, expected 'admin1', 'admin1234' and 'http://localhost:8080' but got %s, %s and %s", iqConfig.IQUsername, iqConfig.IQToken, iqConfig.IQServer)
+	if confMarshallIq.Iq.IQUsername != "admin1" && confMarshallIq.Iq.IQToken != "admin1234" && confMarshallIq.Iq.IQServer != "http://localhost:8080" {
+		t.Errorf("Config not set properly, expected 'admin1', 'admin1234' and 'http://localhost:8080' but got %s, %s and %s", confMarshallIq.Iq.IQUsername, confMarshallIq.Iq.IQToken, confMarshallIq.Iq.IQServer)
 	}
 }

@@ -32,25 +32,33 @@ import (
 )
 
 // these consts must match their associated yaml tag below. for use where tag name matters, like viper
-const YamlKeyIQServer = "IQServer"
-const YamlKeyIQUsername = "IQUsername"
-const YamlKeyIQToken = "IQToken"
+const ViperKeyIQServer = "iq.Server"
+const ViperKeyIQUsername = "iq.Username"
+const ViperKeyIQToken = "iq.Token"
 
 // IQConfig is a struct for holding IQ Configuration, and for writing it to yaml
 type IQConfig struct {
-	IQServer   string `yaml:"IQServer"`
-	IQUsername string `yaml:"IQUsername"`
-	IQToken    string `yaml:"IQToken"`
+	IQServer   string `yaml:"Server"`
+	IQUsername string `yaml:"Username"`
+	IQToken    string `yaml:"Token"`
+}
+
+type ConfMarshallIq struct {
+	Iq IQConfig
 }
 
 // these consts must match their associated yaml tag below. for use where tag name matters, like viper
-const YamlKeyUsername = "Username"
-const YamlKeyToken = "Token"
+const ViperKeyUsername = "ossi.Username"
+const ViperKeyToken = "ossi.Token"
 
 // OSSIndexConfig is a struct for holding OSS Index Configuration, and for writing it to yaml
 type OSSIndexConfig struct {
 	Username string `yaml:"Username"`
 	Token    string `yaml:"Token"`
+}
+
+type ConfMarshallOssi struct {
+	Ossi OSSIndexConfig
 }
 
 var (
@@ -127,11 +135,11 @@ func getAndSetIQConfig(reader *bufio.Reader) (err error) {
 			err = getAndSetIQConfig(reader)
 		} else {
 			logLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
-			err = marshallAndWriteToDisk(iqConfig)
+			err = marshallAndWriteToDisk(ConfMarshallIq{Iq: iqConfig})
 		}
 	} else {
 		logLady.Info("Successfully got IQ Server config from user, attempting to save to disk")
-		err = marshallAndWriteToDisk(iqConfig)
+		err = marshallAndWriteToDisk(ConfMarshallIq{Iq: iqConfig})
 	}
 
 	if err != nil {
@@ -162,7 +170,7 @@ func getAndSetOSSIndexConfig(reader *bufio.Reader) (err error) {
 	ossIndexConfig.Token = strings.Trim(strings.TrimSpace(ossIndexConfig.Token), "\n")
 
 	logLady.Info("Successfully got OSS Index config from user, attempting to save to disk")
-	err = marshallAndWriteToDisk(ossIndexConfig)
+	err = marshallAndWriteToDisk(ConfMarshallOssi{Ossi: ossIndexConfig})
 	if err != nil {
 		logLady.Error(err)
 		return

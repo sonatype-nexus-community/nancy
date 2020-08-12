@@ -56,8 +56,8 @@ type ossiFactory struct{}
 
 func (ossiFactory) create() ossindex.IServer {
 	server := ossindex.New(logLady, ossIndexTypes.Options{
-		Username:    viper.GetString(configuration.YamlKeyUsername),
-		Token:       viper.GetString(configuration.YamlKeyToken),
+		Username:    viper.GetString(configuration.ViperKeyUsername),
+		Token:       viper.GetString(configuration.ViperKeyToken),
 		Tool:        "nancy-client",
 		Version:     buildversion.BuildVersion,
 		DBCacheName: "nancy-cache",
@@ -159,6 +159,10 @@ func Execute() (err error) {
 }
 
 const defaultExcludeFilePath = "./.nancy-ignore"
+const (
+	flagNameOssiUsername = "username"
+	flagNameOssieToken   = "token"
+)
 
 func init() {
 	cobra.OnInitialize(initConfig)
@@ -171,8 +175,8 @@ func init() {
 	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
 	rootCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs to exclude")
 	rootCmd.Flags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep Gopkg.lock file for scanning")
-	rootCmd.PersistentFlags().StringVarP(&configOssi.Username, "username", "u", "", "Specify OSS Index username for request")
-	rootCmd.PersistentFlags().StringVarP(&configOssi.Token, "token", "t", "", "Specify OSS Index API token for request")
+	rootCmd.PersistentFlags().StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
+	rootCmd.PersistentFlags().StringVarP(&configOssi.Token, flagNameOssieToken, "t", "", "Specify OSS Index API token for request")
 	rootCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs to be excluded")
 	rootCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
 }
@@ -181,10 +185,10 @@ func bindViper(cmd *cobra.Command) {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	if err := viper.BindPFlag(configuration.YamlKeyUsername, cmd.Flags().Lookup("username")); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyUsername, cmd.PersistentFlags().Lookup(flagNameOssiUsername)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.YamlKeyToken, cmd.Flags().Lookup("token")); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyToken, cmd.PersistentFlags().Lookup(flagNameOssieToken)); err != nil {
 		panic(err)
 	}
 }

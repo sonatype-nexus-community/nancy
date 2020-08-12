@@ -445,8 +445,8 @@ func TestInitConfig(t *testing.T) {
 
 	initConfig()
 
-	assert.Equal(t, "ossiUsernameValue", viper.GetString(configuration.YamlKeyUsername))
-	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.YamlKeyToken))
+	assert.Equal(t, "ossiUsernameValue", viper.GetString(configuration.ViperKeyUsername))
+	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.ViperKeyToken))
 }
 
 func TestInitConfigWithNoConfigFile(t *testing.T) {
@@ -465,8 +465,8 @@ func TestInitConfigWithNoConfigFile(t *testing.T) {
 
 	initConfig()
 
-	assert.Equal(t, "", viper.GetString(configuration.YamlKeyUsername))
-	assert.Equal(t, "", viper.GetString(configuration.YamlKeyToken))
+	assert.Equal(t, "", viper.GetString(configuration.ViperKeyUsername))
+	assert.Equal(t, "", viper.GetString(configuration.ViperKeyToken))
 }
 
 func setupTestOSSIConfigFile(t *testing.T, tempDir string) {
@@ -483,8 +483,8 @@ func resetOSSIConfigFile() {
 func setupTestOSSIConfigFileValues(t *testing.T, tempDir string) {
 	setupTestOSSIConfigFile(t, tempDir)
 
-	const credentials = configuration.YamlKeyUsername + ": ossiUsernameValue\n" +
-		configuration.YamlKeyToken + ": ossiTokenValue"
+	const credentials = configuration.ViperKeyUsername + ": ossiUsernameValue\n" +
+		configuration.ViperKeyToken + ": ossiTokenValue"
 	assert.Nil(t, ioutil.WriteFile(cfgFile, []byte(credentials), 0644))
 }
 

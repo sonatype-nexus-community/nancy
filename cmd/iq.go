@@ -42,13 +42,13 @@ type iqFactory struct{}
 
 func (iqFactory) create() iq.IServer {
 	iqServer := iq.New(logLady, iq.Options{
-		User:          viper.GetString(configuration.YamlKeyIQUsername),
-		Token:         viper.GetString(configuration.YamlKeyIQToken),
+		User:          viper.GetString(configuration.ViperKeyIQUsername),
+		Token:         viper.GetString(configuration.ViperKeyIQToken),
 		Application:   configIQ.IQApplication,
 		Stage:         configIQ.IQStage,
-		Server:        viper.GetString(configuration.YamlKeyIQServer),
-		OSSIndexUser:  viper.GetString(configuration.YamlKeyUsername),
-		OSSIndexToken: viper.GetString(configuration.YamlKeyToken),
+		Server:        viper.GetString(configuration.ViperKeyIQServer),
+		OSSIndexUser:  viper.GetString(configuration.ViperKeyUsername),
+		OSSIndexToken: viper.GetString(configuration.ViperKeyToken),
 		Tool:          "nancy-client",
 		DBCacheName:   "nancy-cache",
 		MaxRetries:    300,
@@ -159,16 +159,16 @@ func bindViperIq(cmd *cobra.Command) {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// need to ensure ossi CLI flags will override ossi config file values when running IQ command
-	bindViper(cmd)
+	bindViper(rootCmd)
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	if err := viper.BindPFlag(configuration.YamlKeyIQUsername, cmd.Flags().Lookup(flagNameIqUsername)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyIQUsername, cmd.Flags().Lookup(flagNameIqUsername)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.YamlKeyIQToken, cmd.Flags().Lookup(flagNameIqToken)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyIQToken, cmd.Flags().Lookup(flagNameIqToken)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.YamlKeyIQServer, cmd.Flags().Lookup(flagNameIqServerUrl)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyIQServer, cmd.Flags().Lookup(flagNameIqServerUrl)); err != nil {
 		panic(err)
 	}
 }

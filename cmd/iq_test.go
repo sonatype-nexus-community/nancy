@@ -75,9 +75,9 @@ func TestInitIQConfig(t *testing.T) {
 	}()
 
 	credentials := fmt.Sprintf("%s: %s\n%s: %s\n%s: %s\n",
-		configuration.YamlKeyIQUsername, "iqUsernameValue",
-		configuration.YamlKeyIQToken, "iqTokenValue",
-		configuration.YamlKeyIQServer, "iqServerValue")
+		configuration.ViperKeyIQUsername, "iqUsernameValue",
+		configuration.ViperKeyIQToken, "iqTokenValue",
+		configuration.ViperKeyIQServer, "iqServerValue")
 	assert.Nil(t, ioutil.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
 	// init order is not guaranteed
@@ -85,12 +85,12 @@ func TestInitIQConfig(t *testing.T) {
 	initConfig()
 
 	// verify the OSSI stuff, since we will call both OSSI and IQ
-	assert.Equal(t, "ossiUsernameValue", viper.GetString(configuration.YamlKeyUsername))
-	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.YamlKeyToken))
+	assert.Equal(t, "ossiUsernameValue", viper.GetString(configuration.ViperKeyUsername))
+	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.ViperKeyToken))
 	// verify the IQ stuff
-	assert.Equal(t, "iqUsernameValue", viper.GetString(configuration.YamlKeyIQUsername))
-	assert.Equal(t, "iqTokenValue", viper.GetString(configuration.YamlKeyIQToken))
-	assert.Equal(t, "iqServerValue", viper.GetString(configuration.YamlKeyIQServer))
+	assert.Equal(t, "iqUsernameValue", viper.GetString(configuration.ViperKeyIQUsername))
+	assert.Equal(t, "iqTokenValue", viper.GetString(configuration.ViperKeyIQToken))
+	assert.Equal(t, "iqServerValue", viper.GetString(configuration.ViperKeyIQServer))
 }
 
 func TestInitIQConfigWithNoConfigFile(t *testing.T) {
@@ -110,9 +110,9 @@ func TestInitIQConfigWithNoConfigFile(t *testing.T) {
 		resetIQConfigFile()
 	}()
 	credentials := fmt.Sprintf("%s: %s\n%s: %s\n%s: %s\n",
-		configuration.YamlKeyIQUsername, "iqUsernameValue",
-		configuration.YamlKeyIQToken, "iqTokenValue",
-		configuration.YamlKeyIQServer, "iqServerValue")
+		configuration.ViperKeyIQUsername, "iqUsernameValue",
+		configuration.ViperKeyIQToken, "iqTokenValue",
+		configuration.ViperKeyIQServer, "iqServerValue")
 	assert.Nil(t, ioutil.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
 	// delete the config files
@@ -124,12 +124,12 @@ func TestInitIQConfigWithNoConfigFile(t *testing.T) {
 	initConfig()
 
 	// verify the OSSI stuff, since we will call both OSSI and IQ
-	assert.Equal(t, "", viper.GetString(configuration.YamlKeyUsername))
-	assert.Equal(t, "", viper.GetString(configuration.YamlKeyToken))
+	assert.Equal(t, "", viper.GetString(configuration.ViperKeyUsername))
+	assert.Equal(t, "", viper.GetString(configuration.ViperKeyToken))
 	// verify the IQ stuff
-	assert.Equal(t, "", viper.GetString(configuration.YamlKeyIQUsername))
-	assert.Equal(t, "", viper.GetString(configuration.YamlKeyIQToken))
-	assert.Equal(t, "", viper.GetString(configuration.YamlKeyIQServer))
+	assert.Equal(t, "", viper.GetString(configuration.ViperKeyIQUsername))
+	assert.Equal(t, "", viper.GetString(configuration.ViperKeyIQToken))
+	assert.Equal(t, "", viper.GetString(configuration.ViperKeyIQServer))
 }
 
 var testPurls = []string{
