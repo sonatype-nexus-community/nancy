@@ -161,7 +161,7 @@ func Execute() (err error) {
 const defaultExcludeFilePath = "./.nancy-ignore"
 const (
 	flagNameOssiUsername = "username"
-	flagNameOssieToken   = "token"
+	flagNameOssiToken    = "token"
 )
 
 func init() {
@@ -176,7 +176,7 @@ func init() {
 	rootCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs to exclude")
 	rootCmd.Flags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep Gopkg.lock file for scanning")
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
-	rootCmd.PersistentFlags().StringVarP(&configOssi.Token, flagNameOssieToken, "t", "", "Specify OSS Index API token for request")
+	rootCmd.PersistentFlags().StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
 	rootCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs to be excluded")
 	rootCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
 }
@@ -188,7 +188,7 @@ func bindViper(cmd *cobra.Command) {
 	if err := viper.BindPFlag(configuration.ViperKeyUsername, cmd.PersistentFlags().Lookup(flagNameOssiUsername)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.ViperKeyToken, cmd.PersistentFlags().Lookup(flagNameOssieToken)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyToken, cmd.PersistentFlags().Lookup(flagNameOssiToken)); err != nil {
 		panic(err)
 	}
 }
