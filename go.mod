@@ -21,6 +21,7 @@ require (
 	github.com/sonatype-nexus-community/go-sona-types v0.0.6
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cobra v1.0.0
+	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.6.3
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect

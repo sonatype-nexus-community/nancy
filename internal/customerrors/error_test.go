@@ -43,8 +43,8 @@ func TestNewErrorExitPrintHelp(t *testing.T) {
 }
 
 func TestErrorShowLogPath(t *testing.T) {
-	assert.Equal(t, "MyError\n"+getLogFileMessage(),
+	assert.Equal(t, "MyError\n\n"+getLogFileMessage(),
 		ErrorShowLogPath{Err: fmt.Errorf("MyError")}.Error())
-	assert.Equal(t, "\n"+getLogFileMessage(),
+	assert.Equal(t, "\n\n"+getLogFileMessage(),
 		ErrorShowLogPath{}.Error())
 }

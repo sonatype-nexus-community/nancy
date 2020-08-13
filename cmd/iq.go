@@ -18,6 +18,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/pflag"
 	"os"
 	"path"
 
@@ -162,15 +163,24 @@ func bindViperIq(cmd *cobra.Command) {
 	bindViper(rootCmd)
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	if err := viper.BindPFlag(configuration.ViperKeyIQUsername, cmd.Flags().Lookup(flagNameIqUsername)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyIQUsername, lookupFlagNotNil(flagNameIqUsername, cmd)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.ViperKeyIQToken, cmd.Flags().Lookup(flagNameIqToken)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyIQToken, lookupFlagNotNil(flagNameIqToken, cmd)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.ViperKeyIQServer, cmd.Flags().Lookup(flagNameIqServerUrl)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyIQServer, lookupFlagNotNil(flagNameIqServerUrl, cmd)); err != nil {
 		panic(err)
 	}
+}
+
+func lookupFlagNotNil(flagName string, cmd *cobra.Command) *pflag.Flag {
+	// see: https://github.com/spf13/viper/pull/949
+	foundFlag := cmd.Flags().Lookup(flagName)
+	if foundFlag == nil {
+		panic(fmt.Errorf("flag lookup for name: '%s' returned nil", flagName))
+	}
+	return foundFlag
 }
 
 func initIQConfig() {
