@@ -103,7 +103,7 @@ func TestProcessConfigPath(t *testing.T) {
 	defer func() {
 		configOssi = origConfig
 	}()
-	configOssi = types.Configuration{Path: "../packages/testdata/" + GopkgLockFilename}
+	configOssi = types.Configuration{Path: "../../packages/testdata/" + GopkgLockFilename}
 
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
