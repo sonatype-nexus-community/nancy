@@ -132,6 +132,8 @@ const defaultExcludeFilePath = "./.nancy-ignore"
 const (
 	flagNameOssiUsername = "username"
 	flagNameOssiToken    = "token"
+
+	GopkgLockFilename = "Gopkg.lock"
 )
 
 func init() {
@@ -144,6 +146,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
+	rootCmd.PersistentFlags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
 }
 
 func bindViper(cmd *cobra.Command) {
@@ -257,12 +260,6 @@ func processConfig() (err error) {
 	*/
 
 	if configOssi.Path != "" {
-		logLady.Info("Parsing config for file based scan")
-		if !strings.Contains(configOssi.Path, "Gopkg.lock") {
-			err = fmt.Errorf("invalid path value. must point to 'Gopkg.lock' file. path: %s", configOssi.Path)
-			logLady.WithField("error", err).Error("Path error in file based scan")
-			return
-		}
 		if err = doDepAndParse(ossIndex, configOssi.Path); err != nil {
 			logLady.WithField("error", err).Error("Error in file based scan")
 			return
@@ -281,7 +278,14 @@ func getIsQuiet() bool {
 	return !configOssi.Loud
 }
 
-func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
+func getPurlsFromPath(path string) (purls []string, invalidPurls []string, err error) {
+	logLady.Info("Parsing config for file based scan")
+	if !strings.Contains(path, GopkgLockFilename) {
+		err = fmt.Errorf("invalid path value. must point to '%s' file. path: %s", GopkgLockFilename, path)
+		logLady.WithField("error", err).Error("Path error in file based scan")
+		return
+	}
+
 	workingDir := filepath.Dir(path)
 	if workingDir == "." {
 		workingDir, _ = os.Getwd()
@@ -291,7 +295,9 @@ func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
 		WorkingDir: workingDir,
 		GOPATHs:    []string{getenv},
 	}
-	project, err := ctx.LoadProject()
+
+	var project *dep.Project
+	project, err = ctx.LoadProject()
 	if err != nil {
 		return
 	}
@@ -301,10 +307,17 @@ func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
 		return
 	}
 
-	purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
+	purls, invalidPurls = packages.ExtractPurlsUsingDep(project)
+	return
+}
 
-	err = checkOSSIndex(ossIndex, purls, invalidPurls)
-	if err != nil {
+func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
+	var purls, invalidPurls []string
+	if purls, invalidPurls, err = getPurlsFromPath(path); err != nil {
+		return
+	}
+
+	if err = checkOSSIndex(ossIndex, purls, invalidPurls); err != nil {
 		return
 	}
 
@@ -414,16 +427,21 @@ func checkOSSIndex(ossIndex ossindex.IServer, purls []string, invalidpurls []str
 		return
 	}
 
-	var invalidCoordinates []ossIndexTypes.Coordinate
-	for _, invalidpurl := range invalidpurls {
-		invalidCoordinates = append(invalidCoordinates, ossIndexTypes.Coordinate{Coordinates: invalidpurl, InvalidSemVer: true})
-	}
+	invalidCoordinates := convertInvalidPurlsToCoordinates(invalidpurls)
 
 	if count := audit.LogResults(configOssi.Formatter, packageCount, coordinates, invalidCoordinates, configOssi.CveList.Cves); count > 0 {
 		err = customerrors.ErrorExit{ExitCode: count}
 		return
 	}
 	return
+}
+
+func convertInvalidPurlsToCoordinates(invalidPurls []string) []ossIndexTypes.Coordinate {
+	var invalidCoordinates []ossIndexTypes.Coordinate
+	for _, invalidPurl := range invalidPurls {
+		invalidCoordinates = append(invalidCoordinates, ossIndexTypes.Coordinate{Coordinates: invalidPurl, InvalidSemVer: true})
+	}
+	return invalidCoordinates
 }
 
 func checkStdIn() (err error) {

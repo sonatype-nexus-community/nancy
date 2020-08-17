@@ -103,7 +103,7 @@ func TestProcessConfigPath(t *testing.T) {
 	defer func() {
 		configOssi = origConfig
 	}()
-	configOssi = types.Configuration{Path: "../packages/testdata/Gopkg.lock"}
+	configOssi = types.Configuration{Path: "../packages/testdata/" + GopkgLockFilename}
 
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
@@ -207,7 +207,8 @@ func validateFormatterVolume(t *testing.T, testConfig types.Configuration, expec
 }
 
 func TestDoDepAndParseInvalidPath(t *testing.T) {
-	err := doDepAndParse(ossiFactoryMock{}.create(), "bogusPath")
+	logLady, _ = test.NewNullLogger()
+	err := doDepAndParse(ossiFactoryMock{}.create(), GopkgLockFilename)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "could not find project"))
 }

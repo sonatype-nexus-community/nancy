@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -35,16 +36,44 @@ import (
 )
 
 func TestIqApplicationFlagMissing(t *testing.T) {
-	output, err := executeCommand(rootCmd, "iq")
+	output, err := executeCommand(rootCmd, iqCmd.Use)
 	assert.Contains(t, output, "Error: required flag(s) \""+flagNameIqApplication+"\" not set")
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "required flag(s) \""+flagNameIqApplication+"\" not set")
 }
 
 func TestIqHelp(t *testing.T) {
-	output, err := executeCommand(rootCmd, "iq", "--help")
+	output, err := executeCommand(rootCmd, iqCmd.Use, "--help")
 	assert.Contains(t, output, "go list -json -m all | nancy iq --"+flagNameIqApplication+" your_public_application_id --"+flagNameIqServerUrl+" ")
 	assert.Nil(t, err)
+}
+
+func TestIqCommandPathInvalidName(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	// not sure why calling executeCommand() fails as part of test suite, but is fine individually.
+	//_, err := executeCommand(rootCmd, iqCmd.Use, "--path", "invalidPath", "-a", "appId")
+	configOssi = types.Configuration{Path: "invalidPath"}
+	err := doIQ(iqCmd, []string{})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), fmt.Sprintf("invalid path value. must point to '%s' file. path: ", GopkgLockFilename))
+}
+
+func TestIqCommandPathInvalidFile(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	// not sure why calling executeCommand() fails as part of test suite, but is fine individually.
+	//_, err := executeCommand(rootCmd, iqCmd.Use, "--path", GopkgLockFilename, "-a", "appId")
+	configOssi = types.Configuration{Path: GopkgLockFilename}
+	err := doIQ(iqCmd, []string{})
+
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "could not find project"), err.Error())
 }
 
 func setupIQConfigFile(t *testing.T, tempDir string) {
@@ -253,7 +282,7 @@ func TestDoIqWithIqServerError(t *testing.T) {
 
 	typedErrorCause, ok := typedError.Err.(*iq.ServerError)
 	assert.True(t, ok)
-	assert.Contains(t, typedErrorCause.Error(), "There was an error communicating with Nexus IQ Server to get your internal application ID")
+	assert.Contains(t, typedErrorCause.Error(), "There was an error communicating with Nexus IQ Server to get your internal application ID", typedErrorCause.Error())
 }
 
 func TestDoIqHappyPath(t *testing.T) {

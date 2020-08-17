@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/sonatype-nexus-community/nancy/internal/audit"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -16,10 +18,16 @@ func TestSleuthCommandNoArgs(t *testing.T) {
 	assert.Equal(t, customerrors.ErrorShowLogPath{Err: stdInInvalid}, err)
 }
 
-func TestSleuthCommandInvalidPath(t *testing.T) {
+func TestSleuthCommandPathInvalidName(t *testing.T) {
 	_, err := executeCommand(rootCmd, sleuthCmd.Use, "--path", "invalidPath")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid path value. must point to 'Gopkg.lock' file. path: ")
+	assert.Contains(t, err.Error(), fmt.Sprintf("invalid path value. must point to '%s' file. path: ", GopkgLockFilename))
+}
+
+func TestSleuthCommandPathInvalidFile(t *testing.T) {
+	_, err := executeCommand(rootCmd, sleuthCmd.Use, "--path", GopkgLockFilename)
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "could not find project"))
 }
 
 func TestConfigOssi_no_color(t *testing.T) {
