@@ -34,75 +34,99 @@
 
 ```
  ~ > nancy --help
-     nancy is a tool to check for vulnerabilities in your Golang dependencies,
-     powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
-     a smooth experience as a Golang developer, using the best tools in the market!
-     
-     Usage:
-       nancy [flags]
-       nancy [command]
-     
-     Examples:
-       Typical usage will pipe the output of 'go list -json -m all' to 'nancy':
-       go list -json -m all | nancy [flags]
-       go list -json -m all | nancy iq [flags]
-       go list -m all | nancy [flags]
-       go list -m all | nancy iq [flags]
-     
-     Available Commands:
-       config      Setup credentials to use when connecting to services
-       help        Help about any command
-       iq          Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'
-     
-     Flags:
-       -v, -- count                              Set log level, multiple v's is more verbose
-       -c, --clean-cache                         Deletes local cache directory
-       -e, --exclude-vulnerability CveListFlag   Comma separated list of CVEs to exclude (default [])
-       -x, --exclude-vulnerability-file string   Path to a file containing newline separated CVEs to be excluded (default "./.nancy-ignore")
-       -h, --help                                help for nancy
-           --loud                                indicate output should include non-vulnerable packages
-       -n, --no-color                            indicate output should not be colorized
-       -o, --output string                       Styling for output format. json, json-pretty, text, csv (default "text")
-       -p, --path string                         Specify a path to a dep Gopkg.lock file for scanning
-       -q, --quiet                               indicate output should contain only packages with vulnerabilities (default true)
-       -t, --token string                        Specify OSS Index API token for request
-       -u, --username string                     Specify OSS Index username for request
-       -V, --version                             Get the version
-     
-     Use "nancy [command] --help" for more information about a command.
+nancy is a tool to check for vulnerabilities in your Golang dependencies,
+powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
+a smooth experience as a Golang developer, using the best tools in the market!
+
+Usage:
+  nancy [flags]
+  nancy [command]
+
+Examples:
+  Typical usage will pipe the output of 'go list -json -m all' to 'nancy':
+  go list -json -m all | nancy sleuth [flags]
+  go list -json -m all | nancy iq [flags]
+
+Available Commands:
+  config      Setup credentials to use when connecting to services
+  help        Help about any command
+  iq          Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'
+  sleuth      Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index
+
+Flags:
+  -v, -- count            Set log level, multiple v's is more verbose
+  -c, --clean-cache       Deletes local cache directory
+  -h, --help              help for nancy
+      --loud              indicate output should include non-vulnerable packages
+  -p, --path string       Specify a path to a dep Gopkg.lock file for scanning
+  -q, --quiet             indicate output should contain only packages with vulnerabilities (default true)
+  -t, --token string      Specify OSS Index API token for request
+  -u, --username string   Specify OSS Index username for request
+  -V, --version           Get the version
+
+Use "nancy [command] --help" for more information about a command.
+
+
+$ > nancy sleuth --help
+'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by the 'Sonatype OSS Index'.
+
+Usage:
+  nancy sleuth [flags]
+
+Examples:
+  go list -json -m all | nancy sleuth --username your_user --token your_token
+
+Flags:
+  -e, --exclude-vulnerability CveListFlag   Comma separated list of CVEs to exclude (default [])
+  -x, --exclude-vulnerability-file string   Path to a file containing newline separated CVEs to be excluded (default "./.nancy-ignore")
+  -h, --help                                help for sleuth
+  -n, --no-color                            indicate output should not be colorized
+  -o, --output string                       Styling for output format. json, json-pretty, text, csv (default "text")
+
+Global Flags:
+  -v, -- count            Set log level, multiple v's is more verbose
+  -c, --clean-cache       Deletes local cache directory
+      --loud              indicate output should include non-vulnerable packages
+  -p, --path string       Specify a path to a dep Gopkg.lock file for scanning
+  -q, --quiet             indicate output should contain only packages with vulnerabilities (default true)
+  -t, --token string      Specify OSS Index API token for request
+  -u, --username string   Specify OSS Index username for request
+  -V, --version           Get the version
 
 
 $ > nancy iq --help
-    'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!
-    
-    Usage:
-      nancy iq [flags]
-    
-    Examples:
-      go list -json -m all | nancy iq --iq-application your_public_application_id --iq-server-url http://your_iq_server_url:port --iq-username your_user --iq-token your_token --iq-stage develop
-    
-    Flags:
-      -h, --help                    help for iq
-      -a, --iq-application string   Specify Nexus IQ public application ID for request
-      -x, --iq-server-url string    Specify Nexus IQ server url for request (default "http://localhost:8070")
-      -s, --iq-stage string         Specify Nexus IQ stage for request (default "develop")
-      -p, --iq-token string         Specify Nexus IQ token for request (default "admin123")
-      -l, --iq-username string      Specify Nexus IQ username for request (default "admin")
-    
-    Global Flags:
-      -v, -- count            Set log level, multiple v's is more verbose
-          --loud              indicate output should include non-vulnerable packages
-      -q, --quiet             indicate output should contain only packages with vulnerabilities (default true)
-      -t, --token string      Specify OSS Index API token for request
-      -u, --username string   Specify OSS Index username for request
-      -V, --version           Get the version
+'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!
+
+Usage:
+  nancy iq [flags]
+
+Examples:
+  go list -json -m all | nancy iq --iq-application your_public_application_id --iq-server-url http://your_iq_server_url:port --iq-username your_user --iq-token your_token --iq-stage develop
+
+Flags:
+  -h, --help                    help for iq
+  -a, --iq-application string   Specify Nexus IQ public application ID for request
+  -x, --iq-server-url string    Specify Nexus IQ server url for request (default "http://localhost:8070")
+  -s, --iq-stage string         Specify Nexus IQ stage for request (default "develop")
+  -k, --iq-token string         Specify Nexus IQ token for request (default "admin123")
+  -l, --iq-username string      Specify Nexus IQ username for request (default "admin")
+
+Global Flags:
+  -v, -- count            Set log level, multiple v's is more verbose
+  -c, --clean-cache       Deletes local cache directory
+      --loud              indicate output should include non-vulnerable packages
+  -p, --path string       Specify a path to a dep Gopkg.lock file for scanning
+  -q, --quiet             indicate output should contain only packages with vulnerabilities (default true)
+  -t, --token string      Specify OSS Index API token for request
+  -u, --username string   Specify OSS Index username for request
+  -V, --version           Get the version
 ```
 
 #### What is the best usage of Nancy?
 
 The preferred way to use Nancy is:
-- `go list -json -m all | nancy`
-- `nancy -p /path/to/Gopkg.lock`
+- `go list -json -m all | nancy sleuth`
+- `nancy sleuth -p /path/to/Gopkg.lock`
 
 #### Homebrew usage
 
@@ -140,7 +164,7 @@ We publish a few different flavors for convenience:
 
 If you start using Nancy extensively, you might run into Rate Limiting from OSS Index! Don't worry, we've got your back!
 
-If you run into Rate Limiting you should recieve an error that will give you instructions on how to register on OSS Index:
+If you run into Rate Limiting you should receive an error that will give you instructions on how to register on OSS Index:
 
 ```
 You have been rate limited by OSS Index.
@@ -154,7 +178,7 @@ After setting this config, you'll be gifted a nice new higher rate limit. If you
 
 You can also set the user and token via the command line like so:
 
-`nancy --username auser@anemailaddress.com --token A4@k3@p1T0k3n`
+`nancy sleuth --username auser@anemailaddress.com --token A4@k3@p1T0k3n`
 
 This can be handy for testing your account out, or if you want to override your set config with a different user.
 
@@ -163,8 +187,8 @@ This can be handy for testing your account out, or if you want to override your 
 By default, `nancy` runs in a "quiet" mode, only displaying a list of vulnerable components. 
 You can run `nancy` in a loud manner, showing all components by running:
 
-* `./nancy --loud -p /path/to/your/Gopkg.lock`
-* `go list -json -m all | ./nancy --loud`
+* `./nancy sleuth --loud -p /path/to/your/Gopkg.lock`
+* `go list -json -m all | ./nancy sleuth --loud`
 
 #### Exclude vulnerabilities
 
@@ -176,15 +200,15 @@ Vulnerabilities excluded will then be silenced and not show up in the output or 
 We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or via the OSS Index ID (ex: `a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14`) as not all vulnerabilities have a CVE-ID.
 
 ##### Via CLI flag
-* `./nancy --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 -p /path/to/your/Gopkg.lock`
-* `go list -json -m all | ./nancy --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2`
+* `./nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 -p /path/to/your/Gopkg.lock`
+* `go list -json -m all | ./nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2`
 
 ##### Via file
 By default if a file named `.nancy-ignore` exists in the same directory that nancy is run it will use it, will no other options need to be passed.
 
 If you would like to define the path to the file you can use the following
-* `./nancy --exclude-vulnerability-file=/path/to/your/exclude-file -p /path/to/your/Gopkg.lock`
-* `go list -json -m all | ./nancy --exclude-vulnerability-file=/path/to/your/exclude-file`
+* `./nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file -p /path/to/your/Gopkg.lock`
+* `go list -json -m all | ./nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file`
 
 The file format requires each vulnerability that you want to exclude to be on a separate line. Comments are allowed in the file as well to help provide context when needed. See an example file below.
 
@@ -388,7 +412,7 @@ Options for stage are as follows:
 
 `build, develop, stage-release, release`
 
-By default `-stage` will be `develop`.
+By default `--iq-stage` will be `develop`.
 
 Successful submissions to Nexus IQ Server will result in either an OS exit of 0, meaning all is clear and a response akin to:
 
@@ -414,7 +438,7 @@ Uh oh! There was an error with your request to Nexus IQ Server: <error>
 
 #### Persistent Nexus IQ Server Config
 
-Nancy let's you set the Nexus IQ Server Address, User and Token as persistent config (application and stage are generally per project so we do not let you set these globally).
+Nancy lets you set the Nexus IQ Server Address, User and Token as persistent config (application and stage are generally per project so we do not let you set these globally).
 
 To set your Nexus IQ Server config run:
 
@@ -441,7 +465,7 @@ This project is called `nancy` as like the great detective herself, it looks for
 
 ## Installation
 
-At current time you have a few options:
+At the current time you have a few options:
 
 * Build from source
 * Download release binary from [here on GitHub](https://github.com/sonatype-nexus-community/nancy/releases)
