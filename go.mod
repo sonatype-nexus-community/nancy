@@ -21,6 +21,7 @@ require (
 	github.com/sonatype-nexus-community/go-sona-types v0.0.6
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cobra v1.0.0
+	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.6.3
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
@@ -35,5 +36,8 @@ replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200604202706-70a84ac
 
 // fix vulnerability: CVE-2020-14040 in v0.3.0
 replace golang.org/x/text => golang.org/x/text v0.3.3
+
+// fix vulnerability: CVE-2020-15114 in etcd v3.3.13+incompatible
+replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
 
 go 1.13

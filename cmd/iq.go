@@ -18,15 +18,15 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/pflag"
 	"os"
 	"path"
 
-	"github.com/sonatype-nexus-community/nancy/internal/configuration"
-	"github.com/sonatype-nexus-community/nancy/internal/logger"
-
 	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
+	"github.com/sonatype-nexus-community/nancy/internal/configuration"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
+	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -102,20 +102,8 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 
 	printHeader(!configOssi.Quiet)
 
-	if err = checkStdIn(); err != nil {
-		logLady.WithError(err).Error("unexpected error in iq cmd")
-		panic(err)
-	}
-
-	mod := packages.Mod{}
-
-	mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
-	if err != nil {
-		logLady.WithError(err).Error("unexpected error in iq cmd")
-		panic(err)
-	}
-
-	var purls = mod.ExtractPurlsFromManifest()
+	var purls []string
+	purls, err = getPurls()
 
 	err = auditWithIQServer(purls, configIQ.IQApplication)
 	if err != nil {
@@ -130,6 +118,32 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
+func getPurls() (purls []string, err error) {
+	if configOssi.Path != "" {
+		var invalidPurls []string
+		if purls, invalidPurls, err = getPurlsFromPath(configOssi.Path); err != nil {
+			panic(err)
+		}
+		invalidCoordinates := convertInvalidPurlsToCoordinates(invalidPurls)
+		logLady.WithField("invalid", invalidCoordinates).Info("")
+	} else {
+		if err = checkStdIn(); err != nil {
+			logLady.WithError(err).Error("unexpected error in iq cmd")
+			panic(err)
+		}
+
+		mod := packages.Mod{}
+
+		mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+		if err != nil {
+			logLady.WithError(err).Error("unexpected error in iq cmd")
+			panic(err)
+		}
+		purls = mod.ExtractPurlsFromManifest()
+	}
+	return purls, err
+}
+
 const (
 	flagNameIqUsername    = "iq-username"
 	flagNameIqToken       = "iq-token"
@@ -142,7 +156,7 @@ func init() {
 	cobra.OnInitialize(initIQConfig)
 
 	iqCmd.Flags().StringVarP(&configIQ.IQUsername, flagNameIqUsername, "l", "admin", "Specify Nexus IQ username for request")
-	iqCmd.Flags().StringVarP(&configIQ.IQToken, flagNameIqToken, "p", "admin123", "Specify Nexus IQ token for request")
+	iqCmd.Flags().StringVarP(&configIQ.IQToken, flagNameIqToken, "k", "admin123", "Specify Nexus IQ token for request")
 	iqCmd.Flags().StringVarP(&configIQ.IQStage, flagNameIqStage, "s", "develop", "Specify Nexus IQ stage for request")
 
 	iqCmd.Flags().StringVarP(&configIQ.IQApplication, flagNameIqApplication, "a", "", "Specify Nexus IQ public application ID for request")
@@ -162,15 +176,24 @@ func bindViperIq(cmd *cobra.Command) {
 	bindViper(rootCmd)
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	if err := viper.BindPFlag(configuration.ViperKeyIQUsername, cmd.Flags().Lookup(flagNameIqUsername)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyIQUsername, lookupFlagNotNil(flagNameIqUsername, cmd)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.ViperKeyIQToken, cmd.Flags().Lookup(flagNameIqToken)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyIQToken, lookupFlagNotNil(flagNameIqToken, cmd)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.ViperKeyIQServer, cmd.Flags().Lookup(flagNameIqServerUrl)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyIQServer, lookupFlagNotNil(flagNameIqServerUrl, cmd)); err != nil {
 		panic(err)
 	}
+}
+
+func lookupFlagNotNil(flagName string, cmd *cobra.Command) *pflag.Flag {
+	// see: https://github.com/spf13/viper/pull/949
+	foundFlag := cmd.Flags().Lookup(flagName)
+	if foundFlag == nil {
+		panic(fmt.Errorf("flag lookup for name: '%s' returned nil", flagName))
+	}
+	return foundFlag
 }
 
 func initIQConfig() {

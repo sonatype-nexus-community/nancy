@@ -35,7 +35,7 @@ func (es ErrorShowLogPath) Error() string {
 		errString = ""
 	}
 
-	return errString + "\n" + getLogFileMessage()
+	return errString + "\n\n" + getLogFileMessage()
 }
 
 type ErrorExit struct {

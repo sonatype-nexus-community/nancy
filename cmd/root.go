@@ -19,6 +19,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/spf13/pflag"
 	"os"
 	"path"
 	"path/filepath"
@@ -39,7 +40,6 @@ import (
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/internal/audit"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
-	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -104,47 +104,15 @@ var rootCmd = &cobra.Command{
 	Version: buildversion.BuildVersion,
 	Use:     "nancy",
 	Example: `  Typical usage will pipe the output of 'go list -json -m all' to 'nancy':
-  go list -json -m all | nancy [flags]
-  go list -json -m all | nancy iq [flags]
-  go list -m all | nancy [flags]
-  go list -m all | nancy iq [flags]`,
+  go list -json -m all | nancy sleuth [flags]
+  go list -json -m all | nancy iq [flags]`,
 	Short: "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
-	PreRun: func(cmd *cobra.Command, args []string) { bindViper(cmd) },
-	RunE:   doOSSI,
-}
-
-//noinspection GoUnusedParameter
-func doOSSI(cmd *cobra.Command, args []string) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			var ok bool
-			err, ok = r.(error)
-			if !ok {
-				err = fmt.Errorf("pkg: %v", r)
-			}
-			err = customerrors.ErrorShowLogPath{Err: err}
-		}
-	}()
-
-	logLady = logger.GetLogger("", configOssi.LogLevel)
-	logLady.Info("Nancy parsing config for OSS Index")
-
-	err = processConfig()
-	if err != nil {
-		if errExit, ok := err.(customerrors.ErrorExit); ok {
-			logLady.Info(fmt.Sprintf("Nancy finished parsing config for OSS Index, vulnerability found. exit code: %d", errExit.ExitCode))
-			os.Exit(errExit.ExitCode)
-		} else {
-			logLady.WithError(err).Error("unexpected error in root cmd")
-			panic(err)
-		}
-	}
-
-	logLady.Info("Nancy finished parsing config for OSS Index")
-	return
+	Run: func(cmd *cobra.Command, args []string) {
+		_ = cmd.Usage()
+	},
 }
 
 func Execute() (err error) {
@@ -162,6 +130,8 @@ const defaultExcludeFilePath = "./.nancy-ignore"
 const (
 	flagNameOssiUsername = "username"
 	flagNameOssiToken    = "token"
+
+	GopkgLockFilename = "Gopkg.lock"
 )
 
 func init() {
@@ -171,26 +141,31 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&configOssi.Version, "version", "V", false, "Get the version")
 	rootCmd.PersistentFlags().BoolVarP(&configOssi.Quiet, "quiet", "q", true, "indicate output should contain only packages with vulnerabilities")
 	rootCmd.PersistentFlags().BoolVar(&configOssi.Loud, "loud", false, "indicate output should include non-vulnerable packages")
-	rootCmd.Flags().BoolVarP(&configOssi.NoColor, "no-color", "n", false, "indicate output should not be colorized")
-	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
-	rootCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs to exclude")
-	rootCmd.Flags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep Gopkg.lock file for scanning")
+	rootCmd.PersistentFlags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
-	rootCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs to be excluded")
-	rootCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
+	rootCmd.PersistentFlags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
 }
 
 func bindViper(cmd *cobra.Command) {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	if err := viper.BindPFlag(configuration.ViperKeyUsername, cmd.PersistentFlags().Lookup(flagNameOssiUsername)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyUsername, lookupPersistentFlagNotNil(flagNameOssiUsername, cmd)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.ViperKeyToken, cmd.PersistentFlags().Lookup(flagNameOssiToken)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyToken, lookupPersistentFlagNotNil(flagNameOssiToken, cmd)); err != nil {
 		panic(err)
 	}
+}
+
+func lookupPersistentFlagNotNil(flagName string, cmd *cobra.Command) *pflag.Flag {
+	// see: https://github.com/spf13/viper/pull/949
+	foundFlag := cmd.PersistentFlags().Lookup(flagName)
+	if foundFlag == nil {
+		panic(fmt.Errorf("persisent flag lookup for name: '%s' returned nil", flagName))
+	}
+	return foundFlag
 }
 
 const configTypeYaml = "yaml"
@@ -283,12 +258,6 @@ func processConfig() (err error) {
 	*/
 
 	if configOssi.Path != "" {
-		logLady.Info("Parsing config for file based scan")
-		if !strings.Contains(configOssi.Path, "Gopkg.lock") {
-			err = fmt.Errorf("invalid path value. must point to 'Gopkg.lock' file. path: %s", configOssi.Path)
-			logLady.WithField("error", err).Error("Path error in file based scan")
-			return
-		}
 		if err = doDepAndParse(ossIndex, configOssi.Path); err != nil {
 			logLady.WithField("error", err).Error("Error in file based scan")
 			return
@@ -307,7 +276,14 @@ func getIsQuiet() bool {
 	return !configOssi.Loud
 }
 
-func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
+func getPurlsFromPath(path string) (purls []string, invalidPurls []string, err error) {
+	logLady.Info("Parsing config for file based scan")
+	if !strings.Contains(path, GopkgLockFilename) {
+		err = fmt.Errorf("invalid path value. must point to '%s' file. path: %s", GopkgLockFilename, path)
+		logLady.WithField("error", err).Error("Path error in file based scan")
+		return
+	}
+
 	workingDir := filepath.Dir(path)
 	if workingDir == "." {
 		workingDir, _ = os.Getwd()
@@ -317,7 +293,9 @@ func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
 		WorkingDir: workingDir,
 		GOPATHs:    []string{getenv},
 	}
-	project, err := ctx.LoadProject()
+
+	var project *dep.Project
+	project, err = ctx.LoadProject()
 	if err != nil {
 		return
 	}
@@ -327,10 +305,17 @@ func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
 		return
 	}
 
-	purls, invalidPurls := packages.ExtractPurlsUsingDep(project)
+	purls, invalidPurls = packages.ExtractPurlsUsingDep(project)
+	return
+}
 
-	err = checkOSSIndex(ossIndex, purls, invalidPurls)
-	if err != nil {
+func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
+	var purls, invalidPurls []string
+	if purls, invalidPurls, err = getPurlsFromPath(path); err != nil {
+		return
+	}
+
+	if err = checkOSSIndex(ossIndex, purls, invalidPurls); err != nil {
 		return
 	}
 
@@ -440,16 +425,21 @@ func checkOSSIndex(ossIndex ossindex.IServer, purls []string, invalidpurls []str
 		return
 	}
 
-	var invalidCoordinates []ossIndexTypes.Coordinate
-	for _, invalidpurl := range invalidpurls {
-		invalidCoordinates = append(invalidCoordinates, ossIndexTypes.Coordinate{Coordinates: invalidpurl, InvalidSemVer: true})
-	}
+	invalidCoordinates := convertInvalidPurlsToCoordinates(invalidpurls)
 
 	if count := audit.LogResults(configOssi.Formatter, packageCount, coordinates, invalidCoordinates, configOssi.CveList.Cves); count > 0 {
 		err = customerrors.ErrorExit{ExitCode: count}
 		return
 	}
 	return
+}
+
+func convertInvalidPurlsToCoordinates(invalidPurls []string) []ossIndexTypes.Coordinate {
+	var invalidCoordinates []ossIndexTypes.Coordinate
+	for _, invalidPurl := range invalidPurls {
+		invalidCoordinates = append(invalidCoordinates, ossIndexTypes.Coordinate{Coordinates: invalidPurl, InvalidSemVer: true})
+	}
+	return invalidCoordinates
 }
 
 func checkStdIn() (err error) {

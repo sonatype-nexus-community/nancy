@@ -54,8 +54,7 @@ func executeCommand(root *cobra.Command, args ...string) (output string, err err
 
 func TestRootCommandNoArgs(t *testing.T) {
 	_, err := executeCommand(rootCmd, "")
-	assert.NotNil(t, err)
-	assert.Equal(t, customerrors.ErrorShowLogPath{Err: stdInInvalid}, err)
+	assert.Nil(t, err)
 }
 
 func TestRootCommandUnknownCommand(t *testing.T) {
@@ -66,18 +65,14 @@ func TestRootCommandUnknownCommand(t *testing.T) {
 	assert.Contains(t, err.Error(), "unknown command \"one\" for \"nancy\"")
 }
 
-func TestRootCommandInvalidPath(t *testing.T) {
-	_, err := executeCommand(rootCmd, "--path", "invalidPath")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid path value. must point to 'Gopkg.lock' file. path: ")
-}
-
 func TestProcessConfigInvalidStdIn(t *testing.T) {
 	origConfig := configOssi
 	defer func() {
 		configOssi = origConfig
 	}()
 	configOssi = types.Configuration{}
+	logLady, _ = test.NewNullLogger()
+
 	err := processConfig()
 	assert.Equal(t, stdInInvalid, err)
 }
@@ -108,7 +103,7 @@ func TestProcessConfigPath(t *testing.T) {
 	defer func() {
 		configOssi = origConfig
 	}()
-	configOssi = types.Configuration{Path: "../packages/testdata/Gopkg.lock"}
+	configOssi = types.Configuration{Path: "../packages/testdata/" + GopkgLockFilename}
 
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
@@ -212,7 +207,8 @@ func validateFormatterVolume(t *testing.T, testConfig types.Configuration, expec
 }
 
 func TestDoDepAndParseInvalidPath(t *testing.T) {
-	err := doDepAndParse(ossiFactoryMock{}.create(), "bogusPath")
+	logLady, _ = test.NewNullLogger()
+	err := doDepAndParse(ossiFactoryMock{}.create(), GopkgLockFilename)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "could not find project"))
 }
@@ -271,150 +267,39 @@ func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args .
 	assert.Equal(t, expectedConfig, configOssi)
 }
 
-var defaultAuditLogFormatter = audit.AuditLogTextFormatter{Quiet: true}
-
 func TestRootCommandLogVerbosity(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, "")
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, "-v")
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, "-vv")
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, "-vvv")
+	logLady, _ = test.NewNullLogger()
+
+	validateConfigOssi(t, types.Configuration{}, "")
+	validateConfigOssi(t, types.Configuration{LogLevel: 1}, "-v")
+	validateConfigOssi(t, types.Configuration{LogLevel: 2}, "-vv")
+	validateConfigOssi(t, types.Configuration{LogLevel: 3}, "-vvv")
 }
 
 func TestConfigOssi_defaults(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{}...)
-}
-
-func TestConfigOssi_no_color(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{NoColor: true, Formatter: audit.AuditLogTextFormatter{NoColor: true, Quiet: true}}, []string{"--no-color"}...)
-}
-
-func TestConfigOssi_quiet(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Quiet: true, Formatter: audit.AuditLogTextFormatter{Quiet: true}}, []string{"--quiet"}...)
-}
-
-func TestConfigOssi_loud(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Loud: true, Formatter: audit.AuditLogTextFormatter{Quiet: false}}, []string{"--loud"}...)
+	validateConfigOssi(t, types.Configuration{}, []string{}...)
 }
 
 func TestConfigOssi_version(t *testing.T) {
 	validateConfigOssi(t, types.Configuration{Version: true, Formatter: logrus.Formatter(nil)}, []string{"--version"}...)
 }
 
-func TestConfigOssi_exclude_vulnerabilities(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability=CVE123,CVE988"}...)
-}
-
-func TestConfigOssi_stdIn_as_input(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{}...)
-}
-
-const testdataDir = "../internal/configuration/testdata"
-
-func TestConfigOssi_exclude_vulnerabilities_with_sane_file(t *testing.T) {
-	file, _ := os.Open(testdataDir + "/normalIgnore")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + file.Name()}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_when_file_empty(t *testing.T) {
-	emptyFile, _ := os.Open(testdataDir + "/emptyFile")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + emptyFile.Name()}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_when_has_tons_of_newlines(t *testing.T) {
-	lotsOfRandomNewlinesFile, _ := os.Open(testdataDir + "/lotsOfRandomWhitespace")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_are_combined_with_file_and_args_values(t *testing.T) {
-	lotsOfRandomNewlinesFile, _ := os.Open(testdataDir + "/lotsOfRandomWhitespace")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_file_not_found_does_not_matter(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=/blah-blah-doesnt-exists"}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_passed_as_directory_does_not_matter(t *testing.T) {
-	dir, _ := ioutil.TempDir("", "prefix")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + dir}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_does_not_need_to_be_passed_if_default_value_is_used(t *testing.T) {
-	defaultFileName := ".nancy-ignore"
-	err := ioutil.WriteFile(defaultFileName, []byte("DEF-111\nDEF-222"), 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		_ = os.Remove(defaultFileName)
-	}()
-
-	// reset exclude file path, is changed by prior tests
-	origExcludeVulnerabilityFilePath := excludeVulnerabilityFilePath
-	defer func() {
-		excludeVulnerabilityFilePath = origExcludeVulnerabilityFilePath
-	}()
-	excludeVulnerabilityFilePath = defaultExcludeFilePath
-
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter}, []string{}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_when_has_comments(t *testing.T) {
-	commentedFile, _ := os.Open(testdataDir + "/commented")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + commentedFile.Name()}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_when_has_untils(t *testing.T) {
-	untilsFile, _ := os.Open(testdataDir + "/untilsAndComments")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + untilsFile.Name()}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_value_in_untils(t *testing.T) {
-	invalidUntilsFile, _ := os.Open(testdataDir + "/untilsInvaild")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + invalidUntilsFile.Name()}...)
-}
-
-func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_date_in_untils(t *testing.T) {
-	invalidDateUntilsFile, _ := os.Open(testdataDir + "/untilsBadDateFormat")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter}, []string{"--exclude-vulnerability-file=" + invalidDateUntilsFile.Name()}...)
-}
-
-func TestConfigOssi_output_of_json(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: audit.JsonFormatter{}}, []string{"--output=json"}...)
-}
-
-func TestConfigOssi_output_of_json_pretty_print(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}}, []string{"--output=json-pretty"}...)
-}
-
-func TestConfigOssi_output_of_csv(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: audit.CsvFormatter{Quiet: true}}, []string{"--output=csv"}...)
-}
-
-func TestConfigOssi_output_of_text(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{"--output=text"}...)
-}
-
-func TestConfigOssi_output_of_bad_value(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter}, []string{"--output=aintgonnadoit"}...)
-}
-
 func TestConfigOssi_log_level_of_info(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 1}, []string{"-v"}...)
+	validateConfigOssi(t, types.Configuration{LogLevel: 1}, []string{"-v"}...)
 }
 
 func TestConfigOssi_log_level_of_debug(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 2}, []string{"-vv"}...)
+	validateConfigOssi(t, types.Configuration{LogLevel: 2}, []string{"-vv"}...)
 }
 
 func TestConfigOssi_log_level_of_trace(t *testing.T) {
 	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
 
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, LogLevel: 3}, []string{"-vvv"}...)
+	validateConfigOssi(t, types.Configuration{LogLevel: 3}, []string{"-vvv"}...)
 }
 
 func TestConfigOssi_cleanCache(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter, CleanCache: true}, []string{"--clean-cache"}...)
+	validateConfigOssi(t, types.Configuration{CleanCache: true}, []string{"--clean-cache"}...)
 }
 
 func setupConfig(t *testing.T) (tempDir string) {
@@ -607,6 +492,7 @@ func TestOssiCreatorOptions(t *testing.T) {
 	defer func() {
 		ossiCreator = origCreator
 	}()
+	logLady, _ = test.NewNullLogger()
 	ossIndex := ossiCreator.create()
 
 	ossIndexServer, ok := ossIndex.(*ossindex.Server)
