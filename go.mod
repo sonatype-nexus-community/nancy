@@ -37,4 +37,7 @@ replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200604202706-70a84ac
 // fix vulnerability: CVE-2020-14040 in v0.3.0
 replace golang.org/x/text => golang.org/x/text v0.3.3
 
+// fix vulnerability: CVE-2020-15114 in etcd v3.3.13+incompatible
+replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
+
 go 1.13

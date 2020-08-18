@@ -44,5 +44,7 @@ test: build
 
 integration-test: build
 	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
+	go list -json -m all | ./$(BINARY_NAME) sleuth
 	go list -m all | ./$(BINARY_NAME) sleuth
+	go list -json -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
 	go list -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
