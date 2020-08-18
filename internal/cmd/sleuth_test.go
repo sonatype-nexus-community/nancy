@@ -51,7 +51,7 @@ func TestConfigOssi_exclude_vulnerabilities(t *testing.T) {
 		[]string{sleuthCmd.Use, "--exclude-vulnerability=CVE123,CVE988"}...)
 }
 
-const testdataDir = "../internal/configuration/testdata"
+const testdataDir = "../../internal/configuration/testdata"
 
 func TestConfigOssi_exclude_vulnerabilities_with_sane_file(t *testing.T) {
 	file, _ := os.Open(testdataDir + "/normalIgnore")

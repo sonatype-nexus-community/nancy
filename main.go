@@ -17,7 +17,7 @@
 package main
 
 import (
-	"github.com/sonatype-nexus-community/nancy/cmd"
+	"github.com/sonatype-nexus-community/nancy/internal/cmd"
 )
 
 func main() {

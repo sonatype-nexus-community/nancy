@@ -85,7 +85,6 @@ Flags:
 
 Global Flags:
   -v, -- count            Set log level, multiple v's is more verbose
-  -c, --clean-cache       Deletes local cache directory
       --loud              indicate output should include non-vulnerable packages
   -p, --path string       Specify a path to a dep Gopkg.lock file for scanning
   -q, --quiet             indicate output should contain only packages with vulnerabilities (default true)
@@ -113,7 +112,6 @@ Flags:
 
 Global Flags:
   -v, -- count            Set log level, multiple v's is more verbose
-  -c, --clean-cache       Deletes local cache directory
       --loud              indicate output should include non-vulnerable packages
   -p, --path string       Specify a path to a dep Gopkg.lock file for scanning
   -q, --quiet             indicate output should contain only packages with vulnerabilities (default true)
