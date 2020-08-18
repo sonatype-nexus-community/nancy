@@ -65,6 +65,16 @@ func TestRootCommandUnknownCommand(t *testing.T) {
 	assert.Contains(t, err.Error(), "unknown command \"one\" for \"nancy\"")
 }
 
+func TestRootCommandCleanCache(t *testing.T) {
+	origConfig := configOssi
+	defer func() {
+		configOssi = origConfig
+	}()
+	output, err := executeCommand(rootCmd, "-c")
+	assert.Equal(t, output, "")
+	assert.Nil(t, err)
+}
+
 func TestProcessConfigInvalidStdIn(t *testing.T) {
 	origConfig := configOssi
 	defer func() {
@@ -77,7 +87,7 @@ func TestProcessConfigInvalidStdIn(t *testing.T) {
 	assert.Equal(t, stdInInvalid, err)
 }
 
-func TestProcessConfigCleanCacheError(t *testing.T) {
+func TestDoRootCleanCacheError(t *testing.T) {
 	origConfig := configOssi
 	defer func() {
 		configOssi = origConfig
@@ -94,8 +104,9 @@ func TestProcessConfigCleanCacheError(t *testing.T) {
 	}()
 	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesErr: expectedError}}
 
-	err := processConfig()
-	assert.Equal(t, expectedError, err)
+	err := doRoot(nil, nil)
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), expectedError.Error()), err.Error())
 }
 
 func TestProcessConfigPath(t *testing.T) {
