@@ -43,8 +43,6 @@ test: build
 	$(GOTEST) -v ./... 2>&1
 
 integration-test: build
-	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
-	go list -json -m all | ./$(BINARY_NAME) sleuth
-	go list -m all | ./$(BINARY_NAME) sleuth
-	go list -json -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
-	go list -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
+	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) -p Gopkg.lock && cd -
+	go list -m all | ./$(BINARY_NAME)
+	go list -m all > deps.out && ./$(BINARY_NAME) < deps.out
