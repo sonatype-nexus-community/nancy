@@ -40,6 +40,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/internal/audit"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
+	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -110,9 +111,34 @@ var rootCmd = &cobra.Command{
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: doRoot,
+}
+
+//goland:noinspection GoUnusedParameter
+func doRoot(cmd *cobra.Command, args []string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if !ok {
+				err = fmt.Errorf("pkg: %v", r)
+			}
+			err = customerrors.ErrorShowLogPath{Err: err}
+		}
+	}()
+
+	logLady = logger.GetLogger("", configOssi.LogLevel)
+	logLady.Info("Nancy parsing config for root command")
+
+	if configOssi.CleanCache {
+		ossIndex := ossiCreator.create()
+		if err = doCleanCache(ossIndex); err != nil {
+			panic(err)
+		}
+	} else {
 		_ = cmd.Usage()
-	},
+	}
+	return
 }
 
 func Execute() (err error) {
@@ -141,7 +167,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&configOssi.Version, "version", "V", false, "Get the version")
 	rootCmd.PersistentFlags().BoolVarP(&configOssi.Quiet, "quiet", "q", true, "indicate output should contain only packages with vulnerabilities")
 	rootCmd.PersistentFlags().BoolVar(&configOssi.Loud, "loud", false, "indicate output should include non-vulnerable packages")
-	rootCmd.PersistentFlags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
+	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
@@ -226,27 +252,7 @@ func processConfig() (err error) {
 		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: isQuiet, NoColor: configOssi.NoColor}
 	}
 
-	switch configOssi.LogLevel {
-	case 1:
-		logLady.Level = logrus.InfoLevel
-	case 2:
-		logLady.Level = logrus.DebugLevel
-	case 3:
-		logLady.Level = logrus.TraceLevel
-	}
-
 	ossIndex := ossiCreator.create()
-
-	if configOssi.CleanCache {
-		logLady.Info("Attempting to clean cache")
-		if err = ossIndex.NoCacheNoProblems(); err != nil {
-			logLady.WithField("error", err).Error("Error cleaning cache")
-			fmt.Printf("ERROR: cleaning cache: %v\n", err)
-			return
-		}
-		logLady.Info("Cache cleaned")
-		return
-	}
 
 	printHeader(!getIsQuiet() && reflect.TypeOf(configOssi.Formatter).String() == "audit.AuditLogTextFormatter")
 
@@ -269,6 +275,17 @@ func processConfig() (err error) {
 		}
 	}
 
+	return
+}
+
+func doCleanCache(ossIndex ossindex.IServer) (err error) {
+	logLady.Info("Attempting to clean cache")
+	if err = ossIndex.NoCacheNoProblems(); err != nil {
+		logLady.WithField("error", err).Error("Error cleaning cache")
+		fmt.Printf("ERROR: cleaning cache: %v\n", err)
+		return
+	}
+	logLady.Info("Cache cleaned")
 	return
 }
 
