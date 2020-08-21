@@ -180,7 +180,7 @@ type mockIqServer struct {
 }
 
 //noinspection GoUnusedParameter
-func (s mockIqServer) AuditPackages(purls []string, applicationID string) (iq.StatusURLResult, error) {
+func (s mockIqServer) AuditPackages(purls []string) (iq.StatusURLResult, error) {
 	return s.auditPackagesStatusURLResult, s.auditPackagesErr
 }
 
@@ -197,7 +197,7 @@ func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 	expectedErr := fmt.Errorf("forced error")
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesErr: expectedErr}}
 
-	err := auditWithIQServer(testPurls, "testapp")
+	err := auditWithIQServer(testPurls)
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedErr, err)
@@ -212,7 +212,7 @@ func TestAuditWithIQServerResponseError(t *testing.T) {
 
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
 
-	err := auditWithIQServer(testPurls, "testapp")
+	err := auditWithIQServer(testPurls)
 
 	assert.Error(t, err)
 	assert.Equal(t, errors.New("resErrMsg"), err)
@@ -227,7 +227,7 @@ func TestAuditWithIQServerPolicyActionNotFailure(t *testing.T) {
 
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{}}}
 
-	err := auditWithIQServer(testPurls, "testapp")
+	err := auditWithIQServer(testPurls)
 
 	assert.Nil(t, err)
 }
@@ -241,7 +241,7 @@ func TestAuditWithIQServerPolicyActionFailure(t *testing.T) {
 
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{PolicyAction: "Failure"}}}
 
-	err := auditWithIQServer(testPurls, "testapp")
+	err := auditWithIQServer(testPurls)
 
 	typedError, ok := err.(customerrors.ErrorExit)
 	assert.True(t, ok)
@@ -266,7 +266,7 @@ func TestDoIqParseGoListError(t *testing.T) {
 	assert.Contains(t, err.Error(), "index out of range")
 }
 
-func TestDoIqWithIqServerError(t *testing.T) {
+func TestDoIqWithIqServerMissingAppIdError(t *testing.T) {
 	oldStdIn, tmpFile := createFakeStdInWithString(t, "")
 	defer func() {
 		os.Stdin = oldStdIn
@@ -280,9 +280,32 @@ func TestDoIqWithIqServerError(t *testing.T) {
 	typedError, ok := err.(customerrors.ErrorShowLogPath)
 	assert.True(t, ok)
 
-	typedErrorCause, ok := typedError.Err.(*iq.ServerError)
+	assert.Contains(t, typedError.Err.Error(), "missing options.Application", typedError)
+}
+
+func TestDoIqWithIqServerError(t *testing.T) {
+	oldStdIn, tmpFile := createFakeStdInWithString(t, "")
+	defer func() {
+		os.Stdin = oldStdIn
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
+	}()
+
+	origConfigIqApplication := configIQ.IQApplication
+	defer func() {
+		configIQ.IQApplication = origConfigIqApplication
+	}()
+	configIQ.IQApplication = "testapp"
+
+	bindViperIq(iqCmd)
+
+	err := doIQ(iqCmd, []string{})
+	assert.NotNil(t, err)
+
+	typedError, ok := err.(customerrors.ErrorShowLogPath)
 	assert.True(t, ok)
-	assert.Contains(t, typedErrorCause.Error(), "There was an error communicating with Nexus IQ Server to get your internal application ID", typedErrorCause.Error())
+
+	assert.Contains(t, typedError.Error(), "There was an error communicating with Nexus IQ Server to get your internal application ID", typedError.Error())
 }
 
 func TestDoIqHappyPath(t *testing.T) {
@@ -323,6 +346,12 @@ func TestIqCreatorDefaultOptions(t *testing.T) {
 
 	logLady, _ = test.NewNullLogger()
 
+	origConfigIqApplication := configIQ.IQApplication
+	defer func() {
+		configIQ.IQApplication = origConfigIqApplication
+	}()
+	configIQ.IQApplication = "testapp"
+
 	bindViperIq(iqCmd)
 
 	iqServer := iqCreator.create()
@@ -337,7 +366,15 @@ func TestIqCreatorDefaultOptions(t *testing.T) {
 }
 
 func TestIqCreatorOptionsLogging(t *testing.T) {
+	origConfigIqApplication := configIQ.IQApplication
+	defer func() {
+		configIQ.IQApplication = origConfigIqApplication
+	}()
+	configIQ.IQApplication = "testapp"
+
+	bindViperIq(iqCmd)
+
 	logLady, _ = test.NewNullLogger()
 	logLady.Level = logrus.DebugLevel
-	iqCreator.create()
+	assert.NotNil(t, iqCreator.create())
 }

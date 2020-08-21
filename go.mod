@@ -18,7 +18,7 @@ require (
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.6.0
-	github.com/sonatype-nexus-community/go-sona-types v0.0.6
+	github.com/sonatype-nexus-community/go-sona-types v0.0.7
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.3

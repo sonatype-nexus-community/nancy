@@ -41,7 +41,7 @@ type iqServerFactory interface {
 type iqFactory struct{}
 
 func (iqFactory) create() iq.IServer {
-	iqServer := iq.New(logLady, iq.Options{
+	iqServer, err := iq.New(logLady, iq.Options{
 		User:          viper.GetString(configuration.ViperKeyIQUsername),
 		Token:         viper.GetString(configuration.ViperKeyIQToken),
 		Application:   configIQ.IQApplication,
@@ -53,6 +53,10 @@ func (iqFactory) create() iq.IServer {
 		DBCacheName:   "nancy-cache",
 		MaxRetries:    300,
 	})
+	if err != nil {
+		logLady.WithError(err).Error("unexpected error in iqFactory")
+		panic(err)
+	}
 
 	logLady.WithField("iqServer", iq.Options{
 		User:          cleanUserName(iqServer.Options.User),
@@ -105,7 +109,7 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	var purls []string
 	purls, err = getPurls()
 
-	err = auditWithIQServer(purls, configIQ.IQApplication)
+	err = auditWithIQServer(purls)
 	if err != nil {
 		if errExit, ok := err.(customerrors.ErrorExit); ok {
 			os.Exit(errExit.ExitCode)
@@ -225,12 +229,12 @@ func initIQConfig() {
 	}
 }
 
-func auditWithIQServer(purls []string, applicationID string) error {
+func auditWithIQServer(purls []string) error {
 	iqServer := iqCreator.create()
 
 	logLady.Debug("Sending purls to be Audited by IQ Server")
 	// go-sona-types library now takes care of querying both ossi and iq with reformatted purls as needed (to v or not to v).
-	res, err := iqServer.AuditPackages(purls, applicationID)
+	res, err := iqServer.AuditPackages(purls)
 	if err != nil {
 		return err
 	}
