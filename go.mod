@@ -37,15 +37,6 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 )
 
-// fix vulnerability: sonatype-2019-0666 in v1.4.0
-replace github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
-
-// fix vulnerability: CVE-2019-11840 in v0.0.0-20190308221718-c2843e01d9a2
-replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
-
-// fix vulnerability: CVE-2020-14040 in v0.3.0
-replace golang.org/x/text => golang.org/x/text v0.3.3
-
 // fix vulnerability: CVE-2020-15114 in etcd v3.3.13+incompatible
 replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
 
