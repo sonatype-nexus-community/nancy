@@ -71,7 +71,7 @@ brews:
   -
     ids:
       - homebrew
-    github:
+    tap:
       owner: sonatype-nexus-community
       name: homebrew-nancy-tap
 
