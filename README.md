@@ -47,6 +47,10 @@ Examples:
   go list -json -m all | nancy sleuth [flags]
   go list -json -m all | nancy iq [flags]
 
+  If using dep typical usage is as follows :
+  nancy sleuth -p Gopkg.lock [flags]
+  nancy iq -p Gopkg.lock [flags]
+
 Available Commands:
   config      Setup credentials to use when connecting to services
   help        Help about any command
@@ -75,6 +79,7 @@ Usage:
 
 Examples:
   go list -json -m all | nancy sleuth --username your_user --token your_token
+  nancy sleuth -p Gopkg.lock --username your_user --token your_token
 
 Flags:
   -e, --exclude-vulnerability CveListFlag   Comma separated list of CVEs to exclude (default [])
@@ -101,6 +106,7 @@ Usage:
 
 Examples:
   go list -json -m all | nancy iq --iq-application your_public_application_id --iq-server-url http://your_iq_server_url:port --iq-username your_user --iq-token your_token --iq-stage develop
+  nancy iq -p Gopkg.lock --iq-application your_public_application_id --iq-server-url http://your_iq_server_url:port --iq-username your_user --iq-token your_token --iq-stage develop
 
 Flags:
   -h, --help                    help for iq
