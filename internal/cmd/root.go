@@ -106,7 +106,12 @@ var rootCmd = &cobra.Command{
 	Use:     "nancy",
 	Example: `  Typical usage will pipe the output of 'go list -json -m all' to 'nancy':
   go list -json -m all | nancy sleuth [flags]
-  go list -json -m all | nancy iq [flags]`,
+  go list -json -m all | nancy iq [flags]
+
+  If using dep typical usage is as follows :
+  nancy sleuth -p Gopkg.lock [flags]
+  nancy iq -p Gopkg.lock [flags]
+`,
 	Short: "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
