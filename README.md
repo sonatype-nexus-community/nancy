@@ -191,8 +191,8 @@ This can be handy for testing your account out, or if you want to override your 
 By default, `nancy` runs in a "quiet" mode, only displaying a list of vulnerable components. 
 You can run `nancy` in a loud manner, showing all components by running:
 
-* `./nancy sleuth --loud -p /path/to/your/Gopkg.lock`
-* `go list -json -m all | ./nancy sleuth --loud`
+* `nancy sleuth --loud -p /path/to/your/Gopkg.lock`
+* `go list -json -m all | nancy sleuth --loud`
 
 #### Exclude vulnerabilities
 
@@ -204,15 +204,15 @@ Vulnerabilities excluded will then be silenced and not show up in the output or 
 We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or via the OSS Index ID (ex: `a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14`) as not all vulnerabilities have a CVE-ID.
 
 ##### Via CLI flag
-* `./nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 -p /path/to/your/Gopkg.lock`
-* `go list -json -m all | ./nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2`
+* `nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 -p /path/to/your/Gopkg.lock`
+* `go list -json -m all | nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2`
 
 ##### Via file
 By default if a file named `.nancy-ignore` exists in the same directory that nancy is run it will use it, will no other options need to be passed.
 
 If you would like to define the path to the file you can use the following
-* `./nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file -p /path/to/your/Gopkg.lock`
-* `go list -json -m all | ./nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file`
+* `nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file -p /path/to/your/Gopkg.lock`
+* `go list -json -m all | nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file`
 
 The file format requires each vulnerability that you want to exclude to be on a separate line. Comments are allowed in the file as well to help provide context when needed. See an example file below.
 
@@ -404,13 +404,13 @@ Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
 
 By default, assuming you have an out of the box Nexus IQ Server running, you can run `nancy` like so:
 
-`go list -json -m all | ./nancy iq --iq-application public-application-id`
+`go list -json -m all | nancy iq --iq-application public-application-id`
 
 It is STRONGLY suggested that you do not do this, and we will warn you on output if you are.
 
 A more logical use of `nancy` against Nexus IQ Server will look like so:
 
-`go list -json -m all | ./nancy iq --iq-application public-application-id --iq-username nondefaultuser --iq-token yourtoken --iq-server-url http://adifferentserverurl:port --iq-stage develop`
+`go list -json -m all | nancy iq --iq-application public-application-id --iq-username nondefaultuser --iq-token yourtoken --iq-server-url http://adifferentserverurl:port --iq-stage develop`
 
 Options for stage are as follows:
 
