@@ -17,13 +17,10 @@
 package packages
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/sonatype-nexus-community/nancy/types"
 )
-
-var testGoSumName = "testdata/go.sum"
 
 // Simulate calling parse.GopkgLock()
 func getProjectList() (projectList types.ProjectList) {
@@ -64,20 +61,8 @@ func appendProject(name string, version string, projectList *types.ProjectList) 
 	projectList.Projects = append(projectList.Projects, types.Projects{Name: name, Version: version})
 }
 
-func TestModCheckExistenceOfManifestExists(t *testing.T) {
-	mod := Mod{}
-	mod.GoSumPath = testGoSumName
-	exists, err := mod.CheckExistenceOfManifest()
-	assert.NoError(t, err)
-
-	if !exists {
-		t.Errorf("Expected existence of %s", testGoSumName)
-	}
-}
-
 func TestModExtractPurlsFromManifest(t *testing.T) {
 	mod := Mod{}
-	mod.GoSumPath = testGoSumName
 	mod.ProjectList = getProjectList()
 
 	result := mod.ExtractPurlsFromManifest()
@@ -88,7 +73,6 @@ func TestModExtractPurlsFromManifest(t *testing.T) {
 
 func TestModExtractPurlsFromManifestDuplicates(t *testing.T) {
 	mod := Mod{}
-	mod.GoSumPath = testGoSumName
 	mod.ProjectList = getProjectListDuplicates()
 
 	result := mod.ExtractPurlsFromManifest()

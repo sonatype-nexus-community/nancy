@@ -18,9 +18,25 @@ package customerrors
 
 import (
 	"fmt"
+
 	"github.com/sonatype-nexus-community/nancy/buildversion"
-	. "github.com/sonatype-nexus-community/nancy/logger"
+	"github.com/sonatype-nexus-community/nancy/internal/logger"
 )
+
+type ErrorShowLogPath struct {
+	Err error
+}
+
+func (es ErrorShowLogPath) Error() string {
+	var errString string
+	if es.Err != nil {
+		errString = es.Err.Error()
+	} else {
+		errString = ""
+	}
+
+	return errString + "\n\n" + getLogFileMessage()
+}
 
 type ErrorExit struct {
 	Message  string
@@ -35,21 +51,30 @@ func (ee ErrorExit) Error() string {
 	} else {
 		errString = ""
 	}
-	return fmt.Sprintf("exit code: %d - %s - error: %s", ee.ExitCode, ee.Message, errString)
+
+	if ee.Message != "" {
+		return fmt.Sprintf("exit code: %d - %s - error: %s", ee.ExitCode, ee.Message, errString)
+	} else {
+		return fmt.Sprintf("exit code: %d - error: %s", ee.ExitCode, errString)
+	}
 }
 
 func NewErrorExitPrintHelp(errCause error, message string) ErrorExit {
 	myErr := ErrorExit{message, errCause, 3}
-	LogLady.WithField("error", errCause).Error(message)
+	// LogLady.WithField("error", errCause).Error(message)
 	fmt.Println(myErr.Error())
 
+	fmt.Print(getLogFileMessage())
+	return myErr
+}
+
+func getLogFileMessage() string {
 	var logFile string
 	var logFileErr error
-	if logFile, logFileErr = LogFileLocation(); logFileErr != nil {
+	if logFile, logFileErr = logger.LogFileLocation(); logFileErr != nil {
 		logFile = "unknown"
 	}
 
-	fmt.Printf("For more information, check the log file at %s\n", logFile)
-	fmt.Println("nancy version:", buildversion.BuildVersion)
-	return myErr
+	return fmt.Sprintf("For more information, check the log file at %s\n"+
+		"nancy version: %s\n", logFile, buildversion.BuildVersion)
 }
