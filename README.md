@@ -507,11 +507,11 @@ Follow the steps below to release a new version of Nancy. You need to be part of
 
   1. Checkout/pull the latest `master` branch, and create a new tag with the desired semantic version and a helpful note:
   
-         git tag -a v0.1.x -m "Helpful message in tag."
+         git tag -a v1.0.x -m "Helpful message in tag."
          
   2. Push the tag up:
   
-         git push origin v0.1.x
+         git push origin v1.0.x
          
   3. There is no step 3.
           
