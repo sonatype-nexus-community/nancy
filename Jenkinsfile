@@ -33,7 +33,7 @@ dockerizedBuildPipeline(
     withDockerImage(env.DOCKER_IMAGE_ID, {
       withCredentials([usernamePassword(credentialsId: 'policy.s integration account',
         usernameVariable: 'IQ_USERNAME', passwordVariable: 'IQ_PASSWORD')]) {
-        sh 'go list -m all | ./nancy iq -application nancy -stage build -user $IQ_USERNAME -token $IQ_PASSWORD -server-url https://policy.ci.sonatype.dev'
+        sh 'go list -json -m all | ./nancy iq --iq-application nancy --iq-stage build --iq-username $IQ_USERNAME --iq-token $IQ_PASSWORD --iq-server-url https://policy.ci.sonatype.dev'
       }
     })
   },
