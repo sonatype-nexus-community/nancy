@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
 package cmd
 
 import (
@@ -34,13 +33,13 @@ func init() {
 }
 
 var sleuthCmd = &cobra.Command{
-	Use:     "sleuth",
+	Use: "sleuth",
 	Example: `  go list -json -m all | nancy sleuth --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token
   nancy sleuth -p Gopkg.lock --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token`,
-	Short:   "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
-	Long:    `'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by the 'Sonatype OSS Index'.`,
-	PreRun:  func(cmd *cobra.Command, args []string) { bindViper(rootCmd) },
-	RunE:    doOSSI,
+	Short:  "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
+	Long:   `'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by the 'Sonatype OSS Index'.`,
+	PreRun: func(cmd *cobra.Command, args []string) { bindViper(rootCmd) },
+	RunE:   doOSSI,
 }
 
 //noinspection GoUnusedParameter
