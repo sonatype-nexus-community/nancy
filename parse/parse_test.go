@@ -1,4 +1,5 @@
-// Copyright 2018 Sonatype Inc.
+//
+// Copyright 2018-present Sonatype Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,22 +12,74 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+
 package parse
 
 import (
 	"bufio"
+	"os"
 	"strings"
 	"testing"
 )
 
-func TestGoSum(t *testing.T) {
-	deps, err := GoSum("testdata/go.sum")
+func TestGoListAgnostic(t *testing.T) {
+	goListFile, err := os.Open("testdata/golist.out")
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(deps.Projects) != 10 {
-		t.Error(deps)
+	deps, err := GoListAgnostic(goListFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 48 {
+		t.Errorf("Unsuccessfully parsed go list -m all output, 48 dependencies were expected, but %d encountered", len(deps.Projects))
+	}
+
+	goListJSONFile, err := os.Open("testdata/golistjson.out")
+	if err != nil {
+		t.Error(err)
+	}
+
+	deps, err = GoListAgnostic(goListJSONFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 48 {
+		t.Errorf("Unsuccessfully parsed go list -json -m all output, 48 dependencies were expected, but %d encountered", len(deps.Projects))
+	}
+
+	goListReplaceFile, err := os.Open("testdata/golistreplace.out")
+	if err != nil {
+		t.Error(err)
+	}
+
+	deps, err = GoListAgnostic(goListReplaceFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 1 {
+		t.Errorf("Unsuccessfully parsed go list -m all output, 1 dependency was expected, but %d encountered", len(deps.Projects))
+	}
+	if deps.Projects[0].Version != "v1.4.2" {
+		t.Errorf("Version expected to be v1.4.2, but encountered %s", deps.Projects[0].Version)
+	}
+
+	goListJSONReplaceFile, err := os.Open("testdata/golistjsonreplace.out")
+	if err != nil {
+		t.Error(err)
+	}
+
+	deps, err = GoListAgnostic(goListJSONReplaceFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 134 {
+		t.Errorf("Unsuccessfully parsed go list -m all output, 134 dependencies were expected, but %d encountered", len(deps.Projects))
+	}
+	if deps.Projects[0].Version != "v1.4.2" {
+		t.Errorf("Version expected to be v1.4.2, but encountered %s", deps.Projects[0].Version)
 	}
 }
 
@@ -57,12 +110,5 @@ golang.org/x/sys v0.0.0-20181228144115-9a3f9b0469bb`
 
 	if len(deps.Projects) != 16 {
 		t.Error(deps)
-	}
-}
-
-func TestGoSumError(t *testing.T) {
-	_, err := GoSum("../testdata/parse/go.notsum")
-	if err == nil {
-		t.Error(err)
 	}
 }

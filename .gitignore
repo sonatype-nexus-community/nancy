@@ -8,3 +8,17 @@ nancy*amd64*
 .idea
 *.iml
 dist/
+
+# ci config for local ci build
+.circleci/local-config.yml
+
+# VS Code
+.vscode
+
+### Vim ###
+# Swap
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]

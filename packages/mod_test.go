@@ -1,4 +1,5 @@
-// Copyright 2018 Sonatype Inc.
+//
+// Copyright 2018-present Sonatype Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +12,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+
 package packages
 
 import (
@@ -18,8 +21,6 @@ import (
 
 	"github.com/sonatype-nexus-community/nancy/types"
 )
-
-var testGoSumName = "testdata/go.sum"
 
 // Simulate calling parse.GopkgLock()
 func getProjectList() (projectList types.ProjectList) {
@@ -60,24 +61,9 @@ func appendProject(name string, version string, projectList *types.ProjectList) 
 	projectList.Projects = append(projectList.Projects, types.Projects{Name: name, Version: version})
 }
 
-func TestModCheckExistenceOfManifestExists(t *testing.T) {
-	mod := Mod{}
-	mod.GoSumPath = testGoSumName
-	exists := mod.CheckExistenceOfManifest()
-
-	if !exists {
-		t.Errorf("Expected existence of %s", testGoSumName)
-	}
-}
-
 func TestModExtractPurlsFromManifest(t *testing.T) {
-	var err error
 	mod := Mod{}
-	mod.GoSumPath = testGoSumName
 	mod.ProjectList = getProjectList()
-	if err != nil {
-		t.Error(err)
-	}
 
 	result := mod.ExtractPurlsFromManifest()
 	if len(result) != 5 {
@@ -86,13 +72,8 @@ func TestModExtractPurlsFromManifest(t *testing.T) {
 }
 
 func TestModExtractPurlsFromManifestDuplicates(t *testing.T) {
-	var err error
 	mod := Mod{}
-	mod.GoSumPath = testGoSumName
 	mod.ProjectList = getProjectListDuplicates()
-	if err != nil {
-		t.Error(err)
-	}
 
 	result := mod.ExtractPurlsFromManifest()
 	if len(result) != 5 {

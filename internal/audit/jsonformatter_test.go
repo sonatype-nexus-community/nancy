@@ -14,22 +14,42 @@
 // limitations under the License.
 //
 
-package buildversion
+package audit
 
 import (
 	"testing"
 
+	. "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDefaultVersion(t *testing.T) {
-	assert.Equal(t, "development", BuildVersion)
+func TestJsonOutpu(t *testing.T) {
+	data := map[string]interface{}{
+		"stuff":   1,
+		"another": "me",
+	}
+	entry := Entry{Data: data}
+
+	formatter := JsonFormatter{}
+	logMessage, e := formatter.Format(&entry)
+
+	assert.Nil(t, e)
+	assert.Equal(t, `{"another":"me","stuff":1}`, string(logMessage))
 }
 
-func TestDefaultBuildTime(t *testing.T) {
-	assert.Equal(t, "", BuildTime)
-}
+func TestJsonPrettyPrintOutpu(t *testing.T) {
+	data := map[string]interface{}{
+		"stuff":   1,
+		"another": "me",
+	}
+	entry := Entry{Data: data}
 
-func TestDefaultBuildCommit(t *testing.T) {
-	assert.Equal(t, "", BuildCommit)
+	formatter := JsonFormatter{PrettyPrint: true}
+	logMessage, e := formatter.Format(&entry)
+
+	assert.Nil(t, e)
+	assert.Equal(t, `{
+  "another": "me",
+  "stuff": 1
+}`, string(logMessage))
 }

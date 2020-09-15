@@ -33,17 +33,18 @@ deps:
 	$(GOCMD) mod tidy
 
 headers:
-	$(GOCMD) get github.com/google/addlicense
-	addlicense -check -f ./header.txt .
+	$(GOCMD) get -u github.com/google/addlicense
+	addlicense -check -f ./header.txt ./*.go
 
-build: 
+build:
 	$(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
 
 test: build
-	$(GOTEST) -v -count=1 -p=1 ./... 2>&1
+	$(GOTEST) -v ./... 2>&1
 
 integration-test: build
-	cd packages/testdata && ../../$(BINARY_NAME) Gopkg.lock && cd -
-	./$(BINARY_NAME) go.sum
-	go list -m all | ./$(BINARY_NAME)
-	go list -m all > deps.out && ./$(BINARY_NAME) < deps.out
+	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
+	go list -json -m all | ./$(BINARY_NAME) sleuth
+	go list -m all | ./$(BINARY_NAME) sleuth
+	go list -json -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
+	go list -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
