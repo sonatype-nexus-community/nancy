@@ -34,9 +34,9 @@ deps:
 
 headers:
 	$(GOCMD) get -u github.com/google/addlicense
-	addlicense -check -f ./header.txt ./*.go
+	addlicense -v -check -f ./header.txt ./*.go
 
-build: 
+build:
 	$(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
 
 test: build
