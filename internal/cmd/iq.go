@@ -247,19 +247,18 @@ func auditWithIQServer(purls []string) error {
 		return errors.New(res.ErrorMessage)
 	}
 
-	if res.PolicyAction != "Failure" {
-		logLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
-		if res.PolicyAction == "Warning" {
-			fmt.Println("Read, read, read. That's all I can say. There are policy warnings to investigate!")
-			fmt.Println("Report URL: ", res.ReportHTMLURL)
-		} else {
-			fmt.Println("Wonderbar! No policy violations reported for this audit!")
-			fmt.Println("Report URL: ", res.ReportHTMLURL)
-		}
-		return nil
-	}
 	logLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
-	fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
-	fmt.Println("Report URL: ", res.ReportHTMLURL)
-	return customerrors.ErrorExit{ExitCode: 1}
+	switch res.PolicyAction {
+	case "Failure":
+		fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
+		fmt.Println("Report URL: ", res.ReportHTMLURL)
+		return customerrors.ErrorExit{ExitCode: 1}
+	case "Warning":
+		fmt.Println("Read, read, read. That's all I can say. There are policy warnings to investigate!")
+		fmt.Println("Report URL: ", res.ReportHTMLURL)
+	default:
+		fmt.Println("Wonderbar! No policy violations reported for this audit!")
+		fmt.Println("Report URL: ", res.ReportHTMLURL)
+	}
+	return nil
 }
