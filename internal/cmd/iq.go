@@ -81,13 +81,13 @@ var (
 )
 
 var iqCmd = &cobra.Command{
-	Use:     "iq",
+	Use: "iq",
 	Example: `  go list -json -m all | nancy iq --` + flagNameIqApplication + ` your_public_application_id --` + flagNameIqServerUrl + ` http://your_iq_server_url:port --` + flagNameIqUsername + ` your_user --` + flagNameIqToken + ` your_token --` + flagNameIqStage + ` develop
   nancy iq -p Gopkg.lock --` + flagNameIqApplication + ` your_public_application_id --` + flagNameIqServerUrl + ` http://your_iq_server_url:port --` + flagNameIqUsername + ` your_user --` + flagNameIqToken + ` your_token --` + flagNameIqStage + ` develop`,
-	Short:   "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'",
-	Long:    `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
-	PreRun:  func(cmd *cobra.Command, args []string) { bindViperIq(cmd) },
-	RunE:    doIQ,
+	Short:  "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'",
+	Long:   `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
+	PreRun: func(cmd *cobra.Command, args []string) { bindViperIq(cmd) },
+	RunE:   doIQ,
 }
 
 //noinspection GoUnusedParameter
@@ -247,14 +247,18 @@ func auditWithIQServer(purls []string) error {
 		return errors.New(res.ErrorMessage)
 	}
 
-	if res.PolicyAction != "Failure" {
-		logLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
+	logLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
+	switch res.PolicyAction {
+	case "Failure":
+		fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
+		fmt.Println("Report URL: ", res.ReportHTMLURL)
+		return customerrors.ErrorExit{ExitCode: 1}
+	case "Warning":
+		fmt.Println("Read, read, read. That's all I can say. There are policy warnings to investigate!")
+		fmt.Println("Report URL: ", res.ReportHTMLURL)
+	default:
 		fmt.Println("Wonderbar! No policy violations reported for this audit!")
 		fmt.Println("Report URL: ", res.ReportHTMLURL)
-		return nil
 	}
-	logLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
-	fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
-	fmt.Println("Report URL: ", res.ReportHTMLURL)
-	return customerrors.ErrorExit{ExitCode: 1}
+	return nil
 }

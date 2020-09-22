@@ -248,6 +248,20 @@ func TestAuditWithIQServerPolicyActionFailure(t *testing.T) {
 	assert.Equal(t, customerrors.ErrorExit{ExitCode: 1}, typedError)
 }
 
+func TestAuditWithIQServerPolicyActionWarning(t *testing.T) {
+	origIqCreator := iqCreator
+	defer func() {
+		iqCreator = origIqCreator
+	}()
+	logLady, _ = test.NewNullLogger()
+
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{PolicyAction: "Warning"}}}
+
+	err := auditWithIQServer(testPurls)
+
+	assert.Nil(t, err)
+}
+
 func TestDoIqInvalidStdIn(t *testing.T) {
 	err := doIQ(iqCmd, []string{})
 	assert.Equal(t, customerrors.ErrorShowLogPath{Err: stdInInvalid}, err)
