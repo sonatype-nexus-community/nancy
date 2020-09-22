@@ -44,7 +44,7 @@ test: build
 
 integration-test: build
 	# temporary workaround, remove next line when x/net false positive is fixed
-	echo 'CVE-2018-17142\nCVE-2018-17846\nCVE-2018-17143\nCVE-2018-17847\nCVE-2018-17848' > packages/testdata/.nancy-ignore
+	echo 'CVE-2018-17142 until=2020-10-22 #x/net false positive\nCVE-2018-17846 until=2020-10-22\nCVE-2018-17143 until=2020-10-22\nCVE-2018-17847 until=2020-10-22\nCVE-2018-17848 until=2020-10-22' > packages/testdata/.nancy-ignore
 	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
 	# temporary workaround, remove next line when x/net false positive is fixed
 	mv packages/testdata/.nancy-ignore .
