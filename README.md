@@ -16,7 +16,7 @@
 
 -->
 <p align="center">
-    <img src="https://github.com/sonatype-nexus-community/nancy/blob/master/docs/images/nancy.png" width="350"/>
+    <img src="https://github.com/sonatype-nexus-community/nancy/blob/main/docs/images/nancy.png" width="350"/>
 </p>
 
 <p align="center">
@@ -146,7 +146,7 @@ You can see more about the formulae, etc... at [this repo](https://github.com/so
 #### Docker usage
 
 <p align="center">
-    <img src="https://github.com/sonatype-nexus-community/nancy/blob/master/docs/images/nancy_docker.png" width="350"/>
+    <img src="https://github.com/sonatype-nexus-community/nancy/blob/main/docs/images/nancy_docker.png" width="350"/>
 </p>
 
 `nancy` now comes in a boat! For ease of use, we've dockerized `nancy`. To use our Dockerfile:
@@ -454,7 +454,7 @@ Choose `iq` as an option and run through the rest of the config. Once you are do
 
 You can see an example of using `nancy` in Travis-CI at [this intentionally vulnerable repo we made](https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project).
 
-Nancy as well runs on it self (delicious dog food!) in CircleCI, in a myriad of fashions. You can see how we do that here in [our repo's CircleCI config](https://github.com/sonatype-nexus-community/nancy/blob/master/.circleci/config.yml).
+Nancy as well runs on it self (delicious dog food!) in CircleCI, in a myriad of fashions. You can see how we do that here in [our repo's CircleCI config](https://github.com/sonatype-nexus-community/nancy/blob/main/.circleci/config.yml).
 
 ### DISCLAIMER
 
@@ -505,7 +505,7 @@ Adding new files? Get the license header correct with:
 
 Follow the steps below to release a new version of Nancy. You need to be part of the `deploy from circle ci` group for this to work.
 
-  1. Checkout/pull the latest `master` branch, and create a new tag with the desired semantic version and a helpful note:
+  1. Checkout/pull the latest `main` branch, and create a new tag with the desired semantic version and a helpful note:
   
          git tag -a v1.0.x -m "Helpful message in tag."
          
