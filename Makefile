@@ -43,8 +43,14 @@ test: build
 	$(GOTEST) -v ./... 2>&1
 
 integration-test: build
+	# temporary workaround, remove next line when x/net false positive is fixed
+	echo 'CVE-2018-17142\nCVE-2018-17846\nCVE-2018-17143\nCVE-2018-17847\nCVE-2018-17848' > packages/testdata/.nancy-ignore
 	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
+	# temporary workaround, remove next line when x/net false positive is fixed
+	mv packages/testdata/.nancy-ignore .
 	go list -json -m all | ./$(BINARY_NAME) sleuth
 	go list -m all | ./$(BINARY_NAME) sleuth
 	go list -json -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
 	go list -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
+	# temporary workaround, remove next line when x/net false positive is fixed
+	rm .nancy-ignore
