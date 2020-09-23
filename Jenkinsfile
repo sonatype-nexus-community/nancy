@@ -17,6 +17,7 @@
 
 dockerizedBuildPipeline(
   buildImageId: "${sonatypeDockerRegistryId()}/cdi/golang-1.14:1",
+  deployBranch: 'main',
   prepare: {
     githubStatusUpdate('pending')
   },
