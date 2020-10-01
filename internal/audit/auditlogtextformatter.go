@@ -47,13 +47,11 @@ type AuditLogTextFormatter struct {
 	NoColor bool
 }
 
-func logPackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
+func logPackage(sb *strings.Builder, noColor bool, coordinate types.Coordinate) {
 	au := aurora.NewAurora(!noColor)
 
 	sb.WriteString(
-		fmt.Sprintf("[%d/%d]\t%s\n",
-			idx,
-			packageCount,
+		fmt.Sprintf("%s\n",
 			au.Bold(au.Green(coordinate.Coordinates)).String(),
 		),
 	)
@@ -65,11 +63,9 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 			au := aurora.NewAurora(!noColor)
 			sb.WriteString(au.Red("!!!!! WARNING !!!!!\nScanning cannot be completed on the following package(s) since they do not use semver.\n").String())
 
-			for k, v := range invalidPurls {
+			for _, v := range invalidPurls {
 				sb.WriteString(
-					fmt.Sprintf("[%d/%d]\t%s\n",
-						k+1,
-						len(invalidPurls),
+					fmt.Sprintf("%s\n",
 						au.Bold(v.Coordinates).String(),
 					),
 				)
@@ -80,12 +76,10 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 	}
 }
 
-func logVulnerablePackage(sb *strings.Builder, noColor bool, idx int, packageCount int, coordinate types.Coordinate) {
+func logVulnerablePackage(sb *strings.Builder, noColor bool, coordinate types.Coordinate) {
 	au := aurora.NewAurora(!noColor)
 	sb.WriteString(fmt.Sprintf(
-		"[%d/%d]\t%s\n%s \n",
-		idx,
-		packageCount,
+		"%s\n%s \n",
 		au.Bold(au.Red(coordinate.Coordinates)).String(),
 		au.Red(strconv.Itoa(len(coordinate.Vulnerabilities))+" known vulnerabilities affecting installed version").String(),
 	))
@@ -142,16 +136,17 @@ func scoreAssessment(score decimal.Decimal) string {
 
 func groupAndPrint(vulnerable []types.Coordinate, nonVulnerable []types.Coordinate, quiet bool, noColor bool, sb *strings.Builder) {
 	if !quiet {
-		sb.WriteString("\nNon Vulnerable Packages\n\n")
-		for k, v := range nonVulnerable {
-			logPackage(sb, noColor, k+1, len(nonVulnerable), v)
+		sb.WriteString("\n")
+		for _, v := range nonVulnerable {
+			logPackage(sb, noColor, v)
 		}
+		sb.WriteString(fmt.Sprintf("\n%d Non Vulnerable Packages\n\n", len(nonVulnerable)))
 	}
 	if len(vulnerable) > 0 {
-		sb.WriteString("\nVulnerable Packages\n\n")
-		for k, v := range vulnerable {
-			logVulnerablePackage(sb, noColor, k+1, len(vulnerable), v)
+		for _, v := range vulnerable {
+			logVulnerablePackage(sb, noColor, v)
 		}
+		sb.WriteString(fmt.Sprintf("\n%d Vulnerable Packages\n\n", len(vulnerable)))
 	}
 }
 
