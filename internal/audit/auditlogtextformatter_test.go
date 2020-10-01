@@ -88,7 +88,7 @@ func TestFormatterLogInvalidSemVerWarning(t *testing.T) {
 
 	expectedMessagePrefix := `!!!!! WARNING !!!!!
 Scanning cannot be completed on the following package(s) since they do not use semver.
-[1/1]	MyInvalidCoords
+MyInvalidCoords
 
 `
 	assert.True(t, strings.HasPrefix(string(logMessage), expectedMessagePrefix))
