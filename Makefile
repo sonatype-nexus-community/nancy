@@ -57,7 +57,10 @@ docker-alpine-integration-test: build-linux
 	mkdir -p dist
 	docker build . -f Dockerfile.alpine -t sonatypecommunity/nancy:alpine-integration-test
 	# create file, volume mount to simulate, ci run of the container and things just happening inside the container instead of passing output to the container directly
-	go list -json -m all > dist/deps.out && docker run -v $$(pwd):/go/src/github.com/user/repo -it --rm sonatypecommunity/nancy:alpine-integration-test cat /go/src/github.com/user/repo/dist/deps.out | nancy sleuth
+	go list -json -m all > dist/deps.out
+	echo "cat /go/src/github.com/user/repo/dist/deps.out | nancy sleuth" > dist/ci.sh
+	chmod +x dist/ci.sh
+	docker run -v $$(pwd):/go/src/github.com/user/repo -it --rm sonatypecommunity/nancy:alpine-integration-test /bin/sh /go/src/github.com/user/repo/dist/ci.sh
 
 docker-goreleaser-integration-test: build-linux
 	docker build . -f Dockerfile.goreleaser -t sonatypecommunity/nancy:goreleaser-integration-test
