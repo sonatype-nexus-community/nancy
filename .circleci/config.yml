@@ -45,6 +45,7 @@ jobs:
       - run: make ci-lint
       - run: make test | go-junit-report > $TEST_RESULTS/gotest/report.xml
       - run: make integration-test
+      - setup_remote_docker
       - run: make docker-integration-tests
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
