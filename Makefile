@@ -46,8 +46,8 @@ integration-test: build
 	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
 	go list -json -m all | ./$(BINARY_NAME) sleuth
 	go list -m all | ./$(BINARY_NAME) sleuth
-	go list -json -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
-	go list -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
+	go list -json -m all > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
+	go list -m all > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
 
 build-linux:
 	GOOS=linux GOARCH=amd64 $(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
