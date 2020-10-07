@@ -48,3 +48,17 @@ integration-test: build
 	go list -m all | ./$(BINARY_NAME) sleuth
 	go list -json -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
 	go list -m all > deps.out && ./$(BINARY_NAME) sleuth < deps.out
+
+build-linux:
+	GOOS=linux GOARCH=amd64 $(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
+
+docker-alpine-integration-test: build-linux
+	docker build . -f Dockerfile.alpine -t sonatypecommunity/nancy:alpine-integration-test
+	# create file, volume mount to simulate, ci run of the container and things just happening inside the container instead of passing output to the container directly
+	go list -json -m all > dist/deps.out && docker run -v $$(pwd):/go/src/github.com/user/repo -it --rm sonatypecommunity/nancy:alpine-integration-test cat /go/src/github.com/user/repo/dist/deps.out | nancy sleuth
+
+docker-goreleaser-integration-test: build-linux
+	docker build . -f Dockerfile.goreleaser -t sonatypecommunity/nancy:goreleaser-integration-test
+	go list -json -m all | docker run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth
+
+docker-integration-tests: docker-alpine-integration-test docker-goreleaser-integration-test
