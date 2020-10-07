@@ -43,6 +43,7 @@ test: build
 	$(GOTEST) -v ./... 2>&1
 
 integration-test: build
+	mkdir dist
 	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
 	go list -json -m all | ./$(BINARY_NAME) sleuth
 	go list -m all | ./$(BINARY_NAME) sleuth
@@ -53,6 +54,7 @@ build-linux:
 	GOOS=linux GOARCH=amd64 $(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
 
 docker-alpine-integration-test: build-linux
+	mkdir dist
 	docker build . -f Dockerfile.alpine -t sonatypecommunity/nancy:alpine-integration-test
 	# create file, volume mount to simulate, ci run of the container and things just happening inside the container instead of passing output to the container directly
 	go list -json -m all > dist/deps.out && docker run -v $$(pwd):/go/src/github.com/user/repo -it --rm sonatypecommunity/nancy:alpine-integration-test cat /go/src/github.com/user/repo/dist/deps.out | nancy sleuth
