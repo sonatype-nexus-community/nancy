@@ -19,22 +19,28 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestLogger(t *testing.T) {
-	if !strings.Contains(GetLogFileLocation(), TestLogfilename) {
+	homeDir, restoreHomeDirFunc := setTempHomeDir(t)
+	defer restoreHomeDirFunc()
+
+	if !strings.Contains(GetLogFileLocation(), DefaultLogFile) {
 		t.Errorf("Nancy test file not in log file location. args: %+v", os.Args)
+	}
+
+	if !strings.Contains(GetLogFileLocation(), homeDir) {
+		t.Errorf("Nancy test file not in expected temporary home directory. args: %+v", os.Args)
 	}
 
 	LogLady.Info("Test")
 
 	dat, err := ioutil.ReadFile(GetLogFileLocation())
 	if err != nil {
-		t.Error("Unable to open log file")
+		t.Error("Unable to open log file", err)
 	}
 
 	var logTest LogTest
@@ -51,6 +57,7 @@ func TestLogger(t *testing.T) {
 	if logTest.Msg != "Test" {
 		t.Error("Message not written to log correctly")
 	}
+
 }
 
 type LogTest struct {
@@ -59,36 +66,30 @@ type LogTest struct {
 	Time  string `json:"time"`
 }
 
-func setupTestCase(t *testing.T) func(t *testing.T) {
-	origDefault := DefaultLogFile
-	t.Logf("setup test case, origDefault: %+v", origDefault)
-	DefaultLogFile = DefaultLogFilename
-	return func(t *testing.T) {
-		t.Logf("teardown test case, origDefault: %+v", origDefault)
-		DefaultLogFile = origDefault
+func setTempHomeDir(t *testing.T) (string, func()) {
+	originalHomedir, err := os.UserHomeDir()
+	if err != nil {
+		t.Error("unable to get home directory", err)
 	}
-}
+	tempDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Error("unable to create temp directory", err)
+	}
 
-func TestInit(t *testing.T) {
-	teardownTestCase := setupTestCase(t)
-	defer teardownTestCase(t)
+	envVar := "HOME"
+	if runtime.GOOS == "windows" {
+		envVar = "USERPROFILE"
+	}
+	err = os.Setenv(envVar, tempDir)
+	doInit()
 
-	doInit([]string{"yadda", "-test.v"})
-	assert.Equal(t, TestLogfilename, DefaultLogFile)
-}
+	if err != nil {
+		t.Error("unable to set temporary home directory")
+	}
 
-func TestInitIQ(t *testing.T) {
-	teardownTestCase := setupTestCase(t)
-	defer teardownTestCase(t)
-
-	doInit([]string{"yadda", "-iq", "-test.v"})
-	assert.Equal(t, DefaultLogFilename, DefaultLogFile)
-}
-
-func TestInitDefault(t *testing.T) {
-	teardownTestCase := setupTestCase(t)
-	defer teardownTestCase(t)
-
-	doInit([]string{"yadda", "-yadda"})
-	assert.Equal(t, DefaultLogFilename, DefaultLogFile)
+	restoreHomeDirFunc := func() {
+		os.Setenv(envVar, originalHomedir)
+		doInit()
+	}
+	return tempDir, restoreHomeDirFunc
 }
