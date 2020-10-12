@@ -160,6 +160,37 @@ We publish a few different flavors for convenience:
 - The major version (we respect semver) ex: `v0`
 - The major/minor version (seriously, we respect semver) ex: `v0.1`
 
+##### Want to build them locally??
+1. Install `goreleaser` or use their provided docker image (https://goreleaser.com/install/)
+2. Run `goreleaser` with the following options
+```
+goreleaser release --skip-publish --snapshot --rm-dist
+```
+
+or docker version of `goreleaser`
+```
+docker run --privileged \
+  -v $PWD:/go/src/github.com/user/repo \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -w /go/src/github.com/user/repo \
+  goreleaser/goreleaser release --skip-publish --snapshot --rm-dist
+```
+
+3. Once complete you will have the images now built locally. Use `docker images` to see them
+
+```
+> docker images                                                                                                                                                                [789c9df]
+REPOSITORY                TAG                           IMAGE ID            CREATED             SIZE
+sonatypecommunity/nancy   alpine                        f966c833c762        52 seconds ago      19.9MB
+sonatypecommunity/nancy   v1-alpine                     f966c833c762        52 seconds ago      19.9MB
+sonatypecommunity/nancy   v1.0-alpine                   f966c833c762        52 seconds ago      19.9MB
+sonatypecommunity/nancy   v1.0.0-alpine                 f966c833c762        52 seconds ago      19.9MB
+sonatypecommunity/nancy   latest                        7cb89e362115        53 seconds ago      14.1MB
+sonatypecommunity/nancy   v1                            7cb89e362115        53 seconds ago      14.1MB
+sonatypecommunity/nancy   v1.0                          7cb89e362115        53 seconds ago      14.1MB
+sonatypecommunity/nancy   v1.0.0                        7cb89e362115        53 seconds ago      14.1MB
+```
+
 ### OSS Index Options
 
 #### Rate limiting / Setting OSS Index config
