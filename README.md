@@ -530,7 +530,7 @@ Tests can be run like this `make test`
 Adding new files? Get the license header correct with:
 
 > go get -u github.com/google/addlicense
-> addlicense -f ./header.txt .
+> addlicense -v -f ./header.txt .
 
 ### Release Process
 
