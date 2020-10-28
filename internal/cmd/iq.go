@@ -24,8 +24,8 @@ import (
 	"path"
 
 	"github.com/mitchellh/go-homedir"
+	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
-	"github.com/sonatype-nexus-community/nancy/internal/configuration"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/sonatype-nexus-community/nancy/packages"

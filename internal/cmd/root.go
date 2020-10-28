@@ -29,12 +29,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sonatype-nexus-community/nancy/internal/configuration"
-
 	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
 	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
