@@ -180,7 +180,7 @@ func bindViperIq(cmd *cobra.Command) {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// need to ensure ossi CLI flags will override ossi config file values when running IQ command
-	bindViper(rootCmd)
+	bindViperRootCmd()
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
 	if err := viper.BindPFlag(configuration.ViperKeyIQUsername, lookupFlagNotNil(flagNameIqUsername, cmd)); err != nil {

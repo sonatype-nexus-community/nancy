@@ -177,14 +177,14 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
 }
 
-func bindViper(cmd *cobra.Command) {
+func bindViperRootCmd() {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	if err := viper.BindPFlag(configuration.ViperKeyUsername, lookupPersistentFlagNotNil(flagNameOssiUsername, cmd)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyUsername, lookupPersistentFlagNotNil(flagNameOssiUsername, rootCmd)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.ViperKeyToken, lookupPersistentFlagNotNil(flagNameOssiToken, cmd)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyToken, lookupPersistentFlagNotNil(flagNameOssiToken, rootCmd)); err != nil {
 		panic(err)
 	}
 }
