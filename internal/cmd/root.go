@@ -198,13 +198,11 @@ func lookupPersistentFlagNotNil(flagName string, cmd *cobra.Command) *pflag.Flag
 	return foundFlag
 }
 
-const configTypeYaml = "yaml"
-
 func initConfig() {
 	var cfgFileToCheck string
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
-		viper.SetConfigType(configTypeYaml)
+		viper.SetConfigType(configuration.ConfigTypeYaml)
 		cfgFileToCheck = cfgFile
 	} else {
 		home, err := homedir.Dir()
@@ -212,13 +210,13 @@ func initConfig() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		configPath := path.Join(home, types.OssIndexDirName)
+		configPath := path.Join(home, ossIndexTypes.OssIndexDirName)
 
 		viper.AddConfigPath(configPath)
-		viper.SetConfigType(configTypeYaml)
-		viper.SetConfigName(types.OssIndexConfigFileName)
+		viper.SetConfigType(configuration.ConfigTypeYaml)
+		viper.SetConfigName(ossIndexTypes.OssIndexConfigFileName)
 
-		cfgFileToCheck = path.Join(configPath, types.OssIndexConfigFileName)
+		cfgFileToCheck = path.Join(configPath, ossIndexTypes.OssIndexConfigFileName)
 	}
 
 	if fileExists(cfgFileToCheck) {

@@ -364,10 +364,10 @@ func TestInitConfigWithNoConfigFile(t *testing.T) {
 }
 
 func setupTestOSSIConfigFile(t *testing.T, tempDir string) {
-	cfgDir := path.Join(tempDir, types.OssIndexDirName)
+	cfgDir := path.Join(tempDir, ossIndexTypes.OssIndexDirName)
 	assert.Nil(t, os.Mkdir(cfgDir, 0700))
 
-	cfgFile = path.Join(tempDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+	cfgFile = path.Join(tempDir, ossIndexTypes.OssIndexDirName, ossIndexTypes.OssIndexConfigFileName)
 }
 
 func resetOSSIConfigFile() {

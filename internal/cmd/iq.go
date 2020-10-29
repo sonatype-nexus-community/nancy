@@ -26,6 +26,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/sonatype-nexus-community/nancy/packages"
@@ -206,7 +207,7 @@ func initIQConfig() {
 	var cfgFileToCheck string
 	if cfgFileIQ != "" {
 		viper.SetConfigFile(cfgFileIQ)
-		viper.SetConfigType(configTypeYaml)
+		viper.SetConfigType(configuration.ConfigTypeYaml)
 		cfgFileToCheck = cfgFileIQ
 	} else {
 		home, err := homedir.Dir()
@@ -214,13 +215,13 @@ func initIQConfig() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		configPath := path.Join(home, types.IQServerDirName)
+		configPath := path.Join(home, ossIndexTypes.IQServerDirName)
 
 		viper.AddConfigPath(configPath)
-		viper.SetConfigType(configTypeYaml)
-		viper.SetConfigName(types.IQServerConfigFileName)
+		viper.SetConfigType(configuration.ConfigTypeYaml)
+		viper.SetConfigName(ossIndexTypes.IQServerConfigFileName)
 
-		cfgFileToCheck = path.Join(configPath, types.IQServerConfigFileName)
+		cfgFileToCheck = path.Join(configPath, ossIndexTypes.IQServerConfigFileName)
 	}
 
 	if fileExists(cfgFileToCheck) {
