@@ -240,8 +240,8 @@ github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d/go.mod h1
 github.com/smartystreets/goconvey v1.6.4 h1:fv0U8FUIMPNf1L9lnHLvLhgicrIVChEkdzIKYqbNC9s=
 github.com/smartystreets/goconvey v1.6.4/go.mod h1:syvi0/a8iFYH4r/RixwvyeAJjdLS9QV7WQ/tjFTllLA=
 github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4kGIyLM=
-github.com/sonatype-nexus-community/go-sona-types v0.0.8-0.20201029185752-c18f609ad100 h1:594NzVnG/1ksUwQZ71owxZykfMGIZWESpvBa8kC+UwY=
-github.com/sonatype-nexus-community/go-sona-types v0.0.8-0.20201029185752-c18f609ad100/go.mod h1:uou8FGf9R5Nz1c6BfSM3v9K7g0R6faTYoxLh9Ybeht8=
+github.com/sonatype-nexus-community/go-sona-types v0.0.8 h1:6xb9BIC2w3y4kF/xQA25Zs6Yrl8ZqFkfH77AKPaG4RA=
+github.com/sonatype-nexus-community/go-sona-types v0.0.8/go.mod h1:uou8FGf9R5Nz1c6BfSM3v9K7g0R6faTYoxLh9Ybeht8=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/spf13/afero v1.1.2/go.mod h1:j4pytiNVoe2o6bmDsKpLACNPDBIoEAkihy7loJ1B0CQ=
 github.com/spf13/afero v1.3.4 h1:8q6vk3hthlpb2SouZcnBVKboxWQWMDNF38bwholZrJc=
