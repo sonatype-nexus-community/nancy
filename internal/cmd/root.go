@@ -29,12 +29,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sonatype-nexus-community/nancy/internal/configuration"
-
 	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
 	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
@@ -178,14 +177,14 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
 }
 
-func bindViper(cmd *cobra.Command) {
+func bindViperRootCmd() {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
-	if err := viper.BindPFlag(configuration.ViperKeyUsername, lookupPersistentFlagNotNil(flagNameOssiUsername, cmd)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyUsername, lookupPersistentFlagNotNil(flagNameOssiUsername, rootCmd)); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag(configuration.ViperKeyToken, lookupPersistentFlagNotNil(flagNameOssiToken, cmd)); err != nil {
+	if err := viper.BindPFlag(configuration.ViperKeyToken, lookupPersistentFlagNotNil(flagNameOssiToken, rootCmd)); err != nil {
 		panic(err)
 	}
 }
@@ -199,13 +198,11 @@ func lookupPersistentFlagNotNil(flagName string, cmd *cobra.Command) *pflag.Flag
 	return foundFlag
 }
 
-const configTypeYaml = "yaml"
-
 func initConfig() {
 	var cfgFileToCheck string
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
-		viper.SetConfigType(configTypeYaml)
+		viper.SetConfigType(configuration.ConfigTypeYaml)
 		cfgFileToCheck = cfgFile
 	} else {
 		home, err := homedir.Dir()
@@ -213,13 +210,13 @@ func initConfig() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		configPath := path.Join(home, types.OssIndexDirName)
+		configPath := path.Join(home, ossIndexTypes.OssIndexDirName)
 
 		viper.AddConfigPath(configPath)
-		viper.SetConfigType(configTypeYaml)
-		viper.SetConfigName(types.OssIndexConfigFileName)
+		viper.SetConfigType(configuration.ConfigTypeYaml)
+		viper.SetConfigName(ossIndexTypes.OssIndexConfigFileName)
 
-		cfgFileToCheck = path.Join(configPath, types.OssIndexConfigFileName)
+		cfgFileToCheck = path.Join(configPath, ossIndexTypes.OssIndexConfigFileName)
 	}
 
 	if fileExists(cfgFileToCheck) {

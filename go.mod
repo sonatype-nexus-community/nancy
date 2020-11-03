@@ -22,7 +22,7 @@ require (
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.6.0
-	github.com/sonatype-nexus-community/go-sona-types v0.0.7
+	github.com/sonatype-nexus-community/go-sona-types v0.0.8
 	github.com/spf13/afero v1.3.4 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0
@@ -34,7 +34,6 @@ require (
 	golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/ini.v1 v1.60.1 // indirect
-	gopkg.in/yaml.v2 v2.3.0
 )
 
 // fix vulnerability: CVE-2020-15114 in etcd v3.3.13+incompatible

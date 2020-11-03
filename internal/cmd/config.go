@@ -20,9 +20,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
+	"github.com/sonatype-nexus-community/nancy/internal/logger"
 
-	"github.com/sonatype-nexus-community/nancy/internal/configuration"
 	"github.com/spf13/cobra"
 )
 
@@ -47,7 +48,13 @@ func doConfig(cmd *cobra.Command, args []string) (err error) {
 		}
 	}()
 
-	if err = configuration.GetConfigFromCommandLine(os.Stdin); err != nil {
+	logLady = logger.GetLogger("", configOssi.LogLevel)
+	var configSet *configuration.ConfigSet
+	if configSet, err = configuration.New(logLady); err != nil {
+		panic(err)
+	}
+
+	if err = configSet.GetConfigFromCommandLine(os.Stdin); err != nil {
 		panic(err)
 	}
 	return

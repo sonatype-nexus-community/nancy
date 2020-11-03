@@ -24,14 +24,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Helpful constants to pull strings we use more than once out of code
-const (
-	OssIndexDirName        = ".ossindex"
-	OssIndexConfigFileName = ".oss-index-config"
-	IQServerDirName        = ".iqserver"
-	IQServerConfigFileName = ".iq-server-config"
-)
-
 type GoListModule struct {
 	Path      string        // module path
 	Version   string        // module version

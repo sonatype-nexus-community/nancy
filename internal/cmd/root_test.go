@@ -26,13 +26,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
 	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/types"
 
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/sonatype-nexus-community/nancy/internal/configuration"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -316,13 +316,11 @@ func TestConfigOssi_cleanCache(t *testing.T) {
 func setupConfig(t *testing.T) (tempDir string) {
 	tempDir, err := ioutil.TempDir("", "config-test")
 	assert.NoError(t, err)
-	configuration.HomeDir = tempDir
 	return tempDir
 }
 
 func resetConfig(t *testing.T, tempDir string) {
 	var err error
-	configuration.HomeDir, err = os.UserHomeDir()
 	assert.NoError(t, err)
 	_ = os.RemoveAll(tempDir)
 }
@@ -366,10 +364,10 @@ func TestInitConfigWithNoConfigFile(t *testing.T) {
 }
 
 func setupTestOSSIConfigFile(t *testing.T, tempDir string) {
-	cfgDir := path.Join(tempDir, types.OssIndexDirName)
+	cfgDir := path.Join(tempDir, ossIndexTypes.OssIndexDirName)
 	assert.Nil(t, os.Mkdir(cfgDir, 0700))
 
-	cfgFile = path.Join(tempDir, types.OssIndexDirName, types.OssIndexConfigFileName)
+	cfgFile = path.Join(tempDir, ossIndexTypes.OssIndexDirName, ossIndexTypes.OssIndexConfigFileName)
 }
 
 func resetOSSIConfigFile() {

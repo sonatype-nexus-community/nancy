@@ -27,8 +27,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
-	"github.com/sonatype-nexus-community/nancy/internal/configuration"
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/viper"
@@ -77,10 +78,10 @@ func TestIqCommandPathInvalidFile(t *testing.T) {
 }
 
 func setupIQConfigFile(t *testing.T, tempDir string) {
-	cfgDirIQ := path.Join(tempDir, types.IQServerDirName)
+	cfgDirIQ := path.Join(tempDir, ossIndexTypes.IQServerDirName)
 	assert.Nil(t, os.Mkdir(cfgDirIQ, 0700))
 
-	cfgFileIQ = path.Join(tempDir, types.IQServerDirName, types.IQServerConfigFileName)
+	cfgFileIQ = path.Join(tempDir, ossIndexTypes.IQServerDirName, ossIndexTypes.IQServerConfigFileName)
 }
 func resetIQConfigFile() {
 	cfgFileIQ = ""

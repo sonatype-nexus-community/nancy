@@ -24,8 +24,9 @@ import (
 	"path"
 
 	"github.com/mitchellh/go-homedir"
+	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
-	"github.com/sonatype-nexus-community/nancy/internal/configuration"
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/sonatype-nexus-community/nancy/packages"
@@ -179,7 +180,7 @@ func bindViperIq(cmd *cobra.Command) {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// need to ensure ossi CLI flags will override ossi config file values when running IQ command
-	bindViper(rootCmd)
+	bindViperRootCmd()
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
 	if err := viper.BindPFlag(configuration.ViperKeyIQUsername, lookupFlagNotNil(flagNameIqUsername, cmd)); err != nil {
@@ -206,7 +207,7 @@ func initIQConfig() {
 	var cfgFileToCheck string
 	if cfgFileIQ != "" {
 		viper.SetConfigFile(cfgFileIQ)
-		viper.SetConfigType(configTypeYaml)
+		viper.SetConfigType(configuration.ConfigTypeYaml)
 		cfgFileToCheck = cfgFileIQ
 	} else {
 		home, err := homedir.Dir()
@@ -214,13 +215,13 @@ func initIQConfig() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		configPath := path.Join(home, types.IQServerDirName)
+		configPath := path.Join(home, ossIndexTypes.IQServerDirName)
 
 		viper.AddConfigPath(configPath)
-		viper.SetConfigType(configTypeYaml)
-		viper.SetConfigName(types.IQServerConfigFileName)
+		viper.SetConfigType(configuration.ConfigTypeYaml)
+		viper.SetConfigName(ossIndexTypes.IQServerConfigFileName)
 
-		cfgFileToCheck = path.Join(configPath, types.IQServerConfigFileName)
+		cfgFileToCheck = path.Join(configPath, ossIndexTypes.IQServerConfigFileName)
 	}
 
 	if fileExists(cfgFileToCheck) {
