@@ -63,3 +63,13 @@ workflows:
               ignore: /.*/
             tags:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+
+  build_nightly:
+    triggers:
+      - schedule:
+          cron: "20 20 * * *"
+          filters:
+            branches:
+              only: main
+    jobs:
+      - build
