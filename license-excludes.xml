@@ -3,4 +3,5 @@
   <exclude>src/.github/**</exclude>
   <exclude>src/Makefile</exclude>
   <exclude>src/Dockerfile.goreleaser</exclude>
+  <exclude>src/SECURITY.md</exclude>
 </excludes>
