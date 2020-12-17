@@ -18,9 +18,10 @@ package audit
 
 import (
 	"errors"
-	"github.com/shopspring/decimal"
 	"strings"
 	"testing"
+
+	"github.com/shopspring/decimal"
 
 	. "github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
@@ -59,7 +60,7 @@ func verifyFormatterSummaryLoudness(t *testing.T, quiet bool) {
 
 	expectedSummary := "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ Summary                     ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━┫\n┃ Audited Dependencies    ┃ 0 ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━┫\n┃ Vulnerable Dependencies ┃ \x1b[1;31m0\x1b[0m ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━┛\n"
 	if !quiet {
-		expectedSummary = "\nNon Vulnerable Packages\n\n" + expectedSummary
+		expectedSummary = "\n\n0 Non Vulnerable Packages\n\n" + expectedSummary
 	}
 	assert.Equal(t, expectedSummary, string(logMessage))
 }
@@ -87,7 +88,7 @@ func TestFormatterLogInvalidSemVerWarning(t *testing.T) {
 
 	expectedMessagePrefix := `!!!!! WARNING !!!!!
 Scanning cannot be completed on the following package(s) since they do not use semver.
-[1/1]	MyInvalidCoords
+MyInvalidCoords
 
 `
 	assert.True(t, strings.HasPrefix(string(logMessage), expectedMessagePrefix))
