@@ -16,7 +16,7 @@
 
 -->
 <p align="center">
-    <img src="https://github.com/sonatype-nexus-community/nancy/blob/main/docs/images/nancy.png" width="350"/>
+    <img src="https://github.com/sonatype-nexus-community/nancy/blob/main/docs/images/nancy.png" width="350" alt="nancy logo"/>
 </p>
 
 <p align="center">
@@ -146,7 +146,7 @@ You can see more about the formulae, etc... at [this repo](https://github.com/so
 #### Docker usage
 
 <p align="center">
-    <img src="https://github.com/sonatype-nexus-community/nancy/blob/main/docs/images/nancy_docker.png" width="350"/>
+    <img src="https://github.com/sonatype-nexus-community/nancy/blob/main/docs/images/nancy_docker.png" width="350" alt="nancy docker logo"/>
 </p>
 
 `nancy` now comes in a boat! For ease of use, we've dockerized `nancy`. To use our Dockerfile:

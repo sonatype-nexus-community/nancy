@@ -43,5 +43,5 @@ func TestSetWhenExcludeAlreadySet(t *testing.T) {
 	cve := CveListFlag{
 		Cves: []string{""},
 	}
-	assert.Equal(t, errors.New("The CVE Exclude Flag is already set"), cve.Set(""))
+	assert.Equal(t, errors.New("the CVE Exclude Flag is already set"), cve.Set(""))
 }

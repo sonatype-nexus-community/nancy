@@ -35,7 +35,7 @@ func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
 
 		if len(version) > 0 { // There must be a version we can use
 			name := lockedProject.Ident().String()
-			packageName := convertGopkgNameToPurl(string(name))
+			packageName := convertGopkgNameToPurl(name)
 			var purl = "pkg:" + packageName + "@" + version
 
 			_, err := semver.NewVersion(version)

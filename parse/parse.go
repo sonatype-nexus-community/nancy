@@ -85,7 +85,7 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 	if mod.Replace != nil {
 		if mod.Replace.Version == "" {
-			err = &NoVersionError{err: fmt.Errorf("No version found for mod")}
+			err = &NoVersionError{err: fmt.Errorf("no version found for mod")}
 			return
 		}
 		dep.Name = mod.Replace.Path
@@ -93,7 +93,7 @@ func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 		return
 	}
 	if mod.Version == "" {
-		err = &NoVersionError{err: fmt.Errorf("No version found for mod")}
+		err = &NoVersionError{err: fmt.Errorf("no version found for mod")}
 		return
 	}
 	dep.Name = mod.Path

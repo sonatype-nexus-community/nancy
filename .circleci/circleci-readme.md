@@ -13,7 +13,7 @@ The local build runs in a docker container.
           
         circleci local execute -c .circleci/local-config.yml --job 'build'
 
-    Typically both commands are run together:
+    Typically, both commands are run together:
     
         circleci config process .circleci/config.yml > .circleci/local-config.yml && circleci local execute -c .circleci/local-config.yml --job 'build'
     
