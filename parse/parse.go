@@ -105,7 +105,10 @@ func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectLi
 	text := scanner.Text()
 	s := strings.Split(text, " ")
 	if criteria(s) {
-		if len(s) > 3 {
+		if len(s) == 4 {
+			// Odd case, a replace on just name (not version). Should we even handle this?
+			deps.Projects = append(deps.Projects, types.Projects{Name: s[3], Version: s[1]})
+		} else if len(s) > 3 {
 			deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[4]})
 		} else {
 			deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[1]})
