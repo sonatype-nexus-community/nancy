@@ -67,9 +67,9 @@ func updateCLI(gitHubAPI string, performUpdate bool) error {
 		return err
 	}
 	if !found {
-		logAndShowMessage("did not find latest release for " + update.NancyAppName)
+		logLady.Info("did not find latest release for " + update.NancyAppName)
 	} else {
-		logAndShowMessage(fmt.Sprintf("latest release for %s: %v", update.NancyAppName, latest))
+		logLady.Debug(fmt.Sprintf("latest release for %s: %v", update.NancyAppName, latest))
 	}
 
 	check, err := update.CheckForUpdates(gitHubAPI, update.NancySlug, getCleanVersionNumber(), buildversion.PackageManager())
