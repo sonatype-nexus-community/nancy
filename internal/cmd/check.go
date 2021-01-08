@@ -23,7 +23,7 @@ func checkForUpdates(gitHubAPI string) error {
 
 		logLady.Info("Checking for updates...")
 
-		check, err := update.CheckForUpdates(gitHubAPI, slug, getCleanVersionNumber(), buildversion.PackageManager())
+		check, err := update.CheckForUpdates(gitHubAPI, slug, getVersionNumberSemver(), buildversion.PackageManager())
 
 		if err != nil {
 			logLady.Error("error checking for updates: " + err.Error())
@@ -61,7 +61,7 @@ func checkForUpdates(gitHubAPI string) error {
 	return nil
 }
 
-func getCleanVersionNumber() (currentVersion string) {
+func getVersionNumberSemver() (currentVersion string) {
 	// this value will be overridden during release, but for dev, we need a semver compliant value
 	if //goland:noinspection GoBoolExpressions
 	buildversion.BuildVersion == "development" {

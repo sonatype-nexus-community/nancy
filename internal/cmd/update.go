@@ -72,7 +72,7 @@ func updateCLI(gitHubAPI string, performUpdate bool) error {
 		logLady.Debug(fmt.Sprintf("latest release for %s: %v", update.NancyAppName, latest))
 	}
 
-	check, err := update.CheckForUpdates(gitHubAPI, update.NancySlug, getCleanVersionNumber(), buildversion.PackageManager())
+	check, err := update.CheckForUpdates(gitHubAPI, update.NancySlug, getVersionNumberSemver(), buildversion.PackageManager())
 	if err != nil {
 		return err
 	}
