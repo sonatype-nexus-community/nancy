@@ -36,11 +36,11 @@ builds:
 archives:
   -
     id: default
-    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: binary
   -
     id: homebrew
-    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format_overrides:
       - goos: windows
         format: zip
