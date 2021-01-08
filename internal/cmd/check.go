@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// For use in checking for updated version during app startup (not during explicit command to check for update)
+// For use in checking for newer release version during app startup (not during explicit command to check for update)
 func checkForUpdates(gitHubAPI string) error {
 	updateCheck := &settings.UpdateCheck{
 		LastUpdateCheck: time.Time{},
