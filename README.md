@@ -51,11 +51,13 @@ Examples:
   nancy sleuth -p Gopkg.lock [flags]
   nancy iq -p Gopkg.lock [flags]
 
+
 Available Commands:
   config      Setup credentials to use when connecting to services
   help        Help about any command
   iq          Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'
   sleuth      Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index
+  update      Check if there are any updates available
 
 Flags:
   -v, -- count            Set log level, multiple v's is more verbose
@@ -82,8 +84,8 @@ Examples:
   nancy sleuth -p Gopkg.lock --username your_user --token your_token
 
 Flags:
-  -e, --exclude-vulnerability CveListFlag   Comma separated list of CVEs to exclude (default [])
-  -x, --exclude-vulnerability-file string   Path to a file containing newline separated CVEs to be excluded (default "./.nancy-ignore")
+  -e, --exclude-vulnerability CveListFlag   Comma separated list of CVEs or OSS Index IDs to exclude (default [])
+  -x, --exclude-vulnerability-file string   Path to a file containing newline separated CVEs or OSS Index IDs to be excluded (default "./.nancy-ignore")
   -h, --help                                help for sleuth
   -n, --no-color                            indicate output should not be colorized
   -o, --output string                       Styling for output format. json, json-pretty, text, csv (default "text")
