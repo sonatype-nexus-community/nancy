@@ -57,7 +57,6 @@ func CheckForUpdates(githubAPI, slug, current, packageManager string) (*Options,
 func checkFromSource(check *Options) error {
 	updater, err := selfupdate.NewUpdater(selfupdate.Config{
 		EnterpriseBaseURL: check.githubAPI,
-		//Filters: []string{"v*.*.*"},
 	})
 	if err != nil {
 		return err
