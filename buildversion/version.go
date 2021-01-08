@@ -22,3 +22,12 @@ var (
 	BuildTime    = ""
 	BuildCommit  = ""
 )
+
+// PackageManager defines the package manager which was used to install the CLI.
+// You can override this value using -X flag to the compiler ldflags. This is
+// overridden when we build for Homebrew.
+var packageManager = "source"
+
+func PackageManager() string {
+	return packageManager
+}

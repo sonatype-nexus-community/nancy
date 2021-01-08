@@ -19,6 +19,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/spf13/pflag"
 	"os"
 	"path"
@@ -39,7 +40,6 @@ import (
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/internal/audit"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
-	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -115,6 +115,10 @@ var rootCmd = &cobra.Command{
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
+	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		setupLogging()
+		return checkForUpdates("")
+	},
 	RunE: doRoot,
 }
 
@@ -131,7 +135,6 @@ func doRoot(cmd *cobra.Command, args []string) (err error) {
 		}
 	}()
 
-	logLady = logger.GetLogger("", configOssi.LogLevel)
 	logLady.Info("Nancy parsing config for root command")
 
 	if configOssi.CleanCache {
@@ -145,7 +148,12 @@ func doRoot(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
+func setupLogging() {
+	logLady = logger.GetLogger("", configOssi.LogLevel)
+}
+
 func Execute() (err error) {
+	//setupLogging()
 	if err = rootCmd.Execute(); err != nil {
 		if errExit, ok := err.(customerrors.ErrorExit); ok {
 			os.Exit(errExit.ExitCode)
