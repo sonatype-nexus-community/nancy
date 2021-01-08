@@ -487,7 +487,15 @@ Choose `iq` as an option and run through the rest of the config. Once you are do
 
 You can see an example of using `nancy` in Travis-CI at [this intentionally vulnerable repo we made](https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project).
 
-Nancy as well runs on it self (delicious dog food!) in CircleCI, in a myriad of fashions. You can see how we do that here in [our repo's CircleCI config](https://github.com/sonatype-nexus-community/nancy/blob/main/.circleci/config.yml).
+Nancy as well runs on itself (delicious dog food!) in CircleCI, in a myriad of fashions. You can see how we do that here in [our repo's CircleCI config](https://github.com/sonatype-nexus-community/nancy/blob/main/.circleci/config.yml).
+
+  #### Big CI Note: 
+  Nancy will automatically check for newer releases of Nancy, and will prompt you when updates are detected. 
+  The automatic update check will only occur once every 28 hours, and the date stamp of the last update check is stored 
+  in the file: `~/.ossindex/.nancy-config/update_check.yml`.
+
+  If you have a huge CI matrix build, and want to avoid all the builds performing the automatic update check, you may 
+  want to configure you CI build to cache the above directory.
 
 ### DISCLAIMER
 
