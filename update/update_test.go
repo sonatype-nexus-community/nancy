@@ -86,9 +86,10 @@ func TestCheckForUpdatesPackageManagerSource(t *testing.T) {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
-	expectedSemver := semver.Version{Minor: 1, Patch: 2}
-	expectedCheck := &Options{Current: expectedSemver, PackageManager: packageManager, updater: check.updater, slug: NancySlug}
-	assert.Equal(t, expectedCheck, check)
+	assert.True(t, check.Found)
+	assert.NotNil(t, check.Latest)
+	assert.NotNil(t, check.Latest.AssetURL)
+	assert.Equal(t, check.Latest.RepoName, NancyAppName)
 }
 
 func TestCheckForUpdatesPackageManagerRelease(t *testing.T) {
@@ -98,7 +99,9 @@ func TestCheckForUpdatesPackageManagerRelease(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
-	expectedSemver := semver.Version{Minor: 1, Patch: 2}
-	expectedCheck := &Options{Current: expectedSemver, PackageManager: packageManager, updater: check.updater, slug: NancySlug}
-	assert.Equal(t, expectedCheck, check)
+
+	assert.True(t, check.Found)
+	assert.NotNil(t, check.Latest)
+	assert.NotNil(t, check.Latest.AssetURL)
+	assert.Equal(t, check.Latest.RepoName, NancyAppName)
 }
