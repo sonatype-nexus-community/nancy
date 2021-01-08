@@ -149,7 +149,6 @@ func doRoot(cmd *cobra.Command, args []string) (err error) {
 }
 
 func Execute() (err error) {
-	//setupLogging()
 	if err = rootCmd.Execute(); err != nil {
 		if errExit, ok := err.(customerrors.ErrorExit); ok {
 			os.Exit(errExit.ExitCode)
