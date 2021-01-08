@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/rhysd/go-github-selfupdate/selfupdate"
+	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/update"
 	"github.com/spf13/cobra"
@@ -55,11 +55,6 @@ func newUpdateCommand() *cobra.Command {
 	return updateCmd
 }
 
-func logAndShowMessage(message string) {
-	logLady.Info(message)
-	fmt.Println(message)
-}
-
 func updateCLI(gitHubAPI string, performUpdate bool) error {
 	logAndShowMessage("Checking for updates...")
 	latest, found, err := selfupdate.DetectLatest(update.NancySlug)
@@ -69,7 +64,9 @@ func updateCLI(gitHubAPI string, performUpdate bool) error {
 	if !found {
 		logLady.Info("did not find latest release for " + update.NancyAppName)
 	} else {
-		logLady.Debug(fmt.Sprintf("latest release for %s: %v", update.NancyAppName, latest))
+		logLady.WithFields(logrus.Fields{
+			"latest release": latest,
+		}).Debug()
 	}
 
 	check, err := update.CheckForUpdates(gitHubAPI, update.NancySlug, getVersionNumberSemver(), buildversion.PackageManager())
