@@ -25,17 +25,16 @@ func checkForUpdates(gitHubAPI string) error {
 	}).Trace("updateCheck")
 
 	if update.ShouldCheckForUpdates(updateCheck) {
-		slug := "sonatype-community/nancy"
-
 		logAndShowMessage("Checking for updates...")
 
 		logLady.WithFields(logrus.Fields{
+			"gitHubAPI":       gitHubAPI,
 			"BuildVersion":    buildversion.BuildVersion,
 			"current version": getVersionNumberSemver(),
 			"PackageManager":  buildversion.PackageManager(),
 		}).Debug("before CheckForUpdates")
 
-		check, err := update.CheckForUpdates(gitHubAPI, slug, getVersionNumberSemver(), buildversion.PackageManager())
+		check, err := update.CheckForUpdates(gitHubAPI, update.NancySlug, getVersionNumberSemver(), buildversion.PackageManager())
 
 		if err != nil {
 			logLady.Error("error checking for updates: " + err.Error())
