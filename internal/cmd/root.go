@@ -116,7 +116,7 @@ var rootCmd = &cobra.Command{
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-		setupLogging()
+		logLady = logger.GetLogger("", configOssi.LogLevel)
 		return checkForUpdates("")
 	},
 	RunE: doRoot,
@@ -146,10 +146,6 @@ func doRoot(cmd *cobra.Command, args []string) (err error) {
 		_ = cmd.Usage()
 	}
 	return
-}
-
-func setupLogging() {
-	logLady = logger.GetLogger("", configOssi.LogLevel)
 }
 
 func Execute() (err error) {
