@@ -65,19 +65,6 @@ func TestCheckForUpdatesPackageManagerSourceWithInvalidSlug(t *testing.T) {
 	assert.Equal(t, expectedCheck, check)
 }
 
-func TestCheckForUpdatesPackageManagerSourceEmptyGithubAPI(t *testing.T) {
-	currentSemver := "0.1.2"
-	packageManager := "source"
-	check, err := CheckForUpdates("", NancySlug, currentSemver, packageManager)
-	if err != nil {
-		t.Fatalf("Unexpected error %v", err)
-	}
-
-	expectedSemver := semver.Version{Minor: 1, Patch: 2}
-	expectedCheck := &Options{Current: expectedSemver, PackageManager: packageManager, updater: check.updater, slug: NancySlug}
-	assert.Equal(t, expectedCheck, check)
-}
-
 func TestCheckForUpdatesPackageManagerSource(t *testing.T) {
 	currentSemver := "0.1.2"
 	packageManager := "source"
