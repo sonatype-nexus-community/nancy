@@ -495,7 +495,7 @@ Nancy as well runs on itself (delicious dog food!) in CircleCI, in a myriad of f
   in the file: `~/.ossindex/.nancy-config/update_check.yml`.
 
   If you have a huge CI matrix build, and want to avoid all the builds performing the automatic update check, you may 
-  want to configure you CI build to cache the above directory.
+  want to configure your CI build to cache the above directory.
 
 ### DISCLAIMER
 
