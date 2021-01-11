@@ -115,6 +115,10 @@ var rootCmd = &cobra.Command{
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
+	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		logLady = logger.GetLogger("", configOssi.LogLevel)
+		return checkForUpdates("")
+	},
 	RunE: doRoot,
 }
 
@@ -131,7 +135,6 @@ func doRoot(cmd *cobra.Command, args []string) (err error) {
 		}
 	}()
 
-	logLady = logger.GetLogger("", configOssi.LogLevel)
 	logLady.Info("Nancy parsing config for root command")
 
 	if configOssi.CleanCache {

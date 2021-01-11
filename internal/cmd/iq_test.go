@@ -320,7 +320,7 @@ func TestDoIqWithIqServerError(t *testing.T) {
 	typedError, ok := err.(customerrors.ErrorShowLogPath)
 	assert.True(t, ok)
 
-	assert.Contains(t, typedError.Error(), "There was an error communicating with Nexus IQ Server to get your internal application ID", typedError.Error())
+	assert.Contains(t, typedError.Error(), "There was an error communicating with Nexus IQ Server to get your internal application ID")
 }
 
 func TestDoIqHappyPath(t *testing.T) {

@@ -51,11 +51,13 @@ Examples:
   nancy sleuth -p Gopkg.lock [flags]
   nancy iq -p Gopkg.lock [flags]
 
+
 Available Commands:
   config      Setup credentials to use when connecting to services
   help        Help about any command
   iq          Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'
   sleuth      Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index
+  update      Check if there are any updates available
 
 Flags:
   -v, -- count            Set log level, multiple v's is more verbose
@@ -82,8 +84,8 @@ Examples:
   nancy sleuth -p Gopkg.lock --username your_user --token your_token
 
 Flags:
-  -e, --exclude-vulnerability CveListFlag   Comma separated list of CVEs to exclude (default [])
-  -x, --exclude-vulnerability-file string   Path to a file containing newline separated CVEs to be excluded (default "./.nancy-ignore")
+  -e, --exclude-vulnerability CveListFlag   Comma separated list of CVEs or OSS Index IDs to exclude (default [])
+  -x, --exclude-vulnerability-file string   Path to a file containing newline separated CVEs or OSS Index IDs to be excluded (default "./.nancy-ignore")
   -h, --help                                help for sleuth
   -n, --no-color                            indicate output should not be colorized
   -o, --output string                       Styling for output format. json, json-pretty, text, csv (default "text")
@@ -485,7 +487,15 @@ Choose `iq` as an option and run through the rest of the config. Once you are do
 
 You can see an example of using `nancy` in Travis-CI at [this intentionally vulnerable repo we made](https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project).
 
-Nancy as well runs on it self (delicious dog food!) in CircleCI, in a myriad of fashions. You can see how we do that here in [our repo's CircleCI config](https://github.com/sonatype-nexus-community/nancy/blob/main/.circleci/config.yml).
+Nancy as well runs on itself (delicious dog food!) in CircleCI, in a myriad of fashions. You can see how we do that here in [our repo's CircleCI config](https://github.com/sonatype-nexus-community/nancy/blob/main/.circleci/config.yml).
+
+  #### Big CI Note: 
+  Nancy will automatically check for newer releases of Nancy, and will prompt you when updates are detected. 
+  The automatic update check will only occur once every 28 hours, and the date stamp of the last update check is stored 
+  in the file: `~/.ossindex/.nancy-config/update_check.yml`.
+
+  If you have a huge CI matrix build, and want to avoid all the builds performing the automatic update check, you may 
+  want to configure your CI build to cache the above directory.
 
 ### DISCLAIMER
 

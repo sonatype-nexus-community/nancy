@@ -5,6 +5,7 @@ require (
 	github.com/Masterminds/semver v0.0.0-20190925130524-317e8cce5480
 	github.com/Masterminds/vcs v1.13.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
@@ -18,7 +19,8 @@ require (
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/nightlyone/lockfile v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pkg/errors v0.9.1
+	github.com/rhysd/go-github-selfupdate v1.2.2
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.6.0
@@ -34,6 +36,7 @@ require (
 	golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/ini.v1 v1.60.1 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
 
 // fix vulnerability: CVE-2020-15114 in etcd v3.3.13+incompatible
