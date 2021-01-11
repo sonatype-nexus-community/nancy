@@ -26,32 +26,6 @@ func newUpdateCommand() *cobra.Command {
 		},
 	}
 
-	/*	updateCmd.AddCommand(&cobra.Command{
-			Use:    "check",
-			Hidden: true,
-			Short:  "Check if there are any updates available",
-			RunE: func(_ *cobra.Command, _ []string) error {
-				return updateCLI("", false)
-			},
-		})
-	*/
-	/*	updateCmd.AddCommand(&cobra.Command{
-			Use:    "install",
-			Hidden: true,
-			Short:  "Update the tool to the latest version",
-			PersistentPreRun: func(_ *cobra.Command, _ []string) {
-				opts.cfg.SkipUpdateCheck = true
-			},
-			PreRun: func(cmd *cobra.Command, args []string) {
-				opts.args = args
-			},
-			RunE: func(_ *cobra.Command, _ []string) error {
-				return updateCLI(opts)
-			},
-		})
-	*/
-	//updateCmd.PersistentFlags().BoolVar(&opts.dryRun, "check", false, "Check if there are any updates available without installing")
-
 	return updateCmd
 }
 
