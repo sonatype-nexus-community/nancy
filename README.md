@@ -135,17 +135,6 @@ The preferred way to use Nancy is:
 - `go list -json -m all | nancy sleuth`
 - `nancy sleuth -p /path/to/Gopkg.lock`
 
-#### Homebrew usage
-
-`nancy` can be installed using `brew`:
-
-- `brew tap sonatype-nexus-community/homebrew-nancy-tap`
-- `brew install nancy`
-
-`brew` formulae are created and published to that tap with each new release, so you can use `brew` to upgrade, etc... as you wish.
-
-You can see more about the formulae, etc... at [this repo](https://github.com/sonatype-nexus-community/homebrew-nancy-tap).
-
 #### Docker usage
 
 <p align="center">
@@ -913,6 +902,8 @@ At the current time you have a few options:
 
 - Build from source
 - Download release binary from [here on GitHub](https://github.com/sonatype-nexus-community/nancy/releases)
+- Install via Homebrew (macOS)
+- Install from the AUR (Arch Linux)
 
 ### Build from source
 
@@ -928,6 +919,25 @@ Each tag pushed to this repo creates a new release binary, and if you'd like to 
 ```console
 $ curl -o /path/where/you/want/nancy \
   https://github.com/sonatype-nexus-community/nancy/releases/download/v0.0.44/nancy-darwin.amd64-v0.0.44
+```
+
+### Install via Homebrew (macOS)
+
+On macOS, `nancy` can be installed using `brew`:
+
+- `brew tap sonatype-nexus-community/homebrew-nancy-tap`
+- `brew install nancy`
+
+`brew` formulae are created and published to that tap with each new release, so you can use `brew` to upgrade, etc... as you wish.
+
+You can see more about the formulae, etc... at [this repo](https://github.com/sonatype-nexus-community/homebrew-nancy-tap).
+
+### Install from the AUR (Arch Linux)
+
+On Arch Linux, `nancy` can be installed using the [AUR](https://aur.archlinux.org/packages/nancy-bin/):
+
+```shell
+$ yay -S nancy-bin
 ```
 
 ## Development
