@@ -127,7 +127,7 @@ func TestProcessConfigPath(t *testing.T) {
 
 	err := processConfig()
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), " are not within any known GOPATH"))
+	assert.True(t, strings.Contains(err.Error(), " are not within any known GOPATH"), err.Error())
 }
 
 func TestGetIsQuiet(t *testing.T) {
