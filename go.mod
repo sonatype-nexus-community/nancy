@@ -9,7 +9,6 @@ require (
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/dep v0.5.4
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.0.4
@@ -33,6 +32,9 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/ini.v1 v1.60.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
