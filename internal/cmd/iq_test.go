@@ -403,8 +403,8 @@ func TestIqCreatorOptionsLogging(t *testing.T) {
 
 func Test_showPolicyActionMessage(t *testing.T) {
 	verifyReportURL(t, "anythingElse") //default policy action
-	verifyReportURL(t, policyActionWarning)
-	verifyReportURL(t, policyActionFailure)
+	verifyReportURL(t, iq.PolicyActionWarning)
+	verifyReportURL(t, iq.PolicyActionFailure)
 }
 
 func verifyReportURL(t *testing.T, policyAction string) {

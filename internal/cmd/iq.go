@@ -92,9 +92,6 @@ var iqCmd = &cobra.Command{
 	RunE:   doIQ,
 }
 
-const policyActionFailure = "Failure"
-const policyActionWarning = "Warning"
-
 //noinspection GoUnusedParameter
 func doIQ(cmd *cobra.Command, args []string) (err error) {
 	defer func() {
@@ -255,7 +252,7 @@ func auditWithIQServer(purls []string) error {
 	logLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
 	showPolicyActionMessage(res, os.Stdout)
 	switch res.PolicyAction {
-	case policyActionFailure:
+	case iq.PolicyActionFailure:
 		return customerrors.ErrorExit{ExitCode: 1}
 	}
 	return nil
@@ -263,10 +260,10 @@ func auditWithIQServer(purls []string) error {
 
 func showPolicyActionMessage(res iq.StatusURLResult, writer io.Writer) {
 	switch res.PolicyAction {
-	case policyActionFailure:
+	case iq.PolicyActionFailure:
 		_, _ = fmt.Fprintln(writer, "Hi, Nancy here, you have some policy violations to clean up!")
 		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
-	case policyActionWarning:
+	case iq.PolicyActionWarning:
 		_, _ = fmt.Fprintln(writer, "Read, read, read. That's all I can say. There are policy warnings to investigate!")
 		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
 	default:
