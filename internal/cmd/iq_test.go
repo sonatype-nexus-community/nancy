@@ -17,6 +17,8 @@
 package cmd
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -183,6 +185,11 @@ type mockIqServer struct {
 //noinspection GoUnusedParameter
 func (s mockIqServer) AuditPackages(purls []string) (iq.StatusURLResult, error) {
 	return s.auditPackagesStatusURLResult, s.auditPackagesErr
+}
+
+//noinspection GoUnusedParameter
+func (s mockIqServer) AuditWithSbom(sbom string) (iq.StatusURLResult, error) {
+	return iq.StatusURLResult{}, fmt.Errorf("mock AuditWithSbom not implemented")
 }
 
 // use compiler to ensure interface is implemented by mock
@@ -392,4 +399,19 @@ func TestIqCreatorOptionsLogging(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 	logLady.Level = logrus.DebugLevel
 	assert.NotNil(t, iqCreator.create())
+}
+
+func Test_showPolicyActionMessage(t *testing.T) {
+	verifyReportURL(t, "anythingElse") //default policy action
+	verifyReportURL(t, policyActionWarning)
+	verifyReportURL(t, policyActionFailure)
+}
+
+func verifyReportURL(t *testing.T, policyAction string) {
+	var buf bytes.Buffer
+	bufWriter := bufio.NewWriter(&buf)
+	theURL := "someURL"
+	showPolicyActionMessage(iq.StatusURLResult{AbsoluteReportHTMLURL: theURL, PolicyAction: policyAction}, bufWriter)
+	bufWriter.Flush()
+	assert.True(t, strings.Contains(buf.String(), "Report URL:  "+theURL), buf.String())
 }
