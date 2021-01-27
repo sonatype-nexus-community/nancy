@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/pflag"
+	"io"
 	"os"
 	"path"
 
@@ -249,17 +250,24 @@ func auditWithIQServer(purls []string) error {
 	}
 
 	logLady.WithField("res", res).Debug("Successful in communicating with IQ Server")
+	showPolicyActionMessage(res, os.Stdout)
 	switch res.PolicyAction {
-	case "Failure":
-		fmt.Println("Hi, Nancy here, you have some policy violations to clean up!")
-		fmt.Println("Report URL: ", res.ReportHTMLURL)
+	case iq.PolicyActionFailure:
 		return customerrors.ErrorExit{ExitCode: 1}
-	case "Warning":
-		fmt.Println("Read, read, read. That's all I can say. There are policy warnings to investigate!")
-		fmt.Println("Report URL: ", res.ReportHTMLURL)
-	default:
-		fmt.Println("Wonderbar! No policy violations reported for this audit!")
-		fmt.Println("Report URL: ", res.ReportHTMLURL)
 	}
 	return nil
+}
+
+func showPolicyActionMessage(res iq.StatusURLResult, writer io.Writer) {
+	switch res.PolicyAction {
+	case iq.PolicyActionFailure:
+		_, _ = fmt.Fprintln(writer, "Hi, Nancy here, you have some policy violations to clean up!")
+		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+	case iq.PolicyActionWarning:
+		_, _ = fmt.Fprintln(writer, "Read, read, read. That's all I can say. There are policy warnings to investigate!")
+		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+	default:
+		_, _ = fmt.Fprintln(writer, "Wonderbar! No policy violations reported for this audit!")
+		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+	}
 }
