@@ -23,7 +23,7 @@ import (
 )
 
 func TestDefaultVersion(t *testing.T) {
-	assert.Equal(t, "development", BuildVersion)
+	assert.Equal(t, "0.0.0-dev", BuildVersion)
 }
 
 func TestDefaultBuildTime(t *testing.T) {

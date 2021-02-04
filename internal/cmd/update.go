@@ -59,7 +59,7 @@ func updateCLI(gitHubAPI string, performUpdate bool) error {
 		}).Debug()
 	}
 
-	check, err := update.CheckForUpdates(gitHubAPI, update.NancySlug, getVersionNumberSemver(), buildversion.PackageManager())
+	check, err := update.CheckForUpdates(gitHubAPI, update.NancySlug, buildversion.BuildVersion, buildversion.PackageManager())
 	if err != nil {
 		return err
 	}

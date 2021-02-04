@@ -44,13 +44,12 @@ func checkForUpdates(gitHubAPI string) error {
 		logAndShowMessage("Checking for updates...")
 
 		logLady.WithFields(logrus.Fields{
-			"gitHubAPI":       gitHubAPI,
-			"BuildVersion":    buildversion.BuildVersion,
-			"current version": getVersionNumberSemver(),
-			"PackageManager":  buildversion.PackageManager(),
+			"gitHubAPI":      gitHubAPI,
+			"BuildVersion":   buildversion.BuildVersion,
+			"PackageManager": buildversion.PackageManager(),
 		}).Debug("before CheckForUpdates")
 
-		check, err := update.CheckForUpdates(gitHubAPI, update.NancySlug, getVersionNumberSemver(), buildversion.PackageManager())
+		check, err := update.CheckForUpdates(gitHubAPI, update.NancySlug, buildversion.BuildVersion, buildversion.PackageManager())
 
 		if err != nil {
 			logLady.Error("error checking for updates: " + err.Error())
@@ -86,17 +85,6 @@ func checkForUpdates(gitHubAPI string) error {
 	}
 
 	return nil
-}
-
-func getVersionNumberSemver() (currentVersion string) {
-	// this value will be overridden during release, but for dev, we need a semver compliant value
-	if //goland:noinspection GoBoolExpressions
-	buildversion.BuildVersion == "development" {
-		currentVersion = "0.0.0"
-	} else {
-		currentVersion = buildversion.BuildVersion
-	}
-	return currentVersion
 }
 
 func logAndShowMessage(message string) {
