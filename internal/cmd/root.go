@@ -170,14 +170,16 @@ const (
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().CountVarP(&configOssi.LogLevel, "", "v", "Set log level, multiple v's is more verbose")
-	rootCmd.PersistentFlags().BoolVarP(&configOssi.Version, "version", "V", false, "Get the version")
-	rootCmd.PersistentFlags().BoolVarP(&configOssi.Quiet, "quiet", "q", true, "indicate output should contain only packages with vulnerabilities")
-	rootCmd.PersistentFlags().BoolVar(&configOssi.Loud, "loud", false, "indicate output should include non-vulnerable packages")
+	persistentFlags := rootCmd.PersistentFlags()
+	persistentFlags.CountVarP(&configOssi.LogLevel, "", "v", "Set log level, multiple v's is more verbose")
+	persistentFlags.BoolVarP(&configOssi.Version, "version", "V", false, "Get the version")
+	persistentFlags.BoolVarP(&configOssi.Quiet, "quiet", "q", true, "indicate output should contain only packages with vulnerabilities")
+	persistentFlags.BoolVar(&configOssi.Loud, "loud", false, "indicate output should include non-vulnerable packages")
 	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
-	rootCmd.PersistentFlags().StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
-	rootCmd.PersistentFlags().StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
-	rootCmd.PersistentFlags().StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
+	persistentFlags.StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
+	persistentFlags.StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
+	persistentFlags.StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
+	persistentFlags.BoolVar(&configOssi.SkipUpdateCheck, "skip-update-check", configuration.SkipUpdateByDefault(), "Skip the check for updates.")
 }
 
 func bindViperRootCmd() {

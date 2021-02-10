@@ -39,24 +39,25 @@ type GoListModule struct {
 }
 
 type Configuration struct {
-	Version       bool
-	NoColor       bool
-	Quiet         bool
-	Loud          bool
-	CleanCache    bool
-	CveList       CveListFlag
-	Path          string
-	Formatter     logrus.Formatter
-	LogLevel      int
-	Username      string
-	Token         string
-	Help          bool
-	IQUsername    string
-	IQToken       string
-	IQStage       string
-	IQApplication string
-	IQServer      string
-	MaxRetries    int
+	Version         bool
+	NoColor         bool
+	Quiet           bool
+	Loud            bool
+	CleanCache      bool
+	CveList         CveListFlag
+	Path            string
+	Formatter       logrus.Formatter
+	LogLevel        int
+	Username        string
+	Token           string
+	Help            bool
+	IQUsername      string
+	IQToken         string
+	IQStage         string
+	IQApplication   string
+	IQServer        string
+	MaxRetries      int
+	SkipUpdateCheck bool
 }
 
 type Projects struct {
