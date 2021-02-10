@@ -313,6 +313,10 @@ func TestConfigOssi_cleanCache(t *testing.T) {
 	validateConfigOssi(t, types.Configuration{CleanCache: true}, []string{"--clean-cache"}...)
 }
 
+func TestConfigOssi_skip_update_check(t *testing.T) {
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true}, []string{"--skip-update-check"}...)
+}
+
 func setupConfig(t *testing.T) (tempDir string) {
 	tempDir, err := ioutil.TempDir("", "config-test")
 	assert.NoError(t, err)

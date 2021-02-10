@@ -60,15 +60,16 @@ Available Commands:
   update      Check if there are any updates available
 
 Flags:
-  -v, -- count            Set log level, multiple v's is more verbose
-  -c, --clean-cache       Deletes local cache directory
-  -h, --help              help for nancy
-      --loud              indicate output should include non-vulnerable packages
-  -p, --path string       Specify a path to a dep Gopkg.lock file for scanning
-  -q, --quiet             indicate output should contain only packages with vulnerabilities (default true)
-  -t, --token string      Specify OSS Index API token for request
-  -u, --username string   Specify OSS Index username for request
-  -V, --version           Get the version
+  -v, -- count              Set log level, multiple v's is more verbose
+  -c, --clean-cache         Deletes local cache directory
+  -h, --help                help for nancy
+      --loud                indicate output should include non-vulnerable packages
+  -p, --path string         Specify a path to a dep Gopkg.lock file for scanning
+  -q, --quiet               indicate output should contain only packages with vulnerabilities (default true)
+      --skip-update-check   Skip the check for updates.
+  -t, --token string        Specify OSS Index API token for request
+  -u, --username string     Specify OSS Index username for request
+  -V, --version             Get the version
 
 Use "nancy [command] --help" for more information about a command.
 
@@ -91,14 +92,14 @@ Flags:
   -o, --output string                       Styling for output format. json, json-pretty, text, csv (default "text")
 
 Global Flags:
-  -v, -- count            Set log level, multiple v's is more verbose
-      --loud              indicate output should include non-vulnerable packages
-  -p, --path string       Specify a path to a dep Gopkg.lock file for scanning
-  -q, --quiet             indicate output should contain only packages with vulnerabilities (default true)
-  -t, --token string      Specify OSS Index API token for request
-  -u, --username string   Specify OSS Index username for request
-  -V, --version           Get the version
-
+  -v, -- count              Set log level, multiple v's is more verbose
+      --loud                indicate output should include non-vulnerable packages
+  -p, --path string         Specify a path to a dep Gopkg.lock file for scanning
+  -q, --quiet               indicate output should contain only packages with vulnerabilities (default true)
+      --skip-update-check   Skip the check for updates.
+  -t, --token string        Specify OSS Index API token for request
+  -u, --username string     Specify OSS Index username for request
+  -V, --version             Get the version
 
 $ > nancy iq --help
 'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!
@@ -119,13 +120,14 @@ Flags:
   -l, --iq-username string      Specify Nexus IQ username for request (default "admin")
 
 Global Flags:
-  -v, -- count            Set log level, multiple v's is more verbose
-      --loud              indicate output should include non-vulnerable packages
-  -p, --path string       Specify a path to a dep Gopkg.lock file for scanning
-  -q, --quiet             indicate output should contain only packages with vulnerabilities (default true)
-  -t, --token string      Specify OSS Index API token for request
-  -u, --username string   Specify OSS Index username for request
-  -V, --version           Get the version
+  -v, -- count              Set log level, multiple v's is more verbose
+      --loud                indicate output should include non-vulnerable packages
+  -p, --path string         Specify a path to a dep Gopkg.lock file for scanning
+  -q, --quiet               indicate output should contain only packages with vulnerabilities (default true)
+      --skip-update-check   Skip the check for updates.
+  -t, --token string        Specify OSS Index API token for request
+  -u, --username string     Specify OSS Index username for request
+  -V, --version             Get the version
 ```
 
 #### What is the best usage of Nancy?
