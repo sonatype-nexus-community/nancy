@@ -67,7 +67,7 @@ workflows:
   build_nightly:
     triggers:
       - schedule:
-          cron: "20 20 * * *"
+          cron: "30 20 * * *"
           filters:
             branches:
               only: main
