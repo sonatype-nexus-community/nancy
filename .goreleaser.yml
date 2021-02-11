@@ -99,7 +99,7 @@ dockers:
     goarch: amd64
     dockerfile: build/Dockerfile.alpine
     binaries:
-    - nancy
+      - nancy
     build_flag_templates:
     - "--pull"
     - "--label=author='DJ Schleen'"
