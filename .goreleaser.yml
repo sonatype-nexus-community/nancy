@@ -83,7 +83,7 @@ dockers:
     goos: linux
     goarch: amd64
     dockerfile: Dockerfile.goreleaser
-    binaries:
+    ids:
       - nancy
     build_flag_templates:
     - "--label=author='DJ Schleen'"
@@ -98,7 +98,7 @@ dockers:
     goos: linux
     goarch: amd64
     dockerfile: build/Dockerfile.alpine
-    binaries:
+    ids:
       - nancy
     build_flag_templates:
     - "--pull"
