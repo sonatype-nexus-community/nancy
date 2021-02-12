@@ -39,10 +39,6 @@ archives:
     name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: binary
   -
-    id: latest
-    name_template: "{{ .ProjectName }}-latest-{{ .Os }}-{{ .Arch }}"
-    format: binary
-  -
     id: homebrew
     name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format_overrides:
@@ -66,7 +62,6 @@ changelog:
 release:
   ids:
     - default
-    - latest
     - homebrew
   github:
     owner: sonatype-nexus-community
