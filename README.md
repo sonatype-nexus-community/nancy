@@ -137,6 +137,13 @@ The preferred way to use Nancy is:
 - `go list -json -m all | nancy sleuth`
 - `nancy sleuth -p /path/to/Gopkg.lock`
 
+#### CI Usage
+
+Here are some additional tools to simplify using Nancy in your CI environment:
+
+* [Nancy CircleCI Orb](https://github.com/sonatype-nexus-community/circleci-nancy-orb)
+* [Nancy GitHub Action](https://github.com/sonatype-nexus-community/nancy-github-action)
+
 #### Docker usage
 
 <p align="center">
