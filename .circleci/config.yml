@@ -13,21 +13,25 @@
 # limitations under the License.
 
 version: 2.1
-jobs:
-  release:
+
+executors:
+  go:
     docker:
       - image: circleci/golang:1.13
+
+jobs:
+  release:
+    executor: go
     steps:
       - checkout
       - setup_remote_docker
       - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
       - run: curl -sL https://git.io/goreleaser | bash
   build:
-    docker:
-      - image: circleci/golang:1.13
-        environment:
-          GO111MODULE: "on"
-          TEST_RESULTS: /tmp/test-results
+    executor: go
+    environment:
+      GO111MODULE: "on"
+      TEST_RESULTS: /tmp/test-results
     working_directory: /go/src/github.com/sonatype-nexus-community/nancy
     steps:
       - checkout
