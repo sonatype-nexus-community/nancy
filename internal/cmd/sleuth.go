@@ -38,8 +38,8 @@ var sleuthCmd = &cobra.Command{
 	Use: "sleuth",
 	Example: `  go list -json -m all | nancy sleuth --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token
   nancy sleuth -p Gopkg.lock --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token`,
-	Short:  "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
-	Long:   `'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by the 'Sonatype OSS Index'.`,
+	Short:  "Check for vulnerabilities in your Golang dependencies using 'Sonatype's OSS Index'",
+	Long:   `'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's OSS Index'.`,
 	PreRun: func(cmd *cobra.Command, args []string) { bindViperRootCmd() },
 	RunE:   doOSSI,
 }

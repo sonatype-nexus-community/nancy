@@ -26,7 +26,7 @@
 
 # Nancy
 
-`nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype OSS Index](https://ossindex.sonatype.org/), and as well, works with Nexus IQ Server, allowing you a smooth experience as a Golang developer, using the best tools in the market!
+`nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype's OSS Index](https://ossindex.sonatype.org/), and as well, works with Nexus IQ Server, allowing you a smooth experience as a Golang developer, using the best tools in the market!
 
 ### Usage
 
@@ -35,7 +35,7 @@
 ```
  ~ > nancy --help
 nancy is a tool to check for vulnerabilities in your Golang dependencies,
-powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
+powered by 'Sonatype's OSS Index', and as well, works with Sonatype's Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!
 
 Usage:
@@ -56,7 +56,7 @@ Available Commands:
   config      Setup credentials to use when connecting to services
   help        Help about any command
   iq          Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'
-  sleuth      Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index
+  sleuth      Check for vulnerabilities in your Golang dependencies using 'Sonatype's OSS Index'
   update      Check if there are any updates available
 
 Flags:
@@ -75,7 +75,7 @@ Use "nancy [command] --help" for more information about a command.
 
 
 $ > nancy sleuth --help
-'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by the 'Sonatype OSS Index'.
+'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's OSS Index'.
 
 Usage:
   nancy sleuth [flags]
@@ -614,7 +614,7 @@ Remember:
   - We suggest you file issues here on GitHub as well, so that the community can pitch in
 - If you are not a Sonatype customer, Do NOT file Sonatype support tickets related to nancy support in regard to this project, file an issue here on GitHub
 
-Have fun creating and using `nancy` and the [Sonatype OSS Index](https://ossindex.sonatype.org/), we are glad to have you here!
+Have fun creating and using `nancy` and the [Sonatype's OSS Index](https://ossindex.sonatype.org/), we are glad to have you here!
 
 ## Getting help
 

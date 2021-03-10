@@ -76,7 +76,7 @@ brews:
       name: homebrew-nancy-tap
 
     homepage: https://github.com/sonatype-nexus-community/nancy
-    description: "A tool to check for vulnerabilities in your Golang dependencies, powered by Sonatype OSS Index"
+    description: "A tool to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's OSS Index'"
 
 dockers:
   -
@@ -115,7 +115,7 @@ nfpms:
   -
     vendor: sonatype-nexus-community
     homepage: https://github.com/sonatype-nexus-community/nancy
-    description: "A tool to check for vulnerabilities in your Golang dependencies, powered by Sonatype OSS Index"
+    description: "A tool to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's OSS Index'"
     formats:
       - apk
       - deb

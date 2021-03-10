@@ -112,9 +112,9 @@ var rootCmd = &cobra.Command{
   nancy sleuth -p Gopkg.lock [flags]
   nancy iq -p Gopkg.lock [flags]
 `,
-	Short: "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
+	Short: "Check for vulnerabilities in your Golang dependencies using 'Sonatype's OSS Index'",
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
-powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
+powered by 'Sonatype's OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		logLady = logger.GetLogger("", configOssi.LogLevel)
