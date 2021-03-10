@@ -18,10 +18,27 @@ package parse
 
 import (
 	"bufio"
+	"errors"
+	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
 	"strings"
 	"testing"
 )
+
+func TestGoListJson(t *testing.T){
+	goListJSONFile, err := os.Open("testdata/golistjson.out")
+	if err != nil {
+		t.Error(err)
+	}
+
+	deps, err := GoListAgnostic(goListJSONFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 48 {
+		t.Errorf("Unsuccessfully parsed go list -json -m all output, 48 dependencies were expected, but %d encountered", len(deps.Projects))
+	}
+}
 
 func TestGoListAgnostic(t *testing.T) {
 	goListFile, err := os.Open("testdata/golist.out")
@@ -36,26 +53,33 @@ func TestGoListAgnostic(t *testing.T) {
 	if len(deps.Projects) != 48 {
 		t.Errorf("Unsuccessfully parsed go list -m all output, 48 dependencies were expected, but %d encountered", len(deps.Projects))
 	}
+}
 
-	goListJSONFile, err := os.Open("testdata/golistjson.out")
+func TestGoListJsonReplace(t *testing.T){
+	goListJSONReplaceFile, err := os.Open("testdata/golistjsonreplace.out")
 	if err != nil {
 		t.Error(err)
 	}
 
-	deps, err = GoListAgnostic(goListJSONFile)
+	deps, err := GoListAgnostic(goListJSONReplaceFile)
 	if err != nil {
 		t.Error(err)
 	}
-	if len(deps.Projects) != 48 {
-		t.Errorf("Unsuccessfully parsed go list -json -m all output, 48 dependencies were expected, but %d encountered", len(deps.Projects))
+	if len(deps.Projects) != 134 {
+		t.Errorf("Unsuccessfully parsed go list -m all output, 134 dependencies were expected, but %d encountered", len(deps.Projects))
 	}
+	if deps.Projects[0].Version != "v1.4.2" {
+		t.Errorf("Version expected to be v1.4.2, but encountered %s", deps.Projects[0].Version)
+	}
+}
 
+func TestGoListReplace(t *testing.T){
 	goListReplaceFile, err := os.Open("testdata/golistreplace.out")
 	if err != nil {
 		t.Error(err)
 	}
 
-	deps, err = GoListAgnostic(goListReplaceFile)
+	deps, err := GoListAgnostic(goListReplaceFile)
 	if err != nil {
 		t.Error(err)
 	}
@@ -65,21 +89,38 @@ func TestGoListAgnostic(t *testing.T) {
 	if deps.Projects[0].Version != "v1.4.2" {
 		t.Errorf("Version expected to be v1.4.2, but encountered %s", deps.Projects[0].Version)
 	}
+}
 
-	goListJSONReplaceFile, err := os.Open("testdata/golistjsonreplace.out")
+func TestGoListAllWithSelfReference(t *testing.T) {
+	goListSelfReferenceOutput, err := os.Open("testdata/self-reference.out")
+	if err != nil {
+		t.Error(err)
+	}
+	scanner := bufio.NewScanner(goListSelfReferenceOutput)
+
+	deps, err := GoList(scanner)
 	if err != nil {
 		t.Error(err)
 	}
 
-	deps, err = GoListAgnostic(goListJSONReplaceFile)
-	if err != nil {
+	if len(deps.Projects) != 519 {
+		t.Error(deps)
+	}
+
+	selfrefProject, err := findProject(deps, "github.com/ory/kratos-client-go")
+	if err != nil{
 		t.Error(err)
 	}
-	if len(deps.Projects) != 134 {
-		t.Errorf("Unsuccessfully parsed go list -m all output, 134 dependencies were expected, but %d encountered", len(deps.Projects))
+	if selfrefProject.Version != "v0.5.4-alpha.1" {
+		t.Error(selfrefProject)
 	}
-	if deps.Projects[0].Version != "v1.4.2" {
-		t.Errorf("Version expected to be v1.4.2, but encountered %s", deps.Projects[0].Version)
+
+	selfrefProject2, err := findProject(deps, "github.com/ory/kratos/corp")
+	if err != nil{
+		t.Error(err)
+	}
+	if selfrefProject2.Version != "v0.0.0-00010101000000-000000000000" {
+		t.Error(selfrefProject2)
 	}
 }
 
@@ -111,4 +152,13 @@ golang.org/x/sys v0.0.0-20181228144115-9a3f9b0469bb`
 	if len(deps.Projects) != 16 {
 		t.Error(deps)
 	}
+}
+
+func findProject(deps types.ProjectList, name string) (types.Projects, error) {
+	for _, s := range deps.Projects {
+		if s.Name == name {
+			return s, nil
+		}
+	}
+	return types.Projects{}, errors.New("Could not find project with name : " + name)
 }

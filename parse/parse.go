@@ -103,7 +103,23 @@ func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 
 func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectList, criteria func(s []string) bool) {
 	text := scanner.Text()
-	s := strings.Split(text, " ")
+	rewrite := strings.Split(text, "=>")
+
+	if len(rewrite) == 2 {
+		v1 := strings.Split(strings.TrimSpace(rewrite[0]), " ")
+		v2 := strings.Split(strings.TrimSpace(rewrite[1]), " ")
+		versionToUse := v1
+		if criteria(v2){
+			versionToUse = v2
+		}
+		addProjectDep(criteria, versionToUse, deps)
+	}else{
+		s := strings.Split(text, " ")
+		addProjectDep(criteria, s, deps)
+	}
+}
+
+func addProjectDep(criteria func(s []string) bool, s []string, deps *types.ProjectList) {
 	if criteria(s) {
 		if len(s) > 3 {
 			deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[4]})
