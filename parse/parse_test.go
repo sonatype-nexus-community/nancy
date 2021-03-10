@@ -103,24 +103,18 @@ func TestGoListAllWithSelfReference(t *testing.T) {
 		t.Error(err)
 	}
 
-	if len(deps.Projects) != 519 {
+	if len(deps.Projects) != 517 {
 		t.Error(deps)
 	}
 
-	selfrefProject, err := findProject(deps, "github.com/ory/kratos-client-go")
-	if err != nil{
-		t.Error(err)
-	}
-	if selfrefProject.Version != "v0.5.4-alpha.1" {
-		t.Error(selfrefProject)
+	_, err = findProject(deps, "github.com/ory/kratos-client-go")
+	if err == nil{
+		t.Error("Project with name github.com/ory/kratos-client-go should be ignored b/c it references a submodule")
 	}
 
-	selfrefProject2, err := findProject(deps, "github.com/ory/kratos/corp")
-	if err != nil{
-		t.Error(err)
-	}
-	if selfrefProject2.Version != "v0.0.0-00010101000000-000000000000" {
-		t.Error(selfrefProject2)
+	_, err = findProject(deps, "github.com/ory/kratos/corp")
+	if err == nil{
+		t.Error("Project with name github.com/ory/kratos/corp should be ignored b/c it references a submodule")
 	}
 }
 

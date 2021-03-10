@@ -106,13 +106,8 @@ func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectLi
 	rewrite := strings.Split(text, "=>")
 
 	if len(rewrite) == 2 {
-		v1 := strings.Split(strings.TrimSpace(rewrite[0]), " ")
 		v2 := strings.Split(strings.TrimSpace(rewrite[1]), " ")
-		versionToUse := v1
-		if criteria(v2){
-			versionToUse = v2
-		}
-		addProjectDep(criteria, versionToUse, deps)
+		addProjectDep(criteria, v2, deps)
 	}else{
 		s := strings.Split(text, " ")
 		addProjectDep(criteria, s, deps)
