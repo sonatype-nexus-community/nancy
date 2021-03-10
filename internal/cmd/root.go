@@ -19,7 +19,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/spf13/pflag"
 	"os"
 	"path"
 	"path/filepath"
@@ -28,6 +27,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/spf13/pflag"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
