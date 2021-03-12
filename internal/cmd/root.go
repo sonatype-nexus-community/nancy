@@ -116,6 +116,11 @@ var rootCmd = &cobra.Command{
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		viper.AutomaticEnv()
+		//Substitute the _ to .
+		replacer := strings.NewReplacer(".", "_")
+		viper.SetEnvKeyReplacer(replacer)
+
 		logLady = logger.GetLogger("", configOssi.LogLevel)
 		return checkForUpdates("")
 	},
