@@ -525,3 +525,8 @@ func TestCleanUserName(t *testing.T) {
 	assert.Equal(t, "1***hidden***1", cleanUserName("1"))
 	assert.Equal(t, "1***hidden***2", cleanUserName("12"))
 }
+
+func TestViperKeyNameReplacer(t *testing.T) {
+	envVarName := viperKeyReplacer.Replace(configuration.ViperKeyUsername)
+	assert.Equal(t, "ossi_Username", envVarName)
+}

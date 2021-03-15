@@ -18,6 +18,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/sonatype-nexus-community/go-sona-types/configuration"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
 	"github.com/sonatype-nexus-community/nancy/internal/audit"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -171,4 +174,34 @@ func TestConfigOssi_output_of_text(t *testing.T) {
 func TestConfigOssi_output_of_bad_value(t *testing.T) {
 	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--output=aintgonnadoit"}...)
+}
+
+const testEnvVarValue = "myUnlikelyTestEnvVarValue"
+
+func createServerViaEnv(t *testing.T, viperKey, expectedEnvVarName string) *ossindex.Server {
+	envVarName := strings.ToUpper(viperKeyReplacer.Replace(viperKey))
+	assert.Equal(t, expectedEnvVarName, envVarName)
+
+	origEnvVarValue := os.Getenv(envVarName)
+	defer func() {
+		if origEnvVarValue == "" {
+			assert.Nil(t, os.Unsetenv(envVarName))
+		} else {
+			assert.Nil(t, os.Setenv(envVarName, origEnvVarValue))
+		}
+	}()
+
+	assert.Nil(t, os.Setenv(envVarName, testEnvVarValue))
+
+	logLady, _ = test.NewNullLogger()
+	// force call to enable automatic environment variable feature in viper
+	setupViperAutomaticEnv()
+	ossIndex := ossiCreator.create()
+	server := ossIndex.(*ossindex.Server)
+	return server
+}
+
+func TestConfigOssiUserViaEnv(t *testing.T) {
+	assert.Equal(t, testEnvVarValue, createServerViaEnv(t, configuration.ViperKeyUsername, "OSSI_USERNAME").Options.Username)
+	assert.Equal(t, testEnvVarValue, createServerViaEnv(t, configuration.ViperKeyToken, "OSSI_TOKEN").Options.Token)
 }
