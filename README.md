@@ -221,6 +221,15 @@ You can also set the user and token via the command line like so:
 
 This can be handy for testing your account out, or if you want to override your set config with a different user.
 
+As of Nancy v1.0.17, you can also specify configuration values using environment variables:
+
+```shell
+export OSSI_USERNAME=auser@anemailaddress.com
+export OSSI_TOKEN=A4@k3@p1T0k3n
+go list -json -m all | ./nancy sleuth
+...
+```
+
 #### Loud mode
 
 By default, `nancy` runs in a "quiet" mode, only displaying a list of vulnerable components.
@@ -493,6 +502,18 @@ To set your Nexus IQ Server config run:
 `nancy config`
 
 Choose `iq` as an option and run through the rest of the config. Once you are done, Nancy should use this config for communicating with Nexus IQ, simplifying your use of the tool.
+
+As of Nancy v1.0.17, you can also specify configuration values using environment variables:
+
+```shell
+export OSSI_USERNAME=auser@anemailaddress.com
+export OSSI_TOKEN=A4@k3@p1T0k3n
+export IQ_USERNAME=nondefaultuser
+export IQ_TOKEN=yourtoken
+export IQ_SERVER=http://adifferentserverurl:port
+go list -json -m all | ./nancy iq --iq-application public-application-id
+...
+```
 
 ### Usage in CI
 

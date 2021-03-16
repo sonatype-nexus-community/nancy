@@ -100,6 +100,15 @@ var (
 	stdInInvalid                                   = fmt.Errorf("StdIn is invalid or empty. Did you forget to pipe 'go list' to nancy?")
 )
 
+//Substitute the _ to .
+var viperKeyReplacer = strings.NewReplacer(".", "_")
+
+func setupViperAutomaticEnv() {
+	viper.AutomaticEnv()
+	//Substitute the _ to .
+	viper.SetEnvKeyReplacer(viperKeyReplacer)
+}
+
 var rootCmd = &cobra.Command{
 	Version: buildversion.BuildVersion,
 	Use:     "nancy",
@@ -116,6 +125,7 @@ var rootCmd = &cobra.Command{
 powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
 a smooth experience as a Golang developer, using the best tools in the market!`,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		setupViperAutomaticEnv()
 		logLady = logger.GetLogger("", configOssi.LogLevel)
 		return checkForUpdates("")
 	},
