@@ -83,7 +83,7 @@ func setupIQConfigFile(t *testing.T, tempDir string) {
 	cfgDirIQ := path.Join(tempDir, ossIndexTypes.IQServerDirName)
 	assert.Nil(t, os.Mkdir(cfgDirIQ, 0700))
 
-	cfgFileIQ = path.Join(tempDir, ossIndexTypes.IQServerDirName, ossIndexTypes.IQServerConfigFileName)
+	cfgFileIQ = ossIndexTypes.GetIQServerConfigFile(tempDir)
 }
 func resetIQConfigFile() {
 	cfgFileIQ = ""

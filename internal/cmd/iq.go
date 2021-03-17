@@ -19,11 +19,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/pflag"
-	"io"
-	"os"
-	"path"
-
 	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
@@ -34,7 +29,10 @@ import (
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"io"
+	"os"
 )
 
 type iqServerFactory interface {
@@ -205,10 +203,10 @@ func lookupFlagNotNil(flagName string, cmd *cobra.Command) *pflag.Flag {
 }
 
 func initIQConfig() {
+	viper.SetConfigType(configuration.ConfigTypeYaml)
 	var cfgFileToCheck string
 	if cfgFileIQ != "" {
 		viper.SetConfigFile(cfgFileIQ)
-		viper.SetConfigType(configuration.ConfigTypeYaml)
 		cfgFileToCheck = cfgFileIQ
 	} else {
 		home, err := homedir.Dir()
@@ -216,13 +214,10 @@ func initIQConfig() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		configPath := path.Join(home, ossIndexTypes.IQServerDirName)
-
-		viper.AddConfigPath(configPath)
-		viper.SetConfigType(configuration.ConfigTypeYaml)
+		viper.AddConfigPath(ossIndexTypes.GetIQServerDirectory(home))
 		viper.SetConfigName(ossIndexTypes.IQServerConfigFileName)
 
-		cfgFileToCheck = path.Join(configPath, ossIndexTypes.IQServerConfigFileName)
+		cfgFileToCheck = ossIndexTypes.GetIQServerConfigFile(home)
 	}
 
 	if fileExists(cfgFileToCheck) {

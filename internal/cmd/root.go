@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"github.com/spf13/pflag"
 	"os"
-	"path"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -214,10 +213,10 @@ func lookupPersistentFlagNotNil(flagName string, cmd *cobra.Command) *pflag.Flag
 }
 
 func initConfig() {
+	viper.SetConfigType(configuration.ConfigTypeYaml)
 	var cfgFileToCheck string
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
-		viper.SetConfigType(configuration.ConfigTypeYaml)
 		cfgFileToCheck = cfgFile
 	} else {
 		home, err := homedir.Dir()
@@ -225,13 +224,10 @@ func initConfig() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		configPath := path.Join(home, ossIndexTypes.OssIndexDirName)
-
-		viper.AddConfigPath(configPath)
-		viper.SetConfigType(configuration.ConfigTypeYaml)
+		viper.AddConfigPath(ossIndexTypes.GetOssIndexDirectory(home))
 		viper.SetConfigName(ossIndexTypes.OssIndexConfigFileName)
 
-		cfgFileToCheck = path.Join(configPath, ossIndexTypes.OssIndexConfigFileName)
+		cfgFileToCheck = ossIndexTypes.GetOssIndexConfigFile(home)
 	}
 
 	if fileExists(cfgFileToCheck) {
