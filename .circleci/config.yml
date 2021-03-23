@@ -59,7 +59,8 @@ workflows:
   version: 2
   build_and_release:
     jobs:
-      - build
+      - build:
+          context: scan_ossi
       - release:
           context: nancy
           filters:
@@ -76,4 +77,5 @@ workflows:
             branches:
               only: main
     jobs:
-      - build
+      - build:
+          context: scan_ossi
