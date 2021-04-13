@@ -179,7 +179,13 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		var updates []string
 		for _, v := range vulnerableEntries {
 			if v.UpdateCoordinate.Coordinates != "" && v.Update != nil {
-				updates = append(updates, fmt.Sprintf("replace %s => %s %s\n", v.Update.Path, v.Update.Path, v.Update.Version))
+				var issueTitles []string
+				for _, v := range v.Coordinate.Vulnerabilities {
+					issueTitles = append(issueTitles, v.Cve)
+				}
+				comment := fmt.Sprintf("// fix issues: %s in %s %s\n", strings.Join(issueTitles, ", "), v.Name, v.Version)
+				replace := fmt.Sprintf("replace %s => %s %s\n\n", v.Update.Path, v.Update.Path, v.Update.Version)
+				updates = append(updates, comment, replace)
 			}
 		}
 
@@ -188,7 +194,6 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 			for _, v := range updates {
 				sb.WriteString(au.Italic(v).String())
 			}
-			sb.WriteString("\n")
 		}
 
 		t := table.NewWriter()
