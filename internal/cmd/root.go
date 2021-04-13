@@ -458,6 +458,7 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Proje
 		return
 	}
 
+	// Wittle down list of audited to vulnerable stuff, so we can work faster
 	vulnerableCoordinates := make(map[string]types.Projects)
 	for k, v := range ossIndexResponse {
 		if v.IsVulnerable() {
@@ -467,9 +468,11 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Proje
 		}
 	}
 
+	// Keep a map of the original purl, and the updated one
 	updatePurls := make([]string, 0, len(coordinates))
 	updateMatrix := make(map[string]string)
 
+	// Go through the vulnerable coordinates and see if there is a newer version of something, if so, let's make a new list of purls to check
 	for k, v := range vulnerableCoordinates {
 		if v.Update != nil {
 			updatePurl := packages.GimmeAPurl(v.Name, v.Update.Version)
@@ -479,6 +482,7 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Proje
 		}
 	}
 
+	// You guessed it, check OSS Index if we have any updated libraries to audit, and if we
 	var updateCoordinates map[string]ossIndexTypes.Coordinate
 	if len(updatePurls) > 0 {
 		updateCoordinates, err = ossIndex.Audit(updatePurls)
@@ -486,12 +490,15 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Proje
 			return
 		}
 
+		// If the new updated coordinates are not vulnerable, add them to the original map, so we can do something with them
 		for k, v := range updateCoordinates {
-			originalPurl := updateMatrix[k]
-			project := vulnerableCoordinates[originalPurl]
+			if !v.IsVulnerable() {
+				originalPurl := updateMatrix[k]
+				project := vulnerableCoordinates[originalPurl]
 
-			project.UpdateCoordinate = v
-			vulnerableCoordinates[originalPurl] = project
+				project.UpdateCoordinate = v
+				vulnerableCoordinates[originalPurl] = project
+			}
 		}
 	}
 
