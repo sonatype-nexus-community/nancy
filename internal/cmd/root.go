@@ -468,7 +468,7 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Proje
 		}
 	}
 
-	// Keep a map of the original purl, and the updated one
+	// Keep a map of the original purl, and the updated one, set max capacity to the max amount of coordinates we have to look at
 	updatePurls := make([]string, 0, len(coordinates))
 	updateMatrix := make(map[string]string)
 
@@ -482,7 +482,7 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Proje
 		}
 	}
 
-	// You guessed it, check OSS Index if we have any updated libraries to audit, and if we
+	// You guessed it, check OSS Index to see if the update purls are good or bad, and only check if we have some to begin with
 	var updateCoordinates map[string]ossIndexTypes.Coordinate
 	if len(updatePurls) > 0 {
 		updateCoordinates, err = ossIndex.Audit(updatePurls)
