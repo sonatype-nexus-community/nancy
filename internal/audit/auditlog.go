@@ -28,7 +28,6 @@ import (
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
 func LogResults(formatter log.Formatter, packageCount int, coordinates map[string]ossIndexTypes.Coordinate, invalidCoordinates []ossIndexTypes.Coordinate, vulnerableCoordinates map[string]types.Projects, exclusions []string) int {
-	vulnerableCount := 0
 
 	if exclusions == nil {
 		exclusions = make([]string, 0)
@@ -45,14 +44,13 @@ func LogResults(formatter log.Formatter, packageCount int, coordinates map[strin
 	log.SetFormatter(formatter)
 	log.SetOutput(os.Stdout)
 	log.WithFields(log.Fields{
-		"exclusions":     exclusions,
-		"num_audited":    packageCount,
-		"num_vulnerable": vulnerableCount,
-		"audited":        coordinates,
-		"vulnerable":     vulnerableCoordinates,
-		"invalid":        invalidCoordinates,
-		"version":        buildversion.BuildVersion,
+		"exclusions":  exclusions,
+		"num_audited": packageCount,
+		"audited":     coordinates,
+		"vulnerable":  vulnerableCoordinates,
+		"invalid":     invalidCoordinates,
+		"version":     buildversion.BuildVersion,
 	}).Info("")
 
-	return vulnerableCount
+	return len(vulnerableCoordinates)
 }

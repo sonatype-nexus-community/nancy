@@ -155,15 +155,11 @@ func groupAndPrint(vulnerable map[string]types.Projects, nonVulnerable map[strin
 func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 	auditedEntries := entry.Data["audited"]
 	invalidEntries := entry.Data["invalid"]
-	packageCount := entry.Data["num_audited"]
-	numVulnerable := entry.Data["num_vulnerable"]
 	buildVersion := entry.Data["version"]
-	if auditedEntries != nil && invalidEntries != nil && packageCount != nil && numVulnerable != nil && buildVersion != nil {
+	if auditedEntries != nil && invalidEntries != nil && buildVersion != nil {
 		auditedEntries := entry.Data["audited"].(map[string]ossIndexTypes.Coordinate)
 		vulnerableEntries := entry.Data["vulnerable"].(map[string]types.Projects)
 		invalidEntries := entry.Data["invalid"].([]ossIndexTypes.Coordinate)
-		packageCount := entry.Data["num_audited"].(int)
-		numVulnerable := entry.Data["num_vulnerable"].(int)
 
 		var sb strings.Builder
 
@@ -199,9 +195,9 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		t := table.NewWriter()
 		t.SetStyle(table.StyleBold)
 		t.SetTitle("Summary")
-		t.AppendRow([]interface{}{"Audited Dependencies", strconv.Itoa(packageCount)})
+		t.AppendRow([]interface{}{"Audited Dependencies", strconv.Itoa(len(auditedEntries))})
 		t.AppendSeparator()
-		t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(numVulnerable)))})
+		t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(len(vulnerableEntries))))})
 		sb.WriteString(t.Render())
 		sb.WriteString("\n")
 
