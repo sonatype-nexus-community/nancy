@@ -16,7 +16,11 @@
 
 package packages
 
-import "regexp"
+import (
+	"fmt"
+	"regexp"
+	"strings"
+)
 
 var gopkg1Pattern = regexp.MustCompile("^gopkg.in/([^.]+).*")
 var gopkg2Pattern = regexp.MustCompile("^gopkg.in/([^/]+)/([^.]+).*")
@@ -43,4 +47,12 @@ func convertGopkgNameToPurl(name string) (rename string) {
 		rename = "golang/" + name
 	}
 	return
+}
+
+func GimmeAPurl(name string, version string) string {
+	version = strings.Replace(version, "v", "", -1)
+	version = strings.Replace(version, "+incompatible", "", -1)
+
+	convertedName := convertGopkgNameToPurl(name)
+	return fmt.Sprintf("pkg:%s@%s", convertedName, version)
 }

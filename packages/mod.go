@@ -19,6 +19,7 @@ package packages
 import (
 	"strings"
 
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -27,7 +28,11 @@ type Mod struct {
 	GoSumPath   string
 }
 
-func (m Mod) ExtractPurlsFromManifest() (purls []string) {
+func (m Mod) ExtractPurlsFromManifest() []string {
+	return removeDuplicates(m.extractPurls(m.ProjectList))
+}
+
+func (m Mod) extractPurls(mods types.ProjectList) (purls []string) {
 	for _, s := range m.ProjectList.Projects {
 		if len(s.Version) > 0 { // There must be a version we can use
 			// OSS Index no likey v before version, IQ does though, comment left so I will never forget.
@@ -39,9 +44,18 @@ func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 		}
 	}
 
-	purls = removeDuplicates(purls)
-
 	return
+}
+
+func (m Mod) ExtractUpdatePurls(vulnerable map[string]ossIndexTypes.Coordinate) (purls []string) {
+	projectsWithUpdate := types.ProjectList{}
+	for _, s := range m.ProjectList.Projects {
+		if s.Update != nil {
+			projectsWithUpdate.Projects = append(projectsWithUpdate.Projects, s)
+		}
+	}
+
+	return removeDuplicates(m.extractPurls(projectsWithUpdate))
 }
 
 func removeDuplicates(purls []string) (dedupedPurls []string) {

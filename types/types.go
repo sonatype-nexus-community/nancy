@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 )
 
 type GoListModule struct {
@@ -61,9 +62,19 @@ type Configuration struct {
 }
 
 type Projects struct {
-	Name    string
-	Version string
+	Name             string
+	Version          string
+	Update           *ProjectUpdate
+	Coordinate       types.Coordinate
+	UpdateCoordinate types.Coordinate
 }
+
+type ProjectUpdate struct {
+	Path    string
+	Version string
+	Time    time.Time
+}
+
 type ProjectList struct {
 	Projects []Projects
 }

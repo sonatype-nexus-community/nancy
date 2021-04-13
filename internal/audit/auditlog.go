@@ -20,47 +20,35 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
-func LogResults(formatter log.Formatter, packageCount int, coordinates []types.Coordinate, invalidCoordinates []types.Coordinate, exclusions []string) int {
+func LogResults(formatter log.Formatter, packageCount int, coordinates map[string]ossIndexTypes.Coordinate, invalidCoordinates []ossIndexTypes.Coordinate, vulnerableCoordinates map[string]types.Projects, exclusions []string) int {
 	vulnerableCount := 0
 
-	for _, c := range coordinates {
-		c.ExcludeVulnerabilities(exclusions)
-	}
-
-	var auditedCoordinates []types.Coordinate
-	var vulnerableCoordinates []types.Coordinate
-
-	for i := 0; i < len(coordinates); i++ {
-		coordinate := coordinates[i]
-		if coordinate.IsVulnerable() {
-			vulnerableCount++
-			vulnerableCoordinates = append(vulnerableCoordinates, coordinate)
-		}
-		auditedCoordinates = append(auditedCoordinates, coordinate)
-	}
-
-	if invalidCoordinates == nil {
-		invalidCoordinates = make([]types.Coordinate, 0)
-	}
 	if exclusions == nil {
 		exclusions = make([]string, 0)
 	}
-	if vulnerableCoordinates == nil {
-		vulnerableCoordinates = make([]types.Coordinate, 0)
+
+	for _, c := range vulnerableCoordinates {
+		c.Coordinate.ExcludeVulnerabilities(exclusions)
 	}
+
+	if invalidCoordinates == nil {
+		invalidCoordinates = make([]ossIndexTypes.Coordinate, 0)
+	}
+
 	log.SetFormatter(formatter)
 	log.SetOutput(os.Stdout)
 	log.WithFields(log.Fields{
 		"exclusions":     exclusions,
 		"num_audited":    packageCount,
 		"num_vulnerable": vulnerableCount,
-		"audited":        auditedCoordinates,
+		"audited":        coordinates,
 		"vulnerable":     vulnerableCoordinates,
 		"invalid":        invalidCoordinates,
 		"version":        buildversion.BuildVersion,

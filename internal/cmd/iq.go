@@ -19,20 +19,20 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
 	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/internal/logger"
-	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"io"
-	"os"
 )
 
 type iqServerFactory interface {
@@ -127,8 +127,13 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 func getPurls() (purls []string, err error) {
 	if configOssi.Path != "" {
 		var invalidPurls []string
-		if purls, invalidPurls, err = getPurlsFromPath(configOssi.Path); err != nil {
+		deps, invalidPurls, err := getPurlsFromPath(configOssi.Path)
+		if err != nil {
 			panic(err)
+		}
+
+		for k := range deps {
+			purls = append(purls, k)
 		}
 		invalidCoordinates := convertInvalidPurlsToCoordinates(invalidPurls)
 		logLady.WithField("invalid", invalidCoordinates).Info("")
@@ -138,14 +143,15 @@ func getPurls() (purls []string, err error) {
 			panic(err)
 		}
 
-		mod := packages.Mod{}
-
-		mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+		deps, err := parse.GoListAgnostic(os.Stdin)
 		if err != nil {
 			logLady.WithError(err).Error("unexpected error in iq cmd")
 			panic(err)
 		}
-		purls = mod.ExtractPurlsFromManifest()
+
+		for k := range deps {
+			purls = append(purls, k)
+		}
 	}
 	return purls, err
 }

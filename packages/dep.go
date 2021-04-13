@@ -21,12 +21,12 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/golang/dep"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
+func ExtractPurlsUsingDep(project *dep.Project) (deps map[string]types.Projects, invalidPurls []string) {
 	lockedProjects := project.Lock.P
-	var purls []string
-	var invalidPurls []string
+
 	for _, lockedProject := range lockedProjects {
 		var version string
 		i := lockedProject.Version().String()
@@ -42,9 +42,11 @@ func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
 			if err != nil {
 				invalidPurls = append(invalidPurls, purl)
 			} else {
-				purls = append(purls, purl)
+				dep := types.Projects{Name: packageName, Version: version}
+
+				deps[purl] = dep
 			}
 		}
 	}
-	return purls, invalidPurls
+	return
 }
