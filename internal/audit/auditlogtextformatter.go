@@ -183,8 +183,8 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 				for _, v := range v.Coordinate.Vulnerabilities {
 					issueTitles = append(issueTitles, v.Cve)
 				}
-				comment := fmt.Sprintf("// fix issues: %s in %s %s\n", strings.Join(issueTitles, ", "), v.Name, v.Version)
-				replace := fmt.Sprintf("replace %s => %s %s\n\n", v.Update.Path, v.Update.Path, v.Update.Version)
+				comment := au.Green(fmt.Sprintf("// fix issues: %s in %s %s\n", strings.Join(issueTitles, ", "), v.Name, v.Version)).String()
+				replace := au.Blue(fmt.Sprintf("replace %s => %s %s\n\n", v.Update.Path, v.Update.Path, v.Update.Version)).String()
 				updates = append(updates, comment, replace)
 			}
 		}

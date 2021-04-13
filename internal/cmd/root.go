@@ -462,7 +462,6 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Proje
 	for k, v := range ossIndexResponse {
 		if v.IsVulnerable() {
 			project := coordinates[k]
-			fmt.Print(v)
 			project.Coordinate = v
 			vulnerableCoordinates[k] = project
 		}
