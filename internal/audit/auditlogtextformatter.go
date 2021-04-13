@@ -155,8 +155,9 @@ func groupAndPrint(vulnerable map[string]types.Projects, nonVulnerable map[strin
 func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 	auditedEntries := entry.Data["audited"]
 	invalidEntries := entry.Data["invalid"]
+	vulnerableEntries := entry.Data["vulnerable"]
 	buildVersion := entry.Data["version"]
-	if auditedEntries != nil && invalidEntries != nil && buildVersion != nil {
+	if auditedEntries != nil && invalidEntries != nil && vulnerableEntries != nil && buildVersion != nil {
 		auditedEntries := entry.Data["audited"].(map[string]ossIndexTypes.Coordinate)
 		vulnerableEntries := entry.Data["vulnerable"].(map[string]types.Projects)
 		invalidEntries := entry.Data["invalid"].([]ossIndexTypes.Coordinate)
