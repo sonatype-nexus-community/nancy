@@ -127,14 +127,17 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 func getPurls() (purls []string, err error) {
 	if configOssi.Path != "" {
 		var invalidPurls []string
-		deps, invalidPurls, err := getPurlsFromPath(configOssi.Path)
+		deps, err := getPurlsFromPath(configOssi.Path)
 		if err != nil {
 			panic(err)
 		}
 
-		for k := range deps {
-			purls = append(purls, k)
+		for k, v := range deps {
+			if v.Valid {
+				purls = append(purls, k)
+			}
 		}
+
 		invalidCoordinates := convertInvalidPurlsToCoordinates(invalidPurls)
 		logLady.WithField("invalid", invalidCoordinates).Info("")
 	} else {

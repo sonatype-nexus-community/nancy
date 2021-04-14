@@ -307,7 +307,7 @@ func getIsQuiet() bool {
 	return !configOssi.Loud
 }
 
-func getPurlsFromPath(path string) (deps map[string]types.Projects, invalidPurls []string, err error) {
+func getPurlsFromPath(path string) (deps map[string]types.Dependency, err error) {
 	logLady.Info("Parsing config for file based scan")
 	if !strings.Contains(path, GopkgLockFilename) {
 		err = fmt.Errorf("invalid path value. must point to '%s' file. path: %s", GopkgLockFilename, path)
@@ -336,14 +336,15 @@ func getPurlsFromPath(path string) (deps map[string]types.Projects, invalidPurls
 		return
 	}
 
-	deps, invalidPurls = packages.ExtractPurlsUsingDep(project)
+	deps = packages.ExtractPurlsUsingDep(project)
+
 	return
 }
 
 func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
-	deps, invalidPurls, err := getPurlsFromPath(path)
+	deps, err := getPurlsFromPath(path)
 	if err == nil {
-		if err = checkOSSIndex(ossIndex, deps, invalidPurls); err != nil {
+		if err = checkOSSIndex(ossIndex, deps); err != nil {
 			return
 		}
 	}
@@ -424,33 +425,31 @@ func doStdInAndParse(ossIndex ossindex.IServer) (err error) {
 		return err
 	}
 
-	mod := packages.Mod{}
-
-	mods, err := parse.GoListAgnostic(os.Stdin)
+	dependencies, err := parse.GoListAgnostic(os.Stdin)
 	if err != nil {
 		logLady.Error(err)
 		return
 	}
 	logLady.WithFields(logrus.Fields{
-		"projectList": mod.ProjectList,
+		"dependencies": dependencies,
 	}).Debug("Obtained project list")
 
-	var purls = mod.ExtractPurlsFromManifest()
-	logLady.WithFields(logrus.Fields{
-		"purls": purls,
-	}).Debug("Extracted purls")
-
 	logLady.Info("Auditing purls with OSS Index")
-	err = checkOSSIndex(ossIndex, mods, nil)
+	err = checkOSSIndex(ossIndex, dependencies)
 
 	return err
 }
 
-func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Projects, invalidpurls []string) (err error) {
+func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Dependency) (err error) {
 	var packageCount = len(coordinates)
 	purls := make([]string, 0, len(coordinates))
-	for k := range coordinates {
-		purls = append(purls, k)
+	invalidPurls := make([]string, 0, len(coordinates))
+	for k, v := range coordinates {
+		if v.Valid {
+			purls = append(purls, k)
+		} else {
+			invalidPurls = append(invalidPurls, k)
+		}
 	}
 
 	ossIndexResponse, err := ossIndex.Audit(purls)
@@ -459,7 +458,7 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Proje
 	}
 
 	// Wittle down list of audited to vulnerable stuff, so we can work faster
-	vulnerableCoordinates := make(map[string]types.Projects)
+	vulnerableCoordinates := make(map[string]types.Dependency)
 	for k, v := range ossIndexResponse {
 		if v.IsVulnerable() {
 			project := coordinates[k]
@@ -502,7 +501,7 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Proje
 		}
 	}
 
-	invalidCoordinates := convertInvalidPurlsToCoordinates(invalidpurls)
+	invalidCoordinates := convertInvalidPurlsToCoordinates(invalidPurls)
 
 	if count := audit.LogResults(configOssi.Formatter, packageCount, ossIndexResponse, invalidCoordinates, vulnerableCoordinates, configOssi.CveList.Cves); count > 0 {
 		err = customerrors.ErrorExit{ExitCode: count}

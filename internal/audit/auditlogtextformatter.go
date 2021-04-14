@@ -77,7 +77,7 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 	}
 }
 
-func logVulnerablePackage(sb *strings.Builder, noColor bool, coordinate types.Projects) {
+func logVulnerablePackage(sb *strings.Builder, noColor bool, coordinate types.Dependency) {
 	au := aurora.NewAurora(!noColor)
 	sb.WriteString(fmt.Sprintf(
 		"%s\n%s \n",
@@ -136,7 +136,7 @@ func scoreAssessment(score decimal.Decimal) string {
 	return "Low"
 }
 
-func groupAndPrint(vulnerable map[string]types.Projects, nonVulnerable map[string]ossIndexTypes.Coordinate, quiet bool, noColor bool, sb *strings.Builder) {
+func groupAndPrint(vulnerableDependencies map[string]types.Dependency, nonVulnerable map[string]ossIndexTypes.Coordinate, quiet bool, noColor bool, sb *strings.Builder) {
 	if !quiet {
 		sb.WriteString("\n")
 		for _, v := range nonVulnerable {
@@ -144,11 +144,11 @@ func groupAndPrint(vulnerable map[string]types.Projects, nonVulnerable map[strin
 		}
 		sb.WriteString(fmt.Sprintf("\n%d Non Vulnerable Packages\n\n", len(nonVulnerable)))
 	}
-	if len(vulnerable) > 0 {
-		for _, v := range vulnerable {
+	if len(vulnerableDependencies) > 0 {
+		for _, v := range vulnerableDependencies {
 			logVulnerablePackage(sb, noColor, v)
 		}
-		sb.WriteString(fmt.Sprintf("\n%d Vulnerable Packages\n\n", len(vulnerable)))
+		sb.WriteString(fmt.Sprintf("\n%d Vulnerable Packages\n\n", len(vulnerableDependencies)))
 	}
 }
 
@@ -159,7 +159,7 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 	buildVersion := entry.Data["version"]
 	if auditedEntries != nil && invalidEntries != nil && vulnerableEntries != nil && buildVersion != nil {
 		auditedEntries := entry.Data["audited"].(map[string]ossIndexTypes.Coordinate)
-		vulnerableEntries := entry.Data["vulnerable"].(map[string]types.Projects)
+		vulnerableEntries := entry.Data["vulnerable"].(map[string]types.Dependency)
 		invalidEntries := entry.Data["invalid"].([]ossIndexTypes.Coordinate)
 
 		var sb strings.Builder

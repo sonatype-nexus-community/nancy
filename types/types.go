@@ -61,7 +61,10 @@ type Configuration struct {
 	SkipUpdateCheck bool
 }
 
-type Projects struct {
+type Dependency struct {
+	PackageManager   string
+	Purl             string
+	Valid            bool
 	Name             string
 	Version          string
 	Update           *ProjectUpdate
@@ -73,10 +76,6 @@ type ProjectUpdate struct {
 	Path    string
 	Version string
 	Time    time.Time
-}
-
-type ProjectList struct {
-	Projects []Projects
 }
 
 type CveListFlag struct {

@@ -35,14 +35,14 @@ var goListDependencyCriteria = func(s []string) bool {
 // GoListAgnostic will take a io.Reader that is likely the os.StdIn, try to parse it as
 // if `go list -json -m all` was ran, and then try to reparse it as if `go list -m all`
 // was ran instead. It returns either an error, or a deps of types.ProjectList
-func GoListAgnostic(stdIn io.Reader) (deps map[string]types.Projects, err error) {
-	deps = make(map[string]types.Projects)
+func GoListAgnostic(stdIn io.Reader) (dependencies map[string]types.Dependency, err error) {
+	dependencies = make(map[string]types.Dependency)
 
 	// stdIn should never be massive, so taking this approach over reading from a stream
 	// multiple times
 	johnnyFiveNeedInput, err := ioutil.ReadAll(stdIn)
 	if err != nil {
-		return deps, err
+		return
 	}
 	decoder := json.NewDecoder(strings.NewReader(string(johnnyFiveNeedInput)))
 
@@ -62,7 +62,7 @@ func GoListAgnostic(stdIn io.Reader) (deps map[string]types.Projects, err error)
 		if _, ok := err.(*NoVersionError); ok {
 			continue
 		}
-		deps[packages.GimmeAPurl(dep.Name, dep.Version)] = dep
+		dependencies[packages.GimmeAPurl(dep.Name, dep.Version)] = dep
 	}
 
 	if err != nil {
@@ -72,7 +72,7 @@ func GoListAgnostic(stdIn io.Reader) (deps map[string]types.Projects, err error)
 		for scanner.Scan() {
 			dep := parseSpaceSeparatedDependency(scanner, goListDependencyCriteria)
 			if dep != nil {
-				deps[packages.GimmeAPurl(dep.Name, dep.Version)] = *dep
+				dependencies[packages.GimmeAPurl(dep.Name, dep.Version)] = *dep
 			}
 		}
 
@@ -84,7 +84,7 @@ func GoListAgnostic(stdIn io.Reader) (deps map[string]types.Projects, err error)
 	return
 }
 
-func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
+func modToProjectList(mod types.GoListModule) (dep types.Dependency, err error) {
 	if mod.Replace != nil {
 		if mod.Replace.Version == "" {
 			err = &NoVersionError{err: fmt.Errorf("no version found for mod")}
@@ -105,7 +105,7 @@ func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 	return
 }
 
-func populateMod(mod types.GoListModule, name string, version string) (dep types.Projects) {
+func populateMod(mod types.GoListModule, name string, version string) (dep types.Dependency) {
 	if mod.Update != nil {
 		dep.Update = &types.ProjectUpdate{
 			Path:    mod.Update.Path,
@@ -113,13 +113,14 @@ func populateMod(mod types.GoListModule, name string, version string) (dep types
 			Time:    *mod.Update.Time,
 		}
 	}
+	dep.Valid = true
 	dep.Name = name
 	dep.Version = version
 
 	return
 }
 
-func parseSpaceSeparatedDependency(scanner *bufio.Scanner, criteria func(s []string) bool) (dep *types.Projects) {
+func parseSpaceSeparatedDependency(scanner *bufio.Scanner, criteria func(s []string) bool) (dep *types.Dependency) {
 	text := scanner.Text()
 	rewrite := strings.Split(text, "=>")
 
@@ -132,12 +133,12 @@ func parseSpaceSeparatedDependency(scanner *bufio.Scanner, criteria func(s []str
 	return addProjectDep(criteria, s)
 }
 
-func addProjectDep(criteria func(s []string) bool, s []string) (dep *types.Projects) {
+func addProjectDep(criteria func(s []string) bool, s []string) (dep *types.Dependency) {
 	if criteria(s) {
 		if len(s) > 3 {
-			return &types.Projects{Name: s[0], Version: s[4]}
+			return &types.Dependency{Valid: true, Name: s[0], Version: s[4]}
 		} else {
-			return &types.Projects{Name: s[0], Version: s[1]}
+			return &types.Dependency{Valid: true, Name: s[0], Version: s[1]}
 		}
 	}
 

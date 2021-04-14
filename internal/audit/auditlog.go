@@ -27,7 +27,7 @@ import (
 
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
-func LogResults(formatter log.Formatter, packageCount int, coordinates map[string]ossIndexTypes.Coordinate, invalidCoordinates []ossIndexTypes.Coordinate, vulnerableCoordinates map[string]types.Projects, exclusions []string) int {
+func LogResults(formatter log.Formatter, packageCount int, coordinates map[string]ossIndexTypes.Coordinate, invalidCoordinates []ossIndexTypes.Coordinate, vulnerableCoordinates map[string]types.Dependency, exclusions []string) int {
 
 	if exclusions == nil {
 		exclusions = make([]string, 0)
