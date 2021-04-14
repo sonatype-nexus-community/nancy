@@ -474,7 +474,7 @@ func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Depen
 	// Go through the vulnerable coordinates and see if there is a newer version of something, if so, let's make a new list of purls to check
 	for k, v := range vulnerableCoordinates {
 		if v.Update != nil {
-			updatePurl := packages.GimmeAPurl(v.Name, v.Update.Version)
+			updatePurl := packages.GimmeAPURL(v.Name, v.Update.Version)
 			updateMatrix[updatePurl] = k
 
 			updatePurls = append(updatePurls, updatePurl)

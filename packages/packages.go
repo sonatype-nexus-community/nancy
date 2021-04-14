@@ -49,7 +49,7 @@ func convertGopkgNameToPurl(name string) (rename string) {
 	return
 }
 
-func gimmeAPURL(name string, version string) string {
+func GimmeAPURL(name string, version string) string {
 	version = strings.Replace(version, "v", "", -1)
 	version = strings.Replace(version, "+incompatible", "", -1)
 

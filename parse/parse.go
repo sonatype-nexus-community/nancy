@@ -62,7 +62,7 @@ func GoListAgnostic(stdIn io.Reader) (dependencies map[string]types.Dependency, 
 		if _, ok := err.(*NoVersionError); ok {
 			continue
 		}
-		dependencies[packages.GimmeAPurl(dep.Name, dep.Version)] = dep
+		dependencies[packages.GimmeAPURL(dep.Name, dep.Version)] = dep
 	}
 
 	if err != nil {
@@ -72,7 +72,7 @@ func GoListAgnostic(stdIn io.Reader) (dependencies map[string]types.Dependency, 
 		for scanner.Scan() {
 			dep := parseSpaceSeparatedDependency(scanner, goListDependencyCriteria)
 			if dep != nil {
-				dependencies[packages.GimmeAPurl(dep.Name, dep.Version)] = *dep
+				dependencies[packages.GimmeAPURL(dep.Name, dep.Version)] = *dep
 			}
 		}
 
