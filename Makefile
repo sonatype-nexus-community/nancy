@@ -10,12 +10,23 @@ GOLANGCI_VERSION=v1.24.0
 GOLANGCI_LINT_DOCKER=golangci/golangci-lint:$(GOLANGCI_VERSION)
 LINT_CMD=golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v --max-same-issues 10
 
+ifeq ($(findstring localbuild,$(CIRCLE_SHELL_ENV)),localbuild)
+    # Found
+    DOCKER_CMD=sudo docker
+else
+    # Not found
+    DOCKER_CMD=docker
+endif
+
+doit:
+	@echo "DOCKER_CMD=${DOCKER_CMD}"
+
 all: deps test lint build
 
 .PHONY: lint clean deps build test integration-test package
 
 lint:
-	docker run --rm -v $$(pwd):/app -v $$(pwd)/.cache:/root/.cache -w /app $(GOLANGCI_LINT_DOCKER) /bin/sh -c "$(LINT_CMD)"
+	$(DOCKER_CMD) run --rm -v $$(pwd):/app -v $$(pwd)/.cache:/root/.cache -w /app $(GOLANGCI_LINT_DOCKER) /bin/sh -c "$(LINT_CMD)"
 
 ci-lint:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin $(GOLANGCI_VERSION)
@@ -55,20 +66,22 @@ build-linux:
 
 docker-alpine-integration-test: build-linux
 	mkdir -p dist
-	docker build . -f Dockerfile.alpine -t sonatypecommunity/nancy:alpine-integration-test
+	$(DOCKER_CMD) build . -f Dockerfile.alpine -t sonatypecommunity/nancy:alpine-integration-test
 	# create file, volume mount to simulate, ci run of the container and things just happening inside the container instead of passing output to the container directly
 	go list -json -m all > dist/deps.out
 	echo "cat /tmp/dist/deps.out | nancy sleuth" > dist/ci.sh
 	chmod +x dist/ci.sh
 	# run the container....using cat with no params keeps it running
-	docker run --name alpine-integration-test -td sonatypecommunity/nancy:alpine-integration-test cat
+	$(DOCKER_CMD) run --name alpine-integration-test -td sonatypecommunity/nancy:alpine-integration-test cat
 	# copy the code as if it was actually in the "ci" container.. doing this cause circleci cant actually mount volumes
-	docker cp . alpine-integration-test:/tmp
+	$(DOCKER_CMD) cp . alpine-integration-test:/tmp
 	# run nancy against nancy output
-	docker exec -it alpine-integration-test /bin/sh /tmp/dist/ci.sh
+	$(DOCKER_CMD) exec -it alpine-integration-test /bin/sh /tmp/dist/ci.sh
+	$(DOCKER_CMD) stop alpine-integration-test && $(DOCKER_CMD) rm alpine-integration-test
+
 
 docker-goreleaser-integration-test: build-linux
-	docker build . -f Dockerfile.goreleaser -t sonatypecommunity/nancy:goreleaser-integration-test
-	go list -json -m all | docker run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth
+	$(DOCKER_CMD) build . -f Dockerfile.goreleaser -t sonatypecommunity/nancy:goreleaser-integration-test
+	go list -json -m all | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth
 
 docker-integration-tests: docker-alpine-integration-test docker-goreleaser-integration-test
