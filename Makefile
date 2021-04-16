@@ -11,15 +11,10 @@ GOLANGCI_LINT_DOCKER=golangci/golangci-lint:$(GOLANGCI_VERSION)
 LINT_CMD=golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v --max-same-issues 10
 
 ifeq ($(findstring localbuild,$(CIRCLE_SHELL_ENV)),localbuild)
-    # Found
     DOCKER_CMD=sudo docker
 else
-    # Not found
     DOCKER_CMD=docker
 endif
-
-doit:
-	@echo "DOCKER_CMD=${DOCKER_CMD}"
 
 all: deps test lint build
 
