@@ -9,6 +9,7 @@ BUILD_VERSION_LOCATION=github.com/sonatype-nexus-community/nancy/buildversion
 GOLANGCI_VERSION=v1.24.0
 GOLANGCI_LINT_DOCKER=golangci/golangci-lint:$(GOLANGCI_VERSION)
 LINT_CMD=golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v --max-same-issues 10
+NANCY_IGNORE=$(shell cat .nancy-ignore | cut -d\# -f 1)
 
 ifeq ($(findstring localbuild,$(CIRCLE_SHELL_ENV)),localbuild)
     DOCKER_CMD=sudo docker
@@ -77,6 +78,6 @@ docker-alpine-integration-test: build-linux
 
 docker-goreleaser-integration-test: build-linux
 	$(DOCKER_CMD) build . -f Dockerfile.goreleaser -t sonatypecommunity/nancy:goreleaser-integration-test
-	go list -json -m all | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth
+	go list -json -m all | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth -e $(NANCY_IGNORE)
 
 docker-integration-tests: docker-alpine-integration-test docker-goreleaser-integration-test
