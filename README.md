@@ -585,6 +585,88 @@ On Arch Linux, `nancy` can be installed using the [AUR](https://aur.archlinux.or
 $ yay -S nancy-bin
 ```
 
+## How to Fix Vulnerabilities
+
+So you've found a vulnerability. Now what? The best case is to upgrade the vulnerable component to a newer/non-vulnerable
+version. However, it is likely the vulnerable component is not a direct dependency, but instead is a transitive dependency
+(a dependency of a dependency, of a dependency, wash-rinse-repeat). In such a case, the first step is to figure out which
+direct dependency (and sub-dependencies) depend on the vulnerable component.
+
+The command `go mod graph | grep my/vulnerable` will show which module(s) pulls in the `my/vulnerable` package.
+
+As an example, suppose we've learned that component `github.com/gogo/protobuf`, version 1.2.1 is vulnerable (CVE-2021-3121).
+Use the following command to determine which components depend on `github.com/gogo/protobuf`.
+```shell
+$ go mod graph | grep github.com/gogo/protobuf
+github.com/gogo/protobuf@v1.2.1 github.com/kisielk/errcheck@v1.1.0
+github.com/spf13/viper@v1.4.0 github.com/gogo/protobuf@v1.2.1
+github.com/prometheus/common@v0.4.0 github.com/gogo/protobuf@v1.1.1
+github.com/prometheus/tsdb@v0.7.1 github.com/gogo/protobuf@v1.1.1
+github.com/spf13/viper@v1.7.1 github.com/gogo/protobuf@v1.2.1
+```
+
+There are a number of approaches to resolving the vulnerability, but no matter which approach you choose, you should
+probably make sure all the tests are passing before making any dependency changes.
+<details>
+  <summary>Click to expand output of command:
+
+```shell
+$ go test ./... 
+```
+  </summary>
+
+```shell
+$ go test ./...
+?       github.com/sonatype-nexus-community/nancy       [no test files]
+ok      github.com/sonatype-nexus-community/nancy/buildversion  (cached)
+ok      github.com/sonatype-nexus-community/nancy/internal/audit        (cached)
+ok      github.com/sonatype-nexus-community/nancy/internal/cmd  0.206s
+ok      github.com/sonatype-nexus-community/nancy/internal/customerrors (cached)
+?       github.com/sonatype-nexus-community/nancy/internal/logger       [no test files]
+ok      github.com/sonatype-nexus-community/nancy/packages      (cached)
+ok      github.com/sonatype-nexus-community/nancy/parse (cached)
+?       github.com/sonatype-nexus-community/nancy/settings      [no test files]
+ok      github.com/sonatype-nexus-community/nancy/types (cached)
+ok      github.com/sonatype-nexus-community/nancy/update        (cached)
+```
+</details>
+
+We now know the vulnerable component is pulled in by `github.com/spf13/viper@v1.7.1` (among others). Ideally, we could
+upgrade the direct dependency (`github.com/spf13/viper`) to a version that does not depend on a vulnerable version of 
+the transitive dependency (`github.com/gogo/protobuf`).
+
+In some cases, no such upgrade of the direct dependency exists that avoids a dependence on the vulnerable component.
+In such a case, the next step is to file an issue with the direct dependency project for them to update the vulnerable
+sub-dependencies. Be sure to read and follow any vulnerability reporting instructions published by the project: Look for
+a `SECURITY.md` file, or other instructions on how to report vulnerabilities. Some projects may prefer you not report
+the vulnerability publicly. Here's an example of such a bug report: [Issue #1066](https://github.com/spf13/viper/pull/1066)
+
+Until the direct dependency is updated, the next best solution is to use a `replace` directive in the `go.mod` file 
+to use a newer version of the transitive dependency. See the "replace directive" section of 
+[Go Modules Reference](https://golang.org/ref/mod#go). To avoid semver issues, you probably want to use a newer 
+dependency version that is in the same "major.minor" version as the vulnerable dependency version.
+
+You can add the following `replace` directive to your `go.mod` file to us a newer version of 
+`github.com/gogo/protobuf`:
+
+```
+// fix vulnerability: CVE-2021-3121 in github.com/gogo/protobuf v1.2.1
+replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
+```
+
+Be aware that even after you add a `replace` directive, `go mod graph` will still show the old dependency version. 
+You can verify the new version is actually used via the `go list` command:
+```shell
+$ go mod tidy
+$ go list -m all | grep github.com/gogo/protobuf
+github.com/gogo/protobuf v1.2.1 => github.com/gogo/protobuf v1.3.2
+```
+You can see the v1.2.1 is replaced with v1.3.2.
+
+Finally, you may want to submit a PR to the project with the vulnerable dependency (to fix the issues you reported
+earlier) in a new release of the direct dependency. Even better, also tell them about `nancy` and maybe then will add 
+`nancy` to their own CI system.
+
 ## Development
 
 `nancy` is written using Golang 1.13, so it is best you start there.
