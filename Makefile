@@ -64,7 +64,7 @@ docker-alpine-integration-test: build-linux
 	$(DOCKER_CMD) build . -f Dockerfile.alpine -t sonatypecommunity/nancy:alpine-integration-test
 	# create file, volume mount to simulate, ci run of the container and things just happening inside the container instead of passing output to the container directly
 	go list -json -m all > dist/deps.out
-	echo "cat /tmp/dist/deps.out | nancy sleuth" > dist/ci.sh
+	echo "cd /tmp && cat /tmp/dist/deps.out | nancy sleuth" > dist/ci.sh
 	chmod +x dist/ci.sh
 	# run the container....using cat with no params keeps it running
 	$(DOCKER_CMD) run --name alpine-integration-test -td sonatypecommunity/nancy:alpine-integration-test cat
