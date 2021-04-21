@@ -9,6 +9,7 @@ BUILD_VERSION_LOCATION=github.com/sonatype-nexus-community/nancy/buildversion
 GOLANGCI_VERSION=v1.24.0
 GOLANGCI_LINT_DOCKER=golangci/golangci-lint:$(GOLANGCI_VERSION)
 LINT_CMD=golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v --max-same-issues 10
+NANCY_IGNORE=$(shell cat .nancy-ignore | cut -d\# -f 1)
 
 ifeq ($(findstring localbuild,$(CIRCLE_SHELL_ENV)),localbuild)
     DOCKER_CMD=sudo docker
@@ -62,9 +63,14 @@ build-linux:
 docker-alpine-integration-test: build-linux
 	mkdir -p dist
 	$(DOCKER_CMD) build . -f Dockerfile.alpine -t sonatypecommunity/nancy:alpine-integration-test
-	# create file, volume mount to simulate, ci run of the container and things just happening inside the container instead of passing output to the container directly
+	# create deps output since this container does not have golang,
+    # It's simulating the following flow
+    # 1. ci runs using a container that has golang, it then exports the go list -json m all contents
+    # 2. passes it to the next step that is using this container that only has nancy in it
+    # 3. runs nancy using the contents of the exported file with the deps in it. Also assumes that
+    #    in ci its likely you have the codebase (thus .nancy-ignore) in the same location you run nancy sleuth
 	go list -json -m all > dist/deps.out
-	echo "cat /tmp/dist/deps.out | nancy sleuth" > dist/ci.sh
+	echo "cd /tmp && cat /tmp/dist/deps.out | nancy sleuth" > dist/ci.sh
 	chmod +x dist/ci.sh
 	# run the container....using cat with no params keeps it running
 	$(DOCKER_CMD) run --name alpine-integration-test -td sonatypecommunity/nancy:alpine-integration-test cat
@@ -77,6 +83,9 @@ docker-alpine-integration-test: build-linux
 
 docker-goreleaser-integration-test: build-linux
 	$(DOCKER_CMD) build . -f Dockerfile.goreleaser -t sonatypecommunity/nancy:goreleaser-integration-test
-	go list -json -m all | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth
+	# NANCY_IGNORE is more tomfoolery b/c circleci cant do volume mounts. Use the non-file ignore version but with the contents of
+    # the .nancy-ignore. If you were to do this for real you would likely volume mount to your local and it
+    # would just use whatever file you actually had.
+	go list -json -m all | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth -e $(NANCY_IGNORE)
 
 docker-integration-tests: docker-alpine-integration-test docker-goreleaser-integration-test
