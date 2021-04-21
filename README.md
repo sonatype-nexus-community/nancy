@@ -641,10 +641,11 @@ sub-dependencies. Be sure to read and follow any vulnerability reporting instruc
 a `SECURITY.md` file, or other instructions on how to report vulnerabilities. Some projects may prefer you not report
 the vulnerability publicly. Here's an example of such a bug report: [Issue #1066](https://github.com/spf13/viper/pull/1066)
 
-Until the direct dependency is updated, the next best solution is to use a `replace` directive in the `go.mod` file 
-to use a newer version of the transitive dependency. See the "replace directive" section of 
-[Go Modules Reference](https://golang.org/ref/mod#go). To avoid semver issues, you probably want to use a newer 
-dependency version that is in the same "major.minor" version as the vulnerable dependency version.
+Until the direct dependency is updated, the next best solution is to use a `replace` directive in the `go.mod` file
+to use a newer version of the transitive dependency.
+See [replace directive](https://golang.org/ref/mod#go-mod-file-replace).
+To avoid semver issues, you probably want to use a newer dependency version that is in the same "major.minor" version
+as the vulnerable dependency version.
 
 You can add the following `replace` directive to your `go.mod` file to us a newer version of 
 `github.com/gogo/protobuf`:
@@ -666,6 +667,10 @@ You can see the v1.2.1 is replaced with v1.3.2.
 Finally, you may want to submit a PR to the project with the vulnerable dependency (to fix the issues you reported
 earlier) in a new release of the direct dependency. Even better, also tell them about `nancy` and maybe then will add 
 `nancy` to their own CI system.
+
+Yet another resolution, if no other options make sense, is to knowingly ignore the vulnerability. This may be the best 
+option if you know the application does not use the vulnerable code path and no upgraded/non-vulnerable versions are
+available. See: [Exclude vulnerabilities](#exclude-vulnerabilities)
 
 ## Development
 
