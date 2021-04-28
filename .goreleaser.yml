@@ -95,22 +95,6 @@ dockers:
     - "sonatypecommunity/nancy:{{ .Tag }}"
     - "sonatypecommunity/nancy:v{{ .Major }}"
     - "sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}"
-  -
-    goos: linux
-    goarch: amd64
-    dockerfile: build/Dockerfile.alpine
-    ids:
-      - nancy
-    build_flag_templates:
-    - "--pull"
-    - "--label=author='DJ Schleen'"
-    - "--label=version={{ .Version }}"
-    - "--label=maintainer='sonatype-nexus-community'"
-    image_templates:
-    - "sonatypecommunity/nancy:alpine"
-    - "sonatypecommunity/nancy:{{ .Tag }}-alpine"
-    - "sonatypecommunity/nancy:v{{ .Major }}-alpine"
-    - "sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}-alpine"
 
 nfpms:
   -
