@@ -98,7 +98,7 @@ dockers:
   -
     goos: linux
     goarch: amd64
-    dockerfile: build/Dockerfile.alpine
+    dockerfile: Dockerfile.alpine
     ids:
       - nancy
     build_flag_templates:
