@@ -89,3 +89,8 @@ docker-goreleaser-integration-test: build-linux
 	go list -json -m all | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth -e $(NANCY_IGNORE)
 
 docker-integration-tests: docker-alpine-integration-test docker-goreleaser-integration-test
+
+goreleaser-sanity-check:
+	# verifies goreleaser can build all the stuff. couldn't get it to play nice in the regular CI 'build' job, but at
+	# the incantation is here for future use.
+	curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
