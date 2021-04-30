@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
@@ -31,18 +32,12 @@ var goListDependencyCriteria = func(s []string) bool {
 	return len(s) > 1
 }
 
-func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
-	for stdIn.Scan() {
-		parseSpaceSeparatedDependency(stdIn, &deps, goListDependencyCriteria)
-	}
-
-	return deps, nil
-}
-
 // GoListAgnostic will take a io.Reader that is likely the os.StdIn, try to parse it as
 // if `go list -json -m all` was ran, and then try to reparse it as if `go list -m all`
 // was ran instead. It returns either an error, or a deps of types.ProjectList
-func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
+func GoListAgnostic(stdIn io.Reader) (dependencies map[string]types.Dependency, err error) {
+	dependencies = make(map[string]types.Dependency)
+
 	// stdIn should never be massive, so taking this approach over reading from a stream
 	// multiple times
 	johnnyFiveNeedInput, err := ioutil.ReadAll(stdIn)
@@ -63,17 +58,24 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 			break
 		}
 
-		project, err := modToProjectList(mod)
+		dep, err := modToProjectList(mod)
 		if _, ok := err.(*NoVersionError); ok {
 			continue
 		}
-		deps.Projects = append(deps.Projects, project)
+		dependencies[packages.GimmeAPURL(dep.Name, dep.Version)] = dep
 	}
 
 	if err != nil {
 		err = nil
 		scanner := bufio.NewScanner(strings.NewReader(string(johnnyFiveNeedInput)))
-		deps, err = GoList(scanner)
+
+		for scanner.Scan() {
+			dep := parseSpaceSeparatedDependency(scanner, goListDependencyCriteria)
+			if dep != nil {
+				dependencies[packages.GimmeAPURL(dep.Name, dep.Version)] = *dep
+			}
+		}
+
 		if err != nil {
 			return
 		}
@@ -82,46 +84,65 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	return
 }
 
-func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
+func modToProjectList(mod types.GoListModule) (dep types.Dependency, err error) {
 	if mod.Replace != nil {
 		if mod.Replace.Version == "" {
 			err = &NoVersionError{err: fmt.Errorf("no version found for mod")}
 			return
 		}
-		dep.Name = mod.Replace.Path
-		dep.Version = mod.Replace.Version
+
+		dep = populateMod(mod, mod.Replace.Path, mod.Replace.Version)
+
 		return
 	}
 	if mod.Version == "" {
 		err = &NoVersionError{err: fmt.Errorf("no version found for mod")}
 		return
 	}
-	dep.Name = mod.Path
-	dep.Version = mod.Version
+
+	dep = populateMod(mod, mod.Path, mod.Version)
+
 	return
 }
 
-func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectList, criteria func(s []string) bool) {
+func populateMod(mod types.GoListModule, name string, version string) (dep types.Dependency) {
+	if mod.Update != nil {
+		dep.Update = &types.ProjectUpdate{
+			Path:    mod.Update.Path,
+			Version: mod.Update.Version,
+			Time:    *mod.Update.Time,
+		}
+	}
+	dep.Valid = true
+	dep.Name = name
+	dep.Version = version
+
+	return
+}
+
+func parseSpaceSeparatedDependency(scanner *bufio.Scanner, criteria func(s []string) bool) (dep *types.Dependency) {
 	text := scanner.Text()
 	rewrite := strings.Split(text, "=>")
 
 	if len(rewrite) == 2 {
 		v2 := strings.Split(strings.TrimSpace(rewrite[1]), " ")
-		addProjectDep(criteria, v2, deps)
-	}else{
-		s := strings.Split(text, " ")
-		addProjectDep(criteria, s, deps)
+		return addProjectDep(criteria, v2)
 	}
+
+	s := strings.Split(text, " ")
+	return addProjectDep(criteria, s)
 }
 
-func addProjectDep(criteria func(s []string) bool, s []string, deps *types.ProjectList) {
+func addProjectDep(criteria func(s []string) bool, s []string) (dep *types.Dependency) {
 	if criteria(s) {
 		if len(s) > 3 {
-			deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[4]})
+			return &types.Dependency{Valid: true, Name: s[0], Version: s[4]}
 		} else {
-			deps.Projects = append(deps.Projects, types.Projects{Name: s[0], Version: s[1]})
+			return &types.Dependency{Valid: true, Name: s[0], Version: s[1]}
 		}
 	}
+
+	return nil
 }
 
 type NoVersionError struct {

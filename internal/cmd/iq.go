@@ -19,20 +19,20 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
 	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/internal/logger"
-	"github.com/sonatype-nexus-community/nancy/packages"
 	"github.com/sonatype-nexus-community/nancy/parse"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"io"
-	"os"
 )
 
 type iqServerFactory interface {
@@ -108,10 +108,9 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 
 	printHeader(!configOssi.Quiet)
 
-	var purls []string
-	purls, err = getPurls()
+	dependencies, err := getDependencies()
 
-	err = auditWithIQServer(purls)
+	err = auditWithIQServer(dependencies)
 	if err != nil {
 		if errExit, ok := err.(customerrors.ErrorExit); ok {
 			os.Exit(errExit.ExitCode)
@@ -124,12 +123,14 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
-func getPurls() (purls []string, err error) {
+func getDependencies() (dependencies map[string]types.Dependency, err error) {
 	if configOssi.Path != "" {
 		var invalidPurls []string
-		if purls, invalidPurls, err = getPurlsFromPath(configOssi.Path); err != nil {
+		dependencies, err = getPurlsFromPath(configOssi.Path)
+		if err != nil {
 			panic(err)
 		}
+
 		invalidCoordinates := convertInvalidPurlsToCoordinates(invalidPurls)
 		logLady.WithField("invalid", invalidCoordinates).Info("")
 	} else {
@@ -138,16 +139,14 @@ func getPurls() (purls []string, err error) {
 			panic(err)
 		}
 
-		mod := packages.Mod{}
-
-		mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+		dependencies, err = parse.GoListAgnostic(os.Stdin)
 		if err != nil {
 			logLady.WithError(err).Error("unexpected error in iq cmd")
 			panic(err)
 		}
-		purls = mod.ExtractPurlsFromManifest()
 	}
-	return purls, err
+
+	return dependencies, err
 }
 
 const (
@@ -228,10 +227,16 @@ func initIQConfig() {
 	}
 }
 
-func auditWithIQServer(purls []string) error {
+func auditWithIQServer(dependencies map[string]types.Dependency) error {
 	iqServer := iqCreator.create()
 
 	logLady.Debug("Sending purls to be Audited by IQ Server")
+
+	var purls []string
+	for k := range dependencies {
+		purls = append(purls, k)
+	}
+
 	// go-sona-types library now takes care of querying both ossi and iq with reformatted purls as needed (to v or not to v).
 	res, err := iqServer.AuditPackages(purls)
 	if err != nil {

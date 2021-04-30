@@ -24,7 +24,7 @@ require (
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.6.0
-	github.com/sonatype-nexus-community/go-sona-types v0.0.12
+	github.com/sonatype-nexus-community/go-sona-types v0.1.1
 	github.com/spf13/afero v1.3.4 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0
@@ -37,10 +37,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
 
-// fix vulnerability: CVE-2020-15114 in etcd v3.3.13+incompatible
-replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
+// // fix vulnerability: CVE-2020-15114 in etcd v3.3.13+incompatible
+// replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
 
-// fix vulnerability: CVE-2021-3121 in github.com/gogo/protobuf v1.2.1
-replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
+// // fix vulnerability: CVE-2021-3121 in github.com/gogo/protobuf v1.2.1
+// replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 
 go 1.13

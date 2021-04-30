@@ -19,17 +19,14 @@ package packages
 import (
 	"strings"
 
+	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-type Mod struct {
-	ProjectList types.ProjectList
-	GoSumPath   string
-}
-
-func (m Mod) ExtractPurlsFromManifest() (purls []string) {
-	for _, s := range m.ProjectList.Projects {
-		if len(s.Version) > 0 { // There must be a version we can use
+func ExtractGoModPurls(mods []types.Dependency) (purls []string) {
+	for _, s := range mods {
+		// There must be a version we can use
+		if len(s.Version) > 0 {
 			// OSS Index no likey v before version, IQ does though, comment left so I will never forget.
 			// go-sona-types library now takes care of querying both ossi and iq with reformatted purls as needed (to v or not to v).
 			version := strings.Replace(s.Version, "v", "", -1)
@@ -39,9 +36,18 @@ func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 		}
 	}
 
-	purls = removeDuplicates(purls)
-
 	return
+}
+
+func ExtractGoModUpdatePurls(vulnerable map[string]ossIndexTypes.Coordinate, deps []types.Dependency) (purls []string) {
+	projectsWithUpdate := []types.Dependency{}
+	for _, s := range deps {
+		if s.Update != nil {
+			projectsWithUpdate = append(projectsWithUpdate, s)
+		}
+	}
+
+	return removeDuplicates(ExtractGoModPurls(projectsWithUpdate))
 }
 
 func removeDuplicates(purls []string) (dedupedPurls []string) {

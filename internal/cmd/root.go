@@ -19,7 +19,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/spf13/pflag"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -27,6 +26,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/spf13/pflag"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
@@ -306,7 +307,7 @@ func getIsQuiet() bool {
 	return !configOssi.Loud
 }
 
-func getPurlsFromPath(path string) (purls []string, invalidPurls []string, err error) {
+func getPurlsFromPath(path string) (deps map[string]types.Dependency, err error) {
 	logLady.Info("Parsing config for file based scan")
 	if !strings.Contains(path, GopkgLockFilename) {
 		err = fmt.Errorf("invalid path value. must point to '%s' file. path: %s", GopkgLockFilename, path)
@@ -335,20 +336,18 @@ func getPurlsFromPath(path string) (purls []string, invalidPurls []string, err e
 		return
 	}
 
-	purls, invalidPurls = packages.ExtractPurlsUsingDep(project)
+	deps = packages.ExtractPurlsUsingDep(project)
+
 	return
 }
 
 func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
-	var purls, invalidPurls []string
-	if purls, invalidPurls, err = getPurlsFromPath(path); err != nil {
-		return
+	deps, err := getPurlsFromPath(path)
+	if err == nil {
+		if err = checkOSSIndex(ossIndex, deps); err != nil {
+			return
+		}
 	}
-
-	if err = checkOSSIndex(ossIndex, purls, invalidPurls); err != nil {
-		return
-	}
-
 	return
 }
 
@@ -426,38 +425,85 @@ func doStdInAndParse(ossIndex ossindex.IServer) (err error) {
 		return err
 	}
 
-	mod := packages.Mod{}
-
-	mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+	dependencies, err := parse.GoListAgnostic(os.Stdin)
 	if err != nil {
 		logLady.Error(err)
 		return
 	}
 	logLady.WithFields(logrus.Fields{
-		"projectList": mod.ProjectList,
+		"dependencies": dependencies,
 	}).Debug("Obtained project list")
 
-	var purls = mod.ExtractPurlsFromManifest()
-	logLady.WithFields(logrus.Fields{
-		"purls": purls,
-	}).Debug("Extracted purls")
-
 	logLady.Info("Auditing purls with OSS Index")
-	err = checkOSSIndex(ossIndex, purls, nil)
+	err = checkOSSIndex(ossIndex, dependencies)
 
 	return err
 }
 
-func checkOSSIndex(ossIndex ossindex.IServer, purls []string, invalidpurls []string) (err error) {
-	var packageCount = len(purls)
-	coordinates, err := ossIndex.AuditPackages(purls)
+func checkOSSIndex(ossIndex ossindex.IServer, coordinates map[string]types.Dependency) (err error) {
+	var packageCount = len(coordinates)
+	purls := make([]string, 0, len(coordinates))
+	invalidPurls := make([]string, 0, len(coordinates))
+	for k, v := range coordinates {
+		if v.Valid {
+			purls = append(purls, k)
+		} else {
+			invalidPurls = append(invalidPurls, k)
+		}
+	}
+
+	ossIndexResponse, err := ossIndex.Audit(purls)
 	if err != nil {
 		return
 	}
 
-	invalidCoordinates := convertInvalidPurlsToCoordinates(invalidpurls)
+	// Wittle down list of audited to vulnerable stuff, so we can work faster
+	vulnerableCoordinates := make(map[string]types.Dependency)
+	for k, v := range ossIndexResponse {
+		if v.IsVulnerable() {
+			project := coordinates[k]
+			project.Coordinate = v
+			vulnerableCoordinates[k] = project
+		}
+	}
 
-	if count := audit.LogResults(configOssi.Formatter, packageCount, coordinates, invalidCoordinates, configOssi.CveList.Cves); count > 0 {
+	// Keep a map of the original purl, and the updated one, set max capacity to the max amount of coordinates we have to look at
+	updatePurls := make([]string, 0, len(coordinates))
+	updateMatrix := make(map[string]string)
+
+	// Go through the vulnerable coordinates and see if there is a newer version of something, if so, let's make a new list of purls to check
+	for k, v := range vulnerableCoordinates {
+		if v.Update != nil {
+			updatePurl := packages.GimmeAPURL(v.Name, v.Update.Version)
+			updateMatrix[updatePurl] = k
+
+			updatePurls = append(updatePurls, updatePurl)
+		}
+	}
+
+	// You guessed it, check OSS Index to see if the update purls are good or bad, and only check if we have some to begin with
+	var updateCoordinates map[string]ossIndexTypes.Coordinate
+	if len(updatePurls) > 0 {
+		updateCoordinates, err = ossIndex.Audit(updatePurls)
+		if err != nil {
+			return
+		}
+
+		// If the new updated coordinates are not vulnerable, add them to the original map, so we can do something with them
+		for k, v := range updateCoordinates {
+			if !v.IsVulnerable() {
+				originalPurl := updateMatrix[k]
+				project := vulnerableCoordinates[originalPurl]
+
+				project.UpdateCoordinate = v
+				vulnerableCoordinates[originalPurl] = project
+			}
+		}
+	}
+
+	invalidCoordinates := convertInvalidPurlsToCoordinates(invalidPurls)
+
+	if count := audit.LogResults(configOssi.Formatter, packageCount, ossIndexResponse, invalidCoordinates, vulnerableCoordinates, configOssi.CveList.Cves); count > 0 {
 		err = customerrors.ErrorExit{ExitCode: count}
 		return
 	}

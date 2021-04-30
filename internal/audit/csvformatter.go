@@ -39,21 +39,20 @@ func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
 	// source of the official loggers.
 	auditedEntries := entry.Data["audited"]
 	invalidEntries := entry.Data["invalid"]
-	packageCount := entry.Data["num_audited"]
-	numVulnerable := entry.Data["num_vulnerable"]
 	buildVersion := entry.Data["version"]
+	vulnerableEntries := entry.Data["vulnerable"]
 
-	if auditedEntries != nil && invalidEntries != nil && packageCount != nil && numVulnerable != nil && buildVersion != nil {
+	if auditedEntries != nil && invalidEntries != nil && vulnerableEntries != nil && buildVersion != nil {
 		auditedEntries := entry.Data["audited"].([]types.Coordinate)
 		invalidEntries := entry.Data["invalid"].([]types.Coordinate)
-		packageCount := entry.Data["num_audited"].(int)
-		numVulnerable := entry.Data["num_vulnerable"].(int)
 		buildVersion := entry.Data["version"].(string)
+		numVulnerable := len(vulnerableEntries.(map[string]interface{}))
+		numPackages := len(auditedEntries)
 
 		var summaryHeader = []string{"Audited Count", "Vulnerable Count", "Build Version"}
 		var invalidHeader = []string{"Count", "Package", "Reason"}
 		var auditedHeader = []string{"Count", "Package", "Is Vulnerable", "Num Vulnerabilities", "Vulnerabilities"}
-		var summaryRow = []string{strconv.Itoa(packageCount), strconv.Itoa(numVulnerable), buildVersion}
+		var summaryRow = []string{strconv.Itoa(numPackages), strconv.Itoa(numVulnerable), buildVersion}
 
 		var buf bytes.Buffer
 		w := csv.NewWriter(&buf)
@@ -105,7 +104,7 @@ func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
 			auditEntry := auditedEntries[i-1]
 			if auditEntry.IsVulnerable() || !f.Quiet {
 				jsonVulns, _ := json.Marshal(auditEntry.Vulnerabilities)
-				if err = f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(packageCount) + "]", auditEntry.Coordinates, strconv.FormatBool(auditEntry.IsVulnerable()), strconv.Itoa(len(auditEntry.Vulnerabilities)), string(jsonVulns)}); err != nil {
+				if err = f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(numPackages) + "]", auditEntry.Coordinates, strconv.FormatBool(auditEntry.IsVulnerable()), strconv.Itoa(len(auditEntry.Vulnerabilities)), string(jsonVulns)}); err != nil {
 					return nil, err
 				}
 			}

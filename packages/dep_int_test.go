@@ -18,13 +18,15 @@ package packages
 
 import (
 	"fmt"
-	"github.com/Flaque/filet"
-	"github.com/golang/dep"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/Flaque/filet"
+	"github.com/golang/dep"
+	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestExtractPurlsFromManifestUsingDep(t *testing.T) {
@@ -41,33 +43,45 @@ func TestExtractPurlsFromManifestUsingDep(t *testing.T) {
 	project, err2 := ctx.LoadProject()
 	require.NoError(t, err2)
 
-	purls, invalidPurls := ExtractPurlsUsingDep(project)
-	if len(invalidPurls) != 7 {
-		t.Errorf("Number of invalid purls not as expected. Expected : %d, Got %d", 7, len(purls))
+	results := ExtractPurlsUsingDep(project)
+	if len(results) != 14 {
+		t.Errorf("Number of invalid purls not as expected. Expected : %d, Got %d", 14, len(results))
 	}
-	if len(purls) != 7 {
-		t.Errorf("Number of purls not as expected. Expected : %d, Got %d", 7, len(purls))
-	}
-	assertPurlFound("pkg:golang/github.com/Masterminds/semver@2.x", invalidPurls, t)
-	assertPurlFound("pkg:golang/github.com/armon/go-radix@master", invalidPurls, t)
-	assertPurlFound("pkg:golang/github.com/nightlyone/lockfile@master", invalidPurls, t)
-	assertPurlFound("pkg:golang/github.com/sdboyer/constext@master", invalidPurls, t)
-	assertPurlFound("pkg:golang/golang.org/x/net@master", invalidPurls, t)
-	assertPurlFound("pkg:golang/golang.org/x/sync@master", invalidPurls, t)
-	assertPurlFound("pkg:golang/golang.org/x/sys@master", invalidPurls, t)
 
-	assertPurlFound("pkg:golang/github.com/go-yaml/yaml@2", purls, t)
-	assertPurlFound("pkg:golang/github.com/Masterminds/vcs@1.11.1", purls, t)
-	assertPurlFound("pkg:golang/github.com/boltdb/bolt@1.3.1", purls, t)
-	assertPurlFound("pkg:golang/github.com/golang/protobuf@1.0.0", purls, t)
-	assertPurlFound("pkg:golang/github.com/jmank88/nuts@0.3.0", purls, t)
-	assertPurlFound("pkg:golang/github.com/pelletier/go-toml@1.2.0", purls, t)
-	assertPurlFound("pkg:golang/github.com/pkg/errors@0.8.0", purls, t)
+	expectedInvalidPurls := []string{
+		"pkg:golang/github.com/Masterminds/semver@2.x",
+		"pkg:golang/github.com/armon/go-radix@master",
+		"pkg:golang/github.com/nightlyone/lockfile@master",
+		"pkg:golang/github.com/sdboyer/constext@master",
+		"pkg:golang/golang.org/x/net@master",
+		"pkg:golang/golang.org/x/sync@master",
+		"pkg:golang/golang.org/x/sys@master",
+	}
+
+	expectedValidPurls := []string{
+		"pkg:golang/github.com/go-yaml/yaml@2",
+		"pkg:golang/github.com/Masterminds/vcs@1.11.1",
+		"pkg:golang/github.com/boltdb/bolt@1.3.1",
+		"pkg:golang/github.com/golang/protobuf@1.0.0",
+		"pkg:golang/github.com/jmank88/nuts@0.3.0",
+		"pkg:golang/github.com/pelletier/go-toml@1.2.0",
+		"pkg:golang/github.com/pkg/errors@0.8.0",
+	}
+
+	assertPurlsFound(expectedValidPurls, expectedInvalidPurls, results, t)
 }
 
-func assertPurlFound(expectedPurl string, result []string, t *testing.T) {
-	if !inArray(expectedPurl, result) {
-		t.Errorf("Expected purl %s not found. List of purls was %s", expectedPurl, result)
+func assertPurlsFound(expectedPurls []string, invalidPurls []string, results map[string]types.Dependency, t *testing.T) {
+	for _, v := range expectedPurls {
+		if val, ok := results[v]; !ok || !val.Valid {
+			t.Errorf("Expected purl %s not found. List of purls was %v", v, results)
+		}
+	}
+
+	for _, v := range invalidPurls {
+		if val, ok := results[v]; !ok || val.Valid {
+			t.Errorf("Expected invalid purl %s not found. List of purls was %v", v, results)
+		}
 	}
 }
 
@@ -110,17 +124,4 @@ func doGoPathSimulatedSetup(t *testing.T) (string, string, error) {
 		fmt.Println(file.Name())
 	}
 	return path, projectDir, e
-}
-
-func inArray(val string, array []string) (exists bool) {
-	exists = false
-
-	for _, v := range array {
-		if val == v {
-			exists = true
-			return
-		}
-	}
-
-	return
 }

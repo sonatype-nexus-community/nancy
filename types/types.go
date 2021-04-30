@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 )
 
 type GoListModule struct {
@@ -60,12 +61,21 @@ type Configuration struct {
 	SkipUpdateCheck bool
 }
 
-type Projects struct {
-	Name    string
-	Version string
+type Dependency struct {
+	PackageManager   string
+	Purl             string
+	Valid            bool
+	Name             string
+	Version          string
+	Update           *ProjectUpdate
+	Coordinate       types.Coordinate
+	UpdateCoordinate types.Coordinate
 }
-type ProjectList struct {
-	Projects []Projects
+
+type ProjectUpdate struct {
+	Path    string
+	Version string
+	Time    time.Time
 }
 
 type CveListFlag struct {

@@ -164,9 +164,9 @@ func TestInitIQConfigWithNoConfigFile(t *testing.T) {
 	assert.Equal(t, "", viper.GetString(configuration.ViperKeyIQServer))
 }
 
-var testPurls = []string{
-	"pkg:golang/github.com/go-yaml/yaml@v2.2.2",
-	"pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+var testDependenciesMap = map[string]types.Dependency{
+	"pkg:golang/github.com/go-yaml/yaml@v2.2.2":                         {Valid: true, Name: "github.com/go-yaml/yaml", Version: "v2.2.2"},
+	"pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2": {Valid: true, Name: "golang.org/x/crypto", Version: "v0.0.0-20190308221718-c2843e01d9a2"},
 }
 
 type iqFactoryMock struct {
@@ -205,7 +205,7 @@ func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 	expectedErr := fmt.Errorf("forced error")
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesErr: expectedErr}}
 
-	err := auditWithIQServer(testPurls)
+	err := auditWithIQServer(testDependenciesMap)
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedErr, err)

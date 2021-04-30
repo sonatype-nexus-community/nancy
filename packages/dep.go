@@ -21,30 +21,37 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/golang/dep"
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
+func ExtractPurlsUsingDep(project *dep.Project) (deps map[string]types.Dependency) {
+	deps = make(map[string]types.Dependency)
 	lockedProjects := project.Lock.P
-	var purls []string
-	var invalidPurls []string
+
 	for _, lockedProject := range lockedProjects {
 		var version string
 		i := lockedProject.Version().String()
 
 		version = strings.Replace(i, "v", "", -1)
 
-		if len(version) > 0 { // There must be a version we can use
+		// There must be a version we can use
+		if len(version) > 0 {
 			name := lockedProject.Ident().String()
 			packageName := convertGopkgNameToPurl(name)
 			var purl = "pkg:" + packageName + "@" + version
 
 			_, err := semver.NewVersion(version)
 			if err != nil {
-				invalidPurls = append(invalidPurls, purl)
+				dep := types.Dependency{PackageManager: "dep", Name: packageName, Version: version, Valid: false}
+
+				deps[purl] = dep
 			} else {
-				purls = append(purls, purl)
+				dep := types.Dependency{PackageManager: "dep", Name: packageName, Version: version, Valid: true}
+
+				deps[purl] = dep
 			}
 		}
 	}
-	return purls, invalidPurls
+
+	return
 }

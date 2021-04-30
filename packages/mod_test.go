@@ -22,60 +22,71 @@ import (
 	"github.com/sonatype-nexus-community/nancy/types"
 )
 
+type dependency struct {
+	name    string
+	version string
+}
+
 // Simulate calling parse.GopkgLock()
-func getProjectList() (projectList types.ProjectList) {
-	appendProject("github.com/AndreasBriese/bbloom", "", &projectList)
-	appendProject("gopkg.in/BurntSushi/toml", "v0.3.1", &projectList)
-	appendProject("github.com/dgraph-io/badger", "v1.5.4", &projectList)
-	appendProject("github.com/dgryski/go-farm", "", &projectList)
-	appendProject("github.com/golang/protobuf", "v1.2.0", &projectList)
-	appendProject("github.com/logrusorgru/aurora", "", &projectList)
-	appendProject("github.com/pkg/errors", "v0.8.0", &projectList)
-	appendProject("github.com/shopspring/decimal", "1.1.0", &projectList)
-	appendProject("golang.org/x/net", "", &projectList)
-	appendProject("golang.org/x/sys", "", &projectList)
+func getDependencyList() (dependencies []types.Dependency) {
+	deps := []dependency{
+		{name: "github.com/AndreasBriese/bbloom", version: ""},
+		{name: "gopkg.in/BurntSushi/toml", version: "v0.3.1"},
+		{name: "github.com/dgraph-io/badger", version: "v1.5.4"},
+		{name: "github.com/dgryski/go-farm", version: ""},
+		{name: "github.com/golang/protobuf", version: "v1.2.0"},
+		{name: "github.com/logrusorgru/aurora", version: ""},
+		{name: "github.com/pkg/errors", version: "0.8.0"},
+		{name: "github.com/shopspring/decimal", version: "1.1.0"},
+		{name: "golang.org/x/net", version: ""},
+		{name: "golang.org/x/sys", version: ""},
+	}
 
-	return projectList
+	return appendDependencies(deps)
 }
 
-func getProjectListDuplicates() (projectList types.ProjectList) {
-	appendProject("github.com/AndreasBriese/bbloom", "", &projectList)
-	appendProject("gopkg.in/BurntSushi/toml", "v0.3.1", &projectList)
-	appendProject("github.com/dgraph-io/badger", "v1.5.4", &projectList)
-	appendProject("github.com/dgraph-io/badger", "v1.5.4", &projectList)
-	appendProject("gopkg.in/dgraph-io/badger", "v1.5.4", &projectList)
-	appendProject("github.com/dgryski/go-farm", "", &projectList)
-	appendProject("github.com/golang/protobuf", "v1.2.0", &projectList)
-	appendProject("github.com/golang/protobuf", "v1.2.0", &projectList)
-	appendProject("github.com/golang/protobuf", "v1.2.0", &projectList)
-	appendProject("github.com/logrusorgru/aurora", "", &projectList)
-	appendProject("github.com/pkg/errors", "v0.8.0", &projectList)
-	appendProject("github.com/shopspring/decimal", "1.1.0", &projectList)
-	appendProject("golang.org/x/net", "", &projectList)
-	appendProject("golang.org/x/sys", "", &projectList)
+func appendDependencies(deps []dependency) (dependencies []types.Dependency) {
+	for _, v := range deps {
+		dependencies = append(dependencies, types.Dependency{Name: v.name, Version: v.version})
+	}
 
-	return projectList
+	return
 }
 
-func appendProject(name string, version string, projectList *types.ProjectList) {
-	projectList.Projects = append(projectList.Projects, types.Projects{Name: name, Version: version})
+func getProjectListDuplicates() (dependencies []types.Dependency) {
+	deps := []dependency{
+		{name: "github.com/AndreasBriese/bbloom", version: ""},
+		{name: "gopkg.in/BurntSushi/toml", version: "v0.3.1"},
+		{name: "github.com/dgraph-io/badger", version: "v1.5.4"},
+		{name: "github.com/dgraph-io/badger", version: "v1.5.4"},
+		{name: "gopkg.in/dgraph-io/badger", version: "v1.5.4"},
+		{name: "github.com/dgryski/go-farm", version: ""},
+		{name: "github.com/golang/protobuf", version: "v1.2.0"},
+		{name: "github.com/golang/protobuf", version: "v1.2.0"},
+		{name: "github.com/golang/protobuf", version: "v1.2.0"},
+		{name: "github.com/logrusorgru/aurora", version: ""},
+		{name: "github.com/pkg/errors", version: "v0.8.0"},
+		{name: "github.com/shopspring/decimal", version: "1.1.0"},
+		{name: "golang.org/x/net", version: ""},
+		{name: "golang.org/x/sys", version: ""},
+	}
+
+	return appendDependencies(deps)
 }
 
-func TestModExtractPurlsFromManifest(t *testing.T) {
-	mod := Mod{}
-	mod.ProjectList = getProjectList()
+func TestModExtractGoModPurls(t *testing.T) {
+	deps := getDependencyList()
 
-	result := mod.ExtractPurlsFromManifest()
+	result := ExtractGoModPurls(deps)
 	if len(result) != 5 {
 		t.Error(result)
 	}
 }
 
 func TestModExtractPurlsFromManifestDuplicates(t *testing.T) {
-	mod := Mod{}
-	mod.ProjectList = getProjectListDuplicates()
+	deps := getProjectListDuplicates()
 
-	result := mod.ExtractPurlsFromManifest()
+	result := ExtractGoModPurls(deps)
 	if len(result) != 5 {
 		t.Error(result)
 	}
