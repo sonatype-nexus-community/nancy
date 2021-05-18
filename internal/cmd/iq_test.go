@@ -319,6 +319,14 @@ func TestDoIqWithIqServerError(t *testing.T) {
 	}()
 	configIQ.IQApplication = "testapp"
 
+	origIqCreator := iqCreator
+	defer func() {
+		iqCreator = origIqCreator
+	}()
+	forcedError := customerrors.ErrorShowLogPath{
+		Err: fmt.Errorf("error communicating with Nexus IQ Server to get your internal application ID")}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesErr: forcedError}}
+
 	bindViperIq(iqCmd)
 
 	err := doIQ(iqCmd, []string{})
@@ -327,7 +335,7 @@ func TestDoIqWithIqServerError(t *testing.T) {
 	typedError, ok := err.(customerrors.ErrorShowLogPath)
 	assert.True(t, ok)
 
-	assert.Contains(t, typedError.Error(), "There was an error communicating with Nexus IQ Server to get your internal application ID")
+	assert.Contains(t, typedError.Error(), forcedError.Error())
 }
 
 func TestDoIqHappyPath(t *testing.T) {
@@ -412,6 +420,6 @@ func verifyReportURL(t *testing.T, policyAction string) {
 	bufWriter := bufio.NewWriter(&buf)
 	theURL := "someURL"
 	showPolicyActionMessage(iq.StatusURLResult{AbsoluteReportHTMLURL: theURL, PolicyAction: policyAction}, bufWriter)
-	bufWriter.Flush()
+	assert.NoError(t, bufWriter.Flush())
 	assert.True(t, strings.Contains(buf.String(), "Report URL:  "+theURL), buf.String())
 }
