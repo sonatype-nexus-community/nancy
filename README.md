@@ -665,7 +665,7 @@ github.com/gogo/protobuf v1.2.1 => github.com/gogo/protobuf v1.3.2
 You can see the v1.2.1 is replaced with v1.3.2.
 
 Finally, you may want to submit a PR to the project with the vulnerable dependency (to fix the issues you reported
-earlier) in a new release of the direct dependency. Even better, also tell them about `nancy` and maybe then will add 
+earlier) in a new release of the direct dependency. Even better, also tell them about `nancy` and maybe they will add 
 `nancy` to their own CI system.
 
 Yet another resolution, if no other options make sense, is to knowingly ignore the vulnerability. This may be the best 
