@@ -19,13 +19,14 @@ package parse
 import (
 	"bufio"
 	"errors"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
-func TestGoListJson(t *testing.T){
+func TestGoListJson(t *testing.T) {
 	goListJSONFile, err := os.Open("testdata/golistjson.out")
 	if err != nil {
 		t.Error(err)
@@ -70,7 +71,7 @@ func TestGoListAgnostic(t *testing.T) {
 	}
 }
 
-func TestGoListJsonReplace(t *testing.T){
+func TestGoListJsonReplace(t *testing.T) {
 	goListJSONReplaceFile, err := os.Open("testdata/golistjsonreplace.out")
 	if err != nil {
 		t.Error(err)
@@ -88,7 +89,7 @@ func TestGoListJsonReplace(t *testing.T){
 	}
 }
 
-func TestGoListReplace(t *testing.T){
+func TestGoListReplace(t *testing.T) {
 	goListReplaceFile, err := os.Open("testdata/golistreplace.out")
 	if err != nil {
 		t.Error(err)
@@ -123,12 +124,12 @@ func TestGoListAllWithSelfReference(t *testing.T) {
 	}
 
 	_, err = findProject(deps, "github.com/ory/kratos-client-go")
-	if err == nil{
+	if err == nil {
 		t.Error("Project with name github.com/ory/kratos-client-go should be ignored b/c it references a submodule")
 	}
 
 	_, err = findProject(deps, "github.com/ory/kratos/corp")
-	if err == nil{
+	if err == nil {
 		t.Error("Project with name github.com/ory/kratos/corp should be ignored b/c it references a submodule")
 	}
 }

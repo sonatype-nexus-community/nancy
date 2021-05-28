@@ -49,25 +49,35 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	if err != nil {
 		return
 	}
+
 	decoder := json.NewDecoder(strings.NewReader(string(johnnyFiveNeedInput)))
 
 	for {
-		project, err := decodeModToProjectList(decoder)
+		var mod types.GoListModule
+		err = decoder.Decode(&mod)
 
 		if err == io.EOF {
 			err = nil
 			break
 		}
+		if _, ok := err.(*json.SyntaxError); ok {
+			break
+		}
+
+		project, err := modToProjectList(mod)
 
 		if _, ok := err.(*NoVersionError); ok {
 
-			// w didn't find a modulse, check for depenecies (i.e. a "go list -deps")
-			project, err := decodeDepToProjectList(decoder)
+			// w didn't find a module, check for dependencies (i.e. a "go list -deps")
+			var maude types.GoListDependecy
+			err = decoder.Decode(&mod)
 
 			if err == io.EOF {
 				err = nil
 				break
 			}
+
+			project, err = depToProjectList(maude)
 
 			if _, ok := err.(*NoVersionError); ok {
 				continue
@@ -93,21 +103,14 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	return
 }
 
-func decodeModToProjectList(decoder *json.Decoder) (project types.Projects, err error) {
-	var mod types.GoListModule
-	err = decoder.Decode(&mod)
+// func decodeModToProjectList(decoder *json.Decoder) (mod types.GoListModule, err error) {
 
-	if err == io.EOF {
-		return
-	}
-	if err != nil {
-		return
-	}
+// 	if err != nil {
+// 		return
+// 	}
 
-	project, err = modToProjectList(mod)
-
-	return project, err
-}
+// 	return
+// }
 
 func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 	if mod.Replace != nil {
@@ -128,21 +131,14 @@ func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 	return
 }
 
-func decodeDepToProjectList(decoder *json.Decoder) (project types.Projects, err error) {
-	var mod types.GoListDependecy
-	err = decoder.Decode(&mod)
+// func decodeDepToProjectList(decoder *json.Decoder) (mod types.GoListDependecy, err error) {
 
-	if err == io.EOF {
-		return
-	}
-	if err != nil {
-		return
-	}
+// 	if err != nil {
+// 		return
+// 	}
 
-	project, err = depToProjectList(mod)
-
-	return project, err
-}
+// 	return
+// }
 
 func depToProjectList(dep types.GoListDependecy) (project types.Projects, err error) {
 	if dep.Module != nil {
@@ -166,7 +162,7 @@ func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectLi
 	if len(rewrite) == 2 {
 		v2 := strings.Split(strings.TrimSpace(rewrite[1]), " ")
 		addProjectDep(criteria, v2, deps)
-	}else{
+	} else {
 		s := strings.Split(text, " ")
 		addProjectDep(criteria, s, deps)
 	}
