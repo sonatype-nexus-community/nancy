@@ -54,26 +54,30 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 
 	for {
 		var mod types.GoListModule
-		err = decoder.Decode(&mod)
+		var project types.Projects
+		decodeErr := decoder.Decode(&mod)
 
-		if err == io.EOF {
-			err = nil
+		if decodeErr == io.EOF {
 			break
 		}
-		if _, ok := err.(*json.SyntaxError); ok {
+		if _, ok := decodeErr.(*json.SyntaxError); ok {
+			err = decodeErr
 			break
 		}
 
-		project, err := modToProjectList(mod)
+		project, err = modToProjectList(mod)
 
 		if _, ok := err.(*NoVersionError); ok {
 
 			// w didn't find a module, check for dependencies (i.e. a "go list -deps")
 			var maude types.GoListDependecy
-			err = decoder.Decode(&mod)
+			decodErr := decoder.Decode(&mod)
 
-			if err == io.EOF {
-				err = nil
+			if decodErr == io.EOF {
+				break
+			}
+			if decodErr != nil {
+				err = decodErr
 				break
 			}
 
@@ -103,15 +107,6 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	return
 }
 
-// func decodeModToProjectList(decoder *json.Decoder) (mod types.GoListModule, err error) {
-
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	return
-// }
-
 func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 	if mod.Replace != nil {
 		if mod.Replace.Version == "" {
@@ -130,15 +125,6 @@ func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 	dep.Version = mod.Version
 	return
 }
-
-// func decodeDepToProjectList(decoder *json.Decoder) (mod types.GoListDependecy, err error) {
-
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	return
-// }
 
 func depToProjectList(dep types.GoListDependecy) (project types.Projects, err error) {
 	if dep.Module != nil {
