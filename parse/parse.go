@@ -52,21 +52,32 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	decoder := json.NewDecoder(strings.NewReader(string(johnnyFiveNeedInput)))
 
 	for {
-		var mod types.GoListModule
+		project, err := decodeModToProjectList(decoder)
 
-		err = decoder.Decode(&mod)
 		if err == io.EOF {
 			err = nil
 			break
 		}
-		if err != nil {
-			break
-		}
 
-		project, err := modToProjectList(mod)
 		if _, ok := err.(*NoVersionError); ok {
+
+			// w didn't find a modulse, check for depenecies (i.e. a "go list -deps")
+			project, err := decodeDepToProjectList(decoder)
+
+			if err == io.EOF {
+				err = nil
+				break
+			}
+
+			if _, ok := err.(*NoVersionError); ok {
+				continue
+			}
+
+			deps.Projects = append(deps.Projects, project)
+
 			continue
 		}
+
 		deps.Projects = append(deps.Projects, project)
 	}
 
@@ -80,6 +91,22 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	}
 
 	return
+}
+
+func decodeModToProjectList(decoder *json.Decoder) (project types.Projects, err error) {
+	var mod types.GoListModule
+	err = decoder.Decode(&mod)
+
+	if err == io.EOF {
+		return
+	}
+	if err != nil {
+		return
+	}
+
+	project, err = modToProjectList(mod)
+
+	return project, err
 }
 
 func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
@@ -98,6 +125,37 @@ func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 	}
 	dep.Name = mod.Path
 	dep.Version = mod.Version
+	return
+}
+
+func decodeDepToProjectList(decoder *json.Decoder) (project types.Projects, err error) {
+	var mod types.GoListDependecy
+	err = decoder.Decode(&mod)
+
+	if err == io.EOF {
+		return
+	}
+	if err != nil {
+		return
+	}
+
+	project, err = depToProjectList(mod)
+
+	return project, err
+}
+
+func depToProjectList(dep types.GoListDependecy) (project types.Projects, err error) {
+	if dep.Module != nil {
+		if dep.Module.Version == "" {
+			err = &NoVersionError{err: fmt.Errorf("no version found for dep")}
+			return
+		}
+
+		project.Name = dep.Module.Path
+		project.Version = dep.Module.Version
+		return
+	}
+
 	return
 }
 

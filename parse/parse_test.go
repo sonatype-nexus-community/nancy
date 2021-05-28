@@ -40,6 +40,21 @@ func TestGoListJson(t *testing.T){
 	}
 }
 
+func TestGoListDepsJson(t *testing.T) {
+	goListJSONFile, err := os.Open("testdata/golistjsondeps.out")
+	if err != nil {
+		t.Error(err)
+	}
+
+	deps, err := GoListAgnostic(goListJSONFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 148 {
+		t.Errorf("Unsuccessfully parsed go list -deps -json output, 148 dependencies were expected, but %d encountered", len(deps.Projects))
+	}
+}
+
 func TestGoListAgnostic(t *testing.T) {
 	goListFile, err := os.Open("testdata/golist.out")
 	if err != nil {

@@ -38,6 +38,13 @@ type GoListModule struct {
 	GoVersion string        // go version used in module
 }
 
+type GoListDependecy struct {
+	Dir        string        // directory holding files for this module, if any
+	ImportPath string        // path used for importing Dependecy
+	Name       string        // Name of Dependecy
+	Module     *GoListModule // module
+}
+
 type Configuration struct {
 	Version         bool
 	NoColor         bool
