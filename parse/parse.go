@@ -49,24 +49,49 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	if err != nil {
 		return
 	}
+
 	decoder := json.NewDecoder(strings.NewReader(string(johnnyFiveNeedInput)))
 
 	for {
 		var mod types.GoListModule
+		var project types.Projects
+		decodeErr := decoder.Decode(&mod)
 
-		err = decoder.Decode(&mod)
-		if err == io.EOF {
-			err = nil
+		if decodeErr == io.EOF {
 			break
 		}
-		if err != nil {
+		if _, ok := decodeErr.(*json.SyntaxError); ok {
+			err = decodeErr
 			break
 		}
 
-		project, err := modToProjectList(mod)
+		project, err = modToProjectList(mod)
+
 		if _, ok := err.(*NoVersionError); ok {
+
+			// w didn't find a module, check for dependencies (i.e. a "go list -deps")
+			var maude types.GoListDependecy
+			decodErr := decoder.Decode(&mod)
+
+			if decodErr == io.EOF {
+				break
+			}
+			if decodErr != nil {
+				err = decodErr
+				break
+			}
+
+			project, err = depToProjectList(maude)
+
+			if _, ok := err.(*NoVersionError); ok {
+				continue
+			}
+
+			deps.Projects = append(deps.Projects, project)
+
 			continue
 		}
+
 		deps.Projects = append(deps.Projects, project)
 	}
 
@@ -101,6 +126,21 @@ func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
 	return
 }
 
+func depToProjectList(dep types.GoListDependecy) (project types.Projects, err error) {
+	if dep.Module != nil {
+		if dep.Module.Version == "" {
+			err = &NoVersionError{err: fmt.Errorf("no version found for dep")}
+			return
+		}
+
+		project.Name = dep.Module.Path
+		project.Version = dep.Module.Version
+		return
+	}
+
+	return
+}
+
 func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectList, criteria func(s []string) bool) {
 	text := scanner.Text()
 	rewrite := strings.Split(text, "=>")
@@ -108,7 +148,7 @@ func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectLi
 	if len(rewrite) == 2 {
 		v2 := strings.Split(strings.TrimSpace(rewrite[1]), " ")
 		addProjectDep(criteria, v2, deps)
-	}else{
+	} else {
 		s := strings.Split(text, " ")
 		addProjectDep(criteria, s, deps)
 	}
