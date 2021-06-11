@@ -19,7 +19,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/spf13/pflag"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -27,6 +26,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/spf13/pflag"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
@@ -254,6 +255,8 @@ func processConfig() (err error) {
 		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: isQuiet, NoColor: configOssi.NoColor}
 	case "json":
 		configOssi.Formatter = audit.JsonFormatter{}
+	case "sarif":
+		configOssi.Formatter = audit.SarifFormatter{UsingDep: configOssi.Path != ""}
 	case "json-pretty":
 		configOssi.Formatter = audit.JsonFormatter{PrettyPrint: true}
 	case "csv":
