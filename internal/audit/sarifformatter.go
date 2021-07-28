@@ -84,7 +84,7 @@ func buildSarifForInvalidEntries(usingDep bool, invalidEntries []types.Coordinat
 
 func determineLocation(dep bool) *sarif.ArtifactLocation {
 	artifactLocation := sarif.NewArtifactLocation().WithUri("go.mod")
-	if dep == true {
+	if dep {
 		artifactLocation = sarif.NewArtifactLocation().WithUri("Gopkg.lock")
 	}
 	return artifactLocation
@@ -104,7 +104,7 @@ func buildSarifForAuditedEntries(usingDep bool, auditedEntries []types.Coordinat
 CVSS Score of **{{.Score}} ({{.SonatypeSeverity}})**
 Find more details here: 
 {{.URL}}`)
-				tmpl.Execute(&ruleHelpMarkdown, data)
+				_ = tmpl.Execute(&ruleHelpMarkdown, data)
 				var ruleHelpText = vuln.Cve + " " + vuln.Description + " " + vuln.Reference
 
 				rule := run.AddRule(vuln.ID).
