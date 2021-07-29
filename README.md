@@ -570,8 +570,7 @@ $ curl -o /path/where/you/want/nancy \
 
 On macOS, `nancy` can be installed using `brew`:
 
-- `brew tap sonatype-nexus-community/homebrew-nancy-tap`
-- `brew install nancy`
+- `brew install sonatype-nexus-community/nancy-tap/nancy`
 
 `brew` formulae are created and published to that tap with each new release, so you can use `brew` to upgrade, etc... as you wish.
 
