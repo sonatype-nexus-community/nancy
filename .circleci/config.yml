@@ -59,10 +59,23 @@ jobs:
 
 workflows:
   version: 2
+  build_fork:
+    jobs:
+      - build:
+          filters:
+            branches:
+              # Forked pull requests have CIRCLE_BRANCH set to pull/XXX
+              only: /pull\/[0-9]+/
+
   build_and_release:
     jobs:
       - build:
           context: scan_ossi
+          filters:
+            branches:
+              # Forked pull requests have CIRCLE_BRANCH set to pull/XXX
+              ignore: /pull\/[0-9]+/
+
       - release:
           context: nancy
           filters:
