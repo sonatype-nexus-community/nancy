@@ -19,6 +19,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/go-sona-types/configuration"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
@@ -31,8 +34,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"io"
-	"os"
 )
 
 type iqServerFactory interface {
@@ -105,6 +106,11 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 
 	logLady = logger.GetLogger("", configOssi.LogLevel)
 	logLady.Info("Nancy parsing config for IQ")
+
+	err = checkForUpdates("", true)
+	if err != nil {
+		return
+	}
 
 	printHeader(!configOssi.Quiet)
 

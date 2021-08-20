@@ -18,10 +18,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/internal/logger"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func init() {

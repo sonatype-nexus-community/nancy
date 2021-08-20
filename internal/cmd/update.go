@@ -38,15 +38,15 @@ func newUpdateCommand() *cobra.Command {
 		Short: "Check if there are any updates available",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			//return updateCLI("", true)
-			return updateCLI("", false)
+			return updateCLI("", false, true)
 		},
 	}
 
 	return updateCmd
 }
 
-func updateCLI(gitHubAPI string, performUpdate bool) error {
-	logAndShowMessage("Checking for updates...")
+func updateCLI(gitHubAPI string, performUpdate bool, quiet bool) error {
+	logAndShowMessage("Checking for updates...", quiet)
 	latest, found, err := selfupdate.DetectLatest(update.NancySlug)
 	if err != nil {
 		return err
@@ -66,30 +66,30 @@ func updateCLI(gitHubAPI string, performUpdate bool) error {
 	logLady.WithField("check results", check).Debug("")
 
 	if !check.Found {
-		logAndShowMessage("No updates found.")
+		logAndShowMessage("No updates found.", quiet)
 		return nil
 	}
 
 	if update.IsLatestVersion(check) {
-		logAndShowMessage("Already up-to-date.")
+		logAndShowMessage("Already up-to-date.", quiet)
 		return nil
 	}
 
 	logLady.Debug(update.DebugVersion(check))
-	logAndShowMessage(update.ReportVersion(check))
+	logAndShowMessage(update.ReportVersion(check), quiet)
 
 	if !performUpdate {
-		logAndShowMessage(update.HowToUpdate(check))
+		logAndShowMessage(update.HowToUpdate(check), quiet)
 		return nil
 	}
 
-	logAndShowMessage("Installing update...")
+	logAndShowMessage("Installing update...", quiet)
 	message, err := update.InstallLatest(check)
 	if err != nil {
 		return err
 	}
 
-	logAndShowMessage(message)
+	logAndShowMessage(message, quiet)
 
 	return nil
 }
