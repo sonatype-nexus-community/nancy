@@ -71,13 +71,16 @@ docker-alpine-integration-test: build-linux
     #    in ci its likely you have the codebase (thus .nancy-ignore) in the same location you run nancy sleuth
 	go list -json -m all > dist/deps.out
 	echo "cd /tmp && cat /tmp/dist/deps.out | nancy sleuth" > dist/ci.sh
+	echo "cd /tmp && cat /tmp/dist/deps.out | nancy sleuth --output=json && > nancy-result.json && cat nancy-result.json | jq '.'" > dist/ci-json.sh
 	chmod +x dist/ci.sh
+	chmod +x dist/ci-json.sh
 	# run the container....using cat with no params keeps it running
 	$(DOCKER_CMD) run --name alpine-integration-test -td sonatypecommunity/nancy:alpine-integration-test cat
 	# copy the code as if it was actually in the "ci" container.. doing this cause circleci cant actually mount volumes
 	$(DOCKER_CMD) cp . alpine-integration-test:/tmp
 	# run nancy against nancy output
 	$(DOCKER_CMD) exec -it alpine-integration-test /bin/sh /tmp/dist/ci.sh
+	$(DOCKER_CMD) exec -it alpine-integration-test /bin/sh /tmp/dist/ci-json.sh
 	$(DOCKER_CMD) stop alpine-integration-test && $(DOCKER_CMD) rm alpine-integration-test
 
 

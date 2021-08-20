@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk add --no-cache ca-certificates \
+RUN apk add --no-cache ca-certificates jq \
     && update-ca-certificates 2>/dev/null || true \
     && rm -rf /var/cache/apk/*
 
