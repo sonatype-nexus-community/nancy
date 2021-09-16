@@ -19,7 +19,6 @@ package parse
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -52,22 +51,46 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	decoder := json.NewDecoder(strings.NewReader(string(johnnyFiveNeedInput)))
 
 	for {
-		var mod types.GoListModule
+		var mod map[string]interface{}
 
-		err = decoder.Decode(&mod)
-		if err == io.EOF {
-			err = nil
+		decodeErr := decoder.Decode(&mod)
+
+		if decodeErr == io.EOF {
 			break
 		}
-		if err != nil {
+		if decodeErr != nil {
+			err = decodeErr
 			break
 		}
 
-		project, err := modToProjectList(mod)
-		if _, ok := err.(*NoVersionError); ok {
+		if module, ok := mod["Module"].(map[string]interface{}); ok {
+			if version, ok := module["Version"].(string); ok {
+				deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: module["Path"].(string)})
+			}
+
 			continue
 		}
-		deps.Projects = append(deps.Projects, project)
+
+		if path, ok := mod["Path"].(string); ok {
+			if replace, ok := mod["Replace"].(map[string]interface{}); ok {
+				if version, ok := replace["Version"].(string); ok {
+					deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: path})
+
+					continue
+				}
+
+				// No version found in replace block
+				continue
+			}
+
+			if version, ok := mod["Version"].(string); ok {
+				deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: path})
+
+				continue
+			}
+
+			continue
+		}
 	}
 
 	if err != nil {
@@ -82,25 +105,6 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	return
 }
 
-func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
-	if mod.Replace != nil {
-		if mod.Replace.Version == "" {
-			err = &NoVersionError{err: fmt.Errorf("no version found for mod")}
-			return
-		}
-		dep.Name = mod.Replace.Path
-		dep.Version = mod.Replace.Version
-		return
-	}
-	if mod.Version == "" {
-		err = &NoVersionError{err: fmt.Errorf("no version found for mod")}
-		return
-	}
-	dep.Name = mod.Path
-	dep.Version = mod.Version
-	return
-}
-
 func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectList, criteria func(s []string) bool) {
 	text := scanner.Text()
 	rewrite := strings.Split(text, "=>")
@@ -108,7 +112,7 @@ func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectLi
 	if len(rewrite) == 2 {
 		v2 := strings.Split(strings.TrimSpace(rewrite[1]), " ")
 		addProjectDep(criteria, v2, deps)
-	}else{
+	} else {
 		s := strings.Split(text, " ")
 		addProjectDep(criteria, s, deps)
 	}
