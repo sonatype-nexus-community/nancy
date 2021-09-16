@@ -10,6 +10,7 @@ GOLANGCI_VERSION=v1.24.0
 GOLANGCI_LINT_DOCKER=golangci/golangci-lint:$(GOLANGCI_VERSION)
 LINT_CMD=golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v --max-same-issues 10
 NANCY_IGNORE=$(shell cat .nancy-ignore | cut -d\# -f 1)
+IT_EXCLUDED_VULNS=CVE-2020-15114,CVE-2020-15136,CVE-2020-15115,CVE-2021-3121
 
 ifeq ($(findstring localbuild,$(CIRCLE_SHELL_ENV)),localbuild)
     DOCKER_CMD=sudo docker
@@ -53,11 +54,11 @@ integration-test: build
 	mkdir -p dist
 	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
 	go list -json -deps | ./$(BINARY_NAME) sleuth
-	go list -json -m all | ./$(BINARY_NAME) sleuth
-	go list -m all | ./$(BINARY_NAME) sleuth
+	go list -json -m all | ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS)
+	go list -m all | ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS)
 	go list -json -deps > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
-	go list -json -m all > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
-	go list -m all > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
+	go list -json -m all > dist/deps.out && ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS) < dist/deps.out
+	go list -m all > dist/deps.out && ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS) < dist/deps.out
 
 build-linux:
 	GOOS=linux GOARCH=amd64 $(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v

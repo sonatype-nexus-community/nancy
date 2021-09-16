@@ -37,7 +37,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
 
-// fix vulnerability: CVE-2021-3121 in github.com/gogo/protobuf v1.2.1
-replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
-
 go 1.13
