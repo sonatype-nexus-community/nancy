@@ -19,7 +19,6 @@ package parse
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -39,9 +38,11 @@ func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
 	return deps, nil
 }
 
-// GoListAgnostic will take a io.Reader that is likely the os.StdIn, try to parse it as
-// if `go list -json -m all` was ran, and then try to reparse it as if `go list -m all`
-// was ran instead. It returns either an error, or a deps of types.ProjectList
+// GoListAgnostic will take an io.Reader that is likely the os.StdIn, and parse it as
+// a map of string keys to interfaces. If a "Module" key exists, I know I'm in
+// 'go list -json -deps' town. If it doesn't, I look for a "Path" key, which is 'go list -json -m all' town.
+// If I find nothing, then I try and parse it like I'm parsing a non json output
+// It returns either an error, or a deps of types.ProjectList
 func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	// stdIn should never be massive, so taking this approach over reading from a stream
 	// multiple times
@@ -52,22 +53,50 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	decoder := json.NewDecoder(strings.NewReader(string(johnnyFiveNeedInput)))
 
 	for {
-		var mod types.GoListModule
+		var mod map[string]interface{}
 
-		err = decoder.Decode(&mod)
-		if err == io.EOF {
-			err = nil
+		decodeErr := decoder.Decode(&mod)
+
+		if decodeErr == io.EOF {
 			break
 		}
-		if err != nil {
+		if decodeErr != nil {
+			err = decodeErr
 			break
 		}
 
-		project, err := modToProjectList(mod)
-		if _, ok := err.(*NoVersionError); ok {
+		if module, ok := mod["Module"].(map[string]interface{}); ok {
+			// Ok, we are in Module town, so `go list -json -deps` has been run
+			if version, ok := module["Version"].(string); ok {
+				// Intentionally skip checking if `Path` exists as a key, as it should if `Version` is there
+				deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: module["Path"].(string)})
+			}
+
 			continue
 		}
-		deps.Projects = append(deps.Projects, project)
+
+		if path, ok := mod["Path"].(string); ok {
+			// Ok, we are in list town, so `go list -json -m all` has been run
+			if replace, ok := mod["Replace"].(map[string]interface{}); ok {
+				// A replace block has been found, let's try and do something with it
+				if version, ok := replace["Version"].(string); ok {
+					deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: path})
+
+					continue
+				}
+
+				// No version found in replace block, so just continue loop
+				continue
+			}
+
+			if version, ok := mod["Version"].(string); ok {
+				deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: path})
+
+				continue
+			}
+
+			continue
+		}
 	}
 
 	if err != nil {
@@ -82,25 +111,6 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	return
 }
 
-func modToProjectList(mod types.GoListModule) (dep types.Projects, err error) {
-	if mod.Replace != nil {
-		if mod.Replace.Version == "" {
-			err = &NoVersionError{err: fmt.Errorf("no version found for mod")}
-			return
-		}
-		dep.Name = mod.Replace.Path
-		dep.Version = mod.Replace.Version
-		return
-	}
-	if mod.Version == "" {
-		err = &NoVersionError{err: fmt.Errorf("no version found for mod")}
-		return
-	}
-	dep.Name = mod.Path
-	dep.Version = mod.Version
-	return
-}
-
 func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectList, criteria func(s []string) bool) {
 	text := scanner.Text()
 	rewrite := strings.Split(text, "=>")
@@ -108,7 +118,7 @@ func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectLi
 	if len(rewrite) == 2 {
 		v2 := strings.Split(strings.TrimSpace(rewrite[1]), " ")
 		addProjectDep(criteria, v2, deps)
-	}else{
+	} else {
 		s := strings.Split(text, " ")
 		addProjectDep(criteria, s, deps)
 	}

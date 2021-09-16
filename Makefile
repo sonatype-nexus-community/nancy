@@ -10,6 +10,7 @@ GOLANGCI_VERSION=v1.24.0
 GOLANGCI_LINT_DOCKER=golangci/golangci-lint:$(GOLANGCI_VERSION)
 LINT_CMD=golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v --max-same-issues 10
 NANCY_IGNORE=$(shell cat .nancy-ignore | cut -d\# -f 1)
+IT_EXCLUDED_VULNS=CVE-2020-15114,CVE-2020-15136,CVE-2020-15115,CVE-2021-3121
 
 ifeq ($(findstring localbuild,$(CIRCLE_SHELL_ENV)),localbuild)
     DOCKER_CMD=sudo docker
@@ -52,10 +53,12 @@ test: build
 integration-test: build
 	mkdir -p dist
 	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
-	go list -json -m all | ./$(BINARY_NAME) sleuth
-	go list -m all | ./$(BINARY_NAME) sleuth
-	go list -json -m all > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
-	go list -m all > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
+	go list -json -deps | ./$(BINARY_NAME) sleuth
+	go list -json -m all | ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS)
+	go list -m all | ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS)
+	go list -json -deps > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
+	go list -json -m all > dist/deps.out && ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS) < dist/deps.out
+	go list -m all > dist/deps.out && ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS) < dist/deps.out
 
 build-linux:
 	GOOS=linux GOARCH=amd64 $(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
@@ -69,7 +72,7 @@ docker-alpine-integration-test: build-linux
     # 2. passes it to the next step that is using this container that only has nancy in it
     # 3. runs nancy using the contents of the exported file with the deps in it. Also assumes that
     #    in ci its likely you have the codebase (thus .nancy-ignore) in the same location you run nancy sleuth
-	go list -json -m all > dist/deps.out
+	go list -json -deps > dist/deps.out
 	echo "cd /tmp && cat /tmp/dist/deps.out | nancy sleuth" > dist/ci.sh
 	echo "cd /tmp && cat /tmp/dist/deps.out | nancy sleuth --output=json && > nancy-result.json && cat nancy-result.json | jq '.'" > dist/ci-json.sh
 	chmod +x dist/ci.sh
@@ -89,7 +92,7 @@ docker-goreleaser-integration-test: build-linux
 	# NANCY_IGNORE is more tomfoolery b/c circleci cant do volume mounts. Use the non-file ignore version but with the contents of
     # the .nancy-ignore. If you were to do this for real you would likely volume mount to your local and it
     # would just use whatever file you actually had.
-	go list -json -m all | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth -e $(NANCY_IGNORE)
+	go list -json -deps | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth -e $(NANCY_IGNORE)
 
 docker-integration-tests: docker-alpine-integration-test docker-goreleaser-integration-test
 
