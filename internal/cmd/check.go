@@ -18,15 +18,16 @@ package cmd
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/settings"
 	"github.com/sonatype-nexus-community/nancy/update"
-	"time"
 )
 
 // For use in checking for newer release version during app startup (not during explicit command to check for update)
-func checkForUpdates(gitHubAPI string) error {
+func checkForUpdates(gitHubAPI string, quiet bool) error {
 	if configOssi.SkipUpdateCheck {
 		logLady.Debug("skipping update check")
 		return nil
@@ -46,7 +47,7 @@ func checkForUpdates(gitHubAPI string) error {
 	}).Trace("updateCheck")
 
 	if update.ShouldCheckForUpdates(updateCheck) {
-		logAndShowMessage("Checking for updates...")
+		logAndShowMessage("Checking for updates...", quiet)
 
 		logLady.WithFields(logrus.Fields{
 			"gitHubAPI":      gitHubAPI,
@@ -62,7 +63,7 @@ func checkForUpdates(gitHubAPI string) error {
 		}
 
 		if !check.Found {
-			logAndShowMessage("No updates found.")
+			logAndShowMessage("No updates found.", quiet)
 
 			updateCheck.LastUpdateCheck = time.Now()
 			err = updateCheck.WriteToDisk()
@@ -70,7 +71,7 @@ func checkForUpdates(gitHubAPI string) error {
 		}
 
 		if update.IsLatestVersion(check) {
-			logAndShowMessage("Already up-to-date.")
+			logAndShowMessage("Already up-to-date.", quiet)
 
 			updateCheck.LastUpdateCheck = time.Now()
 			err = updateCheck.WriteToDisk()
@@ -78,9 +79,9 @@ func checkForUpdates(gitHubAPI string) error {
 		}
 		logLady.Debug(update.DebugVersion(check))
 
-		logAndShowMessage(update.ReportVersion(check))
-		logAndShowMessage(update.HowToUpdate(check))
-		logAndShowMessage("\n") // Print a new-line after all of that
+		logAndShowMessage(update.ReportVersion(check), quiet)
+		logAndShowMessage(update.HowToUpdate(check), quiet)
+		logAndShowMessage("\n", quiet) // Print a new-line after all of that
 
 		updateCheck.LastUpdateCheck = time.Now()
 		err = updateCheck.WriteToDisk()
@@ -92,7 +93,9 @@ func checkForUpdates(gitHubAPI string) error {
 	return nil
 }
 
-func logAndShowMessage(message string) {
+func logAndShowMessage(message string, quiet bool) {
 	logLady.Info(message)
-	fmt.Println(message)
+	if !quiet {
+		fmt.Println(message)
+	}
 }

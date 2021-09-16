@@ -19,7 +19,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/spf13/pflag"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -27,6 +26,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/spf13/pflag"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/golang/dep"
@@ -126,7 +127,7 @@ a smooth experience as a Golang developer, using the best tools in the market!`,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		setupViperAutomaticEnv()
 		logLady = logger.GetLogger("", configOssi.LogLevel)
-		return checkForUpdates("")
+		return nil
 	},
 	RunE: doRoot,
 }
@@ -263,6 +264,13 @@ func processConfig() (err error) {
 		fmt.Println("!!! Output format of", strings.TrimSpace(format), "is not valid. Defaulting to text output")
 		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		configOssi.Formatter = audit.AuditLogTextFormatter{Quiet: isQuiet, NoColor: configOssi.NoColor}
+	}
+
+	var isTotallyQuiet = isQuiet && outputFormat != "text"
+
+	err = checkForUpdates("", isTotallyQuiet)
+	if err != nil {
+		return
 	}
 
 	ossIndex := ossiCreator.create()

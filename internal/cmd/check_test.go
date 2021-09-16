@@ -17,9 +17,10 @@
 package cmd
 
 import (
+	"testing"
+
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestCheckForUpdates(t *testing.T) {
@@ -28,5 +29,5 @@ func TestCheckForUpdates(t *testing.T) {
 	// NOTE: will not actually run check unless last_update_check is old or file is removed.
 	// Still, just having this test helped me find a slug bug. Hey, that rhymes.
 	// Can add real harness setup/teardown later if desired.
-	assert.Nil(t, checkForUpdates(""))
+	assert.Nil(t, checkForUpdates("", false))
 }
