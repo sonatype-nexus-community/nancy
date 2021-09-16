@@ -38,9 +38,10 @@ func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
 	return deps, nil
 }
 
-// GoListAgnostic will take a io.Reader that is likely the os.StdIn, try to parse it as
-// if `go list -json -m all` was ran, and then try to reparse it as if `go list -m all`
-// was ran instead. It returns either an error, or a deps of types.ProjectList
+// GoListAgnostic will take an io.Reader that is likely the os.StdIn, and parse it as
+// a map of string keys to interfaces. If a "Module" key exists, I know I'm in
+// 'go list -deps' town. If it doesn't, I look for a "Path" key, which is 'go list -m all' town.
+// It returns either an error, or a deps of types.ProjectList
 func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	// stdIn should never be massive, so taking this approach over reading from a stream
 	// multiple times

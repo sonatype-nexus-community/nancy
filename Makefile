@@ -52,8 +52,10 @@ test: build
 integration-test: build
 	mkdir -p dist
 	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
+	go list -json -deps | ./$(BINARY_NAME) sleuth
 	go list -json -m all | ./$(BINARY_NAME) sleuth
 	go list -m all | ./$(BINARY_NAME) sleuth
+	go list -json -deps > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
 	go list -json -m all > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
 	go list -m all > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
 
@@ -69,7 +71,7 @@ docker-alpine-integration-test: build-linux
     # 2. passes it to the next step that is using this container that only has nancy in it
     # 3. runs nancy using the contents of the exported file with the deps in it. Also assumes that
     #    in ci its likely you have the codebase (thus .nancy-ignore) in the same location you run nancy sleuth
-	go list -json -m all > dist/deps.out
+	go list -json -deps > dist/deps.out
 	echo "cd /tmp && cat /tmp/dist/deps.out | nancy sleuth" > dist/ci.sh
 	chmod +x dist/ci.sh
 	# run the container....using cat with no params keeps it running
@@ -86,7 +88,7 @@ docker-goreleaser-integration-test: build-linux
 	# NANCY_IGNORE is more tomfoolery b/c circleci cant do volume mounts. Use the non-file ignore version but with the contents of
     # the .nancy-ignore. If you were to do this for real you would likely volume mount to your local and it
     # would just use whatever file you actually had.
-	go list -json -m all | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth -e $(NANCY_IGNORE)
+	go list -json -deps | $(DOCKER_CMD) run --rm -i sonatypecommunity/nancy:goreleaser-integration-test sleuth -e $(NANCY_IGNORE)
 
 docker-integration-tests: docker-alpine-integration-test docker-goreleaser-integration-test
 

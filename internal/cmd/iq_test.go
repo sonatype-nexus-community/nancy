@@ -47,7 +47,7 @@ func TestIqApplicationFlagMissing(t *testing.T) {
 
 func TestIqHelp(t *testing.T) {
 	output, err := executeCommand(rootCmd, iqCmd.Use, "--help")
-	assert.Contains(t, output, "go list -json -m all | nancy iq --"+flagNameIqApplication+" your_public_application_id --"+flagNameIqServerUrl+" ")
+	assert.Contains(t, output, "go list -json -deps | nancy iq --"+flagNameIqApplication+" your_public_application_id --"+flagNameIqServerUrl+" ")
 	assert.Nil(t, err)
 }
 
