@@ -82,7 +82,7 @@ var (
 
 var iqCmd = &cobra.Command{
 	Use: "iq",
-	Example: `  go list -json -m all | nancy iq --` + flagNameIqApplication + ` your_public_application_id --` + flagNameIqServerUrl + ` http://your_iq_server_url:port --` + flagNameIqUsername + ` your_user --` + flagNameIqToken + ` your_token --` + flagNameIqStage + ` develop
+	Example: `  go list -json -deps | nancy iq --` + flagNameIqApplication + ` your_public_application_id --` + flagNameIqServerUrl + ` http://your_iq_server_url:port --` + flagNameIqUsername + ` your_user --` + flagNameIqToken + ` your_token --` + flagNameIqStage + ` develop
   nancy iq -p Gopkg.lock --` + flagNameIqApplication + ` your_public_application_id --` + flagNameIqServerUrl + ` http://your_iq_server_url:port --` + flagNameIqUsername + ` your_user --` + flagNameIqToken + ` your_token --` + flagNameIqStage + ` develop`,
 	Short:  "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'",
 	Long:   `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
