@@ -153,7 +153,7 @@ func groupAndPrint(vulnerable []types.Coordinate, nonVulnerable []types.Coordina
 func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 	auditedEntries := entry.Data["audited"]
 	invalidEntries := entry.Data["invalid"]
-	excludedEntries := entry.Data["exclusions"]
+	excludedEntries := entry.Data["excluded"]
 	packageCount := entry.Data["num_audited"]
 	numVulnerable := entry.Data["num_vulnerable"]
 	numExcluded := entry.Data["num_exclusions"]
@@ -183,7 +183,7 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		t.AppendSeparator()
 		t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(numVulnerable)))})
 		t.AppendSeparator()
-		t.AppendRow([]interface{}{"Ignored Dependencies", au.Bold(au.Yellow(strconv.Itoa(numExcluded)))})
+		t.AppendRow([]interface{}{"Ignored Vulnerabilities", au.Bold(au.Yellow(strconv.Itoa(numExcluded)))})
 		sb.WriteString(t.Render())
 		sb.WriteString("\n")
 
