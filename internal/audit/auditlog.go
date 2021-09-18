@@ -55,7 +55,7 @@ func LogResults(formatter log.Formatter, packageCount int, coordinates []types.C
 		vulnerableCoordinates = make([]types.Coordinate, 0)
 	}
 
-  exclusionCount := len(exclusions)
+	exclusionCount := len(exclusions)
 
 	log.SetFormatter(formatter)
 	log.SetOutput(os.Stdout)
@@ -63,7 +63,7 @@ func LogResults(formatter log.Formatter, packageCount int, coordinates []types.C
 		"exclusions":     exclusions,
 		"num_audited":    packageCount,
 		"num_vulnerable": vulnerableCount,
-    "num_exclusions": exclusionCount,
+		"num_exclusions": exclusionCount,
 		"audited":        auditedCoordinates,
 		"vulnerable":     vulnerableCoordinates,
 		"invalid":        invalidCoordinates,
