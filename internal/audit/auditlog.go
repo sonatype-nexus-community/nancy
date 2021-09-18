@@ -28,6 +28,7 @@ import (
 // results.
 func LogResults(formatter log.Formatter, packageCount int, coordinates []types.Coordinate, invalidCoordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
+	exclusionCount := 0
 
 	for _, c := range coordinates {
 		c.ExcludeVulnerabilities(exclusions)
@@ -35,9 +36,16 @@ func LogResults(formatter log.Formatter, packageCount int, coordinates []types.C
 
 	var auditedCoordinates []types.Coordinate
 	var vulnerableCoordinates []types.Coordinate
+	var excludedVulnerabilities []types.Vulnerability
 
 	for i := 0; i < len(coordinates); i++ {
 		coordinate := coordinates[i]
+		for _, v := range coordinate.Vulnerabilities {
+			if v.Excluded {
+				exclusionCount++
+				excludedVulnerabilities = append(excludedVulnerabilities, v)
+			}
+		}
 		if coordinate.IsVulnerable() {
 			vulnerableCount++
 			vulnerableCoordinates = append(vulnerableCoordinates, coordinate)
@@ -54,14 +62,17 @@ func LogResults(formatter log.Formatter, packageCount int, coordinates []types.C
 	if vulnerableCoordinates == nil {
 		vulnerableCoordinates = make([]types.Coordinate, 0)
 	}
+
 	log.SetFormatter(formatter)
 	log.SetOutput(os.Stdout)
 	log.WithFields(log.Fields{
 		"exclusions":     exclusions,
 		"num_audited":    packageCount,
 		"num_vulnerable": vulnerableCount,
+		"num_exclusions": exclusionCount,
 		"audited":        auditedCoordinates,
 		"vulnerable":     vulnerableCoordinates,
+		"excluded":       excludedVulnerabilities,
 		"invalid":        invalidCoordinates,
 		"version":        buildversion.BuildVersion,
 	}).Info("")
