@@ -41,19 +41,21 @@ func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
 	invalidEntries := entry.Data["invalid"]
 	packageCount := entry.Data["num_audited"]
 	numVulnerable := entry.Data["num_vulnerable"]
+	excludedCount := entry.Data["num_exclusions"]
 	buildVersion := entry.Data["version"]
 
-	if auditedEntries != nil && invalidEntries != nil && packageCount != nil && numVulnerable != nil && buildVersion != nil {
+	if auditedEntries != nil && invalidEntries != nil && packageCount != nil && numVulnerable != nil && excludedCount != nil && buildVersion != nil {
 		auditedEntries := entry.Data["audited"].([]types.Coordinate)
 		invalidEntries := entry.Data["invalid"].([]types.Coordinate)
 		packageCount := entry.Data["num_audited"].(int)
 		numVulnerable := entry.Data["num_vulnerable"].(int)
+		excludedCount := entry.Data["num_exclusions"].(int)
 		buildVersion := entry.Data["version"].(string)
 
-		var summaryHeader = []string{"Audited Count", "Vulnerable Count", "Build Version"}
+		var summaryHeader = []string{"Audited Count", "Vulnerable Count", "Ignored Vulnerabilities", "Build Version"}
 		var invalidHeader = []string{"Count", "Package", "Reason"}
 		var auditedHeader = []string{"Count", "Package", "Is Vulnerable", "Num Vulnerabilities", "Vulnerabilities"}
-		var summaryRow = []string{strconv.Itoa(packageCount), strconv.Itoa(numVulnerable), buildVersion}
+		var summaryRow = []string{strconv.Itoa(packageCount), strconv.Itoa(numVulnerable), strconv.Itoa(excludedCount), buildVersion}
 
 		var buf bytes.Buffer
 		w := csv.NewWriter(&buf)
