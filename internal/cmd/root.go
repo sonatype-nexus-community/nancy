@@ -60,6 +60,7 @@ func (ossiFactory) create() ossindex.IServer {
 		Token:       viper.GetString(configuration.ViperKeyToken),
 		Tool:        "nancy-client",
 		Version:     buildversion.BuildVersion,
+		DBCachePath: configOssi.DBCachePath,
 		DBCacheName: "nancy-cache",
 		TTL:         time.Now().Local().Add(time.Hour * 12),
 	})
@@ -189,6 +190,7 @@ func init() {
 	persistentFlags.StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
 	persistentFlags.StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
 	persistentFlags.StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
+	persistentFlags.StringVarP(&configOssi.DBCachePath, "db-cache-path", "d", "", "Specify an alternate path for caching responses from OSS Inde, example: /tmp")
 	persistentFlags.BoolVar(&configOssi.SkipUpdateCheck, "skip-update-check", configuration.SkipUpdateByDefault(), "Skip the check for updates.")
 }
 

@@ -403,6 +403,14 @@ type mockOssiServer struct {
 func (s mockOssiServer) AuditPackages(purls []string) ([]ossIndexTypes.Coordinate, error) {
 	return s.auditPackagesResults, s.auditPackagesErr
 }
+
+//noinspection GoUnusedParameter
+func (s mockOssiServer) Audit(purls []string) (results map[string]ossIndexTypes.Coordinate, err error) {
+	results = make(map[string]ossIndexTypes.Coordinate)
+
+	return
+}
+
 func (s mockOssiServer) NoCacheNoProblems() error {
 	return s.auditPackagesErr
 }

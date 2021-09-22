@@ -24,6 +24,7 @@ import (
 )
 
 type Configuration struct {
+	DBCachePath     string
 	Version         bool
 	NoColor         bool
 	Quiet           bool
