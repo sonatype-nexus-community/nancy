@@ -36,6 +36,7 @@ func TestCsvOutputWhenQuiet(t *testing.T) {
 		},
 		"num_audited":    2,
 		"num_vulnerable": 1,
+		"num_exclusions": 0,
 		"version":        "development",
 	}
 	entry := Entry{Data: data}
@@ -44,8 +45,8 @@ func TestCsvOutputWhenQuiet(t *testing.T) {
 	logMessage, e := formatter.Format(&entry)
 	assert.Nil(t, e)
 	expectedCsv := `Summary
-Audited Count,Vulnerable Count,Build Version
-2,1,development
+Audited Count,Vulnerable Count,Ignored Vulnerabilities,Build Version
+2,1,0,development
 
 Audited Package(s)
 Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
@@ -65,6 +66,7 @@ func TestCsvOutput(t *testing.T) {
 		},
 		"num_audited":    2,
 		"num_vulnerable": 1,
+		"num_exclusions": 0,
 		"version":        "development",
 	}
 	entry := Entry{Data: data}
@@ -73,8 +75,8 @@ func TestCsvOutput(t *testing.T) {
 	logMessage, e := formatter.Format(&entry)
 	assert.Nil(t, e)
 	expectedCsv := `Summary
-Audited Count,Vulnerable Count,Build Version
-2,1,development
+Audited Count,Vulnerable Count,Ignored Vulnerabilities,Build Version
+2,1,0,development
 
 Invalid Package(s)
 Count,Package,Reason
@@ -115,9 +117,10 @@ func TestCsvFormatter_FormatNoError(t *testing.T) {
 		},
 		"num_audited":    0,
 		"num_vulnerable": 0,
+		"num_exclusions": 0,
 		"version":        "theBuildVersion",
 	}
 	buf, err := formatter.Format(&Entry{Data: data})
 	assert.NoError(t, err)
-	assert.Equal(t, "Summary\nAudited Count,Vulnerable Count,Build Version\n0,0,theBuildVersion\n", string(buf))
+	assert.Equal(t, "Summary\nAudited Count,Vulnerable Count,Ignored Vulnerabilities,Build Version\n0,0,0,theBuildVersion\n", string(buf))
 }
