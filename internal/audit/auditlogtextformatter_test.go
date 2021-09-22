@@ -47,6 +47,8 @@ func verifyFormatterSummaryLoudness(t *testing.T, quiet bool) {
 	data := map[string]interface{}{
 		"audited":        []types.Coordinate{},
 		"invalid":        []types.Coordinate{},
+		"excluded":       []types.Vulnerability{},
+		"num_exclusions": 0,
 		"num_audited":    0,
 		"num_vulnerable": 0,
 		"version":        0,
@@ -78,6 +80,8 @@ func TestFormatterLogInvalidSemVerWarning(t *testing.T) {
 				Coordinates: "MyInvalidCoords",
 			},
 		},
+		"excluded":       []types.Vulnerability{},
+		"num_exclusions": 0,
 		"num_audited":    0,
 		"num_vulnerable": 0,
 		"version":        0,
@@ -113,4 +117,26 @@ func TestScoreAssessment(t *testing.T) {
 	assert.Equal(t, "High", scoreAssessment(decimal.New(7, 0)))
 	assert.Equal(t, "Medium", scoreAssessment(decimal.New(4, 0)))
 	assert.Equal(t, "Low", scoreAssessment(decimal.New(0, 0)))
+}
+
+func TestExcludedVulnsInSummary(t *testing.T) {
+	data := map[string]interface{}{
+		"audited":        []types.Coordinate{},
+		"invalid":        []types.Coordinate{},
+		"excluded":       []types.Vulnerability{},
+		"num_audited":    0,
+		"num_exclusions": 1,
+		"num_vulnerable": 0,
+		"version":        0,
+	}
+	entry := Entry{Data: data}
+
+	formatter := AuditLogTextFormatter{}
+	logMessage, e := formatter.Format(&entry)
+	assert.Nil(t, e)
+
+	expectedSummary := "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ Summary                     ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━┫\n┃ Audited Dependencies    ┃ 0 ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━┫\n┃ Vulnerable Dependencies ┃ \x1b[1;31m0\x1b[0m ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━┫\n┃ Ignored Vulnerabilities ┃ \x1b[1;33m1\x1b[0m ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━┛\n"
+	expectedSummary = "\n\n0 Non Vulnerable Packages\n\n" + expectedSummary
+	assert.Equal(t, expectedSummary, string(logMessage))
+	// assert that ignored vulns show up
 }

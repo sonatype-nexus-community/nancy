@@ -182,8 +182,10 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		t.AppendRow([]interface{}{"Audited Dependencies", strconv.Itoa(packageCount)})
 		t.AppendSeparator()
 		t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(numVulnerable)))})
-		t.AppendSeparator()
-		t.AppendRow([]interface{}{"Ignored Vulnerabilities", au.Bold(au.Yellow(strconv.Itoa(numExcluded)))})
+    if numExcluded > 0 {
+      t.AppendSeparator()
+      t.AppendRow([]interface{}{"Ignored Vulnerabilities", au.Bold(au.Yellow(strconv.Itoa(numExcluded)))})
+    }
 		sb.WriteString(t.Render())
 		sb.WriteString("\n")
 
