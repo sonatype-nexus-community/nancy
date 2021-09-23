@@ -24,11 +24,19 @@ import (
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 )
 
+func isEntryValid(params ...interface{}) bool {
+	for _, v := range params {
+		if v == nil {
+			return false
+		}
+	}
+	return true
+}
+
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
 func LogResults(formatter log.Formatter, packageCount int, coordinates []types.Coordinate, invalidCoordinates []types.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
-	exclusionCount := 0
 
 	for _, c := range coordinates {
 		c.ExcludeVulnerabilities(exclusions)
@@ -42,7 +50,6 @@ func LogResults(formatter log.Formatter, packageCount int, coordinates []types.C
 		coordinate := coordinates[i]
 		for _, v := range coordinate.Vulnerabilities {
 			if v.Excluded {
-				exclusionCount++
 				excludedVulnerabilities = append(excludedVulnerabilities, v)
 			}
 		}
@@ -62,6 +69,8 @@ func LogResults(formatter log.Formatter, packageCount int, coordinates []types.C
 	if vulnerableCoordinates == nil {
 		vulnerableCoordinates = make([]types.Coordinate, 0)
 	}
+
+	exclusionCount := len(excludedVulnerabilities)
 
 	log.SetFormatter(formatter)
 	log.SetOutput(os.Stdout)

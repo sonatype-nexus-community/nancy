@@ -158,7 +158,7 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 	numVulnerable := entry.Data["num_vulnerable"]
 	numExcluded := entry.Data["num_exclusions"]
 	buildVersion := entry.Data["version"]
-	if auditedEntries != nil && invalidEntries != nil && excludedEntries != nil && packageCount != nil && numVulnerable != nil && numExcluded != nil && buildVersion != nil {
+	if isEntryValid(auditedEntries, invalidEntries, excludedEntries, packageCount, numVulnerable, numExcluded, buildVersion) {
 		auditedEntries := entry.Data["audited"].([]types.Coordinate)
 		invalidEntries := entry.Data["invalid"].([]types.Coordinate)
 		packageCount := entry.Data["num_audited"].(int)
@@ -182,10 +182,10 @@ func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
 		t.AppendRow([]interface{}{"Audited Dependencies", strconv.Itoa(packageCount)})
 		t.AppendSeparator()
 		t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(numVulnerable)))})
-    if numExcluded > 0 {
-      t.AppendSeparator()
-      t.AppendRow([]interface{}{"Ignored Vulnerabilities", au.Bold(au.Yellow(strconv.Itoa(numExcluded)))})
-    }
+		if numExcluded > 0 {
+			t.AppendSeparator()
+			t.AppendRow([]interface{}{"Ignored Vulnerabilities", au.Bold(au.Yellow(strconv.Itoa(numExcluded)))})
+		}
 		sb.WriteString(t.Render())
 		sb.WriteString("\n")
 
