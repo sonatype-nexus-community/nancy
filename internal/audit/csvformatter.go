@@ -44,7 +44,7 @@ func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
 	excludedCount := entry.Data["num_exclusions"]
 	buildVersion := entry.Data["version"]
 
-	if auditedEntries != nil && invalidEntries != nil && packageCount != nil && numVulnerable != nil && excludedCount != nil && buildVersion != nil {
+	if isEntryValid(auditedEntries, invalidEntries, packageCount, numVulnerable, excludedCount, buildVersion) {
 		auditedEntries := entry.Data["audited"].([]types.Coordinate)
 		invalidEntries := entry.Data["invalid"].([]types.Coordinate)
 		packageCount := entry.Data["num_audited"].(int)
