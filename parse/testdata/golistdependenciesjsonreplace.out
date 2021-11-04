@@ -1,0 +1,51 @@
+{
+	"Dir": "/Users/bhamail/go/pkg/mod/github.com/hashicorp/hcl@v1.0.1-vault-3/hcl/strconv",
+	"ImportPath": "github.com/hashicorp/hcl/hcl/strconv",
+	"Name": "strconv",
+	"Root": "/Users/bhamail/go/pkg/mod/github.com/hashicorp/hcl@v1.0.1-vault-3",
+	"Module": {
+		"Path": "github.com/hashicorp/hcl",
+		"Version": "v1.0.0",
+		"Replace": {
+			"Path": "github.com/hashicorp/hcl",
+			"Version": "v1.0.1-vault-3",
+			"Time": "2021-06-11T21:31:12Z",
+			"Dir": "/Users/bhamail/go/pkg/mod/github.com/hashicorp/hcl@v1.0.1-vault-3",
+			"GoMod": "/Users/bhamail/go/pkg/mod/cache/download/github.com/hashicorp/hcl/@v/v1.0.1-vault-3.mod",
+			"GoVersion": "1.15"
+		},
+		"Indirect": true,
+		"Dir": "/Users/bhamail/go/pkg/mod/github.com/hashicorp/hcl@v1.0.1-vault-3",
+		"GoMod": "/Users/bhamail/go/pkg/mod/cache/download/github.com/hashicorp/hcl/@v/v1.0.1-vault-3.mod",
+		"GoVersion": "1.15"
+	},
+	"DepOnly": true,
+	"Stale": true,
+	"StaleReason": "not installed but available in build cache",
+	"GoFiles": [
+		"quote.go"
+	],
+	"Imports": [
+		"errors",
+		"unicode/utf8"
+	],
+	"Deps": [
+		"errors",
+		"internal/bytealg",
+		"internal/cpu",
+		"internal/reflectlite",
+		"internal/unsafeheader",
+		"runtime",
+		"runtime/internal/atomic",
+		"runtime/internal/math",
+		"runtime/internal/sys",
+		"unicode/utf8",
+		"unsafe"
+	],
+	"TestGoFiles": [
+		"quote_test.go"
+	],
+	"TestImports": [
+		"testing"
+	]
+}

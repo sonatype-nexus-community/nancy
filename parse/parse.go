@@ -67,6 +67,13 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 
 		if module, ok := mod["Module"].(map[string]interface{}); ok {
 			// Ok, we are in Module town, so `go list -json -deps` has been run
+			if replace, ok := module["Replace"].(map[string]interface{}); ok {
+				// A replace block has been found, let's try and do something with it
+				if version, ok := replace["Version"].(string); ok {
+					deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: module["Path"].(string)})
+					continue
+				}
+			}
 			if version, ok := module["Version"].(string); ok {
 				// Intentionally skip checking if `Path` exists as a key, as it should if `Version` is there
 				deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: module["Path"].(string)})

@@ -56,6 +56,24 @@ func TestGoListDepsJson(t *testing.T) {
 	}
 }
 
+func TestGoListDepsJsonReplace(t *testing.T) {
+	goListFile, err := os.Open("testdata/golistdependenciesjsonreplace.out")
+	if err != nil {
+		t.Error(err)
+	}
+
+	deps, err := GoListAgnostic(goListFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 1 {
+		t.Errorf("Unsuccessfully parsed go list -deps -json ./... output, 112 dependencies were expected, but %d encountered", len(deps.Projects))
+	}
+	if deps.Projects[0].Version != "v1.0.1-vault-3" {
+		t.Errorf("Unsuccessfully parsed go list -deps -json ./... output, 112 dependencies were expected, but %d encountered", len(deps.Projects))
+	}
+}
+
 func TestGoListAgnostic(t *testing.T) {
 	goListFile, err := os.Open("testdata/golist.out")
 	if err != nil {
