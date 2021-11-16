@@ -1,0 +1,15 @@
+{
+	"Path": "github.com/dgrijalva/jwt-go",
+	"Version": "v3.2.0+incompatible",
+	"Replace": {
+		"Path": "github.com/golang-jwt/jwt/v4",
+		"Version": "v4.1.0",
+		"Time": "2021-09-24T19:32:29Z",
+		"Dir": "/Users/bhamail/go/pkg/mod/github.com/golang-jwt/jwt/v4@v4.1.0",
+		"GoMod": "/Users/bhamail/go/pkg/mod/cache/download/github.com/golang-jwt/jwt/v4/@v/v4.1.0.mod",
+		"GoVersion": "1.15"
+	},
+	"Dir": "/Users/bhamail/go/pkg/mod/github.com/golang-jwt/jwt/v4@v4.1.0",
+	"GoMod": "/Users/bhamail/go/pkg/mod/cache/download/github.com/golang-jwt/jwt/v4/@v/v4.1.0.mod",
+	"GoVersion": "1.15"
+}

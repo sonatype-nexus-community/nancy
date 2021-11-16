@@ -67,10 +67,31 @@ func TestGoListDepsJsonReplace(t *testing.T) {
 		t.Error(err)
 	}
 	if len(deps.Projects) != 1 {
-		t.Errorf("Unsuccessfully parsed go list -deps -json ./... output, 112 dependencies were expected, but %d encountered", len(deps.Projects))
+		t.Errorf("Unsuccessfully parsed go list -deps -json ./... output, 1 dependency expected, but %d encountered", len(deps.Projects))
 	}
 	if deps.Projects[0].Version != "v1.0.1-vault-3" {
-		t.Errorf("Unsuccessfully parsed go list -deps -json ./... output, 112 dependencies were expected, but %d encountered", len(deps.Projects))
+		t.Errorf("Unexpected version: %s", deps.Projects[0].Version)
+	}
+}
+
+func TestGoListDepsJsonReplacePath(t *testing.T) {
+	goListFile, err := os.Open("testdata/golistdependenciesjsonreplacepath.out")
+	if err != nil {
+		t.Error(err)
+	}
+
+	deps, err := GoListAgnostic(goListFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 1 {
+		t.Errorf("Unsuccessfully parsed go list -deps -json ./... output, 1 dependency expected, but %d encountered", len(deps.Projects))
+	}
+	if deps.Projects[0].Name != "github.com/golang-jwt/jwt/v4" {
+		t.Errorf("Unexpected name: %s", deps.Projects[0].Name)
+	}
+	if deps.Projects[0].Version != "v4.1.0" {
+		t.Errorf("Unexpected version: %s", deps.Projects[0].Version)
 	}
 }
 
@@ -105,6 +126,28 @@ func TestGoListJsonReplace(t *testing.T) {
 
 	if deps.Projects[0].Version != "v1.4.2" {
 		t.Errorf("Version expected to be v1.4.2, but encountered %s", deps.Projects[0].Version)
+	}
+}
+
+func TestGoListJsonReplacePath(t *testing.T) {
+	goListJSONReplaceFile, err := os.Open("testdata/golistjsonreplacepath.out")
+	if err != nil {
+		t.Error(err)
+	}
+
+	deps, err := GoListAgnostic(goListJSONReplaceFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(deps.Projects) != 1 {
+		t.Errorf("1 expected, but %d encountered", len(deps.Projects))
+	}
+
+	if deps.Projects[0].Name != "github.com/golang-jwt/jwt/v4" {
+		t.Errorf("Name encountered %s", deps.Projects[0].Name)
+	}
+	if deps.Projects[0].Version != "v4.1.0" {
+		t.Errorf("Version encountered %s", deps.Projects[0].Version)
 	}
 }
 

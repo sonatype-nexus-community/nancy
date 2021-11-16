@@ -68,9 +68,9 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 		if module, ok := mod["Module"].(map[string]interface{}); ok {
 			// Ok, we are in Module town, so `go list -json -deps` has been run
 			if replace, ok := module["Replace"].(map[string]interface{}); ok {
-				// A replace block has been found, let's try and do something with it
+				// A 'Replace' block has been found, let's try and do something with it.
 				if version, ok := replace["Version"].(string); ok {
-					deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: module["Path"].(string)})
+					deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: replace["Path"].(string)})
 					continue
 				}
 			}
@@ -85,13 +85,14 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 		if path, ok := mod["Path"].(string); ok {
 			// Ok, we are in list town, so `go list -json -m all` has been run
 			if replace, ok := mod["Replace"].(map[string]interface{}); ok {
-				// A replace block has been found, let's try and do something with it
-				if version, ok := replace["Version"].(string); ok {
-					deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: path})
+				// A 'Replace' block has been found, let's try and do something with it.
+				if path, ok = replace["Path"].(string); ok { // re-read path from replace block
+					if version, ok := replace["Version"].(string); ok {
+						deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: path})
 
-					continue
-				}
-
+						continue
+					}
+				} // No path found in replace block, so just continue
 				// No version found in replace block, so just continue loop
 				continue
 			}
