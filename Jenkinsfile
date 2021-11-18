@@ -16,7 +16,7 @@
 @Library(['private-pipeline-library', 'jenkins-shared']) _
 
 dockerizedBuildPipeline(
-  buildImageId: "${sonatypeDockerRegistryId()}/cdi/golang-1.14:1",
+  buildImageId: "${sonatypeDockerRegistryId()}/cdi/golang-1.16:1",
   deployBranch: 'main',
   prepare: {
     githubStatusUpdate('pending')
