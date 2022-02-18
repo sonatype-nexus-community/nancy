@@ -37,4 +37,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
 
+// fix vulnerability: CVE-2021-38561 in golang.org/x/text v0.3.5
+replace golang.org/x/text => golang.org/x/text v0.3.7
+
 go 1.16
