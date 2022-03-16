@@ -33,6 +33,14 @@ builds:
       - amd64
       - 386
       - arm64
+    ignore:
+      # fix for build error:
+      # ⨯ release failed after 124.25s error=failed to build for windows_arm64: exit status 2: # golang.org/x/sys/windows
+      #/go/pkg/mod/golang.org/x/sys@v0.0.0-20200519105757-fe76b779f299/windows/zsyscall_windows.go:2833:38: undefined: WSAData
+      #/go/pkg/mod/golang.org/x/sys@v0.0.0-20200519105757-fe76b779f299/windows/zsyscall_windows.go:3106:51: undefined: Servent
+      #/go/pkg/mod/golang.org/x/sys@v0.0.0-20200519105757-fe76b779f299/windows/zsyscall_windows.go:3120:50: undefined: Servent
+      - goos: windows
+        goarch: arm64
 
 archives:
   -
