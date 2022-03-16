@@ -662,7 +662,11 @@ the vulnerability publicly. Here's an example of such a bug report: [Issue #1066
     `require` stanza of `go.mod` where all the `indirect` dependencies are listed, update the dependency version:
 
         require (
-            ...
+            ... <first require stanza - direct dependencies listed here>
+        )
+
+        require (
+            ... <second require stanza - indirect dependencies listed here>
             // fix vulnerability: CVE-2021-38561 in golang.org/x/text v0.3.5
             golang.org/x/text v0.3.7 // indirect
             ...
