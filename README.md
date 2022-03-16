@@ -648,13 +648,34 @@ sub-dependencies. Be sure to read and follow any vulnerability reporting instruc
 a `SECURITY.md` file, or other instructions on how to report vulnerabilities. Some projects may prefer you not report
 the vulnerability publicly. Here's an example of such a bug report: [Issue #1066](https://github.com/spf13/viper/pull/1066)
 
-Until the direct dependency is updated, the next best solution is to use a `replace` directive in the `go.mod` file
+#### Avoid use of `replace` command to permit use of new `go install` command.
+  
+  * The section below describing the use of the `replace` directive is no longer ideal due to changes in how the 
+    `go install` command behaves with projects containing `replace` directives. 
+     See [Deprecation of 'go get' for installing executables](https://go.dev/doc/go-get-install-deprecation).
+
+     Here's an example of the issue: 
+     [cmd/go: go install cmd@version errors out when module with main package has replace directive](https://github.com/golang/go/issues/44840)
+   
+    
+  * Instead of `replace`, you can update the `// indirect` dependency version to a non-vulnerable version. e.g.: In the second 
+    `require` stanza of `go.mod` where all the `indirect` dependencies are listed, update the dependency version:
+
+        require (
+            ...
+            // fix vulnerability: CVE-2021-38561 in golang.org/x/text v0.3.5
+            golang.org/x/text v0.3.7 // indirect
+            ...
+        )
+
+(*Deprecated* see above) Until the direct dependency is updated, the next best solution is to use a `replace` directive in the `go.mod` file
 to use a newer version of the transitive dependency.
 See [replace directive](https://golang.org/ref/mod#go-mod-file-replace).
+
 To avoid semver issues, you probably want to use a newer dependency version that is in the same "major.minor" version
 as the vulnerable dependency version.
 
-You can add the following `replace` directive to your `go.mod` file to us a newer version of 
+(*Deprecated* see above) You can add the following `replace` directive to your `go.mod` file to us a newer version of 
 `github.com/gogo/protobuf`:
 
 ```
