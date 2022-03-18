@@ -15,7 +15,7 @@ require (
 	github.com/rhysd/go-github-selfupdate v1.2.3
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.6.0
-	github.com/sonatype-nexus-community/go-sona-types v0.1.3
+	github.com/sonatype-nexus-community/go-sona-types v0.1.4
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
@@ -57,7 +57,7 @@ require (
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
-	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
+	golang.org/x/sys v0.0.0-20220317061510-51cd9980dadf // indirect
 	// fix vulnerability: CVE-2021-38561 in golang.org/x/text v0.3.5
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
