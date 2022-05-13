@@ -114,8 +114,8 @@ var rootCmd = &cobra.Command{
 	Version: buildversion.BuildVersion,
 	Use:     "nancy",
 	Example: `  Typical usage will pipe the output of 'go list -json -deps' to 'nancy':
-  go list -json -deps | nancy sleuth [flags]
-  go list -json -deps | nancy iq [flags]
+  go list -json -deps ./... | nancy sleuth [flags]
+  go list -json -deps ./... | nancy iq [flags]
 
   If using dep typical usage is as follows :
   nancy sleuth -p Gopkg.lock [flags]

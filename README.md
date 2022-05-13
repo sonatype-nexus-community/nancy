@@ -44,8 +44,8 @@ Usage:
 
 Examples:
   Typical usage will pipe the output of 'go list -json -deps' to 'nancy':
-  go list -json -deps | nancy sleuth [flags]
-  go list -json -deps | nancy iq [flags]
+  go list -json -deps ./... | nancy sleuth [flags]
+  go list -json -deps ./... | nancy iq [flags]
 
   If using dep typical usage is as follows :
   nancy sleuth -p Gopkg.lock [flags]
@@ -618,7 +618,7 @@ probably make sure all the tests are passing before making any dependency change
   <summary>Click to expand output of command:
 
 ```shell
-$ go test ./... 
+$ go test ./...
 ```
   </summary>
 
@@ -639,7 +639,7 @@ ok      github.com/sonatype-nexus-community/nancy/update        (cached)
 </details>
 
 We now know the vulnerable component is pulled in by `github.com/spf13/viper@v1.7.1` (among others). Ideally, we could
-upgrade the direct dependency (`github.com/spf13/viper`) to a version that does not depend on a vulnerable version of 
+upgrade the direct dependency (`github.com/spf13/viper`) to a version that does not depend on a vulnerable version of
 the transitive dependency (`github.com/gogo/protobuf`).
 
 In some cases, no such upgrade of the direct dependency exists that avoids a dependence on the vulnerable component.
@@ -649,16 +649,16 @@ a `SECURITY.md` file, or other instructions on how to report vulnerabilities. So
 the vulnerability publicly. Here's an example of such a bug report: [Issue #1066](https://github.com/spf13/viper/pull/1066)
 
 #### Avoid use of `replace` command to permit use of new `go install` command.
-  
-  * The section below describing the use of the `replace` directive is no longer ideal due to changes in how the 
-    `go install` command behaves with projects containing `replace` directives. 
+
+  * The section below describing the use of the `replace` directive is no longer ideal due to changes in how the
+    `go install` command behaves with projects containing `replace` directives.
      See [Deprecation of 'go get' for installing executables](https://go.dev/doc/go-get-install-deprecation).
 
-     Here's an example of the issue: 
+     Here's an example of the issue:
      [cmd/go: go install cmd@version errors out when module with main package has replace directive](https://github.com/golang/go/issues/44840)
-   
-    
-  * Instead of `replace`, you can update the `// indirect` dependency version to a non-vulnerable version. e.g.: In the second 
+
+
+  * Instead of `replace`, you can update the `// indirect` dependency version to a non-vulnerable version. e.g.: In the second
     `require` stanza of `go.mod` where all the `indirect` dependencies are listed, update the dependency version:
 
         require (
@@ -679,7 +679,7 @@ See [replace directive](https://golang.org/ref/mod#go-mod-file-replace).
 To avoid semver issues, you probably want to use a newer dependency version that is in the same "major.minor" version
 as the vulnerable dependency version.
 
-(*Deprecated* see above) You can add the following `replace` directive to your `go.mod` file to us a newer version of 
+(*Deprecated* see above) You can add the following `replace` directive to your `go.mod` file to us a newer version of
 `github.com/gogo/protobuf`:
 
 ```
@@ -687,7 +687,7 @@ as the vulnerable dependency version.
 replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 ```
 
-Be aware that even after you add a `replace` directive, `go mod graph` will still show the old dependency version. 
+Be aware that even after you add a `replace` directive, `go mod graph` will still show the old dependency version.
 You can verify the new version is actually used via the `go list` command:
 ```shell
 $ go mod tidy
@@ -697,10 +697,10 @@ github.com/gogo/protobuf v1.2.1 => github.com/gogo/protobuf v1.3.2
 You can see the v1.2.1 is replaced with v1.3.2.
 
 Finally, you may want to submit a PR to the project with the vulnerable dependency (to fix the issues you reported
-earlier) in a new release of the direct dependency. Even better, also tell them about `nancy` and maybe they will add 
+earlier) in a new release of the direct dependency. Even better, also tell them about `nancy` and maybe they will add
 `nancy` to their own CI system.
 
-Yet another resolution, if no other options make sense, is to knowingly ignore the vulnerability. This may be the best 
+Yet another resolution, if no other options make sense, is to knowingly ignore the vulnerability. This may be the best
 option if you know the application does not use the vulnerable code path and no upgraded/non-vulnerable versions are
 available. See: [Exclude vulnerabilities](#exclude-vulnerabilities)
 
