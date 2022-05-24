@@ -55,10 +55,17 @@ type ossiServerFactory interface {
 type ossiFactory struct{}
 
 func (ossiFactory) create() ossindex.IServer {
+	// allow override of OSSIndex URL if needed special debug case
+	ossIndexURL := os.Getenv("OSSIndexURL")
+	if ossIndexURL != "" {
+		logLady.Debug("Override OSSIndexURL", ossIndexURL)
+	}
+
 	server := ossindex.New(logLady, ossIndexTypes.Options{
 		Username:    viper.GetString(configuration.ViperKeyUsername),
 		Token:       viper.GetString(configuration.ViperKeyToken),
 		Tool:        "nancy-client",
+		OSSIndexURL: ossIndexURL,
 		Version:     buildversion.BuildVersion,
 		DBCachePath: configOssi.DBCachePath,
 		DBCacheName: "nancy-cache",
