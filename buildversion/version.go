@@ -43,7 +43,8 @@ func init() {
 	// Use build info from debug package if available, and if no build info is
 	// provided via build CLI.
 	info, available := debug.ReadBuildInfo()
-	if available && info.Main.Version != "" && BuildTime == "" && BuildCommit == "" && BuildVersion == DefaultVersion {
+	// info.Main.Version will be "" when debugging, and "(devel)" when building with no arguments
+	if available && info.Main.Version != "" && info.Main.Version != "(devel)" && BuildTime == "" && BuildCommit == "" && BuildVersion == DefaultVersion {
 		BuildVersion = info.Main.Version
 		BuildCommit = fmt.Sprintf("(unknown, mod sum: %q)", info.Main.Sum)
 		BuildTime = "(unknown)"
