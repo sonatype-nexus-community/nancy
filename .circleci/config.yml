@@ -14,6 +14,9 @@
 
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.4.4
+
 executors:
   go:
     docker:
@@ -70,7 +73,9 @@ workflows:
   build_and_release:
     jobs:
       - build:
-          context: scan_ossi
+          context:
+            - scan_ossi
+            - slack_community_oss_fun
           filters:
             branches:
               # Forked pull requests have CIRCLE_BRANCH set to pull/XXX
@@ -93,4 +98,6 @@ workflows:
               only: main
     jobs:
       - build:
-          context: scan_ossi
+          context:
+            - scan_ossi
+            - slack_community_oss_fun

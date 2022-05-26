@@ -10,7 +10,7 @@ GOLANGCI_VERSION=v1.24.0
 GOLANGCI_LINT_DOCKER=golangci/golangci-lint:$(GOLANGCI_VERSION)
 LINT_CMD=golangci-lint cache status --color always && golangci-lint run --timeout 5m --color always -v --max-same-issues 10
 NANCY_IGNORE=$(shell cat .nancy-ignore | cut -d\# -f 1)
-IT_EXCLUDED_VULNS=CVE-2020-15114,CVE-2020-15136,CVE-2020-15115,CVE-2021-3121
+IT_EXCLUDED_VULNS=CVE-2021-3121,CVE-2022-21698,CVE-2022-29153,sonatype-2021-1401
 
 ifeq ($(findstring localbuild,$(CIRCLE_SHELL_ENV)),localbuild)
     DOCKER_CMD=sudo docker
