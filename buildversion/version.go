@@ -16,9 +16,16 @@
 
 package buildversion
 
+import (
+	"fmt"
+	"runtime/debug"
+)
+
+const DefaultVersion = "0.0.0-dev"
+
 var (
 	// these are overwritten/populated via build CLI
-	BuildVersion = "0.0.0-dev"
+	BuildVersion = DefaultVersion
 	BuildTime    = ""
 	BuildCommit  = ""
 )
@@ -30,4 +37,17 @@ var packageManager = "source"
 
 func PackageManager() string {
 	return packageManager
+}
+
+func init() {
+	// Use build info from debug package if available, and if no build info is
+	// provided via build CLI.
+	info, available := debug.ReadBuildInfo()
+	// info.Main.Version will be "" when debugging, and "(devel)" when building with no arguments
+	if available && info.Main.Version != "" && info.Main.Version != "(devel)" && BuildTime == "" && BuildCommit == "" && BuildVersion == DefaultVersion {
+		BuildVersion = info.Main.Version
+		BuildCommit = fmt.Sprintf("(unknown, mod sum: %q)", info.Main.Sum)
+		BuildTime = "(unknown)"
+	}
+
 }
