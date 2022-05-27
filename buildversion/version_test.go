@@ -33,3 +33,45 @@ func TestDefaultBuildTime(t *testing.T) {
 func TestDefaultBuildCommit(t *testing.T) {
 	assert.Equal(t, "", BuildCommit)
 }
+
+func TestNormalizeVersion(t *testing.T) {
+	tests := []struct {
+		expected   string
+		input      string
+		shouldFail bool
+	}{
+		{
+			input:    "1.1.1",
+			expected: "1.1.1",
+		},
+		{
+			input:    "v1.1.1",
+			expected: "1.1.1",
+		},
+		{
+			input:      "x1.1.1",
+			shouldFail: true,
+		},
+		{
+			input:      "vv1.1.1",
+			shouldFail: true,
+		},
+		{
+			input:      "1.1",
+			shouldFail: true,
+		},
+		{
+			input:      "foobar",
+			shouldFail: true,
+		},
+	}
+	for _, test := range tests {
+		actual, err := NormalizeVersion(test.input)
+		if test.shouldFail {
+			assert.Error(t, err)
+			continue
+		}
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, actual)
+	}
+}
