@@ -17,8 +17,6 @@
 package packages
 
 import (
-	"strings"
-
 	"github.com/Masterminds/semver"
 	"github.com/golang/dep"
 )
@@ -28,11 +26,7 @@ func ExtractPurlsUsingDep(project *dep.Project) ([]string, []string) {
 	var purls []string
 	var invalidPurls []string
 	for _, lockedProject := range lockedProjects {
-		var version string
-		i := lockedProject.Version().String()
-
-		version = strings.Replace(i, "v", "", -1)
-
+		version := lockedProject.Version().String()
 		if len(version) > 0 { // There must be a version we can use
 			name := lockedProject.Ident().String()
 			packageName := convertGopkgNameToPurl(name)
