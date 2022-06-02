@@ -84,7 +84,7 @@ func TestProcessConfigInvalidStdIn(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 
 	err := processConfig()
-	assert.Equal(t, stdInInvalid, err)
+	assert.Equal(t, errStdInInvalid, err)
 }
 
 func TestDoRootCleanCacheError(t *testing.T) {
@@ -213,7 +213,7 @@ func validateFormatterVolume(t *testing.T, testConfig types.Configuration, expec
 	ossiCreator = &ossiFactoryMock{}
 
 	err := processConfig()
-	assert.Equal(t, stdInInvalid, err)
+	assert.Equal(t, errStdInInvalid, err)
 	assert.Equal(t, expectedFormatter, configOssi.Formatter)
 }
 

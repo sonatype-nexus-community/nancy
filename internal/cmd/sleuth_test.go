@@ -34,7 +34,7 @@ import (
 func TestSleuthCommandNoArgs(t *testing.T) {
 	_, err := executeCommand(rootCmd, sleuthCmd.Use)
 	assert.NotNil(t, err)
-	assert.Equal(t, customerrors.ErrorShowLogPath{Err: stdInInvalid}, err)
+	assert.Equal(t, customerrors.ErrorShowLogPath{Err: errStdInInvalid}, err)
 }
 
 func TestSleuthCommandPathInvalidName(t *testing.T) {
