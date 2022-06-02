@@ -17,9 +17,9 @@
 package packages
 
 import (
-	"fmt"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"strings"
+
+	"github.com/sonatype-nexus-community/nancy/types"
 )
 
 type Mod struct {
@@ -32,14 +32,8 @@ func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 		if len(s.Version) > 0 { // There must be a version we can use
 			// OSS Index no likey v before version, IQ does though, comment left so I will never forget.
 			// go-sona-types library now takes care of querying both ossi and iq with reformatted purls as needed (to v or not to v).
-			//version := strings.Replace(s.Version, "v", "", -1)
-			//version = strings.Replace(version, "+incompatible", "", -1)
-
-			version := strings.Replace(s.Version, "+incompatible", "", -1)
-
-			fmt.Printf("original version: %s\n", s.Version)
-			fmt.Printf("fixed version: %s\n", version)
-
+			version := strings.Replace(s.Version, "v", "", -1)
+			version = strings.Replace(version, "+incompatible", "", -1)
 			var purl = "pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version
 			purls = append(purls, purl)
 		}
