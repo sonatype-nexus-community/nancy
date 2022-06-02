@@ -105,7 +105,7 @@ var (
 	ossiCreator                  ossiServerFactory = ossiFactory{}
 	unixComments                                   = regexp.MustCompile(`#.*$`)
 	untilComment                                   = regexp.MustCompile(`(until=)(.*)`)
-	stdInInvalid                                   = fmt.Errorf("StdIn is invalid or empty. Did you forget to pipe 'go list' to nancy?")
+	errStdInInvalid                                = fmt.Errorf("StdIn is invalid or empty. Did you forget to pipe 'go list' to nancy?")
 )
 
 //Substitute the _ to .
@@ -494,7 +494,7 @@ func checkStdIn() (err error) {
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		logLady.Info("StdIn is valid")
 	} else {
-		err = stdInInvalid
+		err = errStdInInvalid
 		logLady.Error(err)
 	}
 	return

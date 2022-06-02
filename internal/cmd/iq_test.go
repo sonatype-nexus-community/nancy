@@ -272,7 +272,7 @@ func TestAuditWithIQServerPolicyActionWarning(t *testing.T) {
 
 func TestDoIqInvalidStdIn(t *testing.T) {
 	err := doIQ(iqCmd, []string{})
-	assert.Equal(t, customerrors.ErrorShowLogPath{Err: stdInInvalid}, err)
+	assert.Equal(t, customerrors.ErrorShowLogPath{Err: errStdInInvalid}, err)
 }
 
 func TestDoIqParseGoListError(t *testing.T) {

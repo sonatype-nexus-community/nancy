@@ -28,7 +28,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/logrusorgru/aurora"
 	"github.com/shopspring/decimal"
-	. "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 )
 
@@ -150,7 +150,7 @@ func groupAndPrint(vulnerable []types.Coordinate, nonVulnerable []types.Coordina
 	}
 }
 
-func (f AuditLogTextFormatter) Format(entry *Entry) ([]byte, error) {
+func (f AuditLogTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	auditedEntries := entry.Data["audited"]
 	invalidEntries := entry.Data["invalid"]
 	excludedEntries := entry.Data["excluded"]
