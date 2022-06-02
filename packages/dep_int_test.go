@@ -56,13 +56,13 @@ func TestExtractPurlsFromManifestUsingDep(t *testing.T) {
 	assertPurlFound("pkg:golang/golang.org/x/sync@master", invalidPurls, t)
 	assertPurlFound("pkg:golang/golang.org/x/sys@master", invalidPurls, t)
 
-	assertPurlFound("pkg:golang/github.com/go-yaml/yaml@2", purls, t)
-	assertPurlFound("pkg:golang/github.com/Masterminds/vcs@1.11.1", purls, t)
-	assertPurlFound("pkg:golang/github.com/boltdb/bolt@1.3.1", purls, t)
-	assertPurlFound("pkg:golang/github.com/golang/protobuf@1.0.0", purls, t)
-	assertPurlFound("pkg:golang/github.com/jmank88/nuts@0.3.0", purls, t)
-	assertPurlFound("pkg:golang/github.com/pelletier/go-toml@1.2.0", purls, t)
-	assertPurlFound("pkg:golang/github.com/pkg/errors@0.8.0", purls, t)
+	assertPurlFound("pkg:golang/github.com/go-yaml/yaml@v2", purls, t)
+	assertPurlFound("pkg:golang/github.com/Masterminds/vcs@v1.11.1", purls, t)
+	assertPurlFound("pkg:golang/github.com/boltdb/bolt@v1.3.1", purls, t)
+	assertPurlFound("pkg:golang/github.com/golang/protobuf@v1.0.0", purls, t)
+	assertPurlFound("pkg:golang/github.com/jmank88/nuts@v0.3.0", purls, t)
+	assertPurlFound("pkg:golang/github.com/pelletier/go-toml@v1.2.0", purls, t)
+	assertPurlFound("pkg:golang/github.com/pkg/errors@v0.8.0", purls, t)
 }
 
 func assertPurlFound(expectedPurl string, result []string, t *testing.T) {
