@@ -97,15 +97,16 @@ func cleanUserName(origUsername string) string {
 
 //goland:noinspection GoErrorStringFormat
 var (
-	cfgFile                      string
-	configOssi                   types.Configuration
-	excludeVulnerabilityFilePath string
-	outputFormat                 string
-	logLady                      *logrus.Logger
-	ossiCreator                  ossiServerFactory = ossiFactory{}
-	unixComments                                   = regexp.MustCompile(`#.*$`)
-	untilComment                                   = regexp.MustCompile(`(until=)(.*)`)
-	errStdInInvalid                                = fmt.Errorf("StdIn is invalid or empty. Did you forget to pipe 'go list' to nancy?")
+	cfgFile                                 string
+	configOssi                              types.Configuration
+	excludeVulnerabilityFilePath            string
+	additionalExcludeVulnerabilityFilePaths []string
+	outputFormat                            string
+	logLady                                 *logrus.Logger
+	ossiCreator                             ossiServerFactory = ossiFactory{}
+	unixComments                                              = regexp.MustCompile(`#.*$`)
+	untilComment                                              = regexp.MustCompile(`(until=)(.*)`)
+	errStdInInvalid                                           = fmt.Errorf("StdIn is invalid or empty. Did you forget to pipe 'go list' to nancy?")
 )
 
 //Substitute the _ to .
@@ -288,6 +289,11 @@ func processConfig() (err error) {
 
 	// todo: should errors from this call be ignored
 	_ = getCVEExcludesFromFile(excludeVulnerabilityFilePath)
+
+	for _, additionalExcludeVulnerabilityFilePath := range additionalExcludeVulnerabilityFilePaths {
+		_ = getCVEExcludesFromFile(additionalExcludeVulnerabilityFilePath)
+	}
+
 	/*	if err = getCVEExcludesFromFile(excludeVulnerabilityFilePath); err != nil {
 			return
 		}
