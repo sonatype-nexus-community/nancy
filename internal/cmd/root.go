@@ -429,10 +429,6 @@ func determineIfLineIsExclusion(ogLine string) error {
 	return nil
 }
 
-func clearCveList() {
-	configOssi.CveList.Cves = []string{}
-}
-
 func deduplicateCveList() {
 	allKeys := make(map[string]bool)
 	var list []string
