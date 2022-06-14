@@ -311,6 +311,8 @@ func processConfig() (err error) {
 		}
 	}
 
+	deduplicateCveList()
+
 	return
 }
 
@@ -425,6 +427,23 @@ func determineIfLineIsExclusion(ogLine string) error {
 	}
 
 	return nil
+}
+
+func clearCveList() {
+	configOssi.CveList.Cves = []string{}
+}
+
+func deduplicateCveList() {
+	allKeys := make(map[string]bool)
+	var list []string
+	for _, item := range configOssi.CveList.Cves {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+
+	configOssi.CveList.Cves = list
 }
 
 func printHeader(print bool) {

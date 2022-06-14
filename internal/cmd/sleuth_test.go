@@ -107,6 +107,28 @@ func TestConfigOssi_exclude_vulnerabilities_passed_as_directory_does_not_matter(
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + dir}...)
 }
 
+func TestConfigOssi_additional_exclude_vulnerabilities(t *testing.T) {
+	rootFile, _ := os.Open(testdataDir + "/normalIgnore")
+	normalAdditionalIgnore, _ := os.Open(testdataDir + "/normalAdditionalIgnore")
+	messyAdditionalIgnore, _ := os.Open(testdataDir + "/messyAdditionalIgnore")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999", "CVX-1016", "CVX-1032", "CVX-1512", "CVX-2064"}}, Formatter: defaultAuditLogFormatter},
+		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + rootFile.Name(), "--additional-exclude-vulnerability-files=" + normalAdditionalIgnore.Name() + "," + messyAdditionalIgnore.Name()}...)
+}
+
+func TestConfigOssi_additional_exclude_vulnerabilities_with_empty_base(t *testing.T) {
+	rootFile, _ := os.Open(testdataDir + "/emptyFile")
+	normalAdditionalIgnore, _ := os.Open(testdataDir + "/normalAdditionalIgnore")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVX-1016", "CVX-1032"}}, Formatter: defaultAuditLogFormatter},
+		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + rootFile.Name(), "--additional-exclude-vulnerability-files=" + normalAdditionalIgnore.Name()}...)
+}
+
+func TestConfigOssi_additional_exclude_vulnerabilities_with_empty_additional(t *testing.T) {
+	rootFile, _ := os.Open(testdataDir + "/commented")
+	normalAdditionalIgnore, _ := os.Open(testdataDir + "/emptyFile")
+	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter},
+		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + rootFile.Name(), "--additional-exclude-vulnerability-files=" + normalAdditionalIgnore.Name()}...)
+}
+
 func TestConfigOssi_exclude_vulnerabilities_does_not_need_to_be_passed_if_default_value_is_used(t *testing.T) {
 	defaultFileName := ".nancy-ignore"
 	err := ioutil.WriteFile(defaultFileName, []byte("DEF-111\nDEF-222"), 0644)
