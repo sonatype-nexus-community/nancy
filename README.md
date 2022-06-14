@@ -86,11 +86,12 @@ Examples:
   nancy sleuth -p Gopkg.lock --username your_user --token your_token
 
 Flags:
-  -e, --exclude-vulnerability CveListFlag   Comma separated list of CVEs or OSS Index IDs to exclude (default [])
-  -x, --exclude-vulnerability-file string   Path to a file containing newline separated CVEs or OSS Index IDs to be excluded (default "./.nancy-ignore")
-  -h, --help                                help for sleuth
-  -n, --no-color                            indicate output should not be colorized
-  -o, --output string                       Styling for output format. json, json-pretty, text, csv (default "text")
+  -a, --additional-exclude-vulnerability-files strings   Path to additional files containing newline separated CVEs or OSS Index IDs to be excluded
+  -e, --exclude-vulnerability CveListFlag                Comma separated list of CVEs or OSS Index IDs to exclude (default [])
+  -x, --exclude-vulnerability-file string                Path to a file containing newline separated CVEs or OSS Index IDs to be excluded (default "./.nancy-ignore")
+  -h, --help                                             help for sleuth
+  -n, --no-color                                         indicate output should not be colorized
+  -o, --output string                                    Styling for output format. json, json-pretty, text, csv (default "text")
 
 Global Flags:
   -v, -- count                 Set log level, multiple v's is more verbose
@@ -262,12 +263,21 @@ We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or
 
 ##### Via file
 
-By default if a file named `.nancy-ignore` exists in the same directory that nancy is run it will use it, will no other options need to be passed.
+By default, if a file named `.nancy-ignore` exists in the same directory that nancy is run it will use it, will no other options need to be passed.
 
 If you would like to define the path to the file you can use the following
 
 - `nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file -p /path/to/your/Gopkg.lock`
 - `go list -json -deps | nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file`
+
+If you would like to split up your excludes into multiple files besides your root `.nancy-ignore` you can pass them via the `-a` or `--additional-exclude-vulnerability-files` flags.
+
+- `nancy sleuth --additional-exclude-vulnerability-files=/path/to/first,/path/to/second`
+- `nancy sleuth -a /path/to/first -a /path/to/second`
+
+You can also combine it with the `-x` / `--exclude-vulnerability-file` flag. Nancy merges the additional files on top of the root `.nancy-ignore`.
+
+- `nancy sleuth -x .nancy-ignore.global -a .nancy-ignore.local`
 
 The file format requires each vulnerability that you want to exclude to be on a separate line. Comments are allowed in the file as well to help provide context when needed. See an example file below.
 
