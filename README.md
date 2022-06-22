@@ -263,7 +263,7 @@ We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or
 
 ##### Via file
 
-By default, if a file named `.nancy-ignore` exists in the same directory that nancy is run it will use it, will no other options need to be passed.
+By default, if a file named `.nancy-ignore` exists in the same directory that nancy is run it will use it - no other options need to be passed.
 
 If you would like to define the path to the file you can use the following
 
