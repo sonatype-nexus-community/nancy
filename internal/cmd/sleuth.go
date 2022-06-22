@@ -31,6 +31,7 @@ func init() {
 	sleuthCmd.Flags().BoolVarP(&configOssi.NoColor, "no-color", "n", false, "indicate output should not be colorized")
 	sleuthCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs or OSS Index IDs to exclude")
 	sleuthCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs or OSS Index IDs to be excluded")
+	sleuthCmd.Flags().StringSliceVarP(&additionalExcludeVulnerabilityFilePaths, "additional-exclude-vulnerability-files", "a", []string{}, "Path to additional files containing newline separated CVEs or OSS Index IDs to be excluded")
 	sleuthCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
 }
 

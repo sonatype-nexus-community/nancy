@@ -273,6 +273,10 @@ func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args .
 	}()
 	configOssi = types.Configuration{}
 
+	defer func() {
+		additionalExcludeVulnerabilityFilePaths = []string{}
+	}()
+
 	_, err := executeCommand(rootCmd, args...)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedConfig, configOssi)

@@ -97,15 +97,16 @@ func cleanUserName(origUsername string) string {
 
 //goland:noinspection GoErrorStringFormat
 var (
-	cfgFile                      string
-	configOssi                   types.Configuration
-	excludeVulnerabilityFilePath string
-	outputFormat                 string
-	logLady                      *logrus.Logger
-	ossiCreator                  ossiServerFactory = ossiFactory{}
-	unixComments                                   = regexp.MustCompile(`#.*$`)
-	untilComment                                   = regexp.MustCompile(`(until=)(.*)`)
-	errStdInInvalid                                = fmt.Errorf("StdIn is invalid or empty. Did you forget to pipe 'go list' to nancy?")
+	cfgFile                                 string
+	configOssi                              types.Configuration
+	excludeVulnerabilityFilePath            string
+	additionalExcludeVulnerabilityFilePaths []string
+	outputFormat                            string
+	logLady                                 *logrus.Logger
+	ossiCreator                             ossiServerFactory = ossiFactory{}
+	unixComments                                              = regexp.MustCompile(`#.*$`)
+	untilComment                                              = regexp.MustCompile(`(until=)(.*)`)
+	errStdInInvalid                                           = fmt.Errorf("StdIn is invalid or empty. Did you forget to pipe 'go list' to nancy?")
 )
 
 //Substitute the _ to .
@@ -286,12 +287,12 @@ func processConfig() (err error) {
 
 	printHeader(!getIsQuiet() && reflect.TypeOf(configOssi.Formatter).String() == "audit.AuditLogTextFormatter")
 
-	// todo: should errors from this call be ignored
+	// todo: should errors from getCVEExcludesFromFile() calls be ignored?
 	_ = getCVEExcludesFromFile(excludeVulnerabilityFilePath)
-	/*	if err = getCVEExcludesFromFile(excludeVulnerabilityFilePath); err != nil {
-			return
-		}
-	*/
+
+	for _, additionalExcludeVulnerabilityFilePath := range additionalExcludeVulnerabilityFilePaths {
+		_ = getCVEExcludesFromFile(additionalExcludeVulnerabilityFilePath)
+	}
 
 	if configOssi.Path != "" {
 		if err = doDepAndParse(ossIndex, configOssi.Path); err != nil {
@@ -304,6 +305,8 @@ func processConfig() (err error) {
 			return
 		}
 	}
+
+	deduplicateCveList()
 
 	return
 }
@@ -419,6 +422,19 @@ func determineIfLineIsExclusion(ogLine string) error {
 	}
 
 	return nil
+}
+
+func deduplicateCveList() {
+	allKeys := make(map[string]bool)
+	var list []string
+	for _, item := range configOssi.CveList.Cves {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+
+	configOssi.CveList.Cves = list
 }
 
 func printHeader(print bool) {
