@@ -25,7 +25,7 @@ import (
 
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 
-	. "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 )
 
@@ -33,7 +33,7 @@ type CsvFormatter struct {
 	Quiet bool
 }
 
-func (f CsvFormatter) Format(entry *Entry) ([]byte, error) {
+func (f CsvFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	// Note this doesn't include Time, Level and Message which are available on
 	// the Entry. Consult `godoc` on information about those fields or read the
 	// source of the official loggers.

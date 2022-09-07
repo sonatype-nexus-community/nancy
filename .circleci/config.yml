@@ -14,6 +14,9 @@
 
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.4.4
+
 executors:
   go:
     docker:
@@ -40,7 +43,7 @@ jobs:
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
-      - run: go get -u github.com/jstemmer/go-junit-report
+      - run: go install github.com/jstemmer/go-junit-report@latest
       - run: make headers
       - run: make deps
       - run: make ci-lint
@@ -70,7 +73,9 @@ workflows:
   build_and_release:
     jobs:
       - build:
-          context: scan_ossi
+          context:
+            - scan_ossi
+            - slack_community_oss_fun
           filters:
             branches:
               # Forked pull requests have CIRCLE_BRANCH set to pull/XXX
@@ -93,4 +98,6 @@ workflows:
               only: main
     jobs:
       - build:
-          context: scan_ossi
+          context:
+            - scan_ossi
+            - slack_community_oss_fun
