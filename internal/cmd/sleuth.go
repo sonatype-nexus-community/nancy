@@ -37,7 +37,7 @@ func init() {
 
 var sleuthCmd = &cobra.Command{
 	Use: "sleuth",
-	Example: `  go list -json -deps | nancy sleuth --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token
+	Example: `  go list -json -deps ./... | nancy sleuth --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token
   nancy sleuth -p Gopkg.lock --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token`,
 	Short:  "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
 	Long:   `'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by the 'Sonatype OSS Index'.`,
@@ -45,7 +45,7 @@ var sleuthCmd = &cobra.Command{
 	RunE:   doOSSI,
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func doOSSI(cmd *cobra.Command, args []string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {

@@ -47,7 +47,7 @@ func TestIqApplicationFlagMissing(t *testing.T) {
 
 func TestIqHelp(t *testing.T) {
 	output, err := executeCommand(rootCmd, iqCmd.Use, "--help")
-	assert.Contains(t, output, "go list -json -deps | nancy iq --"+flagNameIqApplication+" your_public_application_id --"+flagNameIqServerUrl+" ")
+	assert.Contains(t, output, "go list -json -deps ./... | nancy iq --"+flagNameIqApplication+" your_public_application_id --"+flagNameIqServerUrl+" ")
 	assert.Nil(t, err)
 }
 
@@ -182,12 +182,12 @@ type mockIqServer struct {
 	auditPackagesErr             error
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func (s mockIqServer) AuditPackages(purls []string) (iq.StatusURLResult, error) {
 	return s.auditPackagesStatusURLResult, s.auditPackagesErr
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func (s mockIqServer) AuditWithSbom(sbom string) (iq.StatusURLResult, error) {
 	return iq.StatusURLResult{}, fmt.Errorf("mock AuditWithSbom not implemented")
 }

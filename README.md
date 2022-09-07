@@ -44,8 +44,8 @@ Usage:
 
 Examples:
   Typical usage will pipe the output of 'go list -json -deps' to 'nancy':
-  go list -json -deps | nancy sleuth [flags]
-  go list -json -deps | nancy iq [flags]
+  go list -json -deps ./... | nancy sleuth [flags]
+  go list -json -deps ./... | nancy iq [flags]
 
   If using dep typical usage is as follows :
   nancy sleuth -p Gopkg.lock [flags]
@@ -62,7 +62,7 @@ Available Commands:
 Flags:
   -v, -- count                 Set log level, multiple v's is more verbose
   -c, --clean-cache            Deletes local cache directory
-  -d, --db-cache-path string   Specify an alternate path for caching responses from OSS Inde, example: '/tmp'
+  -d, --db-cache-path string   Specify an alternate path for caching responses from OSS Inde, example: /tmp
   -h, --help                   help for nancy
       --loud                   indicate output should include non-vulnerable packages
   -p, --path string            Specify a path to a dep Gopkg.lock file for scanning
@@ -82,7 +82,7 @@ Usage:
   nancy sleuth [flags]
 
 Examples:
-  go list -json -deps | nancy sleuth --username your_user --token your_token
+  go list -json -deps ./... | nancy sleuth --username your_user --token your_token
   nancy sleuth -p Gopkg.lock --username your_user --token your_token
 
 Flags:
@@ -95,7 +95,7 @@ Flags:
 
 Global Flags:
   -v, -- count                 Set log level, multiple v's is more verbose
-  -d, --db-cache-path string   Specify an alternate path for caching responses from OSS Inde, example: '/tmp'
+  -d, --db-cache-path string   Specify an alternate path for caching responses from OSS Inde, example: /tmp
       --loud                   indicate output should include non-vulnerable packages
   -p, --path string            Specify a path to a dep Gopkg.lock file for scanning
   -q, --quiet                  indicate output should contain only packages with vulnerabilities (default true)
@@ -111,7 +111,7 @@ Usage:
   nancy iq [flags]
 
 Examples:
-  go list -json -deps | nancy iq --iq-application your_public_application_id --iq-server-url http://your_iq_server_url:port --iq-username your_user --iq-token your_token --iq-stage develop
+  go list -json -deps ./... | nancy iq --iq-application your_public_application_id --iq-server-url http://your_iq_server_url:port --iq-username your_user --iq-token your_token --iq-stage develop
   nancy iq -p Gopkg.lock --iq-application your_public_application_id --iq-server-url http://your_iq_server_url:port --iq-username your_user --iq-token your_token --iq-stage develop
 
 Flags:
@@ -124,7 +124,7 @@ Flags:
 
 Global Flags:
   -v, -- count                 Set log level, multiple v's is more verbose
-  -d, --db-cache-path string   Specify an alternate path for caching responses from OSS Inde, example: '/tmp'
+  -d, --db-cache-path string   Specify an alternate path for caching responses from OSS Inde, example: /tmp
       --loud                   indicate output should include non-vulnerable packages
   -p, --path string            Specify a path to a dep Gopkg.lock file for scanning
   -q, --quiet                  indicate output should contain only packages with vulnerabilities (default true)
@@ -138,7 +138,7 @@ Global Flags:
 
 The preferred way to use Nancy is:
 
-- `go list -json -deps | nancy sleuth`
+- `go list -json -deps ./... | nancy sleuth`
 - `nancy sleuth -p /path/to/Gopkg.lock`
 
 If you would like to scan all dependencies, including those that do not end up in the final binary, you can use
@@ -161,7 +161,7 @@ Here are some additional tools to simplify using Nancy in your CI environment:
 
 `nancy` now comes in a boat! For ease of use, we've dockerized `nancy`. To use our Dockerfile:
 
-`go list -json -deps | docker run --rm -i sonatypecommunity/nancy:latest sleuth`
+`go list -json -deps ./... | docker run --rm -i sonatypecommunity/nancy:latest sleuth`
 
 We publish a few different flavors for convenience:
 
@@ -235,7 +235,7 @@ As of Nancy v1.0.17, you can also specify configuration values using environment
 ```shell
 export OSSI_USERNAME=auser@anemailaddress.com
 export OSSI_TOKEN=A4@k3@p1T0k3n
-go list -json -deps | ./nancy sleuth
+go list -json -deps ./... | ./nancy sleuth
 ...
 ```
 
@@ -245,7 +245,7 @@ By default, `nancy` runs in a "quiet" mode, only displaying a list of vulnerable
 You can run `nancy` in a loud manner, showing all components by running:
 
 - `nancy sleuth --loud -p /path/to/your/Gopkg.lock`
-- `go list -json -deps | nancy sleuth --loud`
+- `go list -json -deps ./... | nancy sleuth --loud`
 
 #### Exclude vulnerabilities
 
@@ -259,7 +259,7 @@ We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or
 ##### Via CLI flag
 
 - `nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 -p /path/to/your/Gopkg.lock`
-- `go list -json -deps | nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2`
+- `go list -json -deps ./... | nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2`
 
 ##### Via file
 
@@ -268,7 +268,7 @@ By default, if a file named `.nancy-ignore` exists in the same directory that na
 If you would like to define the path to the file you can use the following
 
 - `nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file -p /path/to/your/Gopkg.lock`
-- `go list -json -deps | nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file`
+- `go list -json -deps ./... | nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file`
 
 If you would like to split up your excludes into multiple files besides your root `.nancy-ignore` you can pass them via the `-a` or `--additional-exclude-vulnerability-files` flags.
 
@@ -475,13 +475,13 @@ Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
 
 By default, assuming you have an out of the box Nexus IQ Server running, you can run `nancy` like so:
 
-`go list -json -deps | nancy iq --iq-application public-application-id`
+`go list -json -deps ./... | nancy iq --iq-application public-application-id`
 
 It is STRONGLY suggested that you do not do this, and we will warn you on output if you are.
 
 A more logical use of `nancy` against Nexus IQ Server will look like so:
 
-`go list -json -deps | nancy iq --iq-application public-application-id --iq-username nondefaultuser --iq-token yourtoken --iq-server-url http://adifferentserverurl:port --iq-stage develop`
+`go list -json -deps ./... | nancy iq --iq-application public-application-id --iq-username nondefaultuser --iq-token yourtoken --iq-server-url http://adifferentserverurl:port --iq-stage develop`
 
 Options for stage are as follows:
 
@@ -529,7 +529,7 @@ export OSSI_TOKEN=A4@k3@p1T0k3n
 export IQ_USERNAME=nondefaultuser
 export IQ_TOKEN=yourtoken
 export IQ_SERVER=http://adifferentserverurl:port
-go list -json -deps | ./nancy iq --iq-application public-application-id
+go list -json -deps ./... | ./nancy iq --iq-application public-application-id
 ...
 ```
 
@@ -628,7 +628,7 @@ probably make sure all the tests are passing before making any dependency change
   <summary>Click to expand output of command:
 
 ```shell
-$ go test ./... 
+$ go test ./...
 ```
   </summary>
 
@@ -649,7 +649,7 @@ ok      github.com/sonatype-nexus-community/nancy/update        (cached)
 </details>
 
 We now know the vulnerable component is pulled in by `github.com/spf13/viper@v1.7.1` (among others). Ideally, we could
-upgrade the direct dependency (`github.com/spf13/viper`) to a version that does not depend on a vulnerable version of 
+upgrade the direct dependency (`github.com/spf13/viper`) to a version that does not depend on a vulnerable version of
 the transitive dependency (`github.com/gogo/protobuf`).
 
 In some cases, no such upgrade of the direct dependency exists that avoids a dependence on the vulnerable component.
@@ -659,16 +659,16 @@ a `SECURITY.md` file, or other instructions on how to report vulnerabilities. So
 the vulnerability publicly. Here's an example of such a bug report: [Issue #1066](https://github.com/spf13/viper/pull/1066)
 
 #### Avoid use of `replace` command to permit use of new `go install` command.
-  
-  * The section below describing the use of the `replace` directive is no longer ideal due to changes in how the 
-    `go install` command behaves with projects containing `replace` directives. 
+
+  * The section below describing the use of the `replace` directive is no longer ideal due to changes in how the
+    `go install` command behaves with projects containing `replace` directives.
      See [Deprecation of 'go get' for installing executables](https://go.dev/doc/go-get-install-deprecation).
 
-     Here's an example of the issue: 
+     Here's an example of the issue:
      [cmd/go: go install cmd@version errors out when module with main package has replace directive](https://github.com/golang/go/issues/44840)
-   
-    
-  * Instead of `replace`, you can update the `// indirect` dependency version to a non-vulnerable version. e.g.: In the second 
+
+
+  * Instead of `replace`, you can update the `// indirect` dependency version to a non-vulnerable version. e.g.: In the second
     `require` stanza of `go.mod` where all the `indirect` dependencies are listed, update the dependency version:
 
         require (
@@ -689,7 +689,7 @@ See [replace directive](https://golang.org/ref/mod#go-mod-file-replace).
 To avoid semver issues, you probably want to use a newer dependency version that is in the same "major.minor" version
 as the vulnerable dependency version.
 
-(*Deprecated* see above) You can add the following `replace` directive to your `go.mod` file to us a newer version of 
+(*Deprecated* see above) You can add the following `replace` directive to your `go.mod` file to us a newer version of
 `github.com/gogo/protobuf`:
 
 ```
@@ -697,7 +697,7 @@ as the vulnerable dependency version.
 replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 ```
 
-Be aware that even after you add a `replace` directive, `go mod graph` will still show the old dependency version. 
+Be aware that even after you add a `replace` directive, `go mod graph` will still show the old dependency version.
 You can verify the new version is actually used via the `go list` command:
 ```shell
 $ go mod tidy
@@ -707,10 +707,10 @@ github.com/gogo/protobuf v1.2.1 => github.com/gogo/protobuf v1.3.2
 You can see the v1.2.1 is replaced with v1.3.2.
 
 Finally, you may want to submit a PR to the project with the vulnerable dependency (to fix the issues you reported
-earlier) in a new release of the direct dependency. Even better, also tell them about `nancy` and maybe they will add 
+earlier) in a new release of the direct dependency. Even better, also tell them about `nancy` and maybe they will add
 `nancy` to their own CI system.
 
-Yet another resolution, if no other options make sense, is to knowingly ignore the vulnerability. This may be the best 
+Yet another resolution, if no other options make sense, is to knowingly ignore the vulnerability. This may be the best
 option if you know the application does not use the vulnerable code path and no upgraded/non-vulnerable versions are
 available. See: [Exclude vulnerabilities](#exclude-vulnerabilities)
 
