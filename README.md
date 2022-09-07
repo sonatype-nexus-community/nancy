@@ -250,7 +250,7 @@ You can run `nancy` in a loud manner, showing all components by running:
 #### Exclude vulnerabilities
 
 Sometimes you'll run into a dependency that after taking a look at, you either aren't affected by, or cannot resolve for some reason. Nancy understands, and will let you
-exclude these vulnerabilities so you can get back to a passing build:
+exclude these vulnerabilities, so you can get back to a passing build:
 
 Vulnerabilities excluded will then be silenced and not show up in the output or fail your build.
 
@@ -289,8 +289,8 @@ CVN-543
 ```
 
 It's also possible to define expiring ignores. Meaning that if you define a date on a vulnerability ignore until that date it will be ignored and once that
-date is passed it will now be reported by nancy if its still an issue. Format to add an expiring ignore looks as follows. They can also be followed up by comments
-to provide context to as why its been ignored until that date.
+date is passed it will now be reported by nancy if it's still an issue. Format to add an expiring ignore looks as follows. They can also be followed up by comments
+to provide context as to why it's been ignored until that date.
 
 ```
 CVN-111 until=2021-01-01
@@ -473,7 +473,7 @@ Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
 
 ### Nexus IQ Server Options
 
-By default, assuming you have an out of the box Nexus IQ Server running, you can run `nancy` like so:
+By default, assuming you have an out-of-the-box Nexus IQ Server running, you can run `nancy` like so:
 
 `go list -json -deps ./... | nancy iq --iq-application public-application-id`
 
@@ -513,7 +513,7 @@ Uh oh! There was an error with your request to Nexus IQ Server: <error>
 
 #### Persistent Nexus IQ Server Config
 
-Nancy lets you set the Nexus IQ Server Address, User and Token as persistent config (application and stage are generally per project so we do not let you set these globally).
+Nancy lets you set the Nexus IQ Server Address, User and Token as persistent config (application and stage are generally per project, so we do not let you set these globally).
 
 To set your Nexus IQ Server config run:
 
