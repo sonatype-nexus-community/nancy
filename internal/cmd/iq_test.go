@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -110,7 +109,7 @@ func TestInitIQConfig(t *testing.T) {
 		configuration.ViperKeyIQUsername, "iqUsernameValue",
 		configuration.ViperKeyIQToken, "iqTokenValue",
 		configuration.ViperKeyIQServer, "iqServerValue")
-	assert.Nil(t, ioutil.WriteFile(cfgFileIQ, []byte(credentials), 0644))
+	assert.Nil(t, os.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
 	// init order is not guaranteed
 	initIQConfig()
@@ -145,7 +144,7 @@ func TestInitIQConfigWithNoConfigFile(t *testing.T) {
 		configuration.ViperKeyIQUsername, "iqUsernameValue",
 		configuration.ViperKeyIQToken, "iqTokenValue",
 		configuration.ViperKeyIQServer, "iqServerValue")
-	assert.Nil(t, ioutil.WriteFile(cfgFileIQ, []byte(credentials), 0644))
+	assert.Nil(t, os.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
 	// delete the config files
 	assert.NoError(t, os.Remove(cfgFile))
