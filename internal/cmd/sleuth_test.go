@@ -25,7 +25,6 @@ import (
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -102,7 +101,7 @@ func TestConfigOssi_exclude_vulnerabilities_file_not_found_does_not_matter(t *te
 }
 
 func TestConfigOssi_exclude_vulnerabilities_passed_as_directory_does_not_matter(t *testing.T) {
-	dir, _ := ioutil.TempDir("", "prefix")
+	dir, _ := os.MkdirTemp("", "prefix")
 	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + dir}...)
 }
@@ -131,7 +130,7 @@ func TestConfigOssi_additional_exclude_vulnerabilities_with_empty_additional(t *
 
 func TestConfigOssi_exclude_vulnerabilities_does_not_need_to_be_passed_if_default_value_is_used(t *testing.T) {
 	defaultFileName := ".nancy-ignore"
-	err := ioutil.WriteFile(defaultFileName, []byte("DEF-111\nDEF-222"), 0644)
+	err := os.WriteFile(defaultFileName, []byte("DEF-111\nDEF-222"), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}

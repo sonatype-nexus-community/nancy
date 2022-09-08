@@ -19,7 +19,6 @@ package settings
 import (
 	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -39,7 +38,7 @@ func (upd *UpdateCheck) WriteToDisk() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(upd.FileUsed, enc, 0600)
+	err = os.WriteFile(upd.FileUsed, enc, 0600)
 	return err
 }
 
@@ -53,7 +52,7 @@ func (upd *UpdateCheck) Load() error {
 
 	upd.FileUsed = appSettingsPath
 
-	content, err := ioutil.ReadFile(appSettingsPath) // #nosec
+	content, err := os.ReadFile(appSettingsPath) // #nosec
 	if err != nil {
 		return err
 	}

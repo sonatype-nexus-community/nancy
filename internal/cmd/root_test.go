@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -229,7 +228,7 @@ func createFakeStdIn(t *testing.T) (oldStdIn *os.File, tmpFile *os.File) {
 }
 func createFakeStdInWithString(t *testing.T, inputString string) (oldStdIn *os.File, tmpFile *os.File) {
 	content := []byte(inputString)
-	tmpFile, err := ioutil.TempFile("", "tempfile")
+	tmpFile, err := os.CreateTemp("", "tempfile")
 	if err != nil {
 		t.Error(err)
 	}
@@ -322,7 +321,7 @@ func TestConfigOssi_skip_update_check(t *testing.T) {
 }
 
 func setupConfig(t *testing.T) (tempDir string) {
-	tempDir, err := ioutil.TempDir("", "config-test")
+	tempDir, err := os.MkdirTemp("", "config-test")
 	assert.NoError(t, err)
 	return tempDir
 }
@@ -387,7 +386,7 @@ func setupTestOSSIConfigFileValues(t *testing.T, tempDir string) {
 
 	const credentials = configuration.ViperKeyUsername + ": ossiUsernameValue\n" +
 		configuration.ViperKeyToken + ": ossiTokenValue"
-	assert.Nil(t, ioutil.WriteFile(cfgFile, []byte(credentials), 0644))
+	assert.Nil(t, os.WriteFile(cfgFile, []byte(credentials), 0644))
 }
 
 type ossiFactoryMock struct {
@@ -403,12 +402,12 @@ type mockOssiServer struct {
 	auditPackagesErr     error
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func (s mockOssiServer) AuditPackages(purls []string) ([]ossIndexTypes.Coordinate, error) {
 	return s.auditPackagesResults, s.auditPackagesErr
 }
 
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func (s mockOssiServer) Audit(purls []string) (results map[string]ossIndexTypes.Coordinate, err error) {
 	results = make(map[string]ossIndexTypes.Coordinate)
 

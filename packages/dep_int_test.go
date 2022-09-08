@@ -21,7 +21,6 @@ import (
 	"github.com/Flaque/filet"
 	"github.com/golang/dep"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
 	"log"
 	"os"
 	"testing"
@@ -84,25 +83,25 @@ func doGoPathSimulatedSetup(t *testing.T) (string, string, error) {
 	if e != nil {
 		t.Error(e)
 	}
-	lockBytes, e := ioutil.ReadFile("testdata/Gopkg.lock")
+	lockBytes, e := os.ReadFile("testdata/Gopkg.lock")
 	if e != nil {
 		t.Error(e)
 	}
-	e = ioutil.WriteFile(fmt.Sprint(projectDir, "/Gopkg.lock"), lockBytes, 0644)
-	if e != nil {
-		t.Error(e)
-	}
-
-	tomlBytes, e := ioutil.ReadFile("testdata/Gopkg.toml")
-	if e != nil {
-		t.Error(e)
-	}
-	e = ioutil.WriteFile(fmt.Sprint(projectDir, "/Gopkg.toml"), tomlBytes, 0644)
+	e = os.WriteFile(fmt.Sprint(projectDir, "/Gopkg.lock"), lockBytes, 0644)
 	if e != nil {
 		t.Error(e)
 	}
 
-	files, e := ioutil.ReadDir(projectDir)
+	tomlBytes, e := os.ReadFile("testdata/Gopkg.toml")
+	if e != nil {
+		t.Error(e)
+	}
+	e = os.WriteFile(fmt.Sprint(projectDir, "/Gopkg.toml"), tomlBytes, 0644)
+	if e != nil {
+		t.Error(e)
+	}
+
+	files, e := os.ReadDir(projectDir)
 	if e != nil {
 		t.Error(e)
 	}

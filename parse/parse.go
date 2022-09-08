@@ -20,7 +20,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"strings"
 
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -46,7 +45,7 @@ func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
 func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	// stdIn should never be massive, so taking this approach over reading from a stream
 	// multiple times
-	johnnyFiveNeedInput, err := ioutil.ReadAll(stdIn)
+	johnnyFiveNeedInput, err := io.ReadAll(stdIn)
 	if err != nil {
 		return
 	}
