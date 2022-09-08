@@ -72,7 +72,7 @@ const (
 	NancyConfigFileName = ".nancy-config"
 )
 
-// settingsPath returns the path of the CLI settings directory
+// AppSettingsPath returns the path of the CLI settings directory
 func AppSettingsPath() string {
 	// TODO: Make this configurable
 	home, _ := os.UserHomeDir()

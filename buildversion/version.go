@@ -26,7 +26,8 @@ import (
 const DefaultVersion = "0.0.0-dev"
 
 var (
-	// these are overwritten/populated via build CLI
+	// these vars are overwritten/populated via build CLI
+
 	BuildVersion = DefaultVersion
 	BuildTime    = ""
 	BuildCommit  = ""
