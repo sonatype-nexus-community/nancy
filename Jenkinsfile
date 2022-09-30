@@ -16,7 +16,6 @@
 @Library(['private-pipeline-library', 'jenkins-shared']) _
 
 dockerizedBuildPipeline(
-  agentLabel: 'ubuntu-zion-legacy',
   buildImageId: "${sonatypeDockerRegistryId()}/cdi/golang-1.17.1:1",
   deployBranch: 'main',
   prepare: {
