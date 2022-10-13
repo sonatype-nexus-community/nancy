@@ -700,7 +700,7 @@ replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 Be aware that even after you add a `replace` directive, `go mod graph` will still show the old dependency version.
 You can verify the new version is actually used via the `go list` command:
 ```shell
-$ go mod tidy
+$ go mod tidy -compat=1.17
 $ go list -deps | grep github.com/gogo/protobuf
 github.com/gogo/protobuf v1.2.1 => github.com/gogo/protobuf v1.3.2
 ```
