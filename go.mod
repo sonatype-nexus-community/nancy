@@ -57,9 +57,10 @@ require (
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
-	golang.org/x/sys v0.0.0-20220317061510-51cd9980dadf // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	// fix vulnerability: CVE-2021-38561 in golang.org/x/text v0.3.5
-	golang.org/x/text v0.3.7 // indirect
+	// fix vulnerability: CVE-2022-32149 in golang.org/x/text v0.3.7
+	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/ini.v1 v1.60.1 // indirect
