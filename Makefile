@@ -38,7 +38,7 @@ clean:
 deps:
 	$(GOCMD) mod download
 	$(GOCMD) mod verify
-	$(GOCMD) mod tidy
+	$(GOCMD) mod tidy -compat=1.17
 
 headers:
 	$(GOCMD) get -u github.com/google/addlicense
