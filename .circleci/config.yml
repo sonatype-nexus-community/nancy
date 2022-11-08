@@ -20,7 +20,7 @@ orbs:
 executors:
   go:
     docker:
-      - image: circleci/golang:1.17
+      - image: cimg/go:1.17
 
 jobs:
   release:
@@ -35,14 +35,13 @@ jobs:
     environment:
       GO111MODULE: "on"
       TEST_RESULTS: /tmp/test-results
-    working_directory: /go/src/github.com/sonatype-nexus-community/nancy
     steps:
       - setup_remote_docker
       - checkout
       - run: mkdir -p $TEST_RESULTS/gotest
       - restore_cache:
           keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
+            - go-mod-v2-{{ checksum "go.sum" }}
       - run: go install github.com/jstemmer/go-junit-report@latest
       - run: make headers
       - run: make deps
@@ -51,9 +50,9 @@ jobs:
       - run: make integration-test
       - run: make docker-integration-tests
       - save_cache:
-          key: go-mod-v1-{{ checksum "go.sum" }}
+          key: go-mod-v2-{{ checksum "go.sum" }}
           paths:
-            - "/go/pkg/mod"
+            - "$HOME/go/pkg/mod"
       - store_artifacts:
           path: /tmp/test-results/
       - store_test_results:
