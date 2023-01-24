@@ -573,7 +573,7 @@ At the current time you have a few options:
 - Clone the project `git clone github.com/sonatype-nexus-community/nancy`
 - In the root of the project run `make`
   - This will execute multiple targets so if you want to short circuit some of that process you can also just run `make build` to get the binary without running tests, linting, etc
-- Use that binary where ever your heart so desires!
+- Use that binary wherever your heart so desires!
 
 ### Download release binary
 
