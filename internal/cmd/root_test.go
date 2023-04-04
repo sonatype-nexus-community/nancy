@@ -320,24 +320,11 @@ func TestConfigOssi_skip_update_check(t *testing.T) {
 	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true}, []string{"--skip-update-check"}...)
 }
 
-func setupConfig(t *testing.T) (tempDir string) {
-	tempDir, err := os.MkdirTemp("", "config-test")
-	assert.NoError(t, err)
-	return tempDir
-}
-
-func resetConfig(t *testing.T, tempDir string) {
-	var err error
-	assert.NoError(t, err)
-	_ = os.RemoveAll(tempDir)
-}
-
 func TestInitConfig(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
 
-	tempDir := setupConfig(t)
-	defer resetConfig(t, tempDir)
+	tempDir := t.TempDir()
 
 	setupTestOSSIConfigFileValues(t, tempDir)
 	defer func() {
@@ -354,8 +341,7 @@ func TestInitConfigWithNoConfigFile(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
 
-	tempDir := setupConfig(t)
-	defer resetConfig(t, tempDir)
+	tempDir := t.TempDir()
 
 	setupTestOSSIConfigFileValues(t, tempDir)
 	defer func() {
