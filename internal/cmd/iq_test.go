@@ -92,8 +92,7 @@ func TestInitIQConfig(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
 
-	tempDir := setupConfig(t)
-	defer resetConfig(t, tempDir)
+	tempDir := t.TempDir()
 
 	setupTestOSSIConfigFileValues(t, tempDir)
 	defer func() {
@@ -128,8 +127,7 @@ func TestInitIQConfigWithNoConfigFile(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
 
-	tempDir := setupConfig(t)
-	defer resetConfig(t, tempDir)
+	tempDir := t.TempDir()
 
 	setupTestOSSIConfigFileValues(t, tempDir)
 	defer func() {
@@ -360,8 +358,7 @@ func TestIqCreatorDefaultOptions(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
 
-	tempDir := setupConfig(t)
-	defer resetConfig(t, tempDir)
+	tempDir := t.TempDir()
 
 	// setup empty config files
 	setupTestOSSIConfigFile(t, tempDir)

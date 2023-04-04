@@ -101,7 +101,7 @@ func TestConfigOssi_exclude_vulnerabilities_file_not_found_does_not_matter(t *te
 }
 
 func TestConfigOssi_exclude_vulnerabilities_passed_as_directory_does_not_matter(t *testing.T) {
-	dir, _ := os.MkdirTemp("", "prefix")
+	dir := t.TempDir()
 	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + dir}...)
 }
