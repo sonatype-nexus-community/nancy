@@ -760,11 +760,13 @@ Original Gopher designed by Renee French.
 
 Remember:
 
-- If you are a Sonatype customer, you may file Sonatype support tickets related to `nancy` support in regard to this project
-  - We suggest you file issues here on GitHub as well, so that the community can pitch in
-- If you are not a Sonatype customer, Do NOT file Sonatype support tickets related to nancy support in regard to this project, file an issue here on GitHub
+It is worth noting that this is NOT SUPPORTED by Sonatype, and is a contribution of ours to the open source community (read: you!)
 
-Have fun creating and using `nancy` and the [Sonatype OSS Index](https://ossindex.sonatype.org/), we are glad to have you here!
+- Use this contribution at the risk tolerance that you have
+- Do NOT file Sonatype support tickets related to bach support in regard to this project
+- DO file issues here on GitHub, so that the community can pitch in
+
+Phew, that was easier than I thought. Last but not least of all - have fun!
 
 ## Getting help
 
