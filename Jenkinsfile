@@ -18,9 +18,6 @@
 dockerizedBuildPipeline(
   buildImageId: "${sonatypeDockerRegistryId()}/cdi/golang-1.17.1:1",
   deployBranch: 'main',
-  prepare: {
-    githubStatusUpdate('pending')
-  },
   buildAndTest: {
     sh '''
     go get -u github.com/jstemmer/go-junit-report
@@ -38,11 +35,7 @@ dockerizedBuildPipeline(
     })
   },
   testResults: [ 'test-results.xml' ],
-  onSuccess: {
-    githubStatusUpdate('success')
-  },
   onFailure: {
-    githubStatusUpdate('failure')
     notifyChat(currentBuild: currentBuild, env: env, room: 'community-oss-fun')
     sendEmailNotification(currentBuild, env, [], 'community-group@sonatype.com')
   }
