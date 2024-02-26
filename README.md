@@ -559,6 +559,12 @@ A portion of the golang ecosystem doesn't use proper versions, and instead uses 
 
 This project is called `nancy` as like the great detective herself, it looks for problems you might not be aware of, and gives you the information to help put them to an end!
 
+### Relationship to govulncheck
+
+Go community starting 1.18, has used a tool called `govulncheck` shipped with golang distribution to verify vulnerablities. Govulncheck reports known vulnerabilities using static analysis of source code or a binary's symbol table.
+Nancy uses Sonatype's and the open source index. Nancy inspects dependency files to look at all possible vulnerable library usage.
+
+
 ## Installation
 
 At the current time you have a few options:
