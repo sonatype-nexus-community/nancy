@@ -29,7 +29,7 @@ require (
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
-	github.com/golang/protobuf v1.4.1 // indirect
+	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/google/go-github/v30 v30.1.0 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -62,7 +62,7 @@ require (
 	// fix vulnerability: CVE-2022-32149 in golang.org/x/text v0.3.7
 	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.60.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
