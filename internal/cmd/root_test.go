@@ -270,7 +270,7 @@ func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args .
 	defer func() {
 		configOssi = origConfig
 	}()
-	configOssi = types.Configuration{}
+	configOssi = types.Configuration{SkipUpdateCheck: true}
 
 	defer func() {
 		additionalExcludeVulnerabilityFilePaths = []string{}
