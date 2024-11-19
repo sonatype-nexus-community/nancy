@@ -49,23 +49,23 @@ func TestSleuthCommandPathInvalidFile(t *testing.T) {
 }
 
 func TestConfigOssi_no_color(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{NoColor: true, Formatter: audit.AuditLogTextFormatter{NoColor: true, Quiet: true}}, []string{sleuthCmd.Use, "--no-color"}...)
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, NoColor: true, Formatter: audit.AuditLogTextFormatter{NoColor: true, Quiet: true}}, []string{sleuthCmd.Use, "--no-color"}...)
 }
 
 func TestConfigOssi_quiet(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Quiet: true, Formatter: audit.AuditLogTextFormatter{Quiet: true}},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, Quiet: true, Formatter: audit.AuditLogTextFormatter{Quiet: true}},
 		[]string{sleuthCmd.Use, "--quiet"}...)
 }
 
 func TestConfigOssi_loud(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Loud: true, Formatter: audit.AuditLogTextFormatter{Quiet: false}},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, Loud: true, Formatter: audit.AuditLogTextFormatter{Quiet: false}},
 		[]string{sleuthCmd.Use, "--loud"}...)
 }
 
 var defaultAuditLogFormatter = audit.AuditLogTextFormatter{Quiet: true}
 
 func TestConfigOssi_exclude_vulnerabilities(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability=CVE123,CVE988"}...)
 }
 
@@ -73,36 +73,36 @@ const testdataDir = "testdata/sleuth"
 
 func TestConfigOssi_exclude_vulnerabilities_with_sane_file(t *testing.T) {
 	file, _ := os.Open(testdataDir + "/normalIgnore")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + file.Name()}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_when_file_empty(t *testing.T) {
 	emptyFile, _ := os.Open(testdataDir + "/emptyFile")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + emptyFile.Name()}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_when_has_tons_of_newlines(t *testing.T) {
 	lotsOfRandomNewlinesFile, _ := os.Open(testdataDir + "/lotsOfRandomWhitespace")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_are_combined_with_file_and_args_values(t *testing.T) {
 	lotsOfRandomNewlinesFile, _ := os.Open(testdataDir + "/lotsOfRandomWhitespace")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"CVE123", "CVE988", "CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability=CVE123,CVE988", "--exclude-vulnerability-file=" + lotsOfRandomNewlinesFile.Name()}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_file_not_found_does_not_matter(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=/blah-blah-doesnt-exists"}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_passed_as_directory_does_not_matter(t *testing.T) {
 	dir := t.TempDir()
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + dir}...)
 }
 
@@ -110,21 +110,21 @@ func TestConfigOssi_additional_exclude_vulnerabilities(t *testing.T) {
 	rootFile, _ := os.Open(testdataDir + "/normalIgnore")
 	normalAdditionalIgnore, _ := os.Open(testdataDir + "/normalAdditionalIgnore")
 	messyAdditionalIgnore, _ := os.Open(testdataDir + "/messyAdditionalIgnore")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999", "CVX-1016", "CVX-1032", "CVX-1512", "CVX-2064"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVF-123", "CVF-9999", "CVX-1016", "CVX-1032", "CVX-1512", "CVX-2064"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + rootFile.Name(), "--additional-exclude-vulnerability-files=" + normalAdditionalIgnore.Name() + "," + messyAdditionalIgnore.Name()}...)
 }
 
 func TestConfigOssi_additional_exclude_vulnerabilities_with_empty_base(t *testing.T) {
 	rootFile, _ := os.Open(testdataDir + "/emptyFile")
 	normalAdditionalIgnore, _ := os.Open(testdataDir + "/normalAdditionalIgnore")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVX-1016", "CVX-1032"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"CVF-000", "CVX-1016", "CVX-1032"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + rootFile.Name(), "--additional-exclude-vulnerability-files=" + normalAdditionalIgnore.Name()}...)
 }
 
 func TestConfigOssi_additional_exclude_vulnerabilities_with_empty_additional(t *testing.T) {
 	rootFile, _ := os.Open(testdataDir + "/commented")
 	normalAdditionalIgnore, _ := os.Open(testdataDir + "/emptyFile")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + rootFile.Name(), "--additional-exclude-vulnerability-files=" + normalAdditionalIgnore.Name()}...)
 }
 
@@ -145,55 +145,55 @@ func TestConfigOssi_exclude_vulnerabilities_does_not_need_to_be_passed_if_defaul
 	}()
 	excludeVulnerabilityFilePath = defaultExcludeFilePath
 
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"DEF-111", "DEF-222"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_when_has_comments(t *testing.T) {
 	commentedFile, _ := os.Open(testdataDir + "/commented")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"CVN-111", "CVN-123", "CVN-543"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + commentedFile.Name()}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_when_has_untils(t *testing.T) {
 	untilsFile, _ := os.Open(testdataDir + "/untilsAndComments")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{Cves: []string{"NO-UNTIL-888", "MUST-BE-IGNORED-999", "MUST-BE-IGNORED-1999"}}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + untilsFile.Name()}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_value_in_untils(t *testing.T) {
 	invalidUntilsFile, _ := os.Open(testdataDir + "/untilsInvaild")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + invalidUntilsFile.Name()}...)
 }
 
 func TestConfigOssi_exclude_vulnerabilities_when_has_invalid_date_in_untils(t *testing.T) {
 	invalidDateUntilsFile, _ := os.Open(testdataDir + "/untilsBadDateFormat")
-	validateConfigOssi(t, types.Configuration{CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CveList: types.CveListFlag{}, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--exclude-vulnerability-file=" + invalidDateUntilsFile.Name()}...)
 }
 
 func TestConfigOssi_output_of_json(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: audit.JsonFormatter{}}, []string{sleuthCmd.Use, "--output=json"}...)
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, Formatter: audit.JsonFormatter{}}, []string{sleuthCmd.Use, "--output=json"}...)
 }
 
 func TestConfigOssi_output_of_json_pretty_print(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: audit.JsonFormatter{PrettyPrint: true}},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, Formatter: audit.JsonFormatter{PrettyPrint: true}},
 		[]string{sleuthCmd.Use, "--output=json-pretty"}...)
 }
 
 func TestConfigOssi_output_of_csv(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: audit.CsvFormatter{Quiet: true}},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, Formatter: audit.CsvFormatter{Quiet: true}},
 		[]string{sleuthCmd.Use, "--output=csv"}...)
 }
 
 func TestConfigOssi_output_of_text(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--output=text"}...)
 }
 
 func TestConfigOssi_output_of_bad_value(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Formatter: defaultAuditLogFormatter},
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, Formatter: defaultAuditLogFormatter},
 		[]string{sleuthCmd.Use, "--output=aintgonnadoit"}...)
 }
 

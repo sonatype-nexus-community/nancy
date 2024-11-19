@@ -57,7 +57,7 @@ func TestIqCommandPathInvalidName(t *testing.T) {
 	}()
 	// TODO debug side effects. calling executeCommand() fails as part of test suite, but is fine when run individually.
 	//_, err := executeCommand(rootCmd, iqCmd.Use, "--path", "invalidPath", "-a", "appId")
-	configOssi = types.Configuration{Path: "invalidPath"}
+	configOssi = types.Configuration{Path: "invalidPath", SkipUpdateCheck: true}
 	err := doIQ(iqCmd, []string{})
 
 	assert.Error(t, err)
@@ -71,7 +71,7 @@ func TestIqCommandPathInvalidFile(t *testing.T) {
 	}()
 	// TODO debug side effects. calling executeCommand() fails as part of test suite, but is fine when run individually.
 	//_, err := executeCommand(rootCmd, iqCmd.Use, "--path", GopkgLockFilename, "-a", "appId")
-	configOssi = types.Configuration{Path: GopkgLockFilename}
+	configOssi = types.Configuration{Path: GopkgLockFilename, SkipUpdateCheck: true}
 	err := doIQ(iqCmd, []string{})
 
 	assert.Error(t, err)

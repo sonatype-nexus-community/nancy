@@ -79,7 +79,7 @@ func TestProcessConfigInvalidStdIn(t *testing.T) {
 	defer func() {
 		configOssi = origConfig
 	}()
-	configOssi = types.Configuration{}
+	configOssi = types.Configuration{SkipUpdateCheck: true}
 	logLady, _ = test.NewNullLogger()
 
 	err := processConfig()
@@ -113,7 +113,7 @@ func TestProcessConfigPath(t *testing.T) {
 	defer func() {
 		configOssi = origConfig
 	}()
-	configOssi = types.Configuration{Path: "../../packages/testdata/" + GopkgLockFilename}
+	configOssi = types.Configuration{Path: "../../packages/testdata/" + GopkgLockFilename, SkipUpdateCheck: true}
 
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
@@ -161,39 +161,39 @@ func TestProcessConfigWithVolumeEnabledFormatters(t *testing.T) {
 
 	outputFormat = "" // default format
 	// empty config
-	validateFormatterVolume(t, types.Configuration{}, audit.AuditLogTextFormatter{Quiet: true})
+	validateFormatterVolume(t, types.Configuration{SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: true})
 	// not quiet, will not be loud - gotta want the volume baby. e.g. --quiet=false
-	validateFormatterVolume(t, types.Configuration{Quiet: false}, audit.AuditLogTextFormatter{Quiet: true})
+	validateFormatterVolume(t, types.Configuration{Quiet: false, SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: true})
 	// loud overrides quiet - feel the noise
-	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true, SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: false})
 	// loud is loud
-	validateFormatterVolume(t, types.Configuration{Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	validateFormatterVolume(t, types.Configuration{Loud: true, SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: false})
 	// not loud is quiet
-	validateFormatterVolume(t, types.Configuration{Loud: false}, audit.AuditLogTextFormatter{Quiet: true})
+	validateFormatterVolume(t, types.Configuration{Loud: false, SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: true})
 
 	outputFormat = "text" // explicit text format
 	// empty config
-	validateFormatterVolume(t, types.Configuration{}, audit.AuditLogTextFormatter{Quiet: true})
+	validateFormatterVolume(t, types.Configuration{SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: true})
 	// not quiet, will not be loud - gotta want the volume baby. e.g. --quiet=false
-	validateFormatterVolume(t, types.Configuration{Quiet: false}, audit.AuditLogTextFormatter{Quiet: true})
+	validateFormatterVolume(t, types.Configuration{Quiet: false, SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: true})
 	// loud overrides quiet - feel the noise
-	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true, SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: false})
 	// loud is loud
-	validateFormatterVolume(t, types.Configuration{Loud: true}, audit.AuditLogTextFormatter{Quiet: false})
+	validateFormatterVolume(t, types.Configuration{Loud: true, SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: false})
 	// not loud is quiet
-	validateFormatterVolume(t, types.Configuration{Loud: false}, audit.AuditLogTextFormatter{Quiet: true})
+	validateFormatterVolume(t, types.Configuration{Loud: false, SkipUpdateCheck: true}, audit.AuditLogTextFormatter{Quiet: true})
 
 	outputFormat = "csv" // csv format
 	// empty config
-	validateFormatterVolume(t, types.Configuration{}, audit.CsvFormatter{Quiet: true})
+	validateFormatterVolume(t, types.Configuration{SkipUpdateCheck: true}, audit.CsvFormatter{Quiet: true})
 	// not quiet, will not be loud - gotta want the volume baby. e.g. --quiet=false
-	validateFormatterVolume(t, types.Configuration{Quiet: false}, audit.CsvFormatter{Quiet: true})
+	validateFormatterVolume(t, types.Configuration{Quiet: false, SkipUpdateCheck: true}, audit.CsvFormatter{Quiet: true})
 	// loud overrides quiet - feel the noise
-	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true}, audit.CsvFormatter{Quiet: false})
+	validateFormatterVolume(t, types.Configuration{Quiet: true, Loud: true, SkipUpdateCheck: true}, audit.CsvFormatter{Quiet: false})
 	// loud is loud
-	validateFormatterVolume(t, types.Configuration{Loud: true}, audit.CsvFormatter{Quiet: false})
+	validateFormatterVolume(t, types.Configuration{Loud: true, SkipUpdateCheck: true}, audit.CsvFormatter{Quiet: false})
 	// not loud is quiet
-	validateFormatterVolume(t, types.Configuration{Loud: false}, audit.CsvFormatter{Quiet: true})
+	validateFormatterVolume(t, types.Configuration{Loud: false, SkipUpdateCheck: true}, audit.CsvFormatter{Quiet: true})
 }
 
 func validateFormatterVolume(t *testing.T, testConfig types.Configuration, expectedFormatter logrus.Formatter) {
