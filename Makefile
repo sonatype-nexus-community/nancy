@@ -48,7 +48,7 @@ build:
 	$(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
 
 test: build
-	$(GOTEST) -v ./... 2>&1
+	$(GOTEST) -v 2>&1 ./...
 
 integration-test: build
 	mkdir -p dist
