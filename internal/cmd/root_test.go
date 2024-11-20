@@ -284,36 +284,36 @@ func validateConfigOssi(t *testing.T, expectedConfig types.Configuration, args .
 func TestRootCommandLogVerbosity(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 
-	validateConfigOssi(t, types.Configuration{}, "")
-	validateConfigOssi(t, types.Configuration{LogLevel: 1}, "-v")
-	validateConfigOssi(t, types.Configuration{LogLevel: 2}, "-vv")
-	validateConfigOssi(t, types.Configuration{LogLevel: 3}, "-vvv")
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true}, "")
+	validateConfigOssi(t, types.Configuration{LogLevel: 1, SkipUpdateCheck: true}, "-v")
+	validateConfigOssi(t, types.Configuration{LogLevel: 2, SkipUpdateCheck: true}, "-vv")
+	validateConfigOssi(t, types.Configuration{LogLevel: 3, SkipUpdateCheck: true}, "-vvv")
 }
 
 func TestConfigOssi_defaults(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{}, []string{}...)
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true}, []string{}...)
 }
 
 func TestConfigOssi_version(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{Version: true, Formatter: logrus.Formatter(nil)}, []string{"--version"}...)
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, Version: true, Formatter: logrus.Formatter(nil)}, []string{"--version"}...)
 }
 
 func TestConfigOssi_log_level_of_info(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{LogLevel: 1}, []string{"-v"}...)
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, LogLevel: 1}, []string{"-v"}...)
 }
 
 func TestConfigOssi_log_level_of_debug(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{LogLevel: 2}, []string{"-vv"}...)
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, LogLevel: 2}, []string{"-vv"}...)
 }
 
 func TestConfigOssi_log_level_of_trace(t *testing.T) {
 	flag.CommandLine = flag.NewFlagSet("", flag.ContinueOnError)
 
-	validateConfigOssi(t, types.Configuration{LogLevel: 3}, []string{"-vvv"}...)
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, LogLevel: 3}, []string{"-vvv"}...)
 }
 
 func TestConfigOssi_cleanCache(t *testing.T) {
-	validateConfigOssi(t, types.Configuration{CleanCache: true}, []string{"--clean-cache"}...)
+	validateConfigOssi(t, types.Configuration{SkipUpdateCheck: true, CleanCache: true}, []string{"--clean-cache"}...)
 }
 
 func TestConfigOssi_skip_update_check(t *testing.T) {
