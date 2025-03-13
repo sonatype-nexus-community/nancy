@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+version: 2
+
 before:
   hooks:
     - go mod download
@@ -59,7 +61,7 @@ checksum:
   algorithm: sha256
 
 snapshot:
-  name_template: "{{ .Version }}-next-{{.FullCommit}}"
+  version_template: "{{ .Version }}-next-{{.FullCommit}}"
 
 changelog:
   sort: asc
@@ -80,7 +82,7 @@ brews:
   -
     ids:
       - homebrew
-    tap:
+    repository:
       owner: sonatype-nexus-community
       name: homebrew-nancy-tap
 
