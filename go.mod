@@ -1,6 +1,6 @@
 module github.com/sonatype-nexus-community/nancy
 
-go 1.17
+go 1.23.0
 
 require (
 	github.com/Flaque/filet v0.0.0-20190209224823-fc4d33cfcf93
@@ -56,7 +56,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
-	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
+	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	// fix vulnerability: CVE-2021-38561 in golang.org/x/text v0.3.5
 	// fix vulnerability: CVE-2022-32149 in golang.org/x/text v0.3.7
