@@ -107,7 +107,6 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	}
 
 	if err != nil {
-		err = nil
 		scanner := bufio.NewScanner(strings.NewReader(string(johnnyFiveNeedInput)))
 		deps, err = GoList(scanner)
 		if err != nil {
