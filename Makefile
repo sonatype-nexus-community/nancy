@@ -41,7 +41,7 @@ deps:
 	$(GOCMD) mod tidy -compat=1.17
 
 headers:
-	$(GOCMD) get -u github.com/google/addlicense
+	$(GOCMD) install github.com/google/addlicense@latest
 	addlicense -check -f ./header.txt ./*.go
 
 build:
