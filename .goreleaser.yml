@@ -48,13 +48,13 @@ archives:
   -
     id: default
     name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
-    format: binary
+    formats: [ binary ]
   -
     id: homebrew
     name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [ zip ]
 
 checksum:
   name_template: "{{ .ProjectName }}checksums.txt"
