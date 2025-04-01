@@ -1,6 +1,8 @@
 module github.com/sonatype-nexus-community/nancy
 
-go 1.23
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
 	github.com/Flaque/filet v0.0.0-20190209224823-fc4d33cfcf93
