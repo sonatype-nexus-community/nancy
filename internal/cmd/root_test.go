@@ -126,7 +126,13 @@ func TestProcessConfigPath(t *testing.T) {
 
 	err := processConfig()
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), " are not within any known GOPATH"), err.Error())
+	// handle error message differences between OSes/go versions
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "same") {
+		assert.True(t, strings.Contains(errMsg, " are in the same GOPATH"), errMsg)
+	} else {
+		assert.True(t, strings.Contains(errMsg, " are not within any known GOPATH"), errMsg)
+	}
 }
 
 func TestGetIsQuiet(t *testing.T) {
