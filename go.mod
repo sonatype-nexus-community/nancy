@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	github.com/Masterminds/vcs v1.13.1 // indirect
+	github.com/Masterminds/vcs v1.13.3 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
