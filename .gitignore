@@ -4,6 +4,9 @@ nancy*amd64*
 .DS_Store
 .cache
 
+# Implementation summary (local development only)
+IMPLEMENTATION_SUMMARY.md
+
 #IntelliJ
 .idea
 *.iml

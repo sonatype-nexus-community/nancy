@@ -55,10 +55,16 @@ type ossiServerFactory interface {
 type ossiFactory struct{}
 
 func (ossiFactory) create() ossindex.IServer {
-	// allow override of OSSIndex URL if needed special debug case
-	ossIndexURL := os.Getenv("OSSIndexURL")
+	// Get OSS Index URL from viper (which handles env vars, config file, and CLI flags)
+	ossIndexURL := viper.GetString(viperKeyOSSIndexURL)
+
+	// Fallback to legacy OSSIndexURL env var for backwards compatibility
+	if ossIndexURL == "" {
+		ossIndexURL = os.Getenv("OSSIndexURL")
+	}
+
 	if ossIndexURL != "" {
-		logLady.Debug("Override OSSIndexURL", ossIndexURL)
+		logLady.WithField("ossIndexURL", ossIndexURL).Debug("Using custom OSS Index URL")
 	}
 
 	server := ossindex.New(logLady, ossIndexTypes.Options{
@@ -182,6 +188,11 @@ const defaultExcludeFilePath = "./.nancy-ignore"
 const (
 	flagNameOssiUsername = "username"
 	flagNameOssiToken    = "token"
+	flagNameOssiURL      = "ossindex-url"
+
+	// viperKeyOSSIndexURL is the key for OSS Index URL in viper config
+	// Following the same pattern as configuration.ViperKeyUsername and configuration.ViperKeyToken
+	viperKeyOSSIndexURL = "ossi.OSSIndexURL"
 
 	GopkgLockFilename = "Gopkg.lock"
 )
@@ -197,6 +208,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
 	persistentFlags.StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
 	persistentFlags.StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
+	persistentFlags.StringVar(&configOssi.OSSIndexURL, flagNameOssiURL, "", "Specify an alternate OSS Index URL/host")
 	persistentFlags.StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
 	persistentFlags.StringVarP(&configOssi.DBCachePath, "db-cache-path", "d", "", "Specify an alternate path for caching responses from OSS Inde, example: /tmp")
 	persistentFlags.BoolVar(&configOssi.SkipUpdateCheck, "skip-update-check", configuration.SkipUpdateByDefault(), "Skip the check for updates.")
@@ -210,6 +222,9 @@ func bindViperRootCmd() {
 		panic(err)
 	}
 	if err := viper.BindPFlag(configuration.ViperKeyToken, lookupPersistentFlagNotNil(flagNameOssiToken, rootCmd)); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag(viperKeyOSSIndexURL, lookupPersistentFlagNotNil(flagNameOssiURL, rootCmd)); err != nil {
 		panic(err)
 	}
 }
