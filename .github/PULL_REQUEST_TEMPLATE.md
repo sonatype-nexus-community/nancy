@@ -11,4 +11,4 @@ update the docs, as well)
 It relates to the following issue #s:
 * Fixes #X
 
-cc @bhamail / @DarthHater
+cc @sonatype-nexus-community/nancy

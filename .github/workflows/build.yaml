@@ -1,0 +1,121 @@
+# Copyright 2018-present Sonatype Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Build
+
+on:
+    pull_request:
+        paths-ignore:
+            - 'README.md'
+    push:
+        branches:
+            - main
+
+env:
+    LC_APPLICATION_ID: nancy
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        env:
+            GO111MODULE: 'on'
+            TEST_RESULTS: /tmp/test-results
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Setup Go
+              uses: actions/setup-go@v6
+              with:
+                  go-version-file: 'go.mod'
+                  cache: true
+
+            - name: Create test results directory
+              run: mkdir -p $TEST_RESULTS/gotest
+
+            - name: Install go-junit-report
+              run: go install github.com/jstemmer/go-junit-report@latest
+
+            - name: Install addlicense
+              run: go install github.com/google/addlicense@latest
+
+            - name: Check headers
+              run: make headers
+
+            - name: Download dependencies
+              run: make deps
+
+            - name: Lint
+              run: make ci-lint
+
+            - name: Run tests
+              run: make test
+
+            - name: Generate JUnit report
+              run: make test 2>&1 | go-junit-report > $TEST_RESULTS/gotest/report.xml
+              if: always()
+
+            - name: Run integration tests
+              run: make integration-test
+              env:
+                  OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
+                  OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
+
+            # Removed these test temporarily as can't get OSSI secrets to them easily
+            # - name: Run docker integration tests
+            #   run: make docker-integration-tests
+            #   env:
+            #       OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
+            #       OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
+
+            - name: Upload test results
+              uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: test-results
+                  path: /tmp/test-results/
+
+            - name: Publish test results
+              uses: EnricoMi/publish-unit-test-result-action@v2
+              if: always()
+              with:
+                  files: /tmp/test-results/**/report.xml
+                  check_name: Test Results
+
+    sonatype:
+        name: Sonatype Lifecycle
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v6
+
+            - name: Setup Go
+              uses: actions/setup-go@v6
+              with:
+                  go-version-file: 'go.mod'
+                  cache: true
+
+            - name: Generate go.list
+              run: go list -f '{{define "M"}}{{.Path}} {{.Version}}{{end}}{{with .Module}}{{if not .Main}}{{if .Replace}}{{template "M" .Replace}}{{else}}{{template "M" .}}{{end}}{{end}}{{end}}' -compiled -deps| sort -u > go.list
+
+            - name: Sonatype Lifecycle Evaluation
+              id: evaluate
+              uses: sonatype/actions/evaluate@v1
+              with:
+                  iq-server-url: ${{ vars.SONATYPE_PLATFORM_URL }}
+                  username: ${{ secrets.SONATYPE_LIFECYCLE_USERNAME }}
+                  password: ${{ secrets.SONATYPE_LIFECYCLE_PASSWORD }}
+                  application-id: ${{ env.LC_APPLICATION_ID }}
+                  scan-targets: 'go.list'
