@@ -68,9 +68,15 @@ jobs:
 
             - name: Run integration tests
               run: make integration-test
+              env:
+                  OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
+                  OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
 
             - name: Run docker integration tests
               run: make docker-integration-tests
+              env:
+                  OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
+                  OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
 
             - name: Upload test results
               uses: actions/upload-artifact@v6
