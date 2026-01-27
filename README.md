@@ -237,6 +237,29 @@ go list -json -deps ./... | ./nancy sleuth
 ...
 ```
 
+#### Using a custom OSS Index server
+
+If you need to use a custom or on-premise OSS Index server, you can configure the OSS Index URL in several ways:
+
+1. **Via command-line flag:**
+   ```shell
+   nancy sleuth --ossindex-url https://custom.ossindex.sonatype.org -p Gopkg.lock
+   ```
+
+2. **Via environment variable:**
+   ```shell
+   export OSSI_OSSINDEXURL=https://custom.ossindex.sonatype.org
+   go list -json -deps ./... | nancy sleuth
+   ```
+
+3. **Via legacy environment variable (for backwards compatibility):**
+   ```shell
+   export OSSIndexURL=https://custom.ossindex.sonatype.org
+   go list -json -deps ./... | nancy sleuth
+   ```
+
+The priority order is: command-line flag > `OSSI_OSSINDEXURL` environment variable > `OSSIndexURL` environment variable > default OSS Index URL.
+
 #### Loud mode
 
 By default, `nancy` runs in a "quiet" mode, only displaying a list of vulnerable components.

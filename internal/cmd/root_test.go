@@ -533,3 +533,51 @@ func TestViperKeyNameReplacer(t *testing.T) {
 	envVarName := viperKeyReplacer.Replace(configuration.ViperKeyUsername)
 	assert.Equal(t, "ossi_Username", envVarName)
 }
+
+func TestOssiCreatorWithCustomURL(t *testing.T) {
+	defer viper.Reset()
+	logLady, _ = test.NewNullLogger()
+
+	customURL := "https://custom.ossindex.sonatype.org"
+	viper.Set(viperKeyOSSIndexURL, customURL)
+
+	ossIndex := ossiCreator.create()
+
+	ossIndexServer, ok := ossIndex.(*ossindex.Server)
+	assert.True(t, ok)
+	assert.Equal(t, customURL, ossIndexServer.Options.OSSIndexURL)
+}
+
+func TestOssiCreatorWithLegacyEnvVar(t *testing.T) {
+	defer viper.Reset()
+	defer os.Unsetenv("OSSIndexURL")
+	logLady, _ = test.NewNullLogger()
+
+	customURL := "https://legacy.ossindex.sonatype.org"
+	os.Setenv("OSSIndexURL", customURL)
+
+	ossIndex := ossiCreator.create()
+
+	ossIndexServer, ok := ossIndex.(*ossindex.Server)
+	assert.True(t, ok)
+	assert.Equal(t, customURL, ossIndexServer.Options.OSSIndexURL)
+}
+
+func TestOssiCreatorViperOverridesLegacyEnvVar(t *testing.T) {
+	defer viper.Reset()
+	defer os.Unsetenv("OSSIndexURL")
+	logLady, _ = test.NewNullLogger()
+
+	viperURL := "https://viper.ossindex.sonatype.org"
+	legacyURL := "https://legacy.ossindex.sonatype.org"
+
+	viper.Set(viperKeyOSSIndexURL, viperURL)
+	os.Setenv("OSSIndexURL", legacyURL)
+
+	ossIndex := ossiCreator.create()
+
+	ossIndexServer, ok := ossIndex.(*ossindex.Server)
+	assert.True(t, ok)
+	// Viper setting should take precedence over legacy env var
+	assert.Equal(t, viperURL, ossIndexServer.Options.OSSIndexURL)
+}
