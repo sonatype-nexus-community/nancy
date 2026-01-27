@@ -16,15 +16,13 @@
 
 -->
 <p align="center">
-    <img src="https://github.com/sonatype-nexus-community/nancy/blob/main/docs/images/nancy.png" width="350" alt="nancy logo"/>
-</p>
-
-<p align="center">
-    <a href="https://circleci.com/gh/sonatype-nexus-community/nancy"><img src="https://circleci.com/gh/sonatype-nexus-community/nancy.svg?style=shield" alt="Circle CI Build Status"/></a>
-    <a href="https://gitter.im/sonatype-nexus-community/nancy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge"><img src="https://badges.gitter.im/sonatype-nexus-community/nancy.svg" alt="Gitter"/></a>
+    <img src="https://github.com/sonatype-nexus-community/nancy/blob/main/docs/images/nancy.png?raw=true" width="350" alt="nancy logo"/>
 </p>
 
 # Nancy
+
+[![shield_gh-workflow-test]][link_gh-workflow-test]
+[![shield_license]][license_file]
 
 `nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype OSS Index](https://ossindex.sonatype.org/), and as well, works with Nexus IQ Server, allowing you a smooth experience as a Golang developer, using the best tools in the market!
 
@@ -766,16 +764,17 @@ Original Gopher designed by Renee French.
 
 Remember:
 
-It is worth noting that this is NOT SUPPORTED by Sonatype, and is a contribution of ours to the open source community (read: you!)
+This project is part of the [Sonatype Nexus Community](https://github.com/sonatype-nexus-community) organization, which is not officially supported by Sonatype. Please review the latest pull requests, issues, and commits to understand this project's readiness for contribution and use.
 
-- Use this contribution at the risk tolerance that you have
-- Do NOT file Sonatype support tickets related to bach support in regard to this project
-- DO file issues here on GitHub, so that the community can pitch in
+-   File suggestions and requests on this repo through GitHub Issues, so that the community can pitch in
+-   Use or contribute to this project according to your organization's policies and your own risk tolerance
+-   Don't file Sonatype support tickets related to this project— it won't reach the right people that way
 
-Phew, that was easier than I thought. Last but not least of all - have fun!
+Last but not least of all - have fun!
 
-## Getting help
+<!-- Links Section -->
 
-Looking to contribute to our code but need some help? There's a few ways to get information:
-
-- Chat with us on [Gitter](https://gitter.im/sonatype-nexus-community/nancy)
+[shield_gh-workflow-test]: https://img.shields.io/github/actions/workflow/status/sonatype-nexus-community/nancy/build.yaml?branch=main&logo=GitHub&logoColor=white 'build'
+[shield_license]: https://img.shields.io/github/license/sonatype-nexus-community/nancy?logo=open%20source%20initiative&logoColor=white 'license'
+[link_gh-workflow-test]: https://github.com/sonatype-nexus-community/nancy/actions/workflows/build.yaml?query=branch%3Amain
+[license_file]: https://github.com/sonatype-nexus-community/nancy/blob/main/LICENSE

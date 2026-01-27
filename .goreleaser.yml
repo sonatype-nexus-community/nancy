@@ -32,9 +32,9 @@ builds:
       - darwin
       - windows
     goarch:
-      - amd64
-      - 386
-      - arm64
+      - 'amd64'
+      - '386'
+      - 'arm64'
     ignore:
       # fix for build error:
       # ⨯ release failed after 124.25s error=failed to build for windows_arm64: exit status 2: # golang.org/x/sys/windows
@@ -42,7 +42,7 @@ builds:
       #/go/pkg/mod/golang.org/x/sys@v0.0.0-20200519105757-fe76b779f299/windows/zsyscall_windows.go:3106:51: undefined: Servent
       #/go/pkg/mod/golang.org/x/sys@v0.0.0-20200519105757-fe76b779f299/windows/zsyscall_windows.go:3120:50: undefined: Servent
       - goos: windows
-        goarch: arm64
+        goarch: 'arm64'
 
 archives:
   -
@@ -97,9 +97,9 @@ dockers:
     ids:
       - nancy
     build_flag_templates:
-    - "--label=author='DJ Schleen'"
+    - "--label=author='Sonatype Community <community@sonatype.com>'"
     - "--label=version={{ .Version }}"
-    - "--label=maintainer='sonatype-nexus-community'"
+    - "--label=maintainer='Sonatype Community <community@sonatype.com>'"
     image_templates:
     - "sonatypecommunity/nancy:latest"
     - "sonatypecommunity/nancy:{{ .Tag }}"
@@ -113,9 +113,9 @@ dockers:
       - nancy
     build_flag_templates:
     - "--pull"
-    - "--label=author='DJ Schleen'"
+    - "--label=author='Sonatype Community <community@sonatype.com>'"
     - "--label=version={{ .Version }}"
-    - "--label=maintainer='sonatype-nexus-community'"
+    - "--label=maintainer='Sonatype Community <community@sonatype.com>'"
     image_templates:
     - "sonatypecommunity/nancy:alpine"
     - "sonatypecommunity/nancy:{{ .Tag }}-alpine"
@@ -125,7 +125,7 @@ dockers:
 nfpms:
   -
     vendor: sonatype-nexus-community
-    maintainer: Sonatype Nexus Community <community-group@sonatype.com>
+    maintainer: Sonatype Community <community@sonatype.com>
     homepage: https://github.com/sonatype-nexus-community/nancy
     description: "A tool to check for vulnerabilities in your Golang dependencies, powered by Sonatype OSS Index"
     formats:

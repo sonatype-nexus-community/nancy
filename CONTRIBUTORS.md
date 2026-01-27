@@ -19,6 +19,8 @@ A lot of awesome people have contributed to this project! Here they are:
 
 Sonatype internal people:
 
+* [@madpah](https://github.com/madpah) (Paul Horton)
+* [@bfox](https://github.com/bfox) (Brian Fox)
 * [@ken-duck](https://github.com/ken-duck/) (Ken Duck)
 * [@DarthHater](https://github.com/darthhater/) (Jeffry Hesse)
 * [@ajbrown](https://github.com/ajbrown) (A.J. Brown)

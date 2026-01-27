@@ -84,8 +84,8 @@ docker-alpine-integration-test: build-linux
 	# copy the code as if it was actually in the "ci" container.. doing this cause circleci cant actually mount volumes
 	$(DOCKER_CMD) cp . alpine-integration-test:/tmp
 	# run nancy against nancy output
-	$(DOCKER_CMD) exec -it alpine-integration-test /bin/sh /tmp/dist/ci.sh
-	$(DOCKER_CMD) exec -it alpine-integration-test /bin/sh /tmp/dist/ci-json.sh
+	$(DOCKER_CMD) exec -i alpine-integration-test /bin/sh /tmp/dist/ci.sh
+	$(DOCKER_CMD) exec -i alpine-integration-test /bin/sh /tmp/dist/ci-json.sh
 	$(DOCKER_CMD) stop alpine-integration-test && $(DOCKER_CMD) rm alpine-integration-test
 
 

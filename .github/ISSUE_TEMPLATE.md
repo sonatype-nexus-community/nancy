@@ -9,4 +9,4 @@ sure to have all the information we need, and to minimize back and forth.
 
 * **Anything else?**
 
-cc @bhamail / @DarthHater
+cc @sonatype-nexus-community/nancy
