@@ -107,6 +107,11 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	logLady = logger.GetLogger("", configOssi.LogLevel)
 	logLady.Info("Nancy parsing config for IQ")
 
+	// SECURITY: Validate required IQ credentials are provided
+	if err = validateIQCredentials(); err != nil {
+		return err
+	}
+
 	err = checkForUpdates("", true)
 	if err != nil {
 		return
@@ -128,6 +133,32 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	return
+}
+
+// validateIQCredentials ensures required IQ Server credentials are provided
+// SECURITY: Prevents use with missing credentials (CWE-798 mitigation)
+func validateIQCredentials() error {
+	username := viper.GetString(configuration.ViperKeyIQUsername)
+	token := viper.GetString(configuration.ViperKeyIQToken)
+	server := viper.GetString(configuration.ViperKeyIQServer)
+
+	var missing []string
+	if username == "" {
+		missing = append(missing, "iq-username")
+	}
+	if token == "" {
+		missing = append(missing, "iq-token")
+	}
+	if server == "" {
+		missing = append(missing, "iq-server-url")
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("missing required IQ Server credentials: %v. "+
+			"Please provide via CLI flags, environment variables (IQ_USERNAME, IQ_TOKEN, IQ_SERVER), "+
+			"or config file (~/.iqserver/.iq-server-config)", missing)
+	}
+	return nil
 }
 
 func getPurls() (purls []string, err error) {
@@ -167,8 +198,10 @@ const (
 func init() {
 	cobra.OnInitialize(initIQConfig)
 
-	iqCmd.Flags().StringVarP(&configIQ.IQUsername, flagNameIqUsername, "l", "admin", "Specify Nexus IQ username for request")
-	iqCmd.Flags().StringVarP(&configIQ.IQToken, flagNameIqToken, "k", "admin123", "Specify Nexus IQ token for request")
+	// SECURITY: Removed hardcoded default credentials (CWE-798)
+	// Credentials must now be explicitly provided via flags, env vars, or config file
+	iqCmd.Flags().StringVarP(&configIQ.IQUsername, flagNameIqUsername, "l", "", "Specify Nexus IQ username for request (required)")
+	iqCmd.Flags().StringVarP(&configIQ.IQToken, flagNameIqToken, "k", "", "Specify Nexus IQ token for request (required)")
 	iqCmd.Flags().StringVarP(&configIQ.IQStage, flagNameIqStage, "s", "develop", "Specify Nexus IQ stage for request")
 
 	iqCmd.Flags().StringVarP(&configIQ.IQApplication, flagNameIqApplication, "a", "", "Specify Nexus IQ public application ID for request")
@@ -176,7 +209,11 @@ func init() {
 		panic(err)
 	}
 
-	iqCmd.Flags().StringVarP(&configIQ.IQServer, flagNameIqServerUrl, "x", "http://localhost:8070", "Specify Nexus IQ server url for request")
+	// SECURITY: Removed insecure default server URL
+	iqCmd.Flags().StringVarP(&configIQ.IQServer, flagNameIqServerUrl, "x", "", "Specify Nexus IQ server url for request (required)")
+	if err := iqCmd.MarkFlagRequired(flagNameIqServerUrl); err != nil {
+		panic(err)
+	}
 
 	rootCmd.AddCommand(iqCmd)
 }
