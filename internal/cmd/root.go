@@ -18,9 +18,11 @@ package cmd
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
+	"os/exec"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -30,7 +32,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/common-nighthawk/go-figure"
-	"github.com/golang/dep"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/configuration"
@@ -112,7 +113,6 @@ var (
 	ossiCreator                             ossiServerFactory = ossiFactory{}
 	unixComments                                              = regexp.MustCompile(`#.*$`)
 	untilComment                                              = regexp.MustCompile(`(until=)(.*)`)
-	errStdInInvalid                                           = fmt.Errorf("StdIn is invalid or empty. Did you forget to pipe 'go list' to nancy?")
 )
 
 //Substitute the _ to .
@@ -127,18 +127,18 @@ func setupViperAutomaticEnv() {
 var rootCmd = &cobra.Command{
 	Version: buildversion.BuildVersion,
 	Use:     "nancy",
-	Example: `  Typical usage will pipe the output of 'go list -json -deps' to 'nancy':
-  go list -json -deps ./... | nancy sleuth [flags]
-  go list -json -deps ./... | nancy iq [flags]
+	Example: `  go list -json -deps ./... | nancy sleuth [flags]
+  go list -json -deps ./... | nancy lifecycle [flags]
 
-  If using dep typical usage is as follows :
-  nancy sleuth -p Gopkg.lock [flags]
-  nancy iq -p Gopkg.lock [flags]
+  Or simply (auto-detects and runs go list):
+  nancy sleuth [flags]
 `,
-	Short: "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
+	Short: "Check for vulnerabilities in your Golang dependencies using Sonatype Guide",
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
-powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
-a smooth experience as a Golang developer, using the best tools in the market!`,
+powered by Sonatype Guide (previously OSS Index), and works with Sonatype Lifecycle (previously Nexus IQ Server),
+allowing you a smooth experience as a Golang developer, using the best tools in the market!
+
+Note: OSS Index credentials are deprecated. Please migrate to Sonatype Guide credentials.`,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		setupViperAutomaticEnv()
 		logLady = logger.GetLogger("", configOssi.LogLevel)
@@ -193,8 +193,6 @@ const (
 	// viperKeyOSSIndexURL is the key for OSS Index URL in viper config
 	// Following the same pattern as configuration.ViperKeyUsername and configuration.ViperKeyToken
 	viperKeyOSSIndexURL = "ossi.OSSIndexURL"
-
-	GopkgLockFilename = "Gopkg.lock"
 )
 
 func init() {
@@ -209,7 +207,6 @@ func init() {
 	persistentFlags.StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
 	persistentFlags.StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
 	persistentFlags.StringVar(&configOssi.OSSIndexURL, flagNameOssiURL, "", "Specify an alternate OSS Index URL/host")
-	persistentFlags.StringVarP(&configOssi.Path, "path", "p", "", "Specify a path to a dep "+GopkgLockFilename+" file for scanning")
 	persistentFlags.StringVarP(&configOssi.DBCachePath, "db-cache-path", "d", "", "Specify an alternate path for caching responses from OSS Inde, example: /tmp")
 	persistentFlags.BoolVar(&configOssi.SkipUpdateCheck, "skip-update-check", configuration.SkipUpdateByDefault(), "Skip the check for updates.")
 }
@@ -309,16 +306,9 @@ func processConfig() (err error) {
 		_ = getCVEExcludesFromFile(additionalExcludeVulnerabilityFilePath)
 	}
 
-	if configOssi.Path != "" {
-		if err = doDepAndParse(ossIndex, configOssi.Path); err != nil {
-			logLady.WithField("error", err).Error("Error in file based scan")
-			return
-		}
-	} else {
-		logLady.Info("Parsing config for StdIn")
-		if err = doStdInAndParse(ossIndex); err != nil {
-			return
-		}
+	logLady.Info("Parsing config for StdIn")
+	if err = doStdInAndParse(ossIndex); err != nil {
+		return
 	}
 
 	deduplicateCveList()
@@ -341,51 +331,6 @@ func getIsQuiet() bool {
 	return !configOssi.Loud
 }
 
-func getPurlsFromPath(path string) (purls []string, invalidPurls []string, err error) {
-	logLady.Info("Parsing config for file based scan")
-	if !strings.Contains(path, GopkgLockFilename) {
-		err = fmt.Errorf("invalid path value. must point to '%s' file. path: %s", GopkgLockFilename, path)
-		logLady.WithField("error", err).Error("Path error in file based scan")
-		return
-	}
-
-	workingDir := filepath.Dir(path)
-	if workingDir == "." {
-		workingDir, _ = os.Getwd()
-	}
-	getenv := os.Getenv("GOPATH")
-	ctx := dep.Ctx{
-		WorkingDir: workingDir,
-		GOPATHs:    []string{getenv},
-	}
-
-	var project *dep.Project
-	project, err = ctx.LoadProject()
-	if err != nil {
-		return
-	}
-
-	if project.Lock == nil {
-		err = fmt.Errorf("dep failed to parse lock file and returned nil, nancy could not continue due to dep failure")
-		return
-	}
-
-	purls, invalidPurls = packages.ExtractPurlsUsingDep(project)
-	return
-}
-
-func doDepAndParse(ossIndex ossindex.IServer, path string) (err error) {
-	var purls, invalidPurls []string
-	if purls, invalidPurls, err = getPurlsFromPath(path); err != nil {
-		return
-	}
-
-	if err = checkOSSIndex(ossIndex, purls, invalidPurls); err != nil {
-		return
-	}
-
-	return
-}
 
 func getCVEExcludesFromFile(excludeVulnerabilityFilePath string) error {
 	fi, err := os.Stat(excludeVulnerabilityFilePath)
@@ -469,14 +414,37 @@ func printHeader(print bool) {
 	}).Info("Printing Nancy version")
 }
 
+func stdinHasData() bool {
+	stat, _ := os.Stdin.Stat()
+	return (stat.Mode() & os.ModeCharDevice) == 0
+}
+
+func autoRunGoList() (io.Reader, error) {
+	fmt.Fprintln(os.Stderr, "No input detected. Running: go list -json -deps ./...")
+	cmd := exec.Command("go", "list", "-json", "-deps", "./...")
+	cmd.Stderr = os.Stderr
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("auto go list failed: %w\nTip: run manually and pipe output: go list -json -deps ./... | nancy sleuth", err)
+	}
+	return bytes.NewReader(out), nil
+}
+
 func doStdInAndParse(ossIndex ossindex.IServer) (err error) {
-	if err = checkStdIn(); err != nil {
-		return err
+	var reader io.Reader
+	if stdinHasData() {
+		reader = os.Stdin
+	} else {
+		logLady.Info("No stdin detected; auto-running go list")
+		reader, err = autoRunGoList()
+		if err != nil {
+			return
+		}
 	}
 
 	mod := packages.Mod{}
 
-	mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+	mod.ProjectList, err = parse.GoListAgnostic(reader)
 	if err != nil {
 		logLady.Error(err)
 		return
@@ -506,7 +474,9 @@ func checkOSSIndex(ossIndex ossindex.IServer, purls []string, invalidpurls []str
 	invalidCoordinates := convertInvalidPurlsToCoordinates(invalidpurls)
 
 	if count := audit.LogResults(configOssi.Formatter, packageCount, coordinates, invalidCoordinates, configOssi.CveList.Cves); count > 0 {
-		err = customerrors.ErrorExit{ExitCode: count}
+		if !configOssi.NoFail {
+			err = customerrors.ErrorExit{ExitCode: count}
+		}
 		return
 	}
 	return
@@ -520,13 +490,3 @@ func convertInvalidPurlsToCoordinates(invalidPurls []string) []ossIndexTypes.Coo
 	return invalidCoordinates
 }
 
-func checkStdIn() (err error) {
-	stat, _ := os.Stdin.Stat()
-	if (stat.Mode() & os.ModeCharDevice) == 0 {
-		logLady.Info("StdIn is valid")
-	} else {
-		err = errStdInInvalid
-		logLady.Error(err)
-	}
-	return
-}
