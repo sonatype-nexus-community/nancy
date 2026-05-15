@@ -18,6 +18,7 @@ require (
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.8.3
 	github.com/sonatype-nexus-community/nexus-iq-api-client-go v0.201.0
+	github.com/sonatype-nexus-community/sonatype-guide-api-client-go v1.202605.2
 	github.com/spf13/cobra v1.1.3-0.20210218152603-eb3b6397b1b5
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
