@@ -50,11 +50,7 @@ type AuditLogTextFormatter struct {
 func logPackage(sb *strings.Builder, noColor bool, coordinate ossindex.Coordinate) {
 	au := aurora.NewAurora(!noColor)
 
-	sb.WriteString(
-		fmt.Sprintf("%s\n",
-			au.Bold(au.Green(coordinate.Coordinates)).String(),
-		),
-	)
+	fmt.Fprintf(sb, "%s\n", au.Bold(au.Green(coordinate.Coordinates)).String())
 }
 
 func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, invalidPurls []ossindex.Coordinate) {
@@ -64,11 +60,7 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 			sb.WriteString(au.Red("!!!!! WARNING !!!!!\nScanning cannot be completed on the following package(s) since they do not use semver.\n").String())
 
 			for _, v := range invalidPurls {
-				sb.WriteString(
-					fmt.Sprintf("%s\n",
-						au.Bold(v.Coordinates).String(),
-					),
-				)
+				fmt.Fprintf(sb, "%s\n", au.Bold(v.Coordinates).String())
 			}
 
 			sb.WriteString("\n")
@@ -78,11 +70,10 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 
 func logVulnerablePackage(sb *strings.Builder, noColor bool, coordinate ossindex.Coordinate) {
 	au := aurora.NewAurora(!noColor)
-	sb.WriteString(fmt.Sprintf(
-		"%s\n%s \n",
+	fmt.Fprintf(sb, "%s\n%s \n",
 		au.Bold(au.Red(coordinate.Coordinates)).String(),
 		au.Red(strconv.Itoa(len(coordinate.Vulnerabilities))+" known vulnerabilities affecting installed version").String(),
-	))
+	)
 
 	sort.Slice(coordinate.Vulnerabilities, func(i, j int) bool {
 		return coordinate.Vulnerabilities[i].CvssScore.GreaterThan(coordinate.Vulnerabilities[j].CvssScore)
@@ -140,13 +131,13 @@ func groupAndPrint(vulnerable []ossindex.Coordinate, nonVulnerable []ossindex.Co
 		for _, v := range nonVulnerable {
 			logPackage(sb, noColor, v)
 		}
-		sb.WriteString(fmt.Sprintf("\n%d Non Vulnerable Packages\n\n", len(nonVulnerable)))
+		fmt.Fprintf(sb, "\n%d Non Vulnerable Packages\n\n", len(nonVulnerable))
 	}
 	if len(vulnerable) > 0 {
 		for _, v := range vulnerable {
 			logVulnerablePackage(sb, noColor, v)
 		}
-		sb.WriteString(fmt.Sprintf("\n%d Vulnerable Packages\n\n", len(vulnerable)))
+		fmt.Fprintf(sb, "\n%d Vulnerable Packages\n\n", len(vulnerable))
 	}
 }
 

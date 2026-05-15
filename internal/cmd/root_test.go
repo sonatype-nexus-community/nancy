@@ -508,11 +508,11 @@ func TestOssiCreatorWithCustomURL(t *testing.T) {
 
 func TestOssiCreatorWithLegacyEnvVar(t *testing.T) {
 	defer viper.Reset()
-	defer os.Unsetenv("OSSIndexURL")
+	defer func() { _ = os.Unsetenv("OSSIndexURL") }()
 	logLady, _ = test.NewNullLogger()
 
 	customURL := "https://legacy.ossindex.sonatype.org"
-	os.Setenv("OSSIndexURL", customURL)
+	assert.NoError(t, os.Setenv("OSSIndexURL", customURL))
 
 	ossIndex := ossiCreator.create()
 	assert.NotNil(t, ossIndex)
@@ -520,14 +520,14 @@ func TestOssiCreatorWithLegacyEnvVar(t *testing.T) {
 
 func TestOssiCreatorViperOverridesLegacyEnvVar(t *testing.T) {
 	defer viper.Reset()
-	defer os.Unsetenv("OSSIndexURL")
+	defer func() { _ = os.Unsetenv("OSSIndexURL") }()
 	logLady, _ = test.NewNullLogger()
 
 	viperURL := "https://viper.ossindex.sonatype.org"
 	legacyURL := "https://legacy.ossindex.sonatype.org"
 
 	viper.Set(viperKeyOSSIndexURL, viperURL)
-	os.Setenv("OSSIndexURL", legacyURL)
+	assert.NoError(t, os.Setenv("OSSIndexURL", legacyURL))
 
 	ossIndex := ossiCreator.create()
 	assert.NotNil(t, ossIndex)
