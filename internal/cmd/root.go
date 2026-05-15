@@ -48,7 +48,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type ossiServerFactory interface {
+type serverCreator interface {
 	create() localossindex.IServer
 }
 
@@ -83,15 +83,14 @@ func (ossiFactory) create() localossindex.IServer {
 	return server
 }
 
+const redacted = "***hidden***"
+
 func cleanUserName(origUsername string) string {
 	runes := []rune(origUsername)
-	cleanUsername := "***hidden***"
 	if len(runes) > 0 {
-		first := string(runes[0])
-		last := string(runes[len(runes)-1])
-		cleanUsername = first + "***hidden***" + last
+		return string(runes[0]) + redacted + string(runes[len(runes)-1])
 	}
-	return cleanUsername
+	return redacted
 }
 
 //goland:noinspection GoErrorStringFormat
@@ -102,7 +101,7 @@ var (
 	additionalExcludeVulnerabilityFilePaths []string
 	outputFormat                            string
 	logLady                                 *logrus.Logger
-	ossiCreator                             ossiServerFactory = ossiFactory{}
+	ossiCreator                             serverCreator = ossiFactory{}
 	unixComments                                              = regexp.MustCompile(`#.*$`)
 	untilComment                                              = regexp.MustCompile(`(until=)(.*)`)
 )
@@ -299,7 +298,7 @@ func processConfig() (err error) {
 
 	printHeader(!getIsQuiet() && reflect.TypeOf(configOssi.Formatter).String() == "audit.AuditLogTextFormatter")
 
-	// todo: should errors from getCVEExcludesFromFile() calls be ignored?
+	// Exclude file errors are intentionally ignored — a missing or unreadable file is not fatal.
 	_ = getCVEExcludesFromFile(excludeVulnerabilityFilePath)
 
 	for _, additionalExcludeVulnerabilityFilePath := range additionalExcludeVulnerabilityFilePaths {
