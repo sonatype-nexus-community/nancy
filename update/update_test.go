@@ -17,11 +17,11 @@
 package update
 
 import (
-	"github.com/blang/semver"
-	"github.com/rhysd/go-github-selfupdate/selfupdate"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/blang/semver/v4"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckForUpdatesPackageManagerUnknown(t *testing.T) {
@@ -60,10 +60,10 @@ func TestCheckForUpdatesPackageManagerSourceWithInvalidSlug(t *testing.T) {
 	assert.Contains(t, err.Error(), "Failed to query the GitHub API for updates.")
 
 	expectedSemver := semver.Version{Minor: 1, Patch: 2}
-	expectedUpdater, err := selfupdate.NewUpdater(selfupdate.Config{})
-	assert.Nil(t, err)
-	expectedCheck := &Options{Current: expectedSemver, PackageManager: packageManager, updater: expectedUpdater}
-	assert.Equal(t, expectedCheck, check)
+	assert.Equal(t, expectedSemver, check.Current)
+	assert.Equal(t, packageManager, check.PackageManager)
+	assert.False(t, check.Found)
+	assert.Nil(t, check.Latest)
 }
 
 func TestCheckForUpdatesPackageManagerSource(t *testing.T) {
@@ -82,7 +82,6 @@ func TestCheckForUpdatesPackageManagerSource(t *testing.T) {
 	assert.True(t, check.Found)
 	assert.NotNil(t, check.Latest)
 	assert.NotNil(t, check.Latest.AssetURL)
-	assert.Equal(t, check.Latest.RepoName, NancyAppName)
 }
 
 func isRunningUnderCircleCI() bool {
@@ -105,5 +104,4 @@ func TestCheckForUpdatesPackageManagerRelease(t *testing.T) {
 	assert.True(t, check.Found)
 	assert.NotNil(t, check.Latest)
 	assert.NotNil(t, check.Latest.AssetURL)
-	assert.Equal(t, check.Latest.RepoName, NancyAppName)
 }

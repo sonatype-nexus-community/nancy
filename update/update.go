@@ -17,16 +17,17 @@
 package update
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/settings"
 	"os/exec"
 	"strings"
 	"time"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
+	selfupdate "github.com/creativeprojects/go-selfupdate"
 	"github.com/pkg/errors"
-	"github.com/rhysd/go-github-selfupdate/selfupdate"
+	"github.com/sonatype-nexus-community/nancy/settings"
 )
 
 const (
@@ -70,8 +71,20 @@ func CheckForUpdates(githubAPI, slug, current, packageManager string) (*Options,
 }
 
 func checkFromSource(check *Options) error {
+	var source selfupdate.Source
+	var err error
+
+	if check.githubAPI != "" {
+		source, err = selfupdate.NewGitHubSource(selfupdate.GitHubConfig{
+			EnterpriseBaseURL: check.githubAPI,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
 	updater, err := selfupdate.NewUpdater(selfupdate.Config{
-		EnterpriseBaseURL: check.githubAPI,
+		Source: source,
 	})
 	if err != nil {
 		return err
@@ -109,9 +122,7 @@ func checkFromHomebrew(check *Options) error {
 				check.Current = semver.MustParse(o.InstalledVersions[0])
 			}
 
-			check.Latest = &selfupdate.Release{
-				Version: semver.MustParse(o.CurrentVersion),
-			}
+			check.LatestVersion = o.CurrentVersion
 
 			// We found a release so update state of updates check
 			check.Found = true
@@ -157,6 +168,7 @@ type Options struct {
 	Current        semver.Version
 	Found          bool
 	Latest         *selfupdate.Release
+	LatestVersion  string
 	PackageManager string
 
 	updater   *selfupdate.Updater
@@ -167,9 +179,14 @@ type Options struct {
 // latestRelease will set the last known release as a member on the Options instance.
 // We also update options if any releases were found or not.
 func latestRelease(opts *Options) error {
-	latest, found, err := opts.updater.DetectLatest(opts.slug)
+	repo := selfupdate.ParseSlug(opts.slug)
+	latest, found, err := opts.updater.DetectLatest(context.Background(), repo)
 	opts.Latest = latest
 	opts.Found = found
+
+	if latest != nil {
+		opts.LatestVersion = latest.Version()
+	}
 
 	if err != nil {
 		return errors.Wrap(err, `Failed to query the GitHub API for updates.
@@ -200,24 +217,30 @@ func IsLatestVersion(opts *Options) bool {
 		return true
 	}
 
-	return opts.Latest.Version.Equals(opts.Current)
+	latestVer, err := semver.Parse(opts.LatestVersion)
+	if err != nil {
+		return true
+	}
+
+	return latestVer.Equals(opts.Current)
 }
 
 // InstallLatest will execute the updater and replace the current CLI with the latest version available.
 func InstallLatest(opts *Options) (string, error) {
-	release, err := opts.updater.UpdateSelf(opts.Current, opts.slug)
+	repo := selfupdate.ParseSlug(opts.slug)
+	release, err := opts.updater.UpdateSelf(context.Background(), opts.Current.String(), repo)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to install update")
 	}
 
-	return fmt.Sprintf("Updated to %s", release.Version), nil
+	return fmt.Sprintf("Updated to %s", release.Version()), nil
 }
 
 // DebugVersion returns a nicely formatted string representing the state of the current version.
 // Intended to be printed to standard error for developers.
 func DebugVersion(opts *Options) string {
 	return strings.Join([]string{
-		fmt.Sprintf("Latest version: %s", opts.Latest.Version),
+		fmt.Sprintf("Latest version: %s", opts.LatestVersion),
 		fmt.Sprintf("Published: %s", opts.Latest.PublishedAt),
 		fmt.Sprintf("Current Version: %s", opts.Current),
 	}, "\n")
@@ -228,7 +251,7 @@ func DebugVersion(opts *Options) string {
 func ReportVersion(opts *Options) string {
 	return strings.Join([]string{
 		fmt.Sprintf("You are running %s", opts.Current),
-		fmt.Sprintf("A new release is available (%s)", opts.Latest.Version),
+		fmt.Sprintf("A new release is available (%s)", opts.LatestVersion),
 	}, "\n")
 }
 

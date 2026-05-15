@@ -17,7 +17,9 @@
 package cmd
 
 import (
-	"github.com/rhysd/go-github-selfupdate/selfupdate"
+	"context"
+
+	selfupdate "github.com/creativeprojects/go-selfupdate"
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
 	"github.com/sonatype-nexus-community/nancy/update"
@@ -47,7 +49,8 @@ func newUpdateCommand() *cobra.Command {
 
 func updateCLI(gitHubAPI string, performUpdate bool, quiet bool) error {
 	logAndShowMessage("Checking for updates...", quiet)
-	latest, found, err := selfupdate.DetectLatest(update.NancySlug)
+	repo := selfupdate.ParseSlug(update.NancySlug)
+	latest, found, err := selfupdate.DetectLatest(context.Background(), repo)
 	if err != nil {
 		return err
 	}
