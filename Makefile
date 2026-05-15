@@ -52,7 +52,6 @@ test: build
 
 integration-test: build
 	mkdir -p dist
-	cd packages/testdata && GOPATH=. ../../$(BINARY_NAME) sleuth -p Gopkg.lock && cd -
 	go list -json -deps ./... | ./$(BINARY_NAME) sleuth
 	go list -json -deps | ./$(BINARY_NAME) sleuth
 	go list -json -m all | ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS)
