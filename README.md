@@ -24,134 +24,295 @@
 [![shield_gh-workflow-test]][link_gh-workflow-test]
 [![shield_license]][license_file]
 
-`nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype OSS Index](https://ossindex.sonatype.org/), and as well, works with Nexus IQ Server, allowing you a smooth experience as a Golang developer, using the best tools in the market!
+`nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype Guide](https://guide.sonatype.com/), and also works with Sonatype Lifecycle (formerly Nexus IQ Server), allowing you a smooth experience as a Golang developer!
 
-### Usage
+## Table of Contents
 
-`nancy` currently works for projects that use `dep` or `go mod` for dependencies.
+- [Authentication](#authentication)
+- [Installation](#installation)
+  - [Build from source](#build-from-source)
+  - [Download release binary](#download-release-binary)
+  - [Install via Homebrew (macOS)](#install-via-homebrew-macos)
+  - [Install from the AUR (Arch Linux)](#install-from-the-aur-arch-linux)
+- [Usage](#usage)
+  - [What is the best usage of Nancy?](#what-is-the-best-usage-of-nancy)
+  - [CI Usage](#ci-usage)
+  - [Docker usage](#docker-usage)
+- [Sonatype Guide Options](#sonatype-guide-options)
+  - [Rate limiting / Setting config](#rate-limiting--setting-config)
+  - [Using a custom server URL](#using-a-custom-server-url)
+  - [Loud mode](#loud-mode)
+  - [Exclude vulnerabilities](#exclude-vulnerabilities)
+  - [Output](#output)
+- [Sonatype Lifecycle Options](#sonatype-lifecycle-options)
+  - [Persistent Lifecycle Config](#persistent-lifecycle-config)
+- [Usage in CI](#usage-in-ci)
+- [Why Nancy?](#why-nancy)
+  - [Relationship to govulncheck](#relationship-to-govulncheck)
+- [How to Fix Vulnerabilities](#how-to-fix-vulnerabilities)
+- [Development](#development)
+  - [Release Process](#release-process)
+- [Contributing](#contributing)
+- [Acknowledgements](#acknowledgements)
+- [The Fine Print](#the-fine-print)
+
+## Authentication
+
+Nancy v2.0.0 supports three authentication modes for vulnerability scanning via Sonatype Guide.
+
+### Sonatype Guide Bearer Token (Recommended)
+
+Obtain a free token from [https://guide.sonatype.com](https://guide.sonatype.com).
+
+Use via flag:
+```shell
+go list -json -deps ./... | nancy sleuth --guide-token $GUIDE_TOKEN
+```
+
+Or via environment variable:
+```shell
+export GUIDE_TOKEN=YOUR_TOKEN
+go list -json -deps ./... | nancy sleuth
+```
+
+### OSS Index Credentials (Deprecated)
+
+OSS Index credentials (`--username` / `--token`) continue to work via the Sonatype Guide compatibility API.
+
+> **Deprecated**: OSS Index credentials will be removed in v3.x. Please migrate to a Sonatype Guide Bearer token.
+
+If you have existing OSS Index credentials they will continue to work, but nancy will display a deprecation warning.
+
+```shell
+nancy sleuth --username auser@anemailaddress.com --token A4@k3@p1T0k3n
+```
+
+Or via environment variables:
+```shell
+export OSSI_USERNAME=auser@anemailaddress.com   # Deprecated — migrate to GUIDE_TOKEN
+export OSSI_TOKEN=A4@k3@p1T0k3n                 # Deprecated — migrate to GUIDE_TOKEN
+go list -json -deps ./... | nancy sleuth
+```
+
+### Unauthenticated
+
+Nancy works without any credentials but is rate-limited by the upstream service.
+
+---
+
+## Installation
+
+At the current time you have a few options:
+
+- Build from source
+- Download release binary from [here on GitHub](https://github.com/sonatype-nexus-community/nancy/releases)
+- Install via Homebrew (macOS)
+- Install from the AUR (Arch Linux)
+
+### Build from source
+
+- Clone the project `git clone github.com/sonatype-nexus-community/nancy`
+- In the root of the project run `make`
+  - This will execute multiple targets so if you want to short circuit some of that process you can also just run `make build` to get the binary without running tests, linting, etc
+- Use that binary wherever your heart so desires!
+
+### Download release binary
+
+Each tag pushed to this repo creates a new release binary, and if you'd like to skip building from source, you can download a binary similar to:
+
+```console
+$ curl -o /path/where/you/want/nancy \
+  https://github.com/sonatype-nexus-community/nancy/releases/download/v0.0.44/nancy-darwin.amd64-v0.0.44
+```
+
+### Install via Homebrew (macOS)
+
+On macOS, `nancy` can be installed using `brew`:
+
+```shell
+brew tap sonatype-nexus-community/tap
+brew install sonatype-nexus-community/tap/nancy
+```
+
+`brew` formulae are created and published to that tap with each new release, so you can use `brew` to upgrade, etc... as you wish.
+
+You can see more about the formulae, etc... at [this repo](https://github.com/sonatype-nexus-community/homebrew-nancy-tap).
+
+### Install from the AUR (Arch Linux)
+
+On Arch Linux, `nancy` can be installed using the [AUR](https://aur.archlinux.org/packages/nancy-bin/):
+
+```shell
+$ yay -S nancy-bin
+```
+
+---
+
+## Usage
+
+`nancy` works for projects that use `go mod` for dependencies.
+
+> **New in v2.0.0**: Running `nancy sleuth` with no piped input will automatically invoke `go list -json -deps ./...` for you. The pipe form still works and may be preferred in CI for explicitness.
 
 ```
  ~ > nancy --help
 nancy is a tool to check for vulnerabilities in your Golang dependencies,
-powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
-a smooth experience as a Golang developer, using the best tools in the market!
+powered by Sonatype Guide, and also works with Sonatype Lifecycle, allowing
+you a smooth experience as a Golang developer!
 
 Usage:
   nancy [flags]
   nancy [command]
 
 Examples:
-  Typical usage will pipe the output of 'go list -json -deps' to 'nancy':
+  Typical usage:
+  nancy sleuth [flags]
+  nancy lifecycle [flags]
+
+  Or explicitly piping go list output:
   go list -json -deps ./... | nancy sleuth [flags]
-  go list -json -deps ./... | nancy iq [flags]
-
-  If using dep typical usage is as follows :
-  nancy sleuth -p Gopkg.lock [flags]
-  nancy iq -p Gopkg.lock [flags]
-
+  go list -json -deps ./... | nancy lifecycle [flags]
 
 Available Commands:
   config      Setup credentials to use when connecting to services
   help        Help about any command
-  iq          Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'
-  sleuth      Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index
+  lifecycle   Check for vulnerabilities in your Golang dependencies using Sonatype Lifecycle
+  sleuth      Check for vulnerabilities in your Golang dependencies using Sonatype Guide
   update      Check if there are any updates available
 
 Flags:
   -v, -- count                 Set log level, multiple v's is more verbose
   -c, --clean-cache            Deletes local cache directory
-  -d, --db-cache-path string   Specify an alternate path for caching responses from OSS Inde, example: /tmp
+  -d, --db-cache-path string   Specify an alternate path for caching responses from Sonatype Guide, example: /tmp
   -h, --help                   help for nancy
       --loud                   indicate output should include non-vulnerable packages
-  -p, --path string            Specify a path to a dep Gopkg.lock file for scanning
   -q, --quiet                  indicate output should contain only packages with vulnerabilities (default true)
       --skip-update-check      Skip the check for updates.
-  -t, --token string           Specify OSS Index API token for request
-  -u, --username string        Specify OSS Index username for request
+  -t, --token string           Specify OSS Index API token for request (deprecated, use --guide-token)
+  -u, --username string        Specify OSS Index username for request (deprecated, use --guide-token)
   -V, --version                Get the version
 
 Use "nancy [command] --help" for more information about a command.
 
 
 $ > nancy sleuth --help
-'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by the 'Sonatype OSS Index'.
+'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by Sonatype Guide.
 
 Usage:
   nancy sleuth [flags]
 
 Examples:
-  go list -json -deps ./... | nancy sleuth --username your_user --token your_token
-  nancy sleuth -p Gopkg.lock --username your_user --token your_token
+  nancy sleuth --guide-token $GUIDE_TOKEN
+  go list -json -deps ./... | nancy sleuth --guide-token $GUIDE_TOKEN
 
 Flags:
-  -a, --additional-exclude-vulnerability-files strings   Path to additional files containing newline separated CVEs or OSS Index IDs to be excluded
-  -e, --exclude-vulnerability CveListFlag                Comma separated list of CVEs or OSS Index IDs to exclude (default [])
-  -x, --exclude-vulnerability-file string                Path to a file containing newline separated CVEs or OSS Index IDs to be excluded (default "./.nancy-ignore")
+  -a, --additional-exclude-vulnerability-files strings   Path to additional files containing newline separated CVEs or Sonatype IDs to be excluded
+  -e, --exclude-vulnerability CveListFlag                Comma separated list of CVEs or Sonatype IDs to exclude (default [])
+  -x, --exclude-vulnerability-file string                Path to a file containing newline separated CVEs or Sonatype IDs to be excluded (default "./.nancy-ignore")
+      --guide-token string                               Specify Sonatype Guide Bearer token for request
   -h, --help                                             help for sleuth
   -n, --no-color                                         indicate output should not be colorized
   -o, --output string                                    Styling for output format. json, json-pretty, text, csv (default "text")
 
 Global Flags:
   -v, -- count                 Set log level, multiple v's is more verbose
-  -d, --db-cache-path string   Specify an alternate path for caching responses from OSS Inde, example: /tmp
+  -d, --db-cache-path string   Specify an alternate path for caching responses from Sonatype Guide, example: /tmp
       --loud                   indicate output should include non-vulnerable packages
-  -p, --path string            Specify a path to a dep Gopkg.lock file for scanning
   -q, --quiet                  indicate output should contain only packages with vulnerabilities (default true)
       --skip-update-check      Skip the check for updates.
-  -t, --token string           Specify OSS Index API token for request
-  -u, --username string        Specify OSS Index username for request
+  -t, --token string           Specify OSS Index API token for request (deprecated, use --guide-token)
+  -u, --username string        Specify OSS Index username for request (deprecated, use --guide-token)
   -V, --version                Get the version
 
-$ > nancy iq --help
-'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!
+$ > nancy lifecycle --help
+'nancy lifecycle' is a command to check for vulnerabilities in your Golang dependencies using Sonatype Lifecycle.
+Note: 'nancy iq' is a deprecated alias for 'nancy lifecycle'.
 
 Usage:
-  nancy iq [flags]
+  nancy lifecycle [flags]
 
 Examples:
-  go list -json -deps ./... | nancy iq --iq-application your_public_application_id --iq-server-url http://your_iq_server_url:port --iq-username your_user --iq-token your_token --iq-stage develop
-  nancy iq -p Gopkg.lock --iq-application your_public_application_id --iq-server-url http://your_iq_server_url:port --iq-username your_user --iq-token your_token --iq-stage develop
+  go list -json -deps ./... | nancy lifecycle --lifecycle-application your_public_application_id --lifecycle-server-url http://your_lifecycle_server_url:port --lifecycle-username your_user --lifecycle-token your_token --lifecycle-stage develop
 
 Flags:
-  -h, --help                    help for iq
-  -a, --iq-application string   Specify Nexus IQ public application ID for request
-  -x, --iq-server-url string    Specify Nexus IQ server url for request (default "http://localhost:8070")
-  -s, --iq-stage string         Specify Nexus IQ stage for request (default "develop")
-  -k, --iq-token string         Specify Nexus IQ token for request (default "admin123")
-  -l, --iq-username string      Specify Nexus IQ username for request (default "admin")
+  -h, --help                              help for lifecycle
+  -a, --lifecycle-application string      Specify Sonatype Lifecycle public application ID for request
+  -x, --lifecycle-server-url string       Specify Sonatype Lifecycle server url for request (default "http://localhost:8070")
+  -s, --lifecycle-stage string            Specify Sonatype Lifecycle stage for request (default "develop")
+  -k, --lifecycle-token string            Specify Sonatype Lifecycle token for request (default "admin123")
+  -l, --lifecycle-username string         Specify Sonatype Lifecycle username for request (default "admin")
 
 Global Flags:
   -v, -- count                 Set log level, multiple v's is more verbose
-  -d, --db-cache-path string   Specify an alternate path for caching responses from OSS Inde, example: /tmp
+  -d, --db-cache-path string   Specify an alternate path for caching responses from Sonatype Guide, example: /tmp
       --loud                   indicate output should include non-vulnerable packages
-  -p, --path string            Specify a path to a dep Gopkg.lock file for scanning
   -q, --quiet                  indicate output should contain only packages with vulnerabilities (default true)
       --skip-update-check      Skip the check for updates.
-  -t, --token string           Specify OSS Index API token for request
-  -u, --username string        Specify OSS Index username for request
+  -t, --token string           Specify OSS Index API token for request (deprecated, use --guide-token)
+  -u, --username string        Specify OSS Index username for request (deprecated, use --guide-token)
   -V, --version                Get the version
 ```
 
-#### What is the best usage of Nancy?
+> **Gopkg.lock support removed in v2.0.0**
+>
+> The `golang/dep` project has been archived since 2020. Nancy v2.0.0 removes Gopkg.lock scanning.
+>
+> **Migration**: Migrate your project to Go modules. Then scan with:
+> ```
+> go list -json -deps ./... | nancy sleuth
+> ```
+> See https://go.dev/doc/gopath_vs_modules for migration guidance.
 
-The preferred way to use Nancy is:
+### What is the best usage of Nancy?
 
-- `go list -json -deps ./... | nancy sleuth`
-- `nancy sleuth -p /path/to/Gopkg.lock`
+The preferred way to use Nancy is simply:
+
+- `nancy sleuth --guide-token $GUIDE_TOKEN`
+
+Or explicitly piping `go list` output (equivalent, and preferred in CI):
+
+- `go list -json -deps ./... | nancy sleuth --guide-token $GUIDE_TOKEN`
 
 If you would like to scan all dependencies, including those that do not end up in the final binary, you can use
 `go list -json -m all` instead:
 
-- `go list -json -m all | nancy sleuth`
+- `go list -json -m all | nancy sleuth --guide-token $GUIDE_TOKEN`
 
-#### CI Usage
+### CI Usage
 
 Here are some additional tools to simplify using Nancy in your CI environment:
 
 * [Nancy CircleCI Orb](https://github.com/sonatype-nexus-community/circleci-nancy-orb)
 * [Nancy GitHub Action](https://github.com/sonatype-nexus-community/nancy-github-action)
 
-#### Docker usage
+#### GitHub Actions Example
+
+```yaml
+name: Vulnerability Scan
+on: [push, pull_request]
+
+jobs:
+  nancy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Scan for vulnerabilities
+        run: go list -json -deps ./... | nancy sleuth --guide-token ${{ secrets.GUIDE_TOKEN }}
+```
+
+For Sonatype Lifecycle (formerly Nexus IQ) scanning:
+
+```yaml
+      - name: Scan with Sonatype Lifecycle
+        run: go list -json -deps ./... | nancy lifecycle --lifecycle-application my-app-id --lifecycle-server-url ${{ vars.LIFECYCLE_URL }} --lifecycle-username ${{ secrets.LIFECYCLE_USERNAME }} --lifecycle-token ${{ secrets.LIFECYCLE_TOKEN }}
+```
+
+> **Note**: `nancy iq` is a deprecated alias for `nancy lifecycle`. The `--iq-*` flags are deprecated aliases for `--lifecycle-*` flags. Both continue to work in v2.0.0 but will be removed in v3.x.
+
+### Docker usage
 
 <p align="center">
     <img src="https://github.com/sonatype-nexus-community/nancy/blob/main/docs/images/nancy_docker.png" width="350" alt="nancy docker logo"/>
@@ -159,7 +320,9 @@ Here are some additional tools to simplify using Nancy in your CI environment:
 
 `nancy` now comes in a boat! For ease of use, we've dockerized `nancy`. To use our Dockerfile:
 
-`go list -json -deps ./... | docker run --rm -i sonatypecommunity/nancy:latest sleuth`
+```shell
+go list -json -deps ./... | docker run --rm -i sonatypecommunity/nancy:latest sleuth --guide-token $GUIDE_TOKEN
+```
 
 We publish a few different flavors for convenience:
 
@@ -202,93 +365,82 @@ We publish a few different flavors for convenience:
     sonatypecommunity/nancy   v1.0.0                        7cb89e362115        53 seconds ago      14.1MB
     ```
 
-### OSS Index Options
+---
 
-#### Rate limiting / Setting OSS Index config
+## Sonatype Guide Options
 
-**NOTE: New as of Nancy v0.1.17**
+### Rate limiting / Setting config
 
-If you start using Nancy extensively, you might run into Rate Limiting from OSS Index! Don't worry, we've got your back!
+If you start using Nancy extensively without authentication, you might run into rate limiting from Sonatype Guide. To avoid this, authenticate with a Guide Bearer token (see [Authentication](#authentication) above).
 
-If you run into Rate Limiting you should receive an error that will give you instructions on how to register on OSS Index:
+If you run into rate limiting you should receive an error with instructions on how to obtain a token:
 
 ```
-You have been rate limited by OSS Index.
-If you do not have a OSS Index account, please visit https://ossindex.sonatype.org/user/register to register an account.
-After registering and verifying your account, you can retrieve your username (Email Address), and API Token
-at https://ossindex.sonatype.org/user/settings. Upon retrieving those, run 'nancy config', set your OSS Index
-settings, and rerun Nancy.
+You have been rate limited by Sonatype Guide.
+Please visit https://guide.sonatype.com to obtain a free Bearer token.
+Upon retrieving your token, run nancy with --guide-token YOUR_TOKEN or set GUIDE_TOKEN=YOUR_TOKEN.
 ```
 
-After setting this config, you'll be gifted a nice new higher rate limit. If you escape this limit, you might take a look at using Nexus IQ Server, or reach out to the friendly people at OSS Index for partnership opportunities.
+You can set your token via the command line:
 
-You can also set the user and token via the command line like so:
+`nancy sleuth --guide-token YOUR_TOKEN`
 
-`nancy sleuth --username auser@anemailaddress.com --token A4@k3@p1T0k3n`
-
-This can be handy for testing your account out, or if you want to override your set config with a different user.
-
-As of Nancy v1.0.17, you can also specify configuration values using environment variables:
+Or as an environment variable:
 
 ```shell
-export OSSI_USERNAME=auser@anemailaddress.com
-export OSSI_TOKEN=A4@k3@p1T0k3n
-go list -json -deps ./... | ./nancy sleuth
-...
+export GUIDE_TOKEN=YOUR_TOKEN
+go list -json -deps ./... | nancy sleuth
 ```
 
-#### Using a custom OSS Index server
+### Using a custom server URL
 
-If you need to use a custom or on-premise OSS Index server, you can configure the OSS Index URL in several ways:
+If you need to use a custom or on-premise Sonatype Guide server, you can configure the URL in several ways:
 
 1. **Via command-line flag:**
    ```shell
-   nancy sleuth --ossindex-url https://custom.ossindex.sonatype.org -p Gopkg.lock
+   nancy sleuth --ossindex-url https://custom.guide.sonatype.com
    ```
 
 2. **Via environment variable:**
    ```shell
-   export OSSI_OSSINDEXURL=https://custom.ossindex.sonatype.org
+   export OSSI_OSSINDEXURL=https://custom.guide.sonatype.com
    go list -json -deps ./... | nancy sleuth
    ```
 
 3. **Via legacy environment variable (for backwards compatibility):**
    ```shell
-   export OSSIndexURL=https://custom.ossindex.sonatype.org
+   export OSSIndexURL=https://custom.guide.sonatype.com
    go list -json -deps ./... | nancy sleuth
    ```
 
-The priority order is: command-line flag > `OSSI_OSSINDEXURL` environment variable > `OSSIndexURL` environment variable > default OSS Index URL.
+The priority order is: command-line flag > `OSSI_OSSINDEXURL` environment variable > `OSSIndexURL` environment variable > default URL.
 
-#### Loud mode
+### Loud mode
 
 By default, `nancy` runs in a "quiet" mode, only displaying a list of vulnerable components.
 You can run `nancy` in a loud manner, showing all components by running:
 
-- `nancy sleuth --loud -p /path/to/your/Gopkg.lock`
 - `go list -json -deps ./... | nancy sleuth --loud`
 
-#### Exclude vulnerabilities
+### Exclude vulnerabilities
 
 Sometimes you'll run into a dependency that after taking a look at, you either aren't affected by, or cannot resolve for some reason. Nancy understands, and will let you
 exclude these vulnerabilities, so you can get back to a passing build:
 
 Vulnerabilities excluded will then be silenced and not show up in the output or fail your build.
 
-We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or via the OSS Index ID (ex: `a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14`) as not all vulnerabilities have a CVE-ID.
+We support exclusion of vulnerability either by CVE-ID (ex: `CVE-2018-20303`) or via the Sonatype vulnerability ID (ex: `a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14`) as not all vulnerabilities have a CVE-ID.
 
-##### Via CLI flag
+#### Via CLI flag
 
-- `nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2 -p /path/to/your/Gopkg.lock`
 - `go list -json -deps ./... | nancy sleuth --exclude-vulnerability CVE-789,bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2`
 
-##### Via file
+#### Via file
 
 By default, if a file named `.nancy-ignore` exists in the same directory that nancy is run it will use it - no other options need to be passed.
 
 If you would like to define the path to the file you can use the following
 
-- `nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file -p /path/to/your/Gopkg.lock`
 - `go list -json -deps ./... | nancy sleuth --exclude-vulnerability-file=/path/to/your/exclude-file`
 
 If you would like to split up your excludes into multiple files besides your root `.nancy-ignore` you can pass them via the `-a` or `--additional-exclude-vulnerability-files` flags.
@@ -318,7 +470,7 @@ CVN-111 until=2021-01-01
 CVN-543 until=2018-02-12 #Waiting on release from third party. Should be out before this date but gives us a little time to fix it.
 ```
 
-#### Output
+### Output
 
 We support multiple different output formats. Examples can be found below for each. [This intentionally vulnerable repo](https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project) was used to generate the example output.
 Quiet option is supported in text and csv. json formatting will ignore the Quiet option and output the same values if it's passed or not.
@@ -354,7 +506,7 @@ Audited dependencies:10,Vulnerable:6
 _json_
 
 ```json
-{"audited":[{"Coordinates":"pkg:golang/github.com/bitly/oauth2_proxy@0.1","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/bitly/oauth2_proxy@0.1","Vulnerabilities":[{"Id":"9eb9a5bc-8310-4104-bf85-3a820d28ba79","Title":"[CVE-2017-1000070]  URL Redirection to Untrusted Site (\"Open Redirect\")","Description":"The Bitly oauth2_proxy in version 2.1 and earlier was affected by an open redirect vulnerability during the start and termination of the 2-legged OAuth flow. This issue was caused by improper input validation and a violation of RFC-6819","CvssScore":"6.1","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N","Cve":"CVE-2017-1000070","Reference":"https://ossindex.sonatype.org/vuln/9eb9a5bc-8310-4104-bf85-3a820d28ba79","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/cockroachdb/cockroach@2.1.4","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/cockroachdb/cockroach@2.1.4","Vulnerabilities":[],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/ethereum/go-ethereum@1.8.15","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/ethereum/go-ethereum@1.8.15","Vulnerabilities":[{"Id":"4efaed86-e62e-4c0c-b812-36c07e61ede4","Title":"CWE-400: Uncontrolled Resource Consumption ('Resource Exhaustion')","Description":"The software does not properly restrict the size or amount of resources that are requested or influenced by an actor, which can be used to consume more resources than intended.","CvssScore":"7.5","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H","Cve":"","Reference":"https://ossindex.sonatype.org/vuln/4efaed86-e62e-4c0c-b812-36c07e61ede4","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/elastic/beats@5.6.3","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/elastic/beats@5.6.3","Vulnerabilities":[{"Id":"8e4d562d-517b-4d00-a845-a7a3e2be41db","Title":"[CVE-2017-11480]  Improper Access Control","Description":"Packetbeat versions prior to 5.6.4 are affected by a denial of service flaw in the PostgreSQL protocol handler. If Packetbeat is listening for PostgreSQL traffic and a user is able to send arbitrary network traffic to the monitored port, the attacker could prevent Packetbeat from properly logging other PostgreSQL traffic.","CvssScore":"7.5","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H","Cve":"CVE-2017-11480","Reference":"https://ossindex.sonatype.org/vuln/8e4d562d-517b-4d00-a845-a7a3e2be41db","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/etcd-io/etcd@3.3.0","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/etcd-io/etcd@3.3.0","Vulnerabilities":[{"Id":"5c876f5e-2814-4822-baf0-1092fc63ec25","Title":"[CVE-2018-1098]  Cross-Site Request Forgery (CSRF)","Description":"A cross-site request forgery flaw was found in etcd 3.3.1 and earlier. An attacker can set up a website that tries to send a POST request to the etcd server and modify a key. Adding a key is done with PUT so it is theoretically safe (can't PUT from an HTML form or such) but POST allows creating in-order keys that an attacker can send.","CvssScore":"8.8","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H","Cve":"CVE-2018-1098","Reference":"https://ossindex.sonatype.org/vuln/5c876f5e-2814-4822-baf0-1092fc63ec25","Excluded":false},{"Id":"8a190129-526c-4ee0-b663-92f38139c165","Title":"[CVE-2018-1099]  Improper Input Validation","Description":"DNS rebinding vulnerability found in etcd 3.3.1 and earlier. An attacker can control his DNS records to direct to localhost, and trick the browser into sending requests to localhost (or any other address).","CvssScore":"5.5","CvssVector":"CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N","Cve":"CVE-2018-1099","Reference":"https://ossindex.sonatype.org/vuln/8a190129-526c-4ee0-b663-92f38139c165","Excluded":false},{"Id":"69b9f08b-8eda-4125-8e84-b7d67a7c9ee5","Title":"[CVE-2018-16886]  Improper Authentication","Description":"etcd versions 3.2.x before 3.2.26 and 3.3.x before 3.3.11 are vulnerable to an improper authentication issue when role-based access control (RBAC) is used and client-cert-auth is enabled. If an etcd client server TLS certificate contains a Common Name (CN) which matches a valid RBAC username, a remote attacker may authenticate as that user with any valid (trusted) client certificate in a REST API request to the gRPC-gateway.","CvssScore":"8.1","CvssVector":"CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H","Cve":"CVE-2018-16886","Reference":"https://ossindex.sonatype.org/vuln/69b9f08b-8eda-4125-8e84-b7d67a7c9ee5","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/github/hub@2.0.0","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/github/hub@2.0.0","Vulnerabilities":[],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/gogs/gogs@0.9.45","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/gogs/gogs@0.9.45","Vulnerabilities":[{"Id":"a4c682fa-9c9f-4e9e-b218-720d5125b17f","Title":"CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')","Description":"The software constructs all or part of an SQL command using externally-influenced input from an upstream component, but it does not neutralize or incorrectly neutralizes special elements that could modify the intended SQL command when it is sent to a downstream component.","CvssScore":"9.9","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H","Cve":"","Reference":"https://ossindex.sonatype.org/vuln/a4c682fa-9c9f-4e9e-b218-720d5125b17f","Excluded":false},{"Id":"304fa9e0-012e-4385-88b2-88c0c5ec3247","Title":"[CVE-2018-15192] An SSRF vulnerability in webhooks in Gitea through 1.5.0-rc2 and Gogs through 0....","Description":"An SSRF vulnerability in webhooks in Gitea through 1.5.0-rc2 and Gogs through 0.11.53 allows remote attackers to access intranet services.","CvssScore":"8.6","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N","Cve":"CVE-2018-15192","Reference":"https://ossindex.sonatype.org/vuln/304fa9e0-012e-4385-88b2-88c0c5ec3247","Excluded":false},{"Id":"a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14","Title":"[CVE-2018-20303]  Improper Limitation of a Pathname to a Restricted Directory (\"Path Traversal\")","Description":"In pkg/tool/path.go in Gogs before 0.11.82.1218, a directory traversal in the file-upload functionality can allow an attacker to create a file under data/sessions on the server, a similar issue to CVE-2018-18925.","CvssScore":"7.5","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N","Cve":"CVE-2018-20303","Reference":"https://ossindex.sonatype.org/vuln/a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14","Excluded":false},{"Id":"bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2","Title":"[CVE-2018-18925] Gogs 0.11.66 allows remote code execution because it does not properly validate ...","Description":"Gogs 0.11.66 allows remote code execution because it does not properly validate session IDs, as demonstrated by a \"..\" session-file forgery in the file session provider in file.go. This is related to session ID handling in the go-macaron/session code for Macaron.","CvssScore":"9.8","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H","Cve":"CVE-2018-18925","Reference":"https://ossindex.sonatype.org/vuln/bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2","Excluded":false},{"Id":"bbbdbb94-f65a-475c-9e9f-6793778fbd9b","Title":"[CVE-2018-15178]  URL Redirection to Untrusted Site (\"Open Redirect\")","Description":"Open redirect vulnerability in Gogs before 0.12 allows remote attackers to redirect users to arbitrary websites and conduct phishing attacks via an initial /\\ substring in the user/login redirect_to parameter, related to the function isValidRedirect in routes/user/auth.go.","CvssScore":"6.1","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N","Cve":"CVE-2018-15178","Reference":"https://ossindex.sonatype.org/vuln/bbbdbb94-f65a-475c-9e9f-6793778fbd9b","Excluded":false},{"Id":"fc70a115-52cc-44ea-a33d-793267f860dd","Title":"CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')","Description":"The software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.","CvssScore":"6.1","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N","Cve":"","Reference":"https://ossindex.sonatype.org/vuln/fc70a115-52cc-44ea-a33d-793267f860dd","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/goharbor/harbor@1.7.2","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/goharbor/harbor@1.7.2","Vulnerabilities":[],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/gophish/gophish@0.1.1","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/gophish/gophish@0.1.1","Vulnerabilities":[{"Id":"0416e202-2705-431d-9915-8ed93334ca58","Title":"CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')","Description":"The software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.","CvssScore":"6.1","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N","Cve":"","Reference":"https://ossindex.sonatype.org/vuln/0416e202-2705-431d-9915-8ed93334ca58","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/ipfs/go-ipfs@0.4.18","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/ipfs/go-ipfs@0.4.18","Vulnerabilities":[],"InvalidSemVer":false}],"exclusions":[],"invalid":[{"Coordinates":"pkg:golang/github.com/go-gitea/gitea@1.3.0.rc1","Reference":"","Vulnerabilities":null,"InvalidSemVer":true}],"num_audited":10,"num_vulnerable":6,"version":"development","vulnerable":[{"Coordinates":"pkg:golang/github.com/bitly/oauth2_proxy@0.1","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/bitly/oauth2_proxy@0.1","Vulnerabilities":[{"Id":"9eb9a5bc-8310-4104-bf85-3a820d28ba79","Title":"[CVE-2017-1000070]  URL Redirection to Untrusted Site (\"Open Redirect\")","Description":"The Bitly oauth2_proxy in version 2.1 and earlier was affected by an open redirect vulnerability during the start and termination of the 2-legged OAuth flow. This issue was caused by improper input validation and a violation of RFC-6819","CvssScore":"6.1","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N","Cve":"CVE-2017-1000070","Reference":"https://ossindex.sonatype.org/vuln/9eb9a5bc-8310-4104-bf85-3a820d28ba79","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/ethereum/go-ethereum@1.8.15","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/ethereum/go-ethereum@1.8.15","Vulnerabilities":[{"Id":"4efaed86-e62e-4c0c-b812-36c07e61ede4","Title":"CWE-400: Uncontrolled Resource Consumption ('Resource Exhaustion')","Description":"The software does not properly restrict the size or amount of resources that are requested or influenced by an actor, which can be used to consume more resources than intended.","CvssScore":"7.5","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H","Cve":"","Reference":"https://ossindex.sonatype.org/vuln/4efaed86-e62e-4c0c-b812-36c07e61ede4","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/elastic/beats@5.6.3","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/elastic/beats@5.6.3","Vulnerabilities":[{"Id":"8e4d562d-517b-4d00-a845-a7a3e2be41db","Title":"[CVE-2017-11480]  Improper Access Control","Description":"Packetbeat versions prior to 5.6.4 are affected by a denial of service flaw in the PostgreSQL protocol handler. If Packetbeat is listening for PostgreSQL traffic and a user is able to send arbitrary network traffic to the monitored port, the attacker could prevent Packetbeat from properly logging other PostgreSQL traffic.","CvssScore":"7.5","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H","Cve":"CVE-2017-11480","Reference":"https://ossindex.sonatype.org/vuln/8e4d562d-517b-4d00-a845-a7a3e2be41db","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/etcd-io/etcd@3.3.0","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/etcd-io/etcd@3.3.0","Vulnerabilities":[{"Id":"5c876f5e-2814-4822-baf0-1092fc63ec25","Title":"[CVE-2018-1098]  Cross-Site Request Forgery (CSRF)","Description":"A cross-site request forgery flaw was found in etcd 3.3.1 and earlier. An attacker can set up a website that tries to send a POST request to the etcd server and modify a key. Adding a key is done with PUT so it is theoretically safe (can't PUT from an HTML form or such) but POST allows creating in-order keys that an attacker can send.","CvssScore":"8.8","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H","Cve":"CVE-2018-1098","Reference":"https://ossindex.sonatype.org/vuln/5c876f5e-2814-4822-baf0-1092fc63ec25","Excluded":false},{"Id":"8a190129-526c-4ee0-b663-92f38139c165","Title":"[CVE-2018-1099]  Improper Input Validation","Description":"DNS rebinding vulnerability found in etcd 3.3.1 and earlier. An attacker can control his DNS records to direct to localhost, and trick the browser into sending requests to localhost (or any other address).","CvssScore":"5.5","CvssVector":"CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N","Cve":"CVE-2018-1099","Reference":"https://ossindex.sonatype.org/vuln/8a190129-526c-4ee0-b663-92f38139c165","Excluded":false},{"Id":"69b9f08b-8eda-4125-8e84-b7d67a7c9ee5","Title":"[CVE-2018-16886]  Improper Authentication","Description":"etcd versions 3.2.x before 3.2.26 and 3.3.x before 3.3.11 are vulnerable to an improper authentication issue when role-based access control (RBAC) is used and client-cert-auth is enabled. If an etcd client server TLS certificate contains a Common Name (CN) which matches a valid RBAC username, a remote attacker may authenticate as that user with any valid (trusted) client certificate in a REST API request to the gRPC-gateway.","CvssScore":"8.1","CvssVector":"CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H","Cve":"CVE-2018-16886","Reference":"https://ossindex.sonatype.org/vuln/69b9f08b-8eda-4125-8e84-b7d67a7c9ee5","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/gogs/gogs@0.9.45","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/gogs/gogs@0.9.45","Vulnerabilities":[{"Id":"a4c682fa-9c9f-4e9e-b218-720d5125b17f","Title":"CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')","Description":"The software constructs all or part of an SQL command using externally-influenced input from an upstream component, but it does not neutralize or incorrectly neutralizes special elements that could modify the intended SQL command when it is sent to a downstream component.","CvssScore":"9.9","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H","Cve":"","Reference":"https://ossindex.sonatype.org/vuln/a4c682fa-9c9f-4e9e-b218-720d5125b17f","Excluded":false},{"Id":"304fa9e0-012e-4385-88b2-88c0c5ec3247","Title":"[CVE-2018-15192] An SSRF vulnerability in webhooks in Gitea through 1.5.0-rc2 and Gogs through 0....","Description":"An SSRF vulnerability in webhooks in Gitea through 1.5.0-rc2 and Gogs through 0.11.53 allows remote attackers to access intranet services.","CvssScore":"8.6","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N","Cve":"CVE-2018-15192","Reference":"https://ossindex.sonatype.org/vuln/304fa9e0-012e-4385-88b2-88c0c5ec3247","Excluded":false},{"Id":"a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14","Title":"[CVE-2018-20303]  Improper Limitation of a Pathname to a Restricted Directory (\"Path Traversal\")","Description":"In pkg/tool/path.go in Gogs before 0.11.82.1218, a directory traversal in the file-upload functionality can allow an attacker to create a file under data/sessions on the server, a similar issue to CVE-2018-18925.","CvssScore":"7.5","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N","Cve":"CVE-2018-20303","Reference":"https://ossindex.sonatype.org/vuln/a8c20c84-1f6a-472a-ba1b-3eaedb2a2a14","Excluded":false},{"Id":"bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2","Title":"[CVE-2018-18925] Gogs 0.11.66 allows remote code execution because it does not properly validate ...","Description":"Gogs 0.11.66 allows remote code execution because it does not properly validate session IDs, as demonstrated by a \"..\" session-file forgery in the file session provider in file.go. This is related to session ID handling in the go-macaron/session code for Macaron.","CvssScore":"9.8","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H","Cve":"CVE-2018-18925","Reference":"https://ossindex.sonatype.org/vuln/bcb0c38d-0d35-44ee-b7a7-8f77183d1ae2","Excluded":false},{"Id":"bbbdbb94-f65a-475c-9e9f-6793778fbd9b","Title":"[CVE-2018-15178]  URL Redirection to Untrusted Site (\"Open Redirect\")","Description":"Open redirect vulnerability in Gogs before 0.12 allows remote attackers to redirect users to arbitrary websites and conduct phishing attacks via an initial /\\ substring in the user/login redirect_to parameter, related to the function isValidRedirect in routes/user/auth.go.","CvssScore":"6.1","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N","Cve":"CVE-2018-15178","Reference":"https://ossindex.sonatype.org/vuln/bbbdbb94-f65a-475c-9e9f-6793778fbd9b","Excluded":false},{"Id":"fc70a115-52cc-44ea-a33d-793267f860dd","Title":"CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')","Description":"The software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.","CvssScore":"6.1","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N","Cve":"","Reference":"https://ossindex.sonatype.org/vuln/fc70a115-52cc-44ea-a33d-793267f860dd","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/gophish/gophish@0.1.1","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/gophish/gophish@0.1.1","Vulnerabilities":[{"Id":"0416e202-2705-431d-9915-8ed93334ca58","Title":"CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')","Description":"The software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.","CvssScore":"6.1","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N","Cve":"","Reference":"https://ossindex.sonatype.org/vuln/0416e202-2705-431d-9915-8ed93334ca58","Excluded":false}],"InvalidSemVer":false}]}
+{"audited":[{"Coordinates":"pkg:golang/github.com/bitly/oauth2_proxy@0.1","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/bitly/oauth2_proxy@0.1","Vulnerabilities":[{"Id":"9eb9a5bc-8310-4104-bf85-3a820d28ba79","Title":"[CVE-2017-1000070]  URL Redirection to Untrusted Site (\"Open Redirect\")","Description":"The Bitly oauth2_proxy in version 2.1 and earlier was affected by an open redirect vulnerability during the start and termination of the 2-legged OAuth flow. This issue was caused by improper input validation and a violation of RFC-6819","CvssScore":"6.1","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N","Cve":"CVE-2017-1000070","Reference":"https://ossindex.sonatype.org/vuln/9eb9a5bc-8310-4104-bf85-3a820d28ba79","Excluded":false}],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/cockroachdb/cockroach@2.1.4","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/cockroachdb/cockroach@2.1.4","Vulnerabilities":[],"InvalidSemVer":false},{"Coordinates":"pkg:golang/github.com/ethereum/go-ethereum@1.8.15","Reference":"https://ossindex.sonatype.org/component/pkg:golang/github.com/ethereum/go-ethereum@1.8.15","Vulnerabilities":[{"Id":"4efaed86-e62e-4c0c-b812-36c07e61ede4","Title":"CWE-400: Uncontrolled Resource Consumption ('Resource Exhaustion')","Description":"The software does not properly restrict the size or amount of resources that are requested or influenced by an actor, which can be used to consume more resources than intended.","CvssScore":"7.5","CvssVector":"CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H","Cve":"","Reference":"https://ossindex.sonatype.org/vuln/4efaed86-e62e-4c0c-b812-36c07e61ede4","Excluded":false}],"InvalidSemVer":false},...}
 ```
 
 _json-pretty_
@@ -379,29 +531,6 @@ _json-pretty_
       ],
       "InvalidSemVer": false
     },
-    {
-      "Coordinates": "pkg:golang/github.com/cockroachdb/cockroach@2.1.4",
-      "Reference": "https://ossindex.sonatype.org/component/pkg:golang/github.com/cockroachdb/cockroach@2.1.4",
-      "Vulnerabilities": [],
-      "InvalidSemVer": false
-    },
-    {
-      "Coordinates": "pkg:golang/github.com/ethereum/go-ethereum@1.8.15",
-      "Reference": "https://ossindex.sonatype.org/component/pkg:golang/github.com/ethereum/go-ethereum@1.8.15",
-      "Vulnerabilities": [
-        {
-          "Id": "4efaed86-e62e-4c0c-b812-36c07e61ede4",
-          "Title": "CWE-400: Uncontrolled Resource Consumption ('Resource Exhaustion')",
-          "Description": "The software does not properly restrict the size or amount of resources that are requested or influenced by an actor, which can be used to consume more resources than intended.",
-          "CvssScore": "7.5",
-          "CvssVector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-          "Cve": "",
-          "Reference": "https://ossindex.sonatype.org/vuln/4efaed86-e62e-4c0c-b812-36c07e61ede4",
-          "Excluded": false
-        }
-      ],
-      "InvalidSemVer": false
-    },
     ...
   ],
   "exclusions": [],
@@ -416,60 +545,7 @@ _json-pretty_
   "num_audited": 10,
   "num_vulnerable": 6,
   "version": "development",
-  "vulnerable": [
-    {
-      "Coordinates": "pkg:golang/github.com/bitly/oauth2_proxy@0.1",
-      "Reference": "https://ossindex.sonatype.org/component/pkg:golang/github.com/bitly/oauth2_proxy@0.1",
-      "Vulnerabilities": [
-        {
-          "Id": "9eb9a5bc-8310-4104-bf85-3a820d28ba79",
-          "Title": "[CVE-2017-1000070]  URL Redirection to Untrusted Site (\"Open Redirect\")",
-          "Description": "The Bitly oauth2_proxy in version 2.1 and earlier was affected by an open redirect vulnerability during the start and termination of the 2-legged OAuth flow. This issue was caused by improper input validation and a violation of RFC-6819",
-          "CvssScore": "6.1",
-          "CvssVector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
-          "Cve": "CVE-2017-1000070",
-          "Reference": "https://ossindex.sonatype.org/vuln/9eb9a5bc-8310-4104-bf85-3a820d28ba79",
-          "Excluded": false
-        }
-      ],
-      "InvalidSemVer": false
-    },
-    {
-      "Coordinates": "pkg:golang/github.com/ethereum/go-ethereum@1.8.15",
-      "Reference": "https://ossindex.sonatype.org/component/pkg:golang/github.com/ethereum/go-ethereum@1.8.15",
-      "Vulnerabilities": [
-        {
-          "Id": "4efaed86-e62e-4c0c-b812-36c07e61ede4",
-          "Title": "CWE-400: Uncontrolled Resource Consumption ('Resource Exhaustion')",
-          "Description": "The software does not properly restrict the size or amount of resources that are requested or influenced by an actor, which can be used to consume more resources than intended.",
-          "CvssScore": "7.5",
-          "CvssVector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-          "Cve": "",
-          "Reference": "https://ossindex.sonatype.org/vuln/4efaed86-e62e-4c0c-b812-36c07e61ede4",
-          "Excluded": false
-        }
-      ],
-      "InvalidSemVer": false
-    },
-    {
-      "Coordinates": "pkg:golang/github.com/elastic/beats@5.6.3",
-      "Reference": "https://ossindex.sonatype.org/component/pkg:golang/github.com/elastic/beats@5.6.3",
-      "Vulnerabilities": [
-        {
-          "Id": "8e4d562d-517b-4d00-a845-a7a3e2be41db",
-          "Title": "[CVE-2017-11480]  Improper Access Control",
-          "Description": "Packetbeat versions prior to 5.6.4 are affected by a denial of service flaw in the PostgreSQL protocol handler. If Packetbeat is listening for PostgreSQL traffic and a user is able to send arbitrary network traffic to the monitored port, the attacker could prevent Packetbeat from properly logging other PostgreSQL traffic.",
-          "CvssScore": "7.5",
-          "CvssVector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-          "Cve": "CVE-2017-11480",
-          "Reference": "https://ossindex.sonatype.org/vuln/8e4d562d-517b-4d00-a845-a7a3e2be41db",
-          "Excluded": false
-        }
-      ],
-      "InvalidSemVer": false
-    },
-    ...
-  ]
+  "vulnerable": [...]
 }
 ```
 
@@ -488,29 +564,32 @@ Audited Package(s)
 Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
 [1/10],pkg:golang/github.com/bitly/oauth2_proxy@0.1,true,1,"[{""Id"":""9eb9a5bc-8310-4104-bf85-3a820d28ba79"",""Title"":""[CVE-2017-1000070]  URL Redirection to Untrusted Site (\""Open Redirect\"")"",""Description"":""The Bitly oauth2_proxy in version 2.1 and earlier was affected by an open redirect vulnerability during the start and termination of the 2-legged OAuth flow. This issue was caused by improper input validation and a violation of RFC-6819"",""CvssScore"":""6.1"",""CvssVector"":""CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"",""Cve"":""CVE-2017-1000070"",""Reference"":""https://ossindex.sonatype.org/vuln/9eb9a5bc-8310-4104-bf85-3a820d28ba79"",""Excluded"":false}]"
 [2/10],pkg:golang/github.com/cockroachdb/cockroach@2.1.4,false,0,[]
-[3/10],pkg:golang/github.com/ethereum/go-ethereum@1.8.15,true,1,"[{""Id"":""4efaed86-e62e-4c0c-b812-36c07e61ede4"",""Title"":""CWE-400: Uncontrolled Resource Consumption ('Resource Exhaustion')"",""Description"":""The software does not properly restrict the size or amount of resources that are requested or influenced by an actor, which can be used to consume more resources than intended."",""CvssScore"":""7.5"",""CvssVector"":""CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"",""Cve"":"""",""Reference"":""https://ossindex.sonatype.org/vuln/4efaed86-e62e-4c0c-b812-36c07e61ede4"",""Excluded"":false}]"
 ...
 ```
 
-### Nexus IQ Server Options
+---
 
-By default, assuming you have an out-of-the-box Nexus IQ Server running, you can run `nancy` like so:
+## Sonatype Lifecycle Options
 
-`go list -json -deps ./... | nancy iq --iq-application public-application-id`
+By default, assuming you have an out-of-the-box Sonatype Lifecycle server running, you can run `nancy` like so:
+
+`go list -json -deps ./... | nancy lifecycle --lifecycle-application public-application-id`
 
 It is STRONGLY suggested that you do not do this, and we will warn you on output if you are.
 
-A more logical use of `nancy` against Nexus IQ Server will look like so:
+A more logical use of `nancy` against Sonatype Lifecycle will look like so:
 
-`go list -json -deps ./... | nancy iq --iq-application public-application-id --iq-username nondefaultuser --iq-token yourtoken --iq-server-url http://adifferentserverurl:port --iq-stage develop`
+`go list -json -deps ./... | nancy lifecycle --lifecycle-application public-application-id --lifecycle-username nondefaultuser --lifecycle-token yourtoken --lifecycle-server-url http://adifferentserverurl:port --lifecycle-stage develop`
 
 Options for stage are as follows:
 
 `build, develop, stage-release, release`
 
-By default `--iq-stage` will be `develop`.
+By default `--lifecycle-stage` will be `develop`.
 
-Successful submissions to Nexus IQ Server will result in either an OS exit of 0, meaning all is clear and a response akin to:
+> **Note**: `nancy iq` is a deprecated alias for `nancy lifecycle`. The `--iq-*` flags are deprecated aliases for the `--lifecycle-*` flags. Both continue to work in v2.0.0 but will be removed in v3.x.
+
+Successful submissions to Sonatype Lifecycle will result in either an OS exit of 0, meaning all is clear and a response akin to:
 
 ```
 Wonderbar! No policy violations reported for this audit!
@@ -526,35 +605,34 @@ Hi, Nancy here, you have some policy violations to clean up!
 Report URL:  http://reportURL
 ```
 
-Errors processing in Nexus IQ Server will look like:
+Errors processing in Sonatype Lifecycle will look like:
 
 ```
-Uh oh! There was an error with your request to Nexus IQ Server: <error>
+Uh oh! There was an error with your request to Sonatype Lifecycle: <error>
 ```
 
-#### Persistent Nexus IQ Server Config
+### Persistent Lifecycle Config
 
-Nancy lets you set the Nexus IQ Server Address, User and Token as persistent config (application and stage are generally per project, so we do not let you set these globally).
+Nancy lets you set the Sonatype Lifecycle Address, User and Token as persistent config (application and stage are generally per project, so we do not let you set these globally).
 
-To set your Nexus IQ Server config run:
+To set your Lifecycle config run:
 
 `nancy config`
 
-Choose `iq` as an option and run through the rest of the config. Once you are done, Nancy should use this config for communicating with Nexus IQ, simplifying your use of the tool.
+Choose `lifecycle` as an option and run through the rest of the config. Once you are done, Nancy should use this config for communicating with Sonatype Lifecycle, simplifying your use of the tool.
 
-As of Nancy v1.0.17, you can also specify configuration values using environment variables:
+You can also specify configuration values using environment variables:
 
 ```shell
-export OSSI_USERNAME=auser@anemailaddress.com
-export OSSI_TOKEN=A4@k3@p1T0k3n
 export IQ_USERNAME=nondefaultuser
 export IQ_TOKEN=yourtoken
 export IQ_SERVER=http://adifferentserverurl:port
-go list -json -deps ./... | ./nancy iq --iq-application public-application-id
-...
+go list -json -deps ./... | nancy lifecycle --lifecycle-application public-application-id
 ```
 
-### Usage in CI
+---
+
+## Usage in CI
 
 You can see an example of using `nancy` in Travis-CI at [this intentionally vulnerable repo we made](https://github.com/sonatype-nexus-community/intentionally-vulnerable-golang-project).
 
@@ -569,10 +647,7 @@ in the file: `~/.ossindex/.nancy-config/update_check.yml`.
 If you have a huge CI matrix build, and want to avoid all the builds performing the automatic update check, you may
 want to configure your CI build to cache the above directory.
 
-### DISCLAIMER
-
-A portion of the golang ecosystem doesn't use proper versions, and instead uses a commit hash to resolve your dependency. Dependencies like this will not work with
-`nancy` quite yet, as we don't have a mechanism on OSS Index to lookup vulnerabilities in that manner.
+---
 
 ## Why Nancy?
 
@@ -582,52 +657,17 @@ This project is called `nancy` as like the great detective herself, it looks for
 
 ### Relationship to govulncheck
 
-Go community starting 1.18, has used a tool called `govulncheck` shipped with golang distribution to verify vulnerablities. Govulncheck reports known vulnerabilities using static analysis of source code or a binary's symbol table.
-Nancy uses Sonatype's and the open source index. Nancy inspects dependency files to look at all possible vulnerable library usage.
+Go community starting 1.18, has used a tool called `govulncheck` shipped with golang distribution to verify vulnerabilities. Govulncheck reports known vulnerabilities using static analysis of source code or a binary's symbol table.
+Nancy uses Sonatype's vulnerability database. Nancy inspects dependency files to look at all possible vulnerable library usage.
 
+---
 
-## Installation
+## DISCLAIMER
 
-At the current time you have a few options:
+A portion of the golang ecosystem doesn't use proper versions, and instead uses a commit hash to resolve your dependency. Dependencies like this will not work with
+`nancy` quite yet, as we don't have a mechanism to lookup vulnerabilities in that manner.
 
-- Build from source
-- Download release binary from [here on GitHub](https://github.com/sonatype-nexus-community/nancy/releases)
-- Install via Homebrew (macOS)
-- Install from the AUR (Arch Linux)
-
-### Build from source
-
-- Clone the project `git clone github.com/sonatype-nexus-community/nancy`
-- In the root of the project run `make`
-  - This will execute multiple targets so if you want to short circuit some of that process you can also just run `make build` to get the binary without running tests, linting, etc
-- Use that binary wherever your heart so desires!
-
-### Download release binary
-
-Each tag pushed to this repo creates a new release binary, and if you'd like to skip building from source, you can download a binary similar to:
-
-```console
-$ curl -o /path/where/you/want/nancy \
-  https://github.com/sonatype-nexus-community/nancy/releases/download/v0.0.44/nancy-darwin.amd64-v0.0.44
-```
-
-### Install via Homebrew (macOS)
-
-On macOS, `nancy` can be installed using `brew`:
-
-- `brew install sonatype-nexus-community/nancy-tap/nancy`
-
-`brew` formulae are created and published to that tap with each new release, so you can use `brew` to upgrade, etc... as you wish.
-
-You can see more about the formulae, etc... at [this repo](https://github.com/sonatype-nexus-community/homebrew-nancy-tap).
-
-### Install from the AUR (Arch Linux)
-
-On Arch Linux, `nancy` can be installed using the [AUR](https://aur.archlinux.org/packages/nancy-bin/):
-
-```shell
-$ yay -S nancy-bin
-```
+---
 
 ## How to Fix Vulnerabilities
 
@@ -741,6 +781,8 @@ Yet another resolution, if no other options make sense, is to knowingly ignore t
 option if you know the application does not use the vulnerable code path and no upgraded/non-vulnerable versions are
 available. See: [Exclude vulnerabilities](#exclude-vulnerabilities)
 
+---
+
 ## Development
 
 `nancy` is written using Golang 1.13, so it is best you start there.
@@ -770,11 +812,15 @@ Follow the steps below to release a new version of Nancy. You need to be part of
 
 3. There is no step 3.
 
+---
+
 ## Contributing
 
 We care a lot about making the world a safer place, and that's why we created `nancy`. If you as well want to
 speed up the pace of software development by working on this project, jump on in! Before you start work, create
 a new issue, or comment on an existing issue, to let others know you are!
+
+---
 
 ## Acknowledgements
 
@@ -782,6 +828,8 @@ The `nancy` logo was created using a combo of [Gopherize.me](https://gopherize.m
 Gopherize for an easy way to make a fun Gopher :)
 
 Original Gopher designed by Renee French.
+
+---
 
 ## The Fine Print
 
