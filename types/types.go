@@ -31,7 +31,6 @@ type Configuration struct {
 	Loud            bool
 	CleanCache      bool
 	CveList         CveListFlag
-	Path            string
 	Formatter       logrus.Formatter
 	LogLevel        int
 	Username        string
@@ -44,6 +43,7 @@ type Configuration struct {
 	IQApplication   string
 	IQServer        string
 	MaxRetries      int
+	NoFail          bool
 	SkipUpdateCheck bool
 }
 

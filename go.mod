@@ -5,11 +5,8 @@ go 1.24.0
 toolchain go1.24.1
 
 require (
-	github.com/Flaque/filet v0.0.0-20190209224823-fc4d33cfcf93
-	github.com/Masterminds/semver v0.0.0-20190925130524-317e8cce5480
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
-	github.com/golang/dep v0.5.4
 	github.com/jedib0t/go-pretty/v6 v6.0.4
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/mitchellh/go-homedir v1.1.0
@@ -26,9 +23,6 @@ require (
 )
 
 require (
-	github.com/Masterminds/vcs v1.13.3 // indirect
-	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
-	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
@@ -37,17 +31,14 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jmank88/nuts v0.4.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
-	github.com/nightlyone/lockfile v1.0.0 // indirect
 	github.com/package-url/packageurl-go v0.1.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/recoilme/pudge v1.0.3 // indirect
-	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	github.com/spf13/afero v1.1.2 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
@@ -57,7 +48,6 @@ require (
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
-	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/appengine v1.6.1 // indirect

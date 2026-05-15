@@ -32,7 +32,6 @@ import (
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
 	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -50,33 +49,6 @@ func TestIqHelp(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestIqCommandPathInvalidName(t *testing.T) {
-	origConfig := configOssi
-	defer func() {
-		configOssi = origConfig
-	}()
-	// TODO debug side effects. calling executeCommand() fails as part of test suite, but is fine when run individually.
-	//_, err := executeCommand(rootCmd, iqCmd.Use, "--path", "invalidPath", "-a", "appId")
-	configOssi = types.Configuration{Path: "invalidPath", SkipUpdateCheck: true}
-	err := doIQ(iqCmd, []string{})
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), fmt.Sprintf("invalid path value. must point to '%s' file. path: ", GopkgLockFilename))
-}
-
-func TestIqCommandPathInvalidFile(t *testing.T) {
-	origConfig := configOssi
-	defer func() {
-		configOssi = origConfig
-	}()
-	// TODO debug side effects. calling executeCommand() fails as part of test suite, but is fine when run individually.
-	//_, err := executeCommand(rootCmd, iqCmd.Use, "--path", GopkgLockFilename, "-a", "appId")
-	configOssi = types.Configuration{Path: GopkgLockFilename, SkipUpdateCheck: true}
-	err := doIQ(iqCmd, []string{})
-
-	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "could not find project"), err.Error())
-}
 
 func setupIQConfigFile(t *testing.T, tempDir string) {
 	cfgDirIQ := path.Join(tempDir, ossIndexTypes.IQServerDirName)
@@ -267,9 +239,14 @@ func TestAuditWithIQServerPolicyActionWarning(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestDoIqInvalidStdIn(t *testing.T) {
+func TestDoIqNoStdinAutoDetect(t *testing.T) {
+	logLady, _ = test.NewNullLogger()
+	// With no stdin, doIQ will auto-invoke go list; the result (error or not) should not
+	// be the old "StdIn is invalid" error.
 	err := doIQ(iqCmd, []string{})
-	assert.Equal(t, customerrors.ErrorShowLogPath{Err: errStdInInvalid}, err)
+	if err != nil {
+		assert.NotContains(t, err.Error(), "StdIn is invalid or empty")
+	}
 }
 
 func TestDoIqParseGoListError(t *testing.T) {

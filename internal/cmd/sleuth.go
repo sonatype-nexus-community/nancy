@@ -28,21 +28,23 @@ import (
 func init() {
 	rootCmd.AddCommand(sleuthCmd)
 
-	sleuthCmd.Flags().BoolVarP(&configOssi.NoColor, "no-color", "n", false, "indicate output should not be colorized")
-	sleuthCmd.Flags().VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs or OSS Index IDs to exclude")
-	sleuthCmd.Flags().StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs or OSS Index IDs to be excluded")
-	sleuthCmd.Flags().StringSliceVarP(&additionalExcludeVulnerabilityFilePaths, "additional-exclude-vulnerability-files", "a", []string{}, "Path to additional files containing newline separated CVEs or OSS Index IDs to be excluded")
-	sleuthCmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
+	flags := sleuthCmd.Flags()
+	flags.BoolVarP(&configOssi.NoColor, "no-color", "n", false, "indicate output should not be colorized")
+	flags.VarP(&configOssi.CveList, "exclude-vulnerability", "e", "Comma separated list of CVEs or OSS Index IDs to exclude")
+	flags.StringVarP(&excludeVulnerabilityFilePath, "exclude-vulnerability-file", "x", defaultExcludeFilePath, "Path to a file containing newline separated CVEs or OSS Index IDs to be excluded")
+	flags.StringSliceVarP(&additionalExcludeVulnerabilityFilePaths, "additional-exclude-vulnerability-files", "a", []string{}, "Path to additional files containing newline separated CVEs or OSS Index IDs to be excluded")
+	flags.StringVarP(&outputFormat, "output", "o", "text", "Styling for output format. json, json-pretty, text, csv")
+	flags.BoolVar(&configOssi.NoFail, "no-fail", false,
+		"Exit 0 even when vulnerabilities are found (useful for informational CI steps)")
 }
 
 var sleuthCmd = &cobra.Command{
-	Use: "sleuth",
-	Example: `  go list -json -deps ./... | nancy sleuth --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token
-  nancy sleuth -p Gopkg.lock --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token`,
-	Short:  "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
-	Long:   `'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by the 'Sonatype OSS Index'.`,
-	PreRun: func(cmd *cobra.Command, args []string) { bindViperRootCmd() },
-	RunE:   doOSSI,
+	Use:     "sleuth",
+	Example: `  go list -json -deps ./... | nancy sleuth --` + flagNameOssiUsername + ` your_user --` + flagNameOssiToken + ` your_token`,
+	Short:   "Check for vulnerabilities in your Golang dependencies using Sonatype Guide",
+	Long:    `'nancy sleuth' is a command to check for vulnerabilities in your Golang dependencies, powered by Sonatype Guide.`,
+	PreRun:  func(cmd *cobra.Command, args []string) { bindViperRootCmd() },
+	RunE:    doOSSI,
 }
 
 // noinspection GoUnusedParameter

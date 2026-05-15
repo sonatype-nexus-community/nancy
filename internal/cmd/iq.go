@@ -82,13 +82,12 @@ var (
 )
 
 var iqCmd = &cobra.Command{
-	Use: "iq",
-	Example: `  go list -json -deps ./... | nancy iq --` + flagNameIqApplication + ` your_public_application_id --` + flagNameIqServerUrl + ` http://your_iq_server_url:port --` + flagNameIqUsername + ` your_user --` + flagNameIqToken + ` your_token --` + flagNameIqStage + ` develop
-  nancy iq -p Gopkg.lock --` + flagNameIqApplication + ` your_public_application_id --` + flagNameIqServerUrl + ` http://your_iq_server_url:port --` + flagNameIqUsername + ` your_user --` + flagNameIqToken + ` your_token --` + flagNameIqStage + ` develop`,
-	Short:  "Check for vulnerabilities in your Golang dependencies using 'Sonatype's Nexus IQ IQServer'",
-	Long:   `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by 'Sonatype's Nexus IQ IQServer', allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
-	PreRun: func(cmd *cobra.Command, args []string) { bindViperIq(cmd) },
-	RunE:   doIQ,
+	Use:     "iq",
+	Example: `  go list -json -deps ./... | nancy iq --` + flagNameIqApplication + ` your_public_application_id --` + flagNameIqServerUrl + ` http://your_iq_server_url:port --` + flagNameIqUsername + ` your_user --` + flagNameIqToken + ` your_token --` + flagNameIqStage + ` develop`,
+	Short:   "Check for vulnerabilities in your Golang dependencies using Sonatype Lifecycle",
+	Long:    `'nancy iq' is a command to check for vulnerabilities in your Golang dependencies, powered by Sonatype Lifecycle (previously Nexus IQ Server), allowing you a smooth experience as a Golang developer, using the best tools in the market!`,
+	PreRun:  func(cmd *cobra.Command, args []string) { bindViperIq(cmd) },
+	RunE:    doIQ,
 }
 
 // noinspection GoUnusedParameter
@@ -131,28 +130,26 @@ func doIQ(cmd *cobra.Command, args []string) (err error) {
 }
 
 func getPurls() (purls []string, err error) {
-	if configOssi.Path != "" {
-		var invalidPurls []string
-		if purls, invalidPurls, err = getPurlsFromPath(configOssi.Path); err != nil {
-			panic(err)
-		}
-		invalidCoordinates := convertInvalidPurlsToCoordinates(invalidPurls)
-		logLady.WithField("invalid", invalidCoordinates).Info("")
+	var reader io.Reader
+	if stdinHasData() {
+		reader = os.Stdin
 	} else {
-		if err = checkStdIn(); err != nil {
-			logLady.WithError(err).Error("unexpected error in iq cmd")
-			panic(err)
-		}
-
-		mod := packages.Mod{}
-
-		mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+		logLady.Info("No stdin detected; auto-running go list")
+		reader, err = autoRunGoList()
 		if err != nil {
 			logLady.WithError(err).Error("unexpected error in iq cmd")
 			panic(err)
 		}
-		purls = mod.ExtractPurlsFromManifest()
 	}
+
+	mod := packages.Mod{}
+
+	mod.ProjectList, err = parse.GoListAgnostic(reader)
+	if err != nil {
+		logLady.WithError(err).Error("unexpected error in iq cmd")
+		panic(err)
+	}
+	purls = mod.ExtractPurlsFromManifest()
 	return purls, err
 }
 
@@ -177,6 +174,8 @@ func init() {
 	}
 
 	iqCmd.Flags().StringVarP(&configIQ.IQServer, flagNameIqServerUrl, "x", "http://localhost:8070", "Specify Nexus IQ server url for request")
+	iqCmd.Flags().BoolVar(&configOssi.NoFail, "no-fail", false,
+		"Exit 0 even when vulnerabilities are found (useful for informational CI steps)")
 
 	rootCmd.AddCommand(iqCmd)
 }
