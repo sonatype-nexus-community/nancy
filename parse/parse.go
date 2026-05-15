@@ -19,6 +19,7 @@ package parse
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 
@@ -45,8 +46,16 @@ func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
 func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 	// stdIn should never be massive, so taking this approach over reading from a stream
 	// multiple times
-	johnnyFiveNeedInput, err := io.ReadAll(stdIn)
+	const maxStdinBytes = 10 * 1024 * 1024 // 10 MB
+
+	limited := io.LimitReader(stdIn, maxStdinBytes+1)
+	johnnyFiveNeedInput, err := io.ReadAll(limited)
 	if err != nil {
+		return
+	}
+	if int64(len(johnnyFiveNeedInput)) > maxStdinBytes {
+		err = fmt.Errorf("stdin input exceeded %d MB limit; ensure you are piping valid 'go list' output",
+			maxStdinBytes/(1024*1024))
 		return
 	}
 	decoder := json.NewDecoder(strings.NewReader(string(johnnyFiveNeedInput)))

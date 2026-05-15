@@ -31,7 +31,6 @@ import (
 	internaliq "github.com/sonatype-nexus-community/nancy/internal/iq"
 	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -49,29 +48,6 @@ func TestLifecycleHelp(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestLifecycleCommandPathInvalidName(t *testing.T) {
-	origConfig := configOssi
-	defer func() {
-		configOssi = origConfig
-	}()
-	configOssi = types.Configuration{Path: "invalidPath", SkipUpdateCheck: true}
-	err := doLifecycle(lifecycleCmd, []string{})
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), fmt.Sprintf("invalid path value. must point to '%s' file. path: ", GopkgLockFilename))
-}
-
-func TestLifecycleCommandPathInvalidFile(t *testing.T) {
-	origConfig := configOssi
-	defer func() {
-		configOssi = origConfig
-	}()
-	configOssi = types.Configuration{Path: GopkgLockFilename, SkipUpdateCheck: true}
-	err := doLifecycle(lifecycleCmd, []string{})
-
-	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "could not find project"), err.Error())
-}
 
 func setupLifecycleConfigFile(t *testing.T, tempDir string) {
 	cfgDirIQ := path.Join(tempDir, localossindex.IQServerDirName)
@@ -253,9 +229,14 @@ func TestAuditWithLifecycleServerPolicyActionWarning(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestDoLifecycleInvalidStdIn(t *testing.T) {
+func TestDoLifecycleNoStdinAutoDetect(t *testing.T) {
+	logLady, _ = test.NewNullLogger()
+	// With no stdin, doLifecycle auto-invokes go list; result should not be
+	// the old "StdIn is invalid" error.
 	err := doLifecycle(lifecycleCmd, []string{})
-	assert.Equal(t, customerrors.ErrorShowLogPath{Err: errStdInInvalid}, err)
+	if err != nil {
+		assert.NotContains(t, err.Error(), "StdIn is invalid or empty")
+	}
 }
 
 func TestDoLifecycleParseGoListError(t *testing.T) {

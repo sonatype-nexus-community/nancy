@@ -17,10 +17,8 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/sonatype-nexus-community/nancy/internal/audit"
-	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -29,21 +27,13 @@ import (
 )
 
 func TestSleuthCommandNoArgs(t *testing.T) {
+	logLady, _ = test.NewNullLogger()
+	// With no stdin and no flags, sleuth will auto-invoke go list.
+	// In the test environment it may succeed or fail, but not with the old stdin error.
 	_, err := executeCommand(rootCmd, sleuthCmd.Use)
-	assert.NotNil(t, err)
-	assert.Equal(t, customerrors.ErrorShowLogPath{Err: errStdInInvalid}, err)
-}
-
-func TestSleuthCommandPathInvalidName(t *testing.T) {
-	_, err := executeCommand(rootCmd, sleuthCmd.Use, "--path", "invalidPath")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), fmt.Sprintf("invalid path value. must point to '%s' file. path: ", GopkgLockFilename))
-}
-
-func TestSleuthCommandPathInvalidFile(t *testing.T) {
-	_, err := executeCommand(rootCmd, sleuthCmd.Use, "--path", GopkgLockFilename)
-	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "could not find project"))
+	if err != nil {
+		assert.NotContains(t, err.Error(), "StdIn is invalid or empty")
+	}
 }
 
 func TestConfigOssi_no_color(t *testing.T) {

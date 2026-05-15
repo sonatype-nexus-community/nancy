@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 )
 
 const DefaultVersion = "0.0.0-dev"

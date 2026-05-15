@@ -32,7 +32,6 @@ type Configuration struct {
 	CleanCache      bool
 	NoFail          bool
 	CveList         CveListFlag
-	Path            string
 	Formatter       logrus.Formatter
 	LogLevel        int
 	Username        string

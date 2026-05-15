@@ -18,6 +18,7 @@ package parse
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"os"
 	"strings"
@@ -223,6 +224,18 @@ golang.org/x/sys v0.0.0-20181228144115-9a3f9b0469bb`
 
 	if len(deps.Projects) != 16 {
 		t.Error(deps)
+	}
+}
+
+func TestGoListAgnosticRejectsOversizedInput(t *testing.T) {
+	// Generate input slightly over 10 MB
+	oversized := bytes.Repeat([]byte("x"), 10*1024*1024+1)
+	_, err := GoListAgnostic(bytes.NewReader(oversized))
+	if err == nil {
+		t.Error("Expected an error for oversized stdin input, but got nil")
+	}
+	if err != nil && !strings.Contains(err.Error(), "exceeded") {
+		t.Errorf("Expected error message to contain 'exceeded', but got: %s", err.Error())
 	}
 }
 

@@ -17,6 +17,7 @@
 package update
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/sonatype-nexus-community/nancy/settings"
@@ -24,9 +25,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
+	selfupdate "github.com/creativeprojects/go-selfupdate"
 	"github.com/pkg/errors"
-	"github.com/rhysd/go-github-selfupdate/selfupdate"
 )
 
 const (
@@ -70,9 +71,7 @@ func CheckForUpdates(githubAPI, slug, current, packageManager string) (*Options,
 }
 
 func checkFromSource(check *Options) error {
-	updater, err := selfupdate.NewUpdater(selfupdate.Config{
-		EnterpriseBaseURL: check.githubAPI,
-	})
+	updater, err := selfupdate.NewUpdater(selfupdate.Config{})
 	if err != nil {
 		return err
 	}
@@ -109,9 +108,9 @@ func checkFromHomebrew(check *Options) error {
 				check.Current = semver.MustParse(o.InstalledVersions[0])
 			}
 
-			check.Latest = &selfupdate.Release{
-				Version: semver.MustParse(o.CurrentVersion),
-			}
+			latestVersion := semver.MustParse(o.CurrentVersion)
+			check.LatestVersion = latestVersion.String()
+			check.LatestPublishedAt = time.Time{}
 
 			// We found a release so update state of updates check
 			check.Found = true
@@ -154,10 +153,11 @@ type HomebrewOutdated struct {
 
 // Options contains everything we need to check for or perform updates of the CLI.
 type Options struct {
-	Current        semver.Version
-	Found          bool
-	Latest         *selfupdate.Release
-	PackageManager string
+	Current           semver.Version
+	Found             bool
+	LatestVersion     string
+	LatestPublishedAt time.Time
+	PackageManager    string
 
 	updater   *selfupdate.Updater
 	githubAPI string
@@ -167,9 +167,12 @@ type Options struct {
 // latestRelease will set the last known release as a member on the Options instance.
 // We also update options if any releases were found or not.
 func latestRelease(opts *Options) error {
-	latest, found, err := opts.updater.DetectLatest(opts.slug)
-	opts.Latest = latest
+	latest, found, err := opts.updater.DetectLatest(context.Background(), selfupdate.ParseSlug(opts.slug))
 	opts.Found = found
+	if latest != nil {
+		opts.LatestVersion = latest.Version()
+		opts.LatestPublishedAt = latest.PublishedAt
+	}
 
 	if err != nil {
 		return errors.Wrap(err, `Failed to query the GitHub API for updates.
@@ -196,29 +199,29 @@ More information about that API can be found here: https://developer.github.com/
 
 // IsLatestVersion will tell us if the current version is the latest version available
 func IsLatestVersion(opts *Options) bool {
-	if opts.Current.String() == "" || opts.Latest == nil {
+	if opts.Current.String() == "" || opts.LatestVersion == "" {
 		return true
 	}
 
-	return opts.Latest.Version.Equals(opts.Current)
+	return opts.LatestVersion == opts.Current.String()
 }
 
 // InstallLatest will execute the updater and replace the current CLI with the latest version available.
 func InstallLatest(opts *Options) (string, error) {
-	release, err := opts.updater.UpdateSelf(opts.Current, opts.slug)
+	release, err := opts.updater.UpdateSelf(context.Background(), opts.Current.String(), selfupdate.ParseSlug(opts.slug))
 	if err != nil {
 		return "", errors.Wrap(err, "failed to install update")
 	}
 
-	return fmt.Sprintf("Updated to %s", release.Version), nil
+	return fmt.Sprintf("Updated to %s", release.Version()), nil
 }
 
 // DebugVersion returns a nicely formatted string representing the state of the current version.
 // Intended to be printed to standard error for developers.
 func DebugVersion(opts *Options) string {
 	return strings.Join([]string{
-		fmt.Sprintf("Latest version: %s", opts.Latest.Version),
-		fmt.Sprintf("Published: %s", opts.Latest.PublishedAt),
+		fmt.Sprintf("Latest version: %s", opts.LatestVersion),
+		fmt.Sprintf("Published: %s", opts.LatestPublishedAt),
 		fmt.Sprintf("Current Version: %s", opts.Current),
 	}, "\n")
 }
@@ -228,7 +231,7 @@ func DebugVersion(opts *Options) string {
 func ReportVersion(opts *Options) string {
 	return strings.Join([]string{
 		fmt.Sprintf("You are running %s", opts.Current),
-		fmt.Sprintf("A new release is available (%s)", opts.Latest.Version),
+		fmt.Sprintf("A new release is available (%s)", opts.LatestVersion),
 	}, "\n")
 }
 

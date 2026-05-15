@@ -155,28 +155,25 @@ func doLifecycle(cmd *cobra.Command, args []string) (err error) {
 }
 
 func getPurls() (purls []string, err error) {
-	if configOssi.Path != "" {
-		var invalidPurls []string
-		if purls, invalidPurls, err = getPurlsFromPath(configOssi.Path); err != nil {
-			panic(err)
-		}
-		invalidCoordinates := convertInvalidPurlsToCoordinates(invalidPurls)
-		logLady.WithField("invalid", invalidCoordinates).Info("")
+	var reader io.Reader
+	if stdinHasData() {
+		reader = os.Stdin
 	} else {
-		if err = checkStdIn(); err != nil {
-			logLady.WithError(err).Error("unexpected error in lifecycle cmd")
-			panic(err)
-		}
-
-		mod := packages.Mod{}
-
-		mod.ProjectList, err = parse.GoListAgnostic(os.Stdin)
+		logLady.Info("No stdin detected; auto-running go list")
+		reader, err = autoRunGoList()
 		if err != nil {
 			logLady.WithError(err).Error("unexpected error in lifecycle cmd")
 			panic(err)
 		}
-		purls = mod.ExtractPurlsFromManifest()
 	}
+
+	mod := packages.Mod{}
+	mod.ProjectList, err = parse.GoListAgnostic(reader)
+	if err != nil {
+		logLady.WithError(err).Error("unexpected error in lifecycle cmd")
+		panic(err)
+	}
+	purls = mod.ExtractPurlsFromManifest()
 	return purls, err
 }
 

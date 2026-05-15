@@ -69,8 +69,7 @@ jobs:
             - name: Run integration tests
               run: make integration-test
               env:
-                  OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
-                  OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
+                  SONATYPE_GUIDE_TOKEN: ${{ secrets.SONATYPE_GUIDE_TOKEN }}
 
             # Removed these test temporarily as can't get OSSI secrets to them easily
             # - name: Run docker integration tests
