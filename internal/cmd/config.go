@@ -84,27 +84,41 @@ func doConfig(cmd *cobra.Command, args []string) (err error) {
 
 func configureGuide(scanner *bufio.Scanner, home string) error {
 	fmt.Println("\nSonatype Guide Configuration")
-	fmt.Println("  For Bearer token auth: leave username empty and enter your Guide token.")
-	fmt.Println("  For OSS Index compatibility: enter username (email) and API token.")
 
-	fmt.Print("Username (leave empty for Bearer token): ")
+	fmt.Print("Sonatype Guide Bearer token (recommended, leave blank to skip): ")
 	scanner.Scan()
-	username := strings.TrimSpace(scanner.Text())
+	guideToken := strings.TrimSpace(scanner.Text())
 
-	fmt.Print("Token (Guide Bearer token or OSS Index API token): ")
+	var username, ossiToken string
+	fmt.Print("Configure OSS Index credentials (deprecated, press Enter to skip)? [y/N]: ")
 	scanner.Scan()
-	token := strings.TrimSpace(scanner.Text())
+	if strings.EqualFold(strings.TrimSpace(scanner.Text()), "y") {
+		fmt.Println("  OSS Index credentials are deprecated and will be removed in v3.x.")
+		fmt.Println("  Obtain a Sonatype Guide Bearer token at https://guide.sonatype.com")
 
-	type ossiConf struct {
+		fmt.Print("  Username: ")
+		scanner.Scan()
+		username = strings.TrimSpace(scanner.Text())
+
+		fmt.Print("  OSS Index API token: ")
+		scanner.Scan()
+		ossiToken = strings.TrimSpace(scanner.Text())
+	}
+
+	type guideConf struct {
+		Guide struct {
+			Token string `yaml:"token"`
+		} `yaml:"guide"`
 		Ossi struct {
 			Username string `yaml:"Username"`
 			Token    string `yaml:"Token"`
 		} `yaml:"ossi"`
 	}
 
-	conf := ossiConf{}
+	conf := guideConf{}
+	conf.Guide.Token = guideToken
 	conf.Ossi.Username = username
-	conf.Ossi.Token = token
+	conf.Ossi.Token = ossiToken
 
 	data, err := yaml.Marshal(&conf)
 	if err != nil {

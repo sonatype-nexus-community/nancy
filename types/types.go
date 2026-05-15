@@ -36,6 +36,7 @@ type Configuration struct {
 	LogLevel        int
 	Username        string
 	Token           string
+	GuideToken      string
 	OSSIndexURL     string
 	Help            bool
 	IQUsername      string

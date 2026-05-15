@@ -63,8 +63,19 @@ func (ossiFactory) create() localossindex.IServer {
 		logLady.WithField("ossIndexURL", ossIndexURL).Debug("Using custom Guide/OSS Index URL")
 	}
 
+	guideToken := viper.GetString(viperKeyGuideToken)
+	username := viper.GetString(viperKeyOssiUsername)
+
+	if guideToken == "" && username != "" {
+		fmt.Fprintln(os.Stderr,
+			"WARNING: OSS Index credentials are deprecated and will be removed in v3.x.\n"+
+				"         Obtain a Sonatype Guide Bearer token at https://guide.sonatype.com\n"+
+				"         and use --guide-token (or GUIDE_TOKEN env var) instead.")
+	}
+
 	server := guide.New(logLady, guide.Options{
-		Username:    viper.GetString(viperKeyOssiUsername),
+		GuideToken:  guideToken,
+		Username:    username,
 		Token:       viper.GetString(viperKeyOssiToken),
 		ServerURL:   ossIndexURL,
 		DBCachePath: configOssi.DBCachePath,
@@ -108,18 +119,20 @@ func setupViperAutomaticEnv() {
 var rootCmd = &cobra.Command{
 	Version: buildversion.BuildVersion,
 	Use:     "nancy",
-	Example: `  Typical usage will pipe the output of 'go list -json -deps' to 'nancy':
+	Example: `  Pipe the output of 'go list -json -deps' to nancy:
   go list -json -deps ./... | nancy sleuth [flags]
-  go list -json -deps ./... | nancy iq [flags]
+  go list -json -deps ./... | nancy lifecycle [flags]
 
-  If using dep typical usage is as follows :
-  nancy sleuth -p Gopkg.lock [flags]
-  nancy iq -p Gopkg.lock [flags]
+  Authenticate with a Sonatype Guide Bearer token:
+  go list -json -deps ./... | nancy sleuth --guide-token <token>
+  GUIDE_TOKEN=<token> go list -json -deps ./... | nancy sleuth
 `,
-	Short: "Check for vulnerabilities in your Golang dependencies using Sonatype's OSS Index",
+	Short: "Check for vulnerabilities in your Golang dependencies using Sonatype Guide",
 	Long: `nancy is a tool to check for vulnerabilities in your Golang dependencies,
-powered by the 'Sonatype OSS Index', and as well, works with Nexus IQ Server, allowing you
-a smooth experience as a Golang developer, using the best tools in the market!`,
+powered by Sonatype Guide, and as well, works with Sonatype Lifecycle (IQ Server).
+
+Authenticate using a Sonatype Guide Bearer token (--guide-token / GUIDE_TOKEN env var).
+OSS Index username/token authentication is deprecated and will be removed in v3.x.`,
 	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		setupViperAutomaticEnv()
 		logLady = logger.GetLogger("", configOssi.LogLevel)
@@ -170,13 +183,12 @@ const (
 	flagNameOssiUsername = "username"
 	flagNameOssiToken    = "token"
 	flagNameOssiURL      = "ossindex-url"
+	flagNameGuideToken   = "guide-token"
 
-	// viperKeyOSSIndexURL is the key for OSS Index URL in viper config
-	// Following the same pattern as configuration.ViperKeyUsername and configuration.ViperKeyToken
-	viperKeyOSSIndexURL = "ossi.OSSIndexURL"
+	viperKeyOSSIndexURL  = "ossi.OSSIndexURL"
 	viperKeyOssiUsername = "ossi.Username"
 	viperKeyOssiToken    = "ossi.Token"
-
+	viperKeyGuideToken   = "guide.token"
 )
 
 func init() {
@@ -188,8 +200,9 @@ func init() {
 	persistentFlags.BoolVarP(&configOssi.Quiet, "quiet", "q", true, "indicate output should contain only packages with vulnerabilities")
 	persistentFlags.BoolVar(&configOssi.Loud, "loud", false, "indicate output should include non-vulnerable packages")
 	rootCmd.Flags().BoolVarP(&configOssi.CleanCache, "clean-cache", "c", false, "Deletes local cache directory")
-	persistentFlags.StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request")
-	persistentFlags.StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request")
+	persistentFlags.StringVarP(&configOssi.GuideToken, flagNameGuideToken, "g", "", "Specify Sonatype Guide Bearer token for request")
+	persistentFlags.StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request (Deprecated: use --guide-token)")
+	persistentFlags.StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request (Deprecated: use --guide-token)")
 	persistentFlags.StringVar(&configOssi.OSSIndexURL, flagNameOssiURL, "", "Specify an alternate OSS Index URL/host")
 persistentFlags.StringVarP(&configOssi.DBCachePath, "db-cache-path", "d", "", "Specify an alternate path for caching responses from OSS Inde, example: /tmp")
 	persistentFlags.BoolVar(&configOssi.SkipUpdateCheck, "skip-update-check", false, "Skip the check for updates.")
@@ -199,6 +212,9 @@ func bindViperRootCmd() {
 	// need to defer bind call until command is run. see: https://github.com/spf13/viper/issues/233
 
 	// Bind viper to the flags passed in via the command line, so it will override config from file
+	if err := viper.BindPFlag(viperKeyGuideToken, lookupPersistentFlagNotNil(flagNameGuideToken, rootCmd)); err != nil {
+		panic(err)
+	}
 	if err := viper.BindPFlag(viperKeyOssiUsername, lookupPersistentFlagNotNil(flagNameOssiUsername, rootCmd)); err != nil {
 		panic(err)
 	}

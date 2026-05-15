@@ -38,9 +38,12 @@ const (
 
 // Options configures the Guide API client.
 type Options struct {
-	// Username is the OSS Index/Guide username (email). Leave empty to use bearer token auth.
+	// GuideToken is the Sonatype Guide Bearer token (preferred auth method).
+	GuideToken string
+	// Username is the OSS Index username (email). Deprecated: use GuideToken.
 	Username string
-	// Token is either the OSS Index API token (when Username is set) or a Guide Bearer token.
+	// Token is the OSS Index API token when Username is set. Deprecated: use GuideToken.
+	// For backward compat, if Username is empty and Token is non-empty, Token is used as a bearer token.
 	Token string
 	// ServerURL overrides the default Guide API base URL.
 	ServerURL string
@@ -68,12 +71,15 @@ func New(logger *logrus.Logger, opts Options) *Server {
 	cfg.UserAgent = fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion)
 
 	authCtx := context.Background()
-	if opts.Username != "" {
+	if opts.GuideToken != "" {
+		authCtx = context.WithValue(authCtx, sonatypeguide.ContextAccessToken, opts.GuideToken)
+	} else if opts.Username != "" {
 		authCtx = context.WithValue(authCtx, sonatypeguide.ContextBasicAuth, sonatypeguide.BasicAuth{
 			UserName: opts.Username,
 			Password: opts.Token,
 		})
 	} else if opts.Token != "" {
+		// Legacy: bearer token passed via --token with empty --username (pre-v2 pattern).
 		authCtx = context.WithValue(authCtx, sonatypeguide.ContextAccessToken, opts.Token)
 	}
 
