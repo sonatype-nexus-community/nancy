@@ -21,17 +21,17 @@ import (
 	"testing"
 
 	. "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCsvOutputWhenQuiet(t *testing.T) {
 	data := map[string]interface{}{
-		"audited": []types.Coordinate{
+		"audited": []ossindex.Coordinate{
 			{Coordinates: "good1"},
 			{Coordinates: "vuln1", Vulnerabilities: createVulnerabilities(1)},
 		},
-		"invalid": []types.Coordinate{
+		"invalid": []ossindex.Coordinate{
 			{InvalidSemVer: true, Coordinates: "invalid1"},
 		},
 		"num_audited":    2,
@@ -57,11 +57,11 @@ Count,Package,Is Vulnerable,Num Vulnerabilities,Vulnerabilities
 
 func TestCsvOutput(t *testing.T) {
 	data := map[string]interface{}{
-		"audited": []types.Coordinate{
+		"audited": []ossindex.Coordinate{
 			{Coordinates: "good1"},
 			{Coordinates: "vuln1", Vulnerabilities: createVulnerabilities(1)},
 		},
-		"invalid": []types.Coordinate{
+		"invalid": []ossindex.Coordinate{
 			{InvalidSemVer: true, Coordinates: "invalid1"},
 		},
 		"num_audited":    2,
@@ -109,10 +109,10 @@ func TestCsvFormatter_FormatNoError(t *testing.T) {
 	formatter := CsvFormatter{Quiet: true}
 
 	data := map[string]interface{}{
-		"audited": []types.Coordinate{
+		"audited": []ossindex.Coordinate{
 			{Coordinates: "auditedCoordinates"},
 		},
-		"invalid": []types.Coordinate{
+		"invalid": []ossindex.Coordinate{
 			{Coordinates: "invalidCoordinates"},
 		},
 		"num_audited":    0,

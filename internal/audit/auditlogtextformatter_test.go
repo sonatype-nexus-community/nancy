@@ -24,7 +24,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	. "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,9 +45,9 @@ func TestFormatterErrorsIfEntryNotValid(t *testing.T) {
 
 func verifyFormatterSummaryLoudness(t *testing.T, quiet bool) {
 	data := map[string]interface{}{
-		"audited":        []types.Coordinate{},
-		"invalid":        []types.Coordinate{},
-		"excluded":       []types.Vulnerability{},
+		"audited":        []ossindex.Coordinate{},
+		"invalid":        []ossindex.Coordinate{},
+		"excluded":       []ossindex.Vulnerability{},
 		"num_exclusions": 0,
 		"num_audited":    0,
 		"num_vulnerable": 0,
@@ -74,13 +74,13 @@ func TestFormatterSummary(t *testing.T) {
 
 func TestFormatterLogInvalidSemVerWarning(t *testing.T) {
 	entry := Entry{Data: map[string]interface{}{
-		"audited": []types.Coordinate{},
-		"invalid": []types.Coordinate{
+		"audited": []ossindex.Coordinate{},
+		"invalid": []ossindex.Coordinate{
 			{
 				Coordinates: "MyInvalidCoords",
 			},
 		},
-		"excluded":       []types.Vulnerability{},
+		"excluded":       []ossindex.Vulnerability{},
 		"num_exclusions": 0,
 		"num_audited":    0,
 		"num_vulnerable": 0,
@@ -121,9 +121,9 @@ func TestScoreAssessment(t *testing.T) {
 
 func TestExcludedVulnsInSummary(t *testing.T) {
 	data := map[string]interface{}{
-		"audited":        []types.Coordinate{},
-		"invalid":        []types.Coordinate{},
-		"excluded":       []types.Vulnerability{},
+		"audited":        []ossindex.Coordinate{},
+		"invalid":        []ossindex.Coordinate{},
+		"excluded":       []ossindex.Vulnerability{},
 		"num_audited":    0,
 		"num_exclusions": 1,
 		"num_vulnerable": 0,

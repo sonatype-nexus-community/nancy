@@ -17,14 +17,18 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
-	"github.com/sonatype-nexus-community/go-sona-types/configuration"
+	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/internal/logger"
-
+	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var configCmd = &cobra.Command{
@@ -49,15 +53,132 @@ func doConfig(cmd *cobra.Command, args []string) (err error) {
 	}()
 
 	logLady = logger.GetLogger("", configOssi.LogLevel)
-	var configSet *configuration.ConfigSet
-	if configSet, err = configuration.New(logLady); err != nil {
-		panic(err)
+
+	scanner := bufio.NewScanner(os.Stdin)
+
+	fmt.Println("What credentials would you like to configure?")
+	fmt.Println("  1) Sonatype Guide credentials (recommended)")
+	fmt.Println("  2) Sonatype Lifecycle (IQ Server) credentials")
+	fmt.Print("Enter selection: ")
+
+	if !scanner.Scan() {
+		return
+	}
+	choice := strings.TrimSpace(scanner.Text())
+
+	home, err := homedir.Dir()
+	if err != nil {
+		return
 	}
 
-	if err = configSet.GetConfigFromCommandLine(os.Stdin); err != nil {
-		panic(err)
+	switch choice {
+	case "1", "":
+		err = configureGuide(scanner, home)
+	case "2":
+		err = configureLifecycle(scanner, home)
+	default:
+		fmt.Println("Unknown selection. Exiting.")
 	}
 	return
+}
+
+func configureGuide(scanner *bufio.Scanner, home string) error {
+	fmt.Println("\nSonatype Guide Configuration")
+	fmt.Println("  For Bearer token auth: leave username empty and enter your Guide token.")
+	fmt.Println("  For OSS Index compatibility: enter username (email) and API token.")
+
+	fmt.Print("Username (leave empty for Bearer token): ")
+	scanner.Scan()
+	username := strings.TrimSpace(scanner.Text())
+
+	fmt.Print("Token (Guide Bearer token or OSS Index API token): ")
+	scanner.Scan()
+	token := strings.TrimSpace(scanner.Text())
+
+	type ossiConf struct {
+		Ossi struct {
+			Username string `yaml:"Username"`
+			Token    string `yaml:"Token"`
+		} `yaml:"ossi"`
+	}
+
+	conf := ossiConf{}
+	conf.Ossi.Username = username
+	conf.Ossi.Token = token
+
+	data, err := yaml.Marshal(&conf)
+	if err != nil {
+		return err
+	}
+
+	dir := localossindex.GetOssIndexDirectory(home)
+	if err = os.MkdirAll(dir, 0700); err != nil {
+		return err
+	}
+
+	cfgFile := filepath.Join(dir, localossindex.OssIndexConfigFileName)
+	if err = os.WriteFile(cfgFile, data, 0600); err != nil {
+		return err
+	}
+
+	fmt.Println("Credentials saved to", cfgFile)
+	return nil
+}
+
+func configureLifecycle(scanner *bufio.Scanner, home string) error {
+	fmt.Println("\nSonatype Lifecycle Configuration")
+
+	fmt.Print("Server URL [http://localhost:8070]: ")
+	scanner.Scan()
+	server := strings.TrimSpace(scanner.Text())
+	if server == "" {
+		server = "http://localhost:8070"
+	}
+
+	fmt.Print("Username [admin]: ")
+	scanner.Scan()
+	username := strings.TrimSpace(scanner.Text())
+	if username == "" {
+		username = "admin"
+	}
+
+	fmt.Print("Token [admin123]: ")
+	scanner.Scan()
+	token := strings.TrimSpace(scanner.Text())
+	if token == "" {
+		token = "admin123"
+	}
+
+	type iqConf struct {
+		Iq struct {
+			Server   string `yaml:"Server"`
+			Username string `yaml:"Username"`
+			Token    string `yaml:"Token"`
+		} `yaml:"iq"`
+	}
+
+	conf := iqConf{}
+	conf.Iq.Server = server
+	conf.Iq.Username = username
+	conf.Iq.Token = token
+
+	data, err := yaml.Marshal(&conf)
+	if err != nil {
+		return err
+	}
+
+	dir := localossindex.GetIQServerDirectory(home)
+	if err = os.MkdirAll(dir, 0700); err != nil {
+		return err
+	}
+
+	cfgFile := filepath.Join(dir, localossindex.IQServerConfigFileName)
+	if err = os.WriteFile(cfgFile, data, 0600); err != nil {
+		return err
+	}
+
+	fmt.Println("Credentials saved to", cfgFile)
+	return nil
 }
 
 func init() {

@@ -29,7 +29,7 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/shopspring/decimal"
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
 )
 
 var (
@@ -47,7 +47,7 @@ type AuditLogTextFormatter struct {
 	NoColor bool
 }
 
-func logPackage(sb *strings.Builder, noColor bool, coordinate types.Coordinate) {
+func logPackage(sb *strings.Builder, noColor bool, coordinate ossindex.Coordinate) {
 	au := aurora.NewAurora(!noColor)
 
 	sb.WriteString(
@@ -57,7 +57,7 @@ func logPackage(sb *strings.Builder, noColor bool, coordinate types.Coordinate) 
 	)
 }
 
-func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, invalidPurls []types.Coordinate) {
+func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, invalidPurls []ossindex.Coordinate) {
 	if !quiet {
 		if len(invalidPurls) > 0 {
 			au := aurora.NewAurora(!noColor)
@@ -76,7 +76,7 @@ func logInvalidSemVerWarning(sb *strings.Builder, noColor bool, quiet bool, inva
 	}
 }
 
-func logVulnerablePackage(sb *strings.Builder, noColor bool, coordinate types.Coordinate) {
+func logVulnerablePackage(sb *strings.Builder, noColor bool, coordinate ossindex.Coordinate) {
 	au := aurora.NewAurora(!noColor)
 	sb.WriteString(fmt.Sprintf(
 		"%s\n%s \n",
@@ -134,7 +134,7 @@ func scoreAssessment(score decimal.Decimal) string {
 	return "Low"
 }
 
-func groupAndPrint(vulnerable []types.Coordinate, nonVulnerable []types.Coordinate, quiet bool, noColor bool, sb *strings.Builder) {
+func groupAndPrint(vulnerable []ossindex.Coordinate, nonVulnerable []ossindex.Coordinate, quiet bool, noColor bool, sb *strings.Builder) {
 	if !quiet {
 		sb.WriteString("\n")
 		for _, v := range nonVulnerable {
@@ -159,8 +159,8 @@ func (f AuditLogTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	numExcluded := entry.Data["num_exclusions"]
 	buildVersion := entry.Data["version"]
 	if isEntryValid(auditedEntries, invalidEntries, excludedEntries, packageCount, numVulnerable, numExcluded, buildVersion) {
-		auditedEntries := entry.Data["audited"].([]types.Coordinate)
-		invalidEntries := entry.Data["invalid"].([]types.Coordinate)
+		auditedEntries := entry.Data["audited"].([]ossindex.Coordinate)
+		invalidEntries := entry.Data["invalid"].([]ossindex.Coordinate)
 		packageCount := entry.Data["num_audited"].(int)
 		numVulnerable := entry.Data["num_vulnerable"].(int)
 		numExcluded := entry.Data["num_exclusions"].(int)
@@ -194,7 +194,7 @@ func (f AuditLogTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
 }
 
-func splitPackages(entries []types.Coordinate) (nonVulnerable []types.Coordinate, vulnerable []types.Coordinate) {
+func splitPackages(entries []ossindex.Coordinate) (nonVulnerable []ossindex.Coordinate, vulnerable []ossindex.Coordinate) {
 	for _, v := range entries {
 		if v.IsVulnerable() {
 			vulnerable = append(vulnerable, v)
