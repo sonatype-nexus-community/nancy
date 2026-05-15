@@ -20,8 +20,8 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"github.com/sonatype-nexus-community/nancy/buildversion"
+	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
 )
 
 func isEntryValid(params ...interface{}) bool {
@@ -35,16 +35,16 @@ func isEntryValid(params ...interface{}) bool {
 
 // LogResults will given a number of expected results and the results themselves, log the
 // results.
-func LogResults(formatter log.Formatter, packageCount int, coordinates []types.Coordinate, invalidCoordinates []types.Coordinate, exclusions []string) int {
+func LogResults(formatter log.Formatter, packageCount int, coordinates []ossindex.Coordinate, invalidCoordinates []ossindex.Coordinate, exclusions []string) int {
 	vulnerableCount := 0
 
 	for _, c := range coordinates {
 		c.ExcludeVulnerabilities(exclusions)
 	}
 
-	var auditedCoordinates []types.Coordinate
-	var vulnerableCoordinates []types.Coordinate
-	var excludedVulnerabilities []types.Vulnerability
+	var auditedCoordinates []ossindex.Coordinate
+	var vulnerableCoordinates []ossindex.Coordinate
+	var excludedVulnerabilities []ossindex.Vulnerability
 
 	for i := 0; i < len(coordinates); i++ {
 		coordinate := coordinates[i]
@@ -61,13 +61,13 @@ func LogResults(formatter log.Formatter, packageCount int, coordinates []types.C
 	}
 
 	if invalidCoordinates == nil {
-		invalidCoordinates = make([]types.Coordinate, 0)
+		invalidCoordinates = make([]ossindex.Coordinate, 0)
 	}
 	if exclusions == nil {
 		exclusions = make([]string, 0)
 	}
 	if vulnerableCoordinates == nil {
-		vulnerableCoordinates = make([]types.Coordinate, 0)
+		vulnerableCoordinates = make([]ossindex.Coordinate, 0)
 	}
 
 	exclusionCount := len(excludedVulnerabilities)

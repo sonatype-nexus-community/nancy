@@ -26,7 +26,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
 )
 
 type CsvFormatter struct {
@@ -45,8 +45,8 @@ func (f CsvFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	buildVersion := entry.Data["version"]
 
 	if isEntryValid(auditedEntries, invalidEntries, packageCount, numVulnerable, excludedCount, buildVersion) {
-		auditedEntries := entry.Data["audited"].([]types.Coordinate)
-		invalidEntries := entry.Data["invalid"].([]types.Coordinate)
+		auditedEntries := entry.Data["audited"].([]ossindex.Coordinate)
+		invalidEntries := entry.Data["invalid"].([]ossindex.Coordinate)
 		packageCount := entry.Data["num_audited"].(int)
 		numVulnerable := entry.Data["num_vulnerable"].(int)
 		excludedCount := entry.Data["num_exclusions"].(int)

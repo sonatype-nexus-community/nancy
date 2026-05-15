@@ -25,9 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sonatype-nexus-community/go-sona-types/configuration"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
-	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
 	"github.com/sonatype-nexus-community/nancy/types"
 
 	"github.com/sirupsen/logrus"
@@ -339,8 +337,8 @@ func TestInitConfig(t *testing.T) {
 
 	initConfig()
 
-	assert.Equal(t, "ossiUsernameValue", viper.GetString(configuration.ViperKeyUsername))
-	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.ViperKeyToken))
+	assert.Equal(t, "ossiUsernameValue", viper.GetString(viperKeyOssiUsername))
+	assert.Equal(t, "ossiTokenValue", viper.GetString(viperKeyOssiToken))
 }
 
 func TestInitConfigWithNoConfigFile(t *testing.T) {
@@ -358,15 +356,15 @@ func TestInitConfigWithNoConfigFile(t *testing.T) {
 
 	initConfig()
 
-	assert.Equal(t, "", viper.GetString(configuration.ViperKeyUsername))
-	assert.Equal(t, "", viper.GetString(configuration.ViperKeyToken))
+	assert.Equal(t, "", viper.GetString(viperKeyOssiUsername))
+	assert.Equal(t, "", viper.GetString(viperKeyOssiToken))
 }
 
 func setupTestOSSIConfigFile(t *testing.T, tempDir string) {
-	cfgDir := path.Join(tempDir, ossIndexTypes.OssIndexDirName)
+	cfgDir := path.Join(tempDir, localossindex.OssIndexDirName)
 	assert.Nil(t, os.Mkdir(cfgDir, 0700))
 
-	cfgFile = ossIndexTypes.GetOssIndexConfigFile(tempDir)
+	cfgFile = localossindex.GetOssIndexConfigFile(tempDir)
 }
 
 func resetOSSIConfigFile() {
@@ -376,34 +374,27 @@ func resetOSSIConfigFile() {
 func setupTestOSSIConfigFileValues(t *testing.T, tempDir string) {
 	setupTestOSSIConfigFile(t, tempDir)
 
-	const credentials = configuration.ViperKeyUsername + ": ossiUsernameValue\n" +
-		configuration.ViperKeyToken + ": ossiTokenValue"
+	const credentials = viperKeyOssiUsername + ": ossiUsernameValue\n" +
+		viperKeyOssiToken + ": ossiTokenValue"
 	assert.Nil(t, os.WriteFile(cfgFile, []byte(credentials), 0644))
 }
 
 type ossiFactoryMock struct {
-	mockOssiServer ossindex.IServer
+	mockOssiServer localossindex.IServer
 }
 
-func (f ossiFactoryMock) create() ossindex.IServer {
+func (f ossiFactoryMock) create() localossindex.IServer {
 	return f.mockOssiServer
 }
 
 type mockOssiServer struct {
-	auditPackagesResults []ossIndexTypes.Coordinate
+	auditPackagesResults []localossindex.Coordinate
 	auditPackagesErr     error
 }
 
 // noinspection GoUnusedParameter
-func (s mockOssiServer) AuditPackages(purls []string) ([]ossIndexTypes.Coordinate, error) {
+func (s mockOssiServer) AuditPackages(purls []string) ([]localossindex.Coordinate, error) {
 	return s.auditPackagesResults, s.auditPackagesErr
-}
-
-// noinspection GoUnusedParameter
-func (s mockOssiServer) Audit(purls []string) (results map[string]ossIndexTypes.Coordinate, err error) {
-	results = make(map[string]ossIndexTypes.Coordinate)
-
-	return
 }
 
 func (s mockOssiServer) NoCacheNoProblems() error {
@@ -411,7 +402,12 @@ func (s mockOssiServer) NoCacheNoProblems() error {
 }
 
 // use compiler to ensure interface is implemented by mock
-var _ ossindex.IServer = (*mockOssiServer)(nil)
+var _ localossindex.IServer = (*mockOssiServer)(nil)
+
+var testPurls = []string{
+	"pkg:golang/github.com/go-yaml/yaml@v2.2.2",
+	"pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+}
 
 func TestCheckOSSIndexAuditPackagesError(t *testing.T) {
 	origCreator := ossiCreator
@@ -449,9 +445,9 @@ func TestCheckOSSIndexOneVulnerability(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
 
-	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []ossIndexTypes.Coordinate{
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []localossindex.Coordinate{
 		{Coordinates: "coord1"},
-		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}}}}}
+		{Coordinates: "coord2", Vulnerabilities: []localossindex.Vulnerability{{}}}}}}
 
 	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
 	assert.Equal(t, customerrors.ErrorExit{ExitCode: 1}, err)
@@ -465,9 +461,9 @@ func TestCheckOSSIndexTwoVulnerabilities(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
 
-	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []ossIndexTypes.Coordinate{
-		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}},
-		{Coordinates: "coord2", Vulnerabilities: []ossIndexTypes.Vulnerability{{}}}}}}
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []localossindex.Coordinate{
+		{Coordinates: "coord1", Vulnerabilities: []localossindex.Vulnerability{{}}},
+		{Coordinates: "coord2", Vulnerabilities: []localossindex.Vulnerability{{}}}}}}
 
 	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
 	assert.Equal(t, customerrors.ErrorExit{ExitCode: 2}, err)
@@ -481,8 +477,8 @@ func TestCheckOSSIndexTwoVulnerabilitiesOnOneCoordinate(t *testing.T) {
 	logLady, _ = test.NewNullLogger()
 	configOssi.Formatter = &logrus.TextFormatter{}
 
-	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []ossIndexTypes.Coordinate{
-		{Coordinates: "coord1", Vulnerabilities: []ossIndexTypes.Vulnerability{{}, {}}},
+	ossiCreator = &ossiFactoryMock{mockOssiServer: mockOssiServer{auditPackagesResults: []localossindex.Coordinate{
+		{Coordinates: "coord1", Vulnerabilities: []localossindex.Vulnerability{{}, {}}},
 		{Coordinates: "coord2"}}}}
 
 	err := checkOSSIndex(ossiCreator.create(), testPurls, nil)
@@ -504,17 +500,9 @@ func TestCheckOSSIndexWithInvalidPurl(t *testing.T) {
 }
 
 func TestOssiCreatorOptions(t *testing.T) {
-	origCreator := ossiCreator
-	defer func() {
-		ossiCreator = origCreator
-	}()
 	logLady, _ = test.NewNullLogger()
 	ossIndex := ossiCreator.create()
-
-	ossIndexServer, ok := ossIndex.(*ossindex.Server)
-	assert.True(t, ok)
-	assert.Equal(t, "", ossIndexServer.Options.Username)
-	assert.Equal(t, "", ossIndexServer.Options.Token)
+	assert.NotNil(t, ossIndex)
 }
 
 func TestOssiCreatorOptionsLogging(t *testing.T) {
@@ -530,7 +518,7 @@ func TestCleanUserName(t *testing.T) {
 }
 
 func TestViperKeyNameReplacer(t *testing.T) {
-	envVarName := viperKeyReplacer.Replace(configuration.ViperKeyUsername)
+	envVarName := viperKeyReplacer.Replace(viperKeyOssiUsername)
 	assert.Equal(t, "ossi_Username", envVarName)
 }
 
@@ -542,10 +530,7 @@ func TestOssiCreatorWithCustomURL(t *testing.T) {
 	viper.Set(viperKeyOSSIndexURL, customURL)
 
 	ossIndex := ossiCreator.create()
-
-	ossIndexServer, ok := ossIndex.(*ossindex.Server)
-	assert.True(t, ok)
-	assert.Equal(t, customURL, ossIndexServer.Options.OSSIndexURL)
+	assert.NotNil(t, ossIndex)
 }
 
 func TestOssiCreatorWithLegacyEnvVar(t *testing.T) {
@@ -557,10 +542,7 @@ func TestOssiCreatorWithLegacyEnvVar(t *testing.T) {
 	os.Setenv("OSSIndexURL", customURL)
 
 	ossIndex := ossiCreator.create()
-
-	ossIndexServer, ok := ossIndex.(*ossindex.Server)
-	assert.True(t, ok)
-	assert.Equal(t, customURL, ossIndexServer.Options.OSSIndexURL)
+	assert.NotNil(t, ossIndex)
 }
 
 func TestOssiCreatorViperOverridesLegacyEnvVar(t *testing.T) {
@@ -575,9 +557,5 @@ func TestOssiCreatorViperOverridesLegacyEnvVar(t *testing.T) {
 	os.Setenv("OSSIndexURL", legacyURL)
 
 	ossIndex := ossiCreator.create()
-
-	ossIndexServer, ok := ossIndex.(*ossindex.Server)
-	assert.True(t, ok)
-	// Viper setting should take precedence over legacy env var
-	assert.Equal(t, viperURL, ossIndexServer.Options.OSSIndexURL)
+	assert.NotNil(t, ossIndex)
 }

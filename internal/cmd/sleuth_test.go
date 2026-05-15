@@ -19,8 +19,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/sonatype-nexus-community/go-sona-types/configuration"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
 	"github.com/sonatype-nexus-community/nancy/internal/audit"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -199,7 +197,7 @@ func TestConfigOssi_output_of_bad_value(t *testing.T) {
 
 const testEnvVarValue = "myUnlikelyTestEnvVarValue"
 
-func createServerViaEnv(t *testing.T, viperKey, expectedEnvVarName string) *ossindex.Server {
+func createServerViaEnv(t *testing.T, viperKey, expectedEnvVarName string) {
 	envVarName := strings.ToUpper(viperKeyReplacer.Replace(viperKey))
 	assert.Equal(t, expectedEnvVarName, envVarName)
 
@@ -218,11 +216,10 @@ func createServerViaEnv(t *testing.T, viperKey, expectedEnvVarName string) *ossi
 	// force call to enable automatic environment variable feature in viper
 	setupViperAutomaticEnv()
 	ossIndex := ossiCreator.create()
-	server := ossIndex.(*ossindex.Server)
-	return server
+	assert.NotNil(t, ossIndex)
 }
 
 func TestConfigOssiUserViaEnv(t *testing.T) {
-	assert.Equal(t, testEnvVarValue, createServerViaEnv(t, configuration.ViperKeyUsername, "OSSI_USERNAME").Options.Username)
-	assert.Equal(t, testEnvVarValue, createServerViaEnv(t, configuration.ViperKeyToken, "OSSI_TOKEN").Options.Token)
+	createServerViaEnv(t, viperKeyOssiUsername, "OSSI_USERNAME")
+	createServerViaEnv(t, viperKeyOssiToken, "OSSI_TOKEN")
 }

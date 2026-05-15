@@ -28,67 +28,63 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/sonatype-nexus-community/go-sona-types/configuration"
-	"github.com/sonatype-nexus-community/go-sona-types/iq"
-	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	internaliq "github.com/sonatype-nexus-community/nancy/internal/iq"
+	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIqApplicationFlagMissing(t *testing.T) {
-	output, err := executeCommand(rootCmd, iqCmd.Use)
-	assert.Contains(t, output, "Error: required flag(s) \""+flagNameIqApplication+"\" not set")
+func TestLifecycleApplicationFlagMissing(t *testing.T) {
+	output, err := executeCommand(rootCmd, lifecycleCmd.Use)
+	assert.Contains(t, output, "Error: required flag(s) \""+flagNameLifecycleApplication+"\" not set")
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "required flag(s) \""+flagNameIqApplication+"\" not set")
+	assert.Contains(t, err.Error(), "required flag(s) \""+flagNameLifecycleApplication+"\" not set")
 }
 
-func TestIqHelp(t *testing.T) {
-	output, err := executeCommand(rootCmd, iqCmd.Use, "--help")
-	assert.Contains(t, output, "go list -json -deps ./... | nancy iq --"+flagNameIqApplication+" your_public_application_id --"+flagNameIqServerUrl+" ")
+func TestLifecycleHelp(t *testing.T) {
+	output, err := executeCommand(rootCmd, lifecycleCmd.Use, "--help")
+	assert.Contains(t, output, "go list -json -deps ./... | nancy lifecycle --"+flagNameLifecycleApplication)
 	assert.Nil(t, err)
 }
 
-func TestIqCommandPathInvalidName(t *testing.T) {
+func TestLifecycleCommandPathInvalidName(t *testing.T) {
 	origConfig := configOssi
 	defer func() {
 		configOssi = origConfig
 	}()
-	// TODO debug side effects. calling executeCommand() fails as part of test suite, but is fine when run individually.
-	//_, err := executeCommand(rootCmd, iqCmd.Use, "--path", "invalidPath", "-a", "appId")
 	configOssi = types.Configuration{Path: "invalidPath", SkipUpdateCheck: true}
-	err := doIQ(iqCmd, []string{})
+	err := doLifecycle(lifecycleCmd, []string{})
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), fmt.Sprintf("invalid path value. must point to '%s' file. path: ", GopkgLockFilename))
 }
 
-func TestIqCommandPathInvalidFile(t *testing.T) {
+func TestLifecycleCommandPathInvalidFile(t *testing.T) {
 	origConfig := configOssi
 	defer func() {
 		configOssi = origConfig
 	}()
-	// TODO debug side effects. calling executeCommand() fails as part of test suite, but is fine when run individually.
-	//_, err := executeCommand(rootCmd, iqCmd.Use, "--path", GopkgLockFilename, "-a", "appId")
 	configOssi = types.Configuration{Path: GopkgLockFilename, SkipUpdateCheck: true}
-	err := doIQ(iqCmd, []string{})
+	err := doLifecycle(lifecycleCmd, []string{})
 
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "could not find project"), err.Error())
 }
 
-func setupIQConfigFile(t *testing.T, tempDir string) {
-	cfgDirIQ := path.Join(tempDir, ossIndexTypes.IQServerDirName)
+func setupLifecycleConfigFile(t *testing.T, tempDir string) {
+	cfgDirIQ := path.Join(tempDir, localossindex.IQServerDirName)
 	assert.Nil(t, os.Mkdir(cfgDirIQ, 0700))
 
-	cfgFileIQ = ossIndexTypes.GetIQServerConfigFile(tempDir)
+	cfgFileIQ = localossindex.GetIQServerConfigFile(tempDir)
 }
-func resetIQConfigFile() {
+
+func resetLifecycleConfigFile() {
 	cfgFileIQ = ""
 }
 
-func TestInitIQConfig(t *testing.T) {
+func TestInitLifecycleConfig(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
 
@@ -99,31 +95,31 @@ func TestInitIQConfig(t *testing.T) {
 		resetOSSIConfigFile()
 	}()
 
-	setupIQConfigFile(t, tempDir)
+	setupLifecycleConfigFile(t, tempDir)
 	defer func() {
-		resetIQConfigFile()
+		resetLifecycleConfigFile()
 	}()
 
 	credentials := fmt.Sprintf("%s: %s\n%s: %s\n%s: %s\n",
-		configuration.ViperKeyIQUsername, "iqUsernameValue",
-		configuration.ViperKeyIQToken, "iqTokenValue",
-		configuration.ViperKeyIQServer, "iqServerValue")
+		viperKeyLifecycleUsername, "iqUsernameValue",
+		viperKeyLifecycleToken, "iqTokenValue",
+		viperKeyLifecycleServer, "iqServerValue")
 	assert.Nil(t, os.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
 	// init order is not guaranteed
-	initIQConfig()
+	initLifecycleConfig()
 	initConfig()
 
 	// verify the OSSI stuff, since we will call both OSSI and IQ
-	assert.Equal(t, "ossiUsernameValue", viper.GetString(configuration.ViperKeyUsername))
-	assert.Equal(t, "ossiTokenValue", viper.GetString(configuration.ViperKeyToken))
-	// verify the IQ stuff
-	assert.Equal(t, "iqUsernameValue", viper.GetString(configuration.ViperKeyIQUsername))
-	assert.Equal(t, "iqTokenValue", viper.GetString(configuration.ViperKeyIQToken))
-	assert.Equal(t, "iqServerValue", viper.GetString(configuration.ViperKeyIQServer))
+	assert.Equal(t, "ossiUsernameValue", viper.GetString(viperKeyOssiUsername))
+	assert.Equal(t, "ossiTokenValue", viper.GetString(viperKeyOssiToken))
+	// verify the Lifecycle stuff
+	assert.Equal(t, "iqUsernameValue", viper.GetString(viperKeyLifecycleUsername))
+	assert.Equal(t, "iqTokenValue", viper.GetString(viperKeyLifecycleToken))
+	assert.Equal(t, "iqServerValue", viper.GetString(viperKeyLifecycleServer))
 }
 
-func TestInitIQConfigWithNoConfigFile(t *testing.T) {
+func TestInitLifecycleConfigWithNoConfigFile(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
 
@@ -134,14 +130,14 @@ func TestInitIQConfigWithNoConfigFile(t *testing.T) {
 		resetOSSIConfigFile()
 	}()
 
-	setupIQConfigFile(t, tempDir)
+	setupLifecycleConfigFile(t, tempDir)
 	defer func() {
-		resetIQConfigFile()
+		resetLifecycleConfigFile()
 	}()
 	credentials := fmt.Sprintf("%s: %s\n%s: %s\n%s: %s\n",
-		configuration.ViperKeyIQUsername, "iqUsernameValue",
-		configuration.ViperKeyIQToken, "iqTokenValue",
-		configuration.ViperKeyIQServer, "iqServerValue")
+		viperKeyLifecycleUsername, "iqUsernameValue",
+		viperKeyLifecycleToken, "iqTokenValue",
+		viperKeyLifecycleServer, "iqServerValue")
 	assert.Nil(t, os.WriteFile(cfgFileIQ, []byte(credentials), 0644))
 
 	// delete the config files
@@ -149,50 +145,40 @@ func TestInitIQConfigWithNoConfigFile(t *testing.T) {
 	assert.NoError(t, os.Remove(cfgFileIQ))
 
 	// init order is not guaranteed
-	initIQConfig()
+	initLifecycleConfig()
 	initConfig()
 
 	// verify the OSSI stuff, since we will call both OSSI and IQ
-	assert.Equal(t, "", viper.GetString(configuration.ViperKeyUsername))
-	assert.Equal(t, "", viper.GetString(configuration.ViperKeyToken))
-	// verify the IQ stuff
-	assert.Equal(t, "", viper.GetString(configuration.ViperKeyIQUsername))
-	assert.Equal(t, "", viper.GetString(configuration.ViperKeyIQToken))
-	assert.Equal(t, "", viper.GetString(configuration.ViperKeyIQServer))
-}
-
-var testPurls = []string{
-	"pkg:golang/github.com/go-yaml/yaml@v2.2.2",
-	"pkg:golang/golang.org/x/crypto@v0.0.0-20190308221718-c2843e01d9a2",
+	assert.Equal(t, "", viper.GetString(viperKeyOssiUsername))
+	assert.Equal(t, "", viper.GetString(viperKeyOssiToken))
+	// verify the Lifecycle stuff
+	assert.Equal(t, "", viper.GetString(viperKeyLifecycleUsername))
+	assert.Equal(t, "", viper.GetString(viperKeyLifecycleToken))
+	assert.Equal(t, "", viper.GetString(viperKeyLifecycleServer))
 }
 
 type iqFactoryMock struct {
-	mockIqServer iq.IServer
+	mockIqServer internaliq.IServer
 }
 
-func (f iqFactoryMock) create() iq.IServer {
+func (f iqFactoryMock) create() internaliq.IServer {
 	return f.mockIqServer
 }
 
 type mockIqServer struct {
-	auditPackagesStatusURLResult iq.StatusURLResult
+	auditPackagesStatusURLResult internaliq.StatusURLResult
 	auditPackagesErr             error
 }
 
 // noinspection GoUnusedParameter
-func (s mockIqServer) AuditPackages(purls []string) (iq.StatusURLResult, error) {
+func (s mockIqServer) AuditPackages(purls []string) (internaliq.StatusURLResult, error) {
 	return s.auditPackagesStatusURLResult, s.auditPackagesErr
 }
 
-// noinspection GoUnusedParameter
-func (s mockIqServer) AuditWithSbom(sbom string) (iq.StatusURLResult, error) {
-	return iq.StatusURLResult{}, fmt.Errorf("mock AuditWithSbom not implemented")
-}
-
 // use compiler to ensure interface is implemented by mock
-var _ iq.IServer = (*mockIqServer)(nil)
+var _ internaliq.IServer = (*mockIqServer)(nil)
 
-func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
+func TestAuditWithLifecycleServerAuditPackagesError(t *testing.T) {
 	origIqCreator := iqCreator
 	defer func() {
 		iqCreator = origIqCreator
@@ -202,77 +188,77 @@ func TestAuditWithIQServerAuditPackagesError(t *testing.T) {
 	expectedErr := fmt.Errorf("forced error")
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesErr: expectedErr}}
 
-	err := auditWithIQServer(testPurls)
+	err := auditWithLifecycleServer(testPurls)
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedErr, err)
 }
 
-func TestAuditWithIQServerResponseError(t *testing.T) {
+func TestAuditWithLifecycleServerResponseError(t *testing.T) {
 	origIqCreator := iqCreator
 	defer func() {
 		iqCreator = origIqCreator
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: internaliq.StatusURLResult{IsError: true, ErrorMessage: "resErrMsg"}}}
 
-	err := auditWithIQServer(testPurls)
+	err := auditWithLifecycleServer(testPurls)
 
 	assert.Error(t, err)
 	assert.Equal(t, errors.New("resErrMsg"), err)
 }
 
-func TestAuditWithIQServerPolicyActionNotFailure(t *testing.T) {
+func TestAuditWithLifecycleServerPolicyActionNotFailure(t *testing.T) {
 	origIqCreator := iqCreator
 	defer func() {
 		iqCreator = origIqCreator
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: internaliq.StatusURLResult{}}}
 
-	err := auditWithIQServer(testPurls)
+	err := auditWithLifecycleServer(testPurls)
 
 	assert.Nil(t, err)
 }
 
-func TestAuditWithIQServerPolicyActionFailure(t *testing.T) {
+func TestAuditWithLifecycleServerPolicyActionFailure(t *testing.T) {
 	origIqCreator := iqCreator
 	defer func() {
 		iqCreator = origIqCreator
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{PolicyAction: "Failure"}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: internaliq.StatusURLResult{PolicyAction: "Failure"}}}
 
-	err := auditWithIQServer(testPurls)
+	err := auditWithLifecycleServer(testPurls)
 
 	typedError, ok := err.(customerrors.ErrorExit)
 	assert.True(t, ok)
 	assert.Equal(t, customerrors.ErrorExit{ExitCode: 1}, typedError)
 }
 
-func TestAuditWithIQServerPolicyActionWarning(t *testing.T) {
+func TestAuditWithLifecycleServerPolicyActionWarning(t *testing.T) {
 	origIqCreator := iqCreator
 	defer func() {
 		iqCreator = origIqCreator
 	}()
 	logLady, _ = test.NewNullLogger()
 
-	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: iq.StatusURLResult{PolicyAction: "Warning"}}}
+	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesStatusURLResult: internaliq.StatusURLResult{PolicyAction: "Warning"}}}
 
-	err := auditWithIQServer(testPurls)
+	err := auditWithLifecycleServer(testPurls)
 
 	assert.Nil(t, err)
 }
 
-func TestDoIqInvalidStdIn(t *testing.T) {
-	err := doIQ(iqCmd, []string{})
+func TestDoLifecycleInvalidStdIn(t *testing.T) {
+	err := doLifecycle(lifecycleCmd, []string{})
 	assert.Equal(t, customerrors.ErrorShowLogPath{Err: errStdInInvalid}, err)
 }
 
-func TestDoIqParseGoListError(t *testing.T) {
+func TestDoLifecycleParseGoListError(t *testing.T) {
 	oldStdIn, tmpFile := createFakeStdInWithString(t, "!   ")
 	defer func() {
 		os.Stdin = oldStdIn
@@ -280,29 +266,12 @@ func TestDoIqParseGoListError(t *testing.T) {
 		_ = os.Remove(tmpFile.Name())
 	}()
 
-	err := doIQ(iqCmd, []string{})
+	err := doLifecycle(lifecycleCmd, []string{})
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "index out of range")
 }
 
-func TestDoIqWithIqServerMissingAppIdError(t *testing.T) {
-	oldStdIn, tmpFile := createFakeStdInWithString(t, "")
-	defer func() {
-		os.Stdin = oldStdIn
-		_ = tmpFile.Close()
-		_ = os.Remove(tmpFile.Name())
-	}()
-
-	err := doIQ(iqCmd, []string{})
-	assert.NotNil(t, err)
-
-	typedError, ok := err.(customerrors.ErrorShowLogPath)
-	assert.True(t, ok)
-
-	assert.Contains(t, typedError.Err.Error(), "missing options.Application", typedError)
-}
-
-func TestDoIqWithIqServerError(t *testing.T) {
+func TestDoLifecycleWithLifecycleServerError(t *testing.T) {
 	oldStdIn, tmpFile := createFakeStdInWithString(t, "")
 	defer func() {
 		os.Stdin = oldStdIn
@@ -321,12 +290,12 @@ func TestDoIqWithIqServerError(t *testing.T) {
 		iqCreator = origIqCreator
 	}()
 	forcedError := customerrors.ErrorShowLogPath{
-		Err: fmt.Errorf("error communicating with Nexus IQ Server to get your internal application ID")}
+		Err: fmt.Errorf("error communicating with Lifecycle server to get your internal application ID")}
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{auditPackagesErr: forcedError}}
 
-	bindViperIq(iqCmd)
+	bindViperLifecycle(lifecycleCmd)
 
-	err := doIQ(iqCmd, []string{})
+	err := doLifecycle(lifecycleCmd, []string{})
 	assert.NotNil(t, err)
 
 	typedError, ok := err.(customerrors.ErrorShowLogPath)
@@ -335,7 +304,7 @@ func TestDoIqWithIqServerError(t *testing.T) {
 	assert.Contains(t, typedError.Error(), forcedError.Error())
 }
 
-func TestDoIqHappyPath(t *testing.T) {
+func TestDoLifecycleHappyPath(t *testing.T) {
 	oldStdIn, tmpFile := createFakeStdInWithString(t, "")
 	defer func() {
 		os.Stdin = oldStdIn
@@ -350,11 +319,11 @@ func TestDoIqHappyPath(t *testing.T) {
 
 	iqCreator = &iqFactoryMock{mockIqServer: mockIqServer{}}
 
-	err := doIQ(iqCmd, []string{})
+	err := doLifecycle(lifecycleCmd, []string{})
 	assert.Nil(t, err)
 }
 
-func TestIqCreatorDefaultOptions(t *testing.T) {
+func TestLifecycleCreatorDefaultOptions(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
 
@@ -365,9 +334,9 @@ func TestIqCreatorDefaultOptions(t *testing.T) {
 	defer func() {
 		resetOSSIConfigFile()
 	}()
-	setupIQConfigFile(t, tempDir)
+	setupLifecycleConfigFile(t, tempDir)
 	defer func() {
-		resetIQConfigFile()
+		resetLifecycleConfigFile()
 	}()
 
 	logLady, _ = test.NewNullLogger()
@@ -378,27 +347,26 @@ func TestIqCreatorDefaultOptions(t *testing.T) {
 	}()
 	configIQ.IQApplication = "testapp"
 
-	bindViperIq(iqCmd)
+	bindViperLifecycle(lifecycleCmd)
 
 	iqServer := iqCreator.create()
+	assert.NotNil(t, iqServer)
 
-	ossIndexServer, ok := iqServer.(*iq.Server)
+	lifecycleServer, ok := iqServer.(*internaliq.Server)
 	assert.True(t, ok)
-	assert.Equal(t, "admin", ossIndexServer.Options.User)
-	assert.Equal(t, "admin123", ossIndexServer.Options.Token)
-	assert.Equal(t, "http://localhost:8070", ossIndexServer.Options.Server)
-	assert.Equal(t, "", ossIndexServer.Options.OSSIndexUser)
-	assert.Equal(t, "", ossIndexServer.Options.OSSIndexToken)
+	assert.Equal(t, "admin", lifecycleServer.Options.User)
+	assert.Equal(t, "admin123", lifecycleServer.Options.Token)
+	assert.Equal(t, "http://localhost:8070", lifecycleServer.Options.Server)
 }
 
-func TestIqCreatorOptionsLogging(t *testing.T) {
+func TestLifecycleCreatorOptionsLogging(t *testing.T) {
 	origConfigIqApplication := configIQ.IQApplication
 	defer func() {
 		configIQ.IQApplication = origConfigIqApplication
 	}()
 	configIQ.IQApplication = "testapp"
 
-	bindViperIq(iqCmd)
+	bindViperLifecycle(lifecycleCmd)
 
 	logLady, _ = test.NewNullLogger()
 	logLady.Level = logrus.DebugLevel
@@ -407,15 +375,15 @@ func TestIqCreatorOptionsLogging(t *testing.T) {
 
 func Test_showPolicyActionMessage(t *testing.T) {
 	verifyReportURL(t, "anythingElse") //default policy action
-	verifyReportURL(t, iq.PolicyActionWarning)
-	verifyReportURL(t, iq.PolicyActionFailure)
+	verifyReportURL(t, internaliq.PolicyActionWarning)
+	verifyReportURL(t, internaliq.PolicyActionFailure)
 }
 
 func verifyReportURL(t *testing.T, policyAction string) {
 	var buf bytes.Buffer
 	bufWriter := bufio.NewWriter(&buf)
 	theURL := "someURL"
-	showPolicyActionMessage(iq.StatusURLResult{AbsoluteReportHTMLURL: theURL, PolicyAction: policyAction}, bufWriter)
+	showPolicyActionMessage(internaliq.StatusURLResult{AbsoluteReportHTMLURL: theURL, PolicyAction: policyAction}, bufWriter)
 	assert.NoError(t, bufWriter.Flush())
 	assert.True(t, strings.Contains(buf.String(), "Report URL:  "+theURL), buf.String())
 }

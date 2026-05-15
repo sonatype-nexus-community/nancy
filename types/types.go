@@ -30,6 +30,7 @@ type Configuration struct {
 	Quiet           bool
 	Loud            bool
 	CleanCache      bool
+	NoFail          bool
 	CveList         CveListFlag
 	Path            string
 	Formatter       logrus.Formatter
