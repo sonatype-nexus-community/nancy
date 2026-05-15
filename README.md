@@ -785,7 +785,7 @@ available. See: [Exclude vulnerabilities](#exclude-vulnerabilities)
 
 ## Development
 
-`nancy` is written using Golang 1.13, so it is best you start there.
+`nancy` is written using Go (see `go.mod` for the minimum required version).
 
 Tests can be run like this `make test`
 
@@ -796,7 +796,7 @@ Adding new files? Get the license header correct with:
 
 ### Release Process
 
-Follow the steps below to release a new version of Nancy. You need to be part of the `deploy from circle ci` group for this to work.
+Follow the steps below to release a new version of Nancy. You need push access to the repository.
 
 1. Checkout/pull the latest `main` branch, and create a new tag with the desired semantic version and a helpful note:
 
