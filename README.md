@@ -23,23 +23,25 @@
 
 [![shield_gh-workflow-test]][link_gh-workflow-test]
 [![shield_license]][license_file]
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=sonatype-nexus-community_nancy&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=sonatype-nexus-community_nancy)
 
-`nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype Guide](https://guide.sonatype.com/), and also works with Sonatype Lifecycle (formerly Nexus IQ Server), allowing you a smooth experience as a Golang developer!
+`nancy` is a tool to check for vulnerabilities in your Golang dependencies, powered by [Sonatype Guide](https://guide.sonatype.com/), and also works with [Sonatype Lifecycle](https://www.sonatype.com/products/open-source-security-dependency-management) (formerly Nexus IQ Server), allowing you a smooth experience as a Golang developer!
 
 ## Table of Contents
 
+- [Table of Contents](#table-of-contents)
 - [Authentication](#authentication)
+  - [Sonatype Guide Bearer Token (Recommended)](#sonatype-guide-bearer-token-recommended)
+  - [OSS Index Credentials (Deprecated)](#oss-index-credentials-deprecated)
 - [Installation](#installation)
   - [Build from source](#build-from-source)
   - [Download release binary](#download-release-binary)
   - [Install via Homebrew (macOS)](#install-via-homebrew-macos)
-  - [Install from the AUR (Arch Linux)](#install-from-the-aur-arch-linux)
 - [Usage](#usage)
   - [What is the best usage of Nancy?](#what-is-the-best-usage-of-nancy)
   - [CI Usage](#ci-usage)
   - [Docker usage](#docker-usage)
 - [Sonatype Guide Options](#sonatype-guide-options)
-  - [Rate limiting / Setting config](#rate-limiting--setting-config)
   - [Using a custom server URL](#using-a-custom-server-url)
   - [Loud mode](#loud-mode)
   - [Exclude vulnerabilities](#exclude-vulnerabilities)
@@ -49,6 +51,7 @@
 - [Usage in CI](#usage-in-ci)
 - [Why Nancy?](#why-nancy)
   - [Relationship to govulncheck](#relationship-to-govulncheck)
+- [DISCLAIMER](#disclaimer)
 - [How to Fix Vulnerabilities](#how-to-fix-vulnerabilities)
 - [Development](#development)
   - [Release Process](#release-process)
@@ -58,7 +61,7 @@
 
 ## Authentication
 
-Nancy v2.0.0 supports three authentication modes for vulnerability scanning via Sonatype Guide.
+Nancy v2.0.0 supports two authentication modes for vulnerability scanning via [Sonatype Guide](https://guide.sonatype.com).
 
 ### Sonatype Guide Bearer Token (Recommended)
 
@@ -79,7 +82,7 @@ go list -json -deps ./... | nancy sleuth
 
 OSS Index credentials (`--username` / `--token`) continue to work via the Sonatype Guide compatibility API.
 
-> **Deprecated**: OSS Index credentials will be removed in v3.x. Please migrate to a Sonatype Guide Bearer token.
+> **Deprecated**: OSS Index credentials will be removed in v3.x.y. Please migrate to a Sonatype Guide Bearer token.
 
 If you have existing OSS Index credentials they will continue to work, but nancy will display a deprecation warning.
 
@@ -94,10 +97,6 @@ export OSSI_TOKEN=A4@k3@p1T0k3n                 # Deprecated — migrate to GUID
 go list -json -deps ./... | nancy sleuth
 ```
 
-### Unauthenticated
-
-Nancy works without any credentials but is rate-limited by the upstream service.
-
 ---
 
 ## Installation
@@ -107,7 +106,6 @@ At the current time you have a few options:
 - Build from source
 - Download release binary from [here on GitHub](https://github.com/sonatype-nexus-community/nancy/releases)
 - Install via Homebrew (macOS)
-- Install from the AUR (Arch Linux)
 
 ### Build from source
 
@@ -137,14 +135,6 @@ brew install sonatype-nexus-community/tap/nancy
 `brew` formulae are created and published to that tap with each new release, so you can use `brew` to upgrade, etc... as you wish.
 
 You can see more about the formulae, etc... at [this repo](https://github.com/sonatype-nexus-community/homebrew-nancy-tap).
-
-### Install from the AUR (Arch Linux)
-
-On Arch Linux, `nancy` can be installed using the [AUR](https://aur.archlinux.org/packages/nancy-bin/):
-
-```shell
-$ yay -S nancy-bin
-```
 
 ---
 
@@ -255,7 +245,7 @@ Global Flags:
 
 > **Gopkg.lock support removed in v2.0.0**
 >
-> The `golang/dep` project has been archived since 2020. Nancy v2.0.0 removes Gopkg.lock scanning.
+> The `golang/dep` project has been archived since 2020. Nancy v2.x.y removes Gopkg.lock scanning.
 >
 > **Migration**: Migrate your project to Go modules. Then scan with:
 > ```
@@ -295,7 +285,7 @@ jobs:
   nancy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -310,7 +300,7 @@ For Sonatype Lifecycle (formerly Nexus IQ) scanning:
         run: go list -json -deps ./... | nancy lifecycle --lifecycle-application my-app-id --lifecycle-server-url ${{ vars.LIFECYCLE_URL }} --lifecycle-username ${{ secrets.LIFECYCLE_USERNAME }} --lifecycle-token ${{ secrets.LIFECYCLE_TOKEN }}
 ```
 
-> **Note**: `nancy iq` is a deprecated alias for `nancy lifecycle`. The `--iq-*` flags are deprecated aliases for `--lifecycle-*` flags. Both continue to work in v2.0.0 but will be removed in v3.x.
+> **Note**: `nancy iq` is a deprecated alias for `nancy lifecycle`. The `--iq-*` flags are deprecated aliases for `--lifecycle-*` flags. Both continue to work in v2.x.y but will be removed in v3.x.y.
 
 ### Docker usage
 
@@ -368,29 +358,6 @@ We publish a few different flavors for convenience:
 ---
 
 ## Sonatype Guide Options
-
-### Rate limiting / Setting config
-
-If you start using Nancy extensively without authentication, you might run into rate limiting from Sonatype Guide. To avoid this, authenticate with a Guide Bearer token (see [Authentication](#authentication) above).
-
-If you run into rate limiting you should receive an error with instructions on how to obtain a token:
-
-```
-You have been rate limited by Sonatype Guide.
-Please visit https://guide.sonatype.com to obtain a free Bearer token.
-Upon retrieving your token, run nancy with --guide-token YOUR_TOKEN or set GUIDE_TOKEN=YOUR_TOKEN.
-```
-
-You can set your token via the command line:
-
-`nancy sleuth --guide-token YOUR_TOKEN`
-
-Or as an environment variable:
-
-```shell
-export GUIDE_TOKEN=YOUR_TOKEN
-go list -json -deps ./... | nancy sleuth
-```
 
 ### Using a custom server URL
 
@@ -664,8 +631,7 @@ Nancy uses Sonatype's vulnerability database. Nancy inspects dependency files to
 
 ## DISCLAIMER
 
-A portion of the golang ecosystem doesn't use proper versions, and instead uses a commit hash to resolve your dependency. Dependencies like this will not work with
-`nancy` quite yet, as we don't have a mechanism to lookup vulnerabilities in that manner.
+A portion of the golang ecosystem doesn't use proper versions, and instead uses a commit hash to resolve your dependency. Dependencies like this will not work with `nancy` quite yet, as we don't have a mechanism to lookup vulnerabilities in that manner.
 
 ---
 
