@@ -52,14 +52,14 @@ test: build
 
 integration-test: build
 	mkdir -p dist
-	go list -json -deps ./... | ./$(BINARY_NAME) sleuth
-	go list -json -deps | ./$(BINARY_NAME) sleuth
-	go list -json -m all | ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS)
-	go list -m all | ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS)
-	go list -json -deps ./... > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
-	go list -json -deps > dist/deps.out && ./$(BINARY_NAME) sleuth < dist/deps.out
-	go list -json -m all > dist/deps.out && ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS) < dist/deps.out
-	go list -m all > dist/deps.out && ./$(BINARY_NAME) sleuth --exclude-vulnerability $(IT_EXCLUDED_VULNS) < dist/deps.out
+	go list -json -deps ./... | ./$(BINARY_NAME) sleuth --token $(SONATYPE_GUIDE_TOKEN)
+	go list -json -deps | ./$(BINARY_NAME) sleuth --token $(SONATYPE_GUIDE_TOKEN)
+	go list -json -m all | ./$(BINARY_NAME) sleuth --token $(SONATYPE_GUIDE_TOKEN) --exclude-vulnerability $(IT_EXCLUDED_VULNS)
+	go list -m all | ./$(BINARY_NAME) sleuth --token $(SONATYPE_GUIDE_TOKEN) --exclude-vulnerability $(IT_EXCLUDED_VULNS)
+	go list -json -deps ./... > dist/deps.out && ./$(BINARY_NAME) sleuth --token $(SONATYPE_GUIDE_TOKEN)  < dist/deps.out
+	go list -json -deps > dist/deps.out && ./$(BINARY_NAME) sleuth --token $(SONATYPE_GUIDE_TOKEN) < dist/deps.out
+	go list -json -m all > dist/deps.out && ./$(BINARY_NAME) sleuth --token $(SONATYPE_GUIDE_TOKEN) --exclude-vulnerability $(IT_EXCLUDED_VULNS) < dist/deps.out
+	go list -m all > dist/deps.out && ./$(BINARY_NAME) sleuth --token $(SONATYPE_GUIDE_TOKEN) --exclude-vulnerability $(IT_EXCLUDED_VULNS) < dist/deps.out
 
 build-linux:
 	GOOS=linux GOARCH=amd64 $(GO_BUILD_FLAGS) $(GOBUILD) -o $(BINARY_NAME) -v
