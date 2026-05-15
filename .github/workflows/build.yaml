@@ -57,7 +57,9 @@ jobs:
               run: make deps
 
             - name: Lint
-              run: make ci-lint
+              uses: golangci/golangci-lint-action@v9
+              with:
+                  version: v2.12.2
 
             - name: Run tests
               run: make test
