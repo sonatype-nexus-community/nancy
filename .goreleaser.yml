@@ -71,6 +71,7 @@ changelog:
     - '^test:'
 
 release:
+  prerelease: auto
   ids:
     - default
     - homebrew
@@ -80,6 +81,7 @@ release:
 
 brews:
   -
+    skip_upload: auto
     ids:
       - homebrew
     repository:
@@ -101,10 +103,10 @@ dockers:
     - "--label=version={{ .Version }}"
     - "--label=maintainer='Sonatype Community <community@sonatype.com>'"
     image_templates:
-    - "sonatypecommunity/nancy:latest"
     - "sonatypecommunity/nancy:{{ .Tag }}"
-    - "sonatypecommunity/nancy:v{{ .Major }}"
-    - "sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}"
+    - '{{ if not .Prerelease }}sonatypecommunity/nancy:latest{{ end }}'
+    - '{{ if not .Prerelease }}sonatypecommunity/nancy:v{{ .Major }}{{ end }}'
+    - '{{ if not .Prerelease }}sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}{{ end }}'
   -
     goos: linux
     goarch: amd64
@@ -117,10 +119,10 @@ dockers:
     - "--label=version={{ .Version }}"
     - "--label=maintainer='Sonatype Community <community@sonatype.com>'"
     image_templates:
-    - "sonatypecommunity/nancy:alpine"
     - "sonatypecommunity/nancy:{{ .Tag }}-alpine"
-    - "sonatypecommunity/nancy:v{{ .Major }}-alpine"
-    - "sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}-alpine"
+    - '{{ if not .Prerelease }}sonatypecommunity/nancy:alpine{{ end }}'
+    - '{{ if not .Prerelease }}sonatypecommunity/nancy:v{{ .Major }}-alpine{{ end }}'
+    - '{{ if not .Prerelease }}sonatypecommunity/nancy:v{{ .Major }}.{{ .Minor }}-alpine{{ end }}'
 
 nfpms:
   -
