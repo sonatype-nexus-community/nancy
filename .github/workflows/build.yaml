@@ -45,17 +45,16 @@ jobs:
             - name: Create test results directory
               run: mkdir -p $TEST_RESULTS/gotest
 
-            - name: Install go-junit-report
-              run: go install github.com/jstemmer/go-junit-report@latest
-
-            - name: Install addlicense
-              run: go install github.com/google/addlicense@latest
-
             - name: Check headers
-              run: make headers
+              run: |
+                  go install github.com/google/addlicense@latest
+                  addlicense -check -f ./header.txt ./*.go
 
             - name: Download dependencies
-              run: make deps
+              run: |
+                  go mod download
+                  go mod verify
+                  go mod tidy
 
             - name: Lint
               uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
@@ -63,23 +62,31 @@ jobs:
                   version: v2.12.1
 
             - name: Run tests
-              run: make test
+              run: |
+                  go build ./...
+                  go test -v ./... 2>&1 | tee /tmp/gotest.out
 
             - name: Generate JUnit report
-              run: make test 2>&1 | go-junit-report > $TEST_RESULTS/gotest/report.xml
+              run: |
+                  go install github.com/jstemmer/go-junit-report@latest
+                  go-junit-report < /tmp/gotest.out > $TEST_RESULTS/gotest/report.xml
               if: always()
 
             - name: Run integration tests
-              run: make integration-test
               env:
                   SONATYPE_GUIDE_TOKEN: ${{ secrets.SONATYPE_GUIDE_TOKEN }}
-
-            # Removed these test temporarily as can't get OSSI secrets to them easily
-            # - name: Run docker integration tests
-            #   run: make docker-integration-tests
-            #   env:
-            #       OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
-            #       OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
+                  IT_EXCLUDED_VULNS: CVE-2021-3121,CVE-2022-21698,CVE-2022-29153,sonatype-2021-1401,CVE-2023-32731,CVE-2023-45142,CVE-2024-10086,CVE-2023-29407,CVE-2023-29408,CVE-2022-41727
+              run: |
+                  go build -o nancy .
+                  mkdir -p dist
+                  go list -json -deps ./...      | ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN"
+                  go list -json -deps            | ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN"
+                  go list -json -m all           | ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS"
+                  go list -m all                 | ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS"
+                  go list -json -deps ./... > dist/deps.out && ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" < dist/deps.out
+                  go list -json -deps       > dist/deps.out && ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" < dist/deps.out
+                  go list -json -m all      > dist/deps.out && ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
+                  go list -m all            > dist/deps.out && ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
 
             - name: Upload test results
               uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

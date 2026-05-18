@@ -1,4 +1,4 @@
-FROM alpine:latest as builder
+FROM alpine:3.21 AS builder
 
 RUN apk update \
     && apk upgrade \
