@@ -96,48 +96,46 @@ func (s *Server) AuditPackages(purls []string) (StatusURLResult, error) {
 		sonatypeiq.BasicAuth{UserName: s.Options.User, Password: s.Options.Token},
 	)
 
-	// Step 1: resolve internal application ID from public application ID
+	internalAppID, err := s.resolveAppID(ctx)
+	if err != nil {
+		return StatusURLResult{IsError: true, ErrorMessage: err.Error()}, err
+	}
+
+	scanResp, _, err := s.client.ThirdPartyAnalysisAPI.
+		ScanComponents(ctx, internalAppID, "nancy").
+		StageId(s.Options.Stage).
+		Body(buildCycloneDXSBOM(purls)).
+		Execute()
+	if err != nil {
+		return StatusURLResult{IsError: true, ErrorMessage: err.Error()}, err
+	}
+
+	return s.pollForResult(ctx, internalAppID, extractScanRequestId(scanResp.GetStatusUrl()))
+}
+
+func (s *Server) resolveAppID(ctx context.Context) (string, error) {
 	appResp, _, err := s.client.ApplicationsAPI.GetApplications(ctx).
 		PublicId([]string{s.Options.Application}).
 		Execute()
 	if err != nil {
-		return StatusURLResult{IsError: true, ErrorMessage: err.Error()}, err
+		return "", err
 	}
 	if appResp == nil || len(appResp.GetApplications()) == 0 {
-		msg := fmt.Sprintf("application with public ID %q not found", s.Options.Application)
-		return StatusURLResult{IsError: true, ErrorMessage: msg}, fmt.Errorf("%s", msg)
+		return "", fmt.Errorf("application with public ID %q not found", s.Options.Application)
 	}
-	internalAppID := appResp.GetApplications()[0].GetId()
+	return appResp.GetApplications()[0].GetId(), nil
+}
 
-	// Step 2: build minimal CycloneDX 1.1 SBOM with PURLs
-	sbom := buildCycloneDXSBOM(purls)
-
-	// Step 3: submit SBOM for evaluation
-	scanResp, _, err := s.client.ThirdPartyAnalysisAPI.
-		ScanComponents(ctx, internalAppID, "nancy").
-		StageId(s.Options.Stage).
-		Body(sbom).
-		Execute()
-	if err != nil {
-		return StatusURLResult{IsError: true, ErrorMessage: err.Error()}, err
-	}
-
-	statusURL := scanResp.GetStatusUrl()
-	// Extract the scanRequestId from the statusUrl
-	// statusUrl format: api/v2/scan/applications/{appId}/status/{scanRequestId}
-	scanRequestId := extractScanRequestId(statusURL)
-
-	// Step 4: poll for results
+func (s *Server) pollForResult(ctx context.Context, internalAppID, scanRequestID string) (StatusURLResult, error) {
 	for i := 0; i < s.Options.MaxRetries; i++ {
 		time.Sleep(1 * time.Second)
 
 		result, _, err := s.client.ThirdPartyAnalysisAPI.
-			GetScanStatus(ctx, internalAppID, scanRequestId).
+			GetScanStatus(ctx, internalAppID, scanRequestID).
 			Execute()
 		if err != nil {
 			return StatusURLResult{IsError: true, ErrorMessage: err.Error()}, err
 		}
-
 		if result.IsError != nil && *result.IsError {
 			msg := ""
 			if result.ErrorMessage != nil {
@@ -145,7 +143,6 @@ func (s *Server) AuditPackages(purls []string) (StatusURLResult, error) {
 			}
 			return StatusURLResult{IsError: true, ErrorMessage: msg}, nil
 		}
-
 		if result.PolicyAction != nil {
 			reportURL := ""
 			if result.ReportHtmlUrl != nil {
@@ -157,7 +154,6 @@ func (s *Server) AuditPackages(purls []string) (StatusURLResult, error) {
 			}, nil
 		}
 	}
-
 	return StatusURLResult{IsError: true, ErrorMessage: "timed out waiting for Lifecycle evaluation"}, nil
 }
 

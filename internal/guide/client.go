@@ -53,11 +53,10 @@ type Options struct {
 
 // Server implements ossindex.IServer using the Sonatype Guide API.
 type Server struct {
-	opts    Options
-	logger  *logrus.Logger
-	api     *sonatypeguide.APIClient
-	authCtx context.Context
-	cache   *jsonCache
+	opts   Options
+	logger *logrus.Logger
+	api    *sonatypeguide.APIClient
+	cache  *jsonCache
 }
 
 // New creates a new Guide API Server.
@@ -70,25 +69,30 @@ func New(logger *logrus.Logger, opts Options) *Server {
 	cfg.Servers = sonatypeguide.ServerConfigurations{{URL: opts.ServerURL}}
 	cfg.UserAgent = fmt.Sprintf("nancy-client/%s", buildversion.BuildVersion)
 
-	authCtx := context.Background()
-	if opts.GuideToken != "" {
-		authCtx = context.WithValue(authCtx, sonatypeguide.ContextAccessToken, opts.GuideToken)
-	} else if opts.Username != "" {
-		authCtx = context.WithValue(authCtx, sonatypeguide.ContextBasicAuth, sonatypeguide.BasicAuth{
-			UserName: opts.Username,
-			Password: opts.Token,
-		})
-	} else if opts.Token != "" {
-		// Legacy: bearer token passed via --token with empty --username (pre-v2 pattern).
-		authCtx = context.WithValue(authCtx, sonatypeguide.ContextAccessToken, opts.Token)
-	}
-
 	return &Server{
-		opts:    opts,
-		logger:  logger,
-		api:     sonatypeguide.NewAPIClient(cfg),
-		authCtx: authCtx,
-		cache:   newJSONCache(opts.DBCachePath),
+		opts:   opts,
+		logger: logger,
+		api:    sonatypeguide.NewAPIClient(cfg),
+		cache:  newJSONCache(opts.DBCachePath),
+	}
+}
+
+// authContext builds a context carrying the configured credentials.
+func (s *Server) authContext() context.Context {
+	ctx := context.Background()
+	switch {
+	case s.opts.GuideToken != "":
+		return context.WithValue(ctx, sonatypeguide.ContextAccessToken, s.opts.GuideToken)
+	case s.opts.Username != "":
+		return context.WithValue(ctx, sonatypeguide.ContextBasicAuth, sonatypeguide.BasicAuth{
+			UserName: s.opts.Username,
+			Password: s.opts.Token,
+		})
+	case s.opts.Token != "":
+		// Legacy: bearer token passed via --token with empty --username (pre-v2 pattern).
+		return context.WithValue(ctx, sonatypeguide.ContextAccessToken, s.opts.Token)
+	default:
+		return ctx
 	}
 }
 
@@ -100,53 +104,56 @@ func (s *Server) NoCacheNoProblems() error {
 // AuditPackages checks a list of PURLs against the Sonatype Guide API.
 func (s *Server) AuditPackages(purls []string) ([]ossindex.Coordinate, error) {
 	var allCoords []ossindex.Coordinate
-
 	for i := 0; i < len(purls); i += maxCoords {
 		end := i + maxCoords
 		if end > len(purls) {
 			end = len(purls)
 		}
-		batch := purls[i:end]
-
-		var uncached []string
-		cachedCoords := make(map[string]ossindex.Coordinate)
-		for _, p := range batch {
-			if c, ok := s.cache.get(p); ok {
-				cachedCoords[p] = c
-			} else {
-				uncached = append(uncached, p)
-			}
+		coords, err := s.processBatch(purls[i:end])
+		if err != nil {
+			return nil, err
 		}
+		allCoords = append(allCoords, coords...)
+	}
+	return allCoords, nil
+}
 
-		if len(uncached) > 0 {
-			fetched, err := s.fetchBatch(uncached)
-			if err != nil {
-				return nil, err
-			}
-			for _, c := range fetched {
-				s.cache.set(c.Coordinates, c)
-			}
-			// Merge fetched into cachedCoords for ordering pass below
-			for _, c := range fetched {
-				cachedCoords[c.Coordinates] = c
-			}
-		}
-
-		for _, p := range batch {
-			if c, ok := cachedCoords[p]; ok {
-				allCoords = append(allCoords, c)
-			}
+func (s *Server) processBatch(batch []string) ([]ossindex.Coordinate, error) {
+	var uncached []string
+	cachedCoords := make(map[string]ossindex.Coordinate)
+	for _, p := range batch {
+		if c, ok := s.cache.get(p); ok {
+			cachedCoords[p] = c
+		} else {
+			uncached = append(uncached, p)
 		}
 	}
 
-	return allCoords, nil
+	if len(uncached) > 0 {
+		fetched, err := s.fetchBatch(uncached)
+		if err != nil {
+			return nil, err
+		}
+		for _, c := range fetched {
+			s.cache.set(c.Coordinates, c)
+			cachedCoords[c.Coordinates] = c
+		}
+	}
+
+	coords := make([]ossindex.Coordinate, 0, len(batch))
+	for _, p := range batch {
+		if c, ok := cachedCoords[p]; ok {
+			coords = append(coords, c)
+		}
+	}
+	return coords, nil
 }
 
 func (s *Server) fetchBatch(purls []string) ([]ossindex.Coordinate, error) {
 	s.logger.WithField("count", len(purls)).Debug("Sending batch to Guide API")
 
 	body := sonatypeguide.NewPurlRequestPost(purls)
-	reports, _, err := s.api.OSSIndexCompatibilityAPI.GetComponentReports(s.authCtx).
+	reports, _, err := s.api.OSSIndexCompatibilityAPI.GetComponentReports(s.authContext()).
 		PurlRequestPost(*body).
 		Execute()
 	if err != nil {

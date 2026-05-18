@@ -42,7 +42,12 @@ const (
 	viperKeyLifecycleToken    = "iq.Token"
 )
 
-type iqServerFactory interface {
+const (
+	unexpectedLifecycleErr = "unexpected error in lifecycle cmd"
+	reportURLLabel         = "Report URL: "
+)
+
+type lifecycleCreator interface {
 	create() internaliq.IServer
 }
 
@@ -67,7 +72,7 @@ func (iqFactory) create() internaliq.IServer {
 var (
 	cfgFileIQ string
 	configIQ  types.Configuration
-	iqCreator iqServerFactory = iqFactory{}
+	iqCreator lifecycleCreator = iqFactory{}
 )
 
 const (
@@ -146,7 +151,7 @@ func doLifecycle(cmd *cobra.Command, args []string) (err error) {
 		if errExit, ok := err.(customerrors.ErrorExit); ok {
 			os.Exit(errExit.ExitCode)
 		} else {
-			logLady.WithError(err).Error("unexpected error in lifecycle cmd")
+			logLady.WithError(err).Error(unexpectedLifecycleErr)
 			panic(err)
 		}
 	}
@@ -162,7 +167,7 @@ func getPurls() (purls []string, err error) {
 		logLady.Info("No stdin detected; auto-running go list")
 		reader, err = autoRunGoList()
 		if err != nil {
-			logLady.WithError(err).Error("unexpected error in lifecycle cmd")
+			logLady.WithError(err).Error(unexpectedLifecycleErr)
 			panic(err)
 		}
 	}
@@ -170,7 +175,7 @@ func getPurls() (purls []string, err error) {
 	mod := packages.Mod{}
 	mod.ProjectList, err = parse.GoListAgnostic(reader)
 	if err != nil {
-		logLady.WithError(err).Error("unexpected error in lifecycle cmd")
+		logLady.WithError(err).Error(unexpectedLifecycleErr)
 		panic(err)
 	}
 	purls = mod.ExtractPurlsFromManifest()
@@ -284,12 +289,12 @@ func showPolicyActionMessage(res internaliq.StatusURLResult, writer io.Writer) {
 	switch res.PolicyAction {
 	case internaliq.PolicyActionFailure:
 		_, _ = fmt.Fprintln(writer, "Hi, Nancy here, you have some policy violations to clean up!")
-		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+		_, _ = fmt.Fprintln(writer, reportURLLabel, res.AbsoluteReportHTMLURL)
 	case internaliq.PolicyActionWarning:
 		_, _ = fmt.Fprintln(writer, "Read, read, read. That's all I can say. There are policy warnings to investigate!")
-		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+		_, _ = fmt.Fprintln(writer, reportURLLabel, res.AbsoluteReportHTMLURL)
 	default:
 		_, _ = fmt.Fprintln(writer, "Wonderbar! No policy violations reported for this audit!")
-		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+		_, _ = fmt.Fprintln(writer, reportURLLabel, res.AbsoluteReportHTMLURL)
 	}
 }
