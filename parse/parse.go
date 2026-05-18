@@ -62,68 +62,68 @@ func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
 
 	for {
 		var mod map[string]interface{}
-
-		decodeErr := decoder.Decode(&mod)
-
-		if decodeErr == io.EOF {
+		if decodeErr := decoder.Decode(&mod); decodeErr == io.EOF {
 			break
-		}
-		if decodeErr != nil {
+		} else if decodeErr != nil {
 			err = decodeErr
 			break
 		}
 
-		if module, ok := mod["Module"].(map[string]interface{}); ok {
-			// Ok, we are in Module town, so `go list -json -deps` has been run
-			if replace, ok := module["Replace"].(map[string]interface{}); ok {
-				// A 'Replace' block has been found, let's try and do something with it.
-				if version, ok := replace["Version"].(string); ok {
-					deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: replace["Path"].(string)})
-					continue
-				}
+		if _, hasModule := mod["Module"]; hasModule {
+			if p, ok := extractModuleDep(mod); ok {
+				deps.Projects = append(deps.Projects, p)
 			}
-			if version, ok := module["Version"].(string); ok {
-				// Intentionally skip checking if `Path` exists as a key, as it should if `Version` is there
-				deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: module["Path"].(string)})
-			}
-
 			continue
 		}
-
-		if path, ok := mod["Path"].(string); ok {
-			// Ok, we are in list town, so `go list -json -m all` has been run
-			if replace, ok := mod["Replace"].(map[string]interface{}); ok {
-				// A 'Replace' block has been found, let's try and do something with it.
-				if path, ok = replace["Path"].(string); ok { // re-read path from replace block
-					if version, ok := replace["Version"].(string); ok {
-						deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: path})
-
-						continue
-					}
-				} // No path found in replace block, so just continue
-				// No version found in replace block, so just continue loop
-				continue
-			}
-
-			if version, ok := mod["Version"].(string); ok {
-				deps.Projects = append(deps.Projects, types.Projects{Version: version, Name: path})
-
-				continue
-			}
-
-			continue
+		if p, ok := extractListDep(mod); ok {
+			deps.Projects = append(deps.Projects, p)
 		}
 	}
 
 	if err != nil {
 		scanner := bufio.NewScanner(strings.NewReader(string(johnnyFiveNeedInput)))
 		deps, err = GoList(scanner)
-		if err != nil {
-			return
-		}
 	}
 
 	return
+}
+
+// extractModuleDep parses a dep from `go list -json -deps` output (has "Module" key).
+func extractModuleDep(mod map[string]interface{}) (types.Projects, bool) {
+	module, ok := mod["Module"].(map[string]interface{})
+	if !ok {
+		return types.Projects{}, false
+	}
+	if replace, ok := module["Replace"].(map[string]interface{}); ok {
+		if version, ok := replace["Version"].(string); ok {
+			return types.Projects{Version: version, Name: replace["Path"].(string)}, true
+		}
+		// Replace block exists but has no version — fall through to module version
+	}
+	if version, ok := module["Version"].(string); ok {
+		return types.Projects{Version: version, Name: module["Path"].(string)}, true
+	}
+	return types.Projects{}, false
+}
+
+// extractListDep parses a dep from `go list -json -m all` output (has "Path" key, no "Module").
+func extractListDep(mod map[string]interface{}) (types.Projects, bool) {
+	path, ok := mod["Path"].(string)
+	if !ok {
+		return types.Projects{}, false
+	}
+	if replace, ok := mod["Replace"].(map[string]interface{}); ok {
+		replacePath, pathOk := replace["Path"].(string)
+		version, versionOk := replace["Version"].(string)
+		if pathOk && versionOk {
+			return types.Projects{Version: version, Name: replacePath}, true
+		}
+		return types.Projects{}, false
+	}
+	if version, ok := mod["Version"].(string); ok {
+		return types.Projects{Version: version, Name: path}, true
+	}
+	return types.Projects{}, false
 }
 
 func parseSpaceSeparatedDependency(scanner *bufio.Scanner, deps *types.ProjectList, criteria func(s []string) bool) {
