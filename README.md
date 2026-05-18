@@ -110,8 +110,7 @@ At the current time you have a few options:
 ### Build from source
 
 - Clone the project `git clone github.com/sonatype-nexus-community/nancy`
-- In the root of the project run `make`
-  - This will execute multiple targets so if you want to short circuit some of that process you can also just run `make build` to get the binary without running tests, linting, etc
+- In the root of the project run `go build -o nancy .`
 - Use that binary wherever your heart so desires!
 
 ### Download release binary
@@ -753,7 +752,7 @@ available. See: [Exclude vulnerabilities](#exclude-vulnerabilities)
 
 `nancy` is written using Go (see `go.mod` for the minimum required version).
 
-Tests can be run like this `make test`
+Tests can be run like this `go test ./...`
 
 Adding new files? Get the license header correct with:
 
