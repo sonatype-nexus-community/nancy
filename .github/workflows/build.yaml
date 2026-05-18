@@ -89,7 +89,6 @@ jobs:
                   go list -m all            > dist/deps.out && ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
 
             - name: Run OSS Index compat integration tests
-              if: ${{ secrets.OSSI_USERNAME != '' }}
               env:
                   OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
                   OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
