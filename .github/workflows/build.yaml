@@ -74,19 +74,19 @@ jobs:
 
             - name: Run integration tests
               env:
-                  SONATYPE_GUIDE_TOKEN: ${{ secrets.SONATYPE_GUIDE_TOKEN }}
+                  GUIDE_TOKEN: ${{ secrets.SONATYPE_GUIDE_TOKEN }}
                   IT_EXCLUDED_VULNS: CVE-2021-3121,CVE-2022-21698,CVE-2022-29153,sonatype-2021-1401,CVE-2023-32731,CVE-2023-45142,CVE-2024-10086,CVE-2023-29407,CVE-2023-29408,CVE-2022-41727
               run: |
                   go build -o nancy .
                   mkdir -p dist
-                  go list -json -deps ./...      | ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN"
-                  go list -json -deps            | ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN"
-                  go list -json -m all           | ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS"
-                  go list -m all                 | ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS"
-                  go list -json -deps ./... > dist/deps.out && ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" < dist/deps.out
-                  go list -json -deps       > dist/deps.out && ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" < dist/deps.out
-                  go list -json -m all      > dist/deps.out && ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
-                  go list -m all            > dist/deps.out && ./nancy sleuth --token "$SONATYPE_GUIDE_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
+                  go list -json -deps ./...      | ./nancy sleuth
+                  go list -json -deps            | ./nancy sleuth
+                  go list -json -m all           | ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS"
+                  go list -m all                 | ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS"
+                  go list -json -deps ./... > dist/deps.out && ./nancy sleuth < dist/deps.out
+                  go list -json -deps       > dist/deps.out && ./nancy sleuth < dist/deps.out
+                  go list -json -m all      > dist/deps.out && ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
+                  go list -m all            > dist/deps.out && ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
 
             - name: Run OSS Index compat integration tests
               env:
@@ -94,8 +94,18 @@ jobs:
                   OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
                   IT_EXCLUDED_VULNS: CVE-2021-3121,CVE-2022-21698,CVE-2022-29153,sonatype-2021-1401,CVE-2023-32731,CVE-2023-45142,CVE-2024-10086,CVE-2023-29407,CVE-2023-29408,CVE-2022-41727
               run: |
-                  go list -json -deps ./... | ./nancy sleuth --username "$OSSI_USERNAME" --token "$OSSI_TOKEN"
-                  go list -json -m all      | ./nancy sleuth --username "$OSSI_USERNAME" --token "$OSSI_TOKEN" --exclude-vulnerability "$IT_EXCLUDED_VULNS"
+                  go list -json -deps ./... | ./nancy sleuth
+                  go list -json -m all      | ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS"
+
+            - name: Run Lifecycle integration tests
+              env:
+                  IQ_USERNAME: ${{ secrets.SONATYPE_LIFECYCLE_USERNAME }}
+                  IQ_TOKEN: ${{ secrets.SONATYPE_LIFECYCLE_PASSWORD }}
+                  IQ_SERVER: ${{ vars.SONATYPE_PLATFORM_URL }}
+              run: |
+                  go list -json -deps ./... | ./nancy lifecycle \
+                    --lifecycle-application "$LC_APPLICATION_ID" \
+                    --lifecycle-stage develop
 
             - name: Upload test results
               uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
