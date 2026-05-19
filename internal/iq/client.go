@@ -146,25 +146,32 @@ func (s *Server) pollForResult(ctx context.Context, internalAppID, scanRequestID
 			}
 			return StatusURLResult{IsError: true, ErrorMessage: err.Error()}, err
 		}
-		if result.IsError != nil && *result.IsError {
-			msg := ""
-			if result.ErrorMessage != nil {
-				msg = *result.ErrorMessage
-			}
-			return StatusURLResult{IsError: true, ErrorMessage: msg}, nil
-		}
-		if result.PolicyAction != nil {
-			reportURL := ""
-			if result.ReportHtmlUrl != nil {
-				reportURL = s.Options.Server + "/" + *result.ReportHtmlUrl
-			}
-			return StatusURLResult{
-				PolicyAction:          *result.PolicyAction,
-				AbsoluteReportHTMLURL: reportURL,
-			}, nil
+		if res, done := s.interpretScanResult(result); done {
+			return res, nil
 		}
 	}
 	return StatusURLResult{IsError: true, ErrorMessage: "timed out waiting for Lifecycle evaluation"}, nil
+}
+
+func (s *Server) interpretScanResult(result *sonatypeiq.ApiThirdPartyScanResultDTO) (StatusURLResult, bool) {
+	if result.IsError != nil && *result.IsError {
+		msg := ""
+		if result.ErrorMessage != nil {
+			msg = *result.ErrorMessage
+		}
+		return StatusURLResult{IsError: true, ErrorMessage: msg}, true
+	}
+	if result.PolicyAction != nil {
+		reportURL := ""
+		if result.ReportHtmlUrl != nil {
+			reportURL = s.Options.Server + "/" + *result.ReportHtmlUrl
+		}
+		return StatusURLResult{
+			PolicyAction:          *result.PolicyAction,
+			AbsoluteReportHTMLURL: reportURL,
+		}, true
+	}
+	return StatusURLResult{}, false
 }
 
 // purlToName extracts the module path from a PURL (e.g. "pkg:golang/github.com/foo/bar@v1.0.0" → "github.com/foo/bar").
