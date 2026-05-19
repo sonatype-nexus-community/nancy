@@ -777,6 +777,34 @@ Follow the steps below to release a new version of Nancy. You need push access t
 
 3. There is no step 3.
 
+### Pre-Release Process
+
+Pre-releases are used to publish release candidates or alpha/beta builds from development branches (e.g. `dev/2.x`) without affecting the stable release channel.
+
+A pre-release is triggered the same way as a full release — by pushing a semver tag — but with a pre-release suffix in the tag name (e.g. `-rc.1`, `-alpha.1`, `-beta.1`). GoReleaser detects the suffix automatically via `prerelease: auto` and adjusts the release accordingly:
+
+- The GitHub release is marked as **pre-release**
+- Docker images are published with **only the specific tag** (e.g. `sonatypecommunity/nancy:v2.0.0-rc.1`); the `latest`, `vX`, and `vX.Y` aliases are **not** updated
+- The **Homebrew tap is not updated**
+
+To publish a pre-release:
+
+1. Ensure your pre-release branch (e.g. `dev/2.x`) is in the desired state and pushed to origin.
+
+2. Create an annotated tag with a pre-release suffix:
+
+   ```shell
+   $ git tag -a v2.0.0-rc.1 -m "Release candidate 1 for v2.0.0"
+   ```
+
+3. Push the tag:
+
+   ```shell
+   $ git push origin v2.0.0-rc.1
+   ```
+
+4. The [Release workflow](/.github/workflows/release.yaml) will trigger automatically, run a Sonatype Lifecycle scan, then publish binaries, a GitHub pre-release, and Docker images tagged with the specific version only.
+
 ---
 
 ## Contributing
