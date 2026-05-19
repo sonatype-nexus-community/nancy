@@ -55,6 +55,7 @@
 - [How to Fix Vulnerabilities](#how-to-fix-vulnerabilities)
 - [Development](#development)
   - [Release Process](#release-process)
+  - [Pre-Release Process](#pre-release-process)
 - [Contributing](#contributing)
 - [Acknowledgements](#acknowledgements)
 - [The Fine Print](#the-fine-print)
