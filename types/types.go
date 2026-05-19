@@ -19,6 +19,7 @@ package types
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -45,6 +46,7 @@ type Configuration struct {
 	IQApplication   string
 	IQServer        string
 	MaxRetries      int
+	IQPollInterval  time.Duration
 	SkipUpdateCheck bool
 }
 

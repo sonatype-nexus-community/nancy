@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
@@ -55,12 +56,12 @@ type iqFactory struct{}
 
 func (iqFactory) create() internaliq.IServer {
 	server, err := internaliq.New(logLady, internaliq.Options{
-		User:        viper.GetString(viperKeyLifecycleUsername),
-		Token:       viper.GetString(viperKeyLifecycleToken),
-		Application: configIQ.IQApplication,
-		Stage:       configIQ.IQStage,
-		Server:      viper.GetString(viperKeyLifecycleServer),
-		MaxRetries:  300,
+		User:         viper.GetString(viperKeyLifecycleUsername),
+		Token:        viper.GetString(viperKeyLifecycleToken),
+		Application:  configIQ.IQApplication,
+		Stage:        configIQ.IQStage,
+		Server:       viper.GetString(viperKeyLifecycleServer),
+		PollInterval: configIQ.IQPollInterval,
 	})
 	if err != nil {
 		logLady.WithError(err).Error("unexpected error creating lifecycle server")
@@ -81,6 +82,7 @@ const (
 	flagNameLifecycleStage       = "lifecycle-stage"
 	flagNameLifecycleApplication = "lifecycle-application"
 	flagNameLifecycleServerUrl   = "lifecycle-server-url"
+	flagNameLifecyclePollInterval = "lifecycle-poll-interval"
 
 	// Deprecated aliases (v2 only — removed in v3)
 	flagNameIqUsername    = "iq-username"
@@ -196,6 +198,7 @@ func init() {
 		panic(err)
 	}
 	flags.StringVarP(&configIQ.IQServer, flagNameLifecycleServerUrl, "x", "http://localhost:8070", "Specify Lifecycle server url for request")
+	flags.DurationVar(&configIQ.IQPollInterval, flagNameLifecyclePollInterval, 2*time.Second, "Polling interval when waiting for Lifecycle scan results")
 	flags.BoolVar(&configOssi.NoFail, "no-fail", false,
 		"Exit 0 even when vulnerabilities are found (useful for informational CI steps)")
 

@@ -19,6 +19,7 @@ package iq
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -35,7 +36,8 @@ const (
 	PolicyActionFailure = "Failure"
 )
 
-const defaultMaxRetries = 300
+const defaultMaxRetries = 10
+const defaultPollInterval = 2 * time.Second
 
 // StatusURLResult holds the result of a Lifecycle policy evaluation.
 type StatusURLResult struct {
@@ -53,12 +55,13 @@ type IServer interface {
 
 // Options configures the Lifecycle client.
 type Options struct {
-	User        string
-	Token       string
-	Stage       string
-	Application string
-	Server      string
-	MaxRetries  int
+	User         string
+	Token        string
+	Stage        string
+	Application  string
+	Server       string
+	MaxRetries   int
+	PollInterval time.Duration
 }
 
 // Server implements IServer using nexus-iq-api-client-go.
@@ -72,6 +75,9 @@ type Server struct {
 func New(logger *logrus.Logger, opts Options) (*Server, error) {
 	if opts.MaxRetries <= 0 {
 		opts.MaxRetries = defaultMaxRetries
+	}
+	if opts.PollInterval <= 0 {
+		opts.PollInterval = defaultPollInterval
 	}
 
 	cfg := sonatypeiq.NewConfiguration()
@@ -128,12 +134,16 @@ func (s *Server) resolveAppID(ctx context.Context) (string, error) {
 
 func (s *Server) pollForResult(ctx context.Context, internalAppID, scanRequestID string) (StatusURLResult, error) {
 	for i := 0; i < s.Options.MaxRetries; i++ {
-		time.Sleep(1 * time.Second)
+		time.Sleep(s.Options.PollInterval)
 
-		result, _, err := s.client.ThirdPartyAnalysisAPI.
+		result, resp, err := s.client.ThirdPartyAnalysisAPI.
 			GetScanStatus(ctx, internalAppID, scanRequestID).
 			Execute()
 		if err != nil {
+			if resp != nil && resp.StatusCode == 404 {
+				s.logger.WithField("attempt", i+1).Debug("scan result not yet available (404), retrying")
+				continue
+			}
 			return StatusURLResult{IsError: true, ErrorMessage: err.Error()}, err
 		}
 		if result.IsError != nil && *result.IsError {
@@ -157,16 +167,48 @@ func (s *Server) pollForResult(ctx context.Context, internalAppID, scanRequestID
 	return StatusURLResult{IsError: true, ErrorMessage: "timed out waiting for Lifecycle evaluation"}, nil
 }
 
-func buildCycloneDXSBOM(purls []string) string {
-	var sb strings.Builder
-	sb.WriteString(`<?xml version="1.0" ?><bom xmlns="http://cyclonedx.org/schema/bom/1.1" version="1"><components>`)
-	for _, p := range purls {
-		sb.WriteString(`<component type="library"><purl>`)
-		sb.WriteString(p)
-		sb.WriteString(`</purl></component>`)
+// purlToName extracts the module path from a PURL (e.g. "pkg:golang/github.com/foo/bar@v1.0.0" → "github.com/foo/bar").
+func purlToName(purl string) string {
+	s := strings.TrimPrefix(purl, "pkg:")
+	if i := strings.Index(s, "/"); i >= 0 {
+		s = s[i+1:]
 	}
-	sb.WriteString(`</components></bom>`)
-	return sb.String()
+	if i := strings.LastIndex(s, "@"); i >= 0 {
+		s = s[:i]
+	}
+	return s
+}
+
+type cycloneDXComponent struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+	Purl string `json:"purl"`
+}
+
+type cycloneDXBOM struct {
+	BomFormat   string               `json:"bomFormat"`
+	SpecVersion string               `json:"specVersion"`
+	Version     int                  `json:"version"`
+	Components  []cycloneDXComponent `json:"components"`
+}
+
+func buildCycloneDXSBOM(purls []string) string {
+	components := make([]cycloneDXComponent, len(purls))
+	for i, p := range purls {
+		components[i] = cycloneDXComponent{Type: "library", Name: purlToName(p), Purl: p}
+	}
+	bom := cycloneDXBOM{
+		BomFormat:   "CycloneDX",
+		SpecVersion: "1.4",
+		Version:     1,
+		Components:  components,
+	}
+	b, err := json.Marshal(bom)
+	if err != nil {
+		// purls are plain strings; marshalling cannot fail
+		return ""
+	}
+	return string(b)
 }
 
 func extractScanRequestId(statusURL string) string {

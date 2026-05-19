@@ -227,6 +227,7 @@ Examples:
 Flags:
   -h, --help                              help for lifecycle
   -a, --lifecycle-application string      Specify Sonatype Lifecycle public application ID for request
+      --lifecycle-poll-interval duration  Polling interval when waiting for Lifecycle scan results (default 2s)
   -x, --lifecycle-server-url string       Specify Sonatype Lifecycle server url for request (default "http://localhost:8070")
   -s, --lifecycle-stage string            Specify Sonatype Lifecycle stage for request (default "develop")
   -k, --lifecycle-token string            Specify Sonatype Lifecycle token for request (default "admin123")
@@ -553,6 +554,10 @@ Options for stage are as follows:
 `build, develop, stage-release, release`
 
 By default `--lifecycle-stage` will be `develop`.
+
+Nancy polls the Lifecycle scan status endpoint until results are available. By default it polls every 2 seconds for a maximum of 10 attempts. If your server is slow or handles large SBOMs, you can increase the interval:
+
+`go list -json -deps ./... | nancy lifecycle --lifecycle-application public-application-id --lifecycle-poll-interval 5s`
 
 > **Note**: `nancy iq` is a deprecated alias for `nancy lifecycle`. The `--iq-*` flags are deprecated aliases for the `--lifecycle-*` flags. Both continue to work in v2.0.0 but will be removed in v3.x.
 
