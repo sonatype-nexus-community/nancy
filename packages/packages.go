@@ -28,9 +28,7 @@ type Packages interface {
 	CheckExistenceOfManifest() bool
 }
 
-// convertGopkgNameToPurl will convert the Gopkg name into a Package URL
-//
-// FIXME: Research the various Gopkg name formats and convert them correctly
+// convertGopkgNameToPurl converts a Go module path into a Package URL (golang ecosystem).
 func convertGopkgNameToPurl(name string) (rename string) {
 	switch {
 	case githubPattern.MatchString(name):

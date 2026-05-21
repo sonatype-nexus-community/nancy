@@ -22,7 +22,7 @@ import (
 	"path"
 
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
 )
 
 const defaultLogFilename = "nancy.combined.log"
@@ -46,11 +46,11 @@ func GetLogger(loggerFilename string, level int) *logrus.Logger {
 // LogFileLocation will return the location on disk of the log file
 func LogFileLocation() (result string, err error) {
 	result, _ = os.UserHomeDir()
-	err = os.MkdirAll(path.Join(result, types.OssIndexDirName), os.ModePerm)
+	err = os.MkdirAll(path.Join(result, localossindex.OssIndexDirName), os.ModePerm)
 	if err != nil {
 		return
 	}
-	result = path.Join(result, types.OssIndexDirName, DefaultLogFile)
+	result = path.Join(result, localossindex.OssIndexDirName, DefaultLogFile)
 	return
 }
 

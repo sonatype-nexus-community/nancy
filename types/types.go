@@ -19,6 +19,7 @@ package types
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -30,12 +31,13 @@ type Configuration struct {
 	Quiet           bool
 	Loud            bool
 	CleanCache      bool
+	NoFail          bool
 	CveList         CveListFlag
-	Path            string
 	Formatter       logrus.Formatter
 	LogLevel        int
 	Username        string
 	Token           string
+	GuideToken      string
 	OSSIndexURL     string
 	Help            bool
 	IQUsername      string
@@ -44,6 +46,7 @@ type Configuration struct {
 	IQApplication   string
 	IQServer        string
 	MaxRetries      int
+	IQPollInterval  time.Duration
 	SkipUpdateCheck bool
 }
 

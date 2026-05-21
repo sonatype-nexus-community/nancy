@@ -31,7 +31,7 @@ func (m Mod) ExtractPurlsFromManifest() (purls []string) {
 	for _, s := range m.ProjectList.Projects {
 		if len(s.Version) > 0 { // There must be a version we can use
 			// remove "+incompatible" from version string if it exists
-			version := strings.Replace(s.Version, "+incompatible", "", -1)
+			version := strings.ReplaceAll(s.Version, "+incompatible", "")
 			var purl = "pkg:" + convertGopkgNameToPurl(s.Name) + "@" + version
 			purls = append(purls, purl)
 		}

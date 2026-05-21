@@ -17,7 +17,7 @@
 package settings
 
 import (
-	ossIndexTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path"
@@ -75,7 +75,7 @@ const (
 func AppSettingsPath() string {
 	// TODO: Make this configurable
 	home, _ := os.UserHomeDir()
-	return path.Join(home, ossIndexTypes.OssIndexDirName, NancyConfigFileName)
+	return path.Join(home, localossindex.OssIndexDirName, NancyConfigFileName)
 }
 
 // updateCheckFilename returns the name of the cli update checks file

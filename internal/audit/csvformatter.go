@@ -26,7 +26,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
 
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
 )
 
 type CsvFormatter struct {
@@ -34,9 +34,6 @@ type CsvFormatter struct {
 }
 
 func (f CsvFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	// Note this doesn't include Time, Level and Message which are available on
-	// the Entry. Consult `godoc` on information about those fields or read the
-	// source of the official loggers.
 	auditedEntries := entry.Data["audited"]
 	invalidEntries := entry.Data["invalid"]
 	packageCount := entry.Data["num_audited"]
@@ -44,80 +41,98 @@ func (f CsvFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	excludedCount := entry.Data["num_exclusions"]
 	buildVersion := entry.Data["version"]
 
-	if isEntryValid(auditedEntries, invalidEntries, packageCount, numVulnerable, excludedCount, buildVersion) {
-		auditedEntries := entry.Data["audited"].([]types.Coordinate)
-		invalidEntries := entry.Data["invalid"].([]types.Coordinate)
-		packageCount := entry.Data["num_audited"].(int)
-		numVulnerable := entry.Data["num_vulnerable"].(int)
-		excludedCount := entry.Data["num_exclusions"].(int)
-		buildVersion := entry.Data["version"].(string)
-
-		var summaryHeader = []string{"Audited Count", "Vulnerable Count", "Ignored Vulnerabilities", "Build Version"}
-		var invalidHeader = []string{"Count", "Package", "Reason"}
-		var auditedHeader = []string{"Count", "Package", "Is Vulnerable", "Num Vulnerabilities", "Vulnerabilities"}
-		var summaryRow = []string{strconv.Itoa(packageCount), strconv.Itoa(numVulnerable), strconv.Itoa(excludedCount), buildVersion}
-
-		var buf bytes.Buffer
-		w := csv.NewWriter(&buf)
-
-		var err error
-		if err = f.write(w, []string{"Summary"}); err != nil {
-			return nil, err
-		}
-		if err = f.write(w, summaryHeader); err != nil {
-			return nil, err
-		}
-		if err = f.write(w, summaryRow); err != nil {
-			return nil, err
-		}
-
-		if !f.Quiet {
-			invalidCount := len(invalidEntries)
-			if invalidCount > 0 {
-				if err = f.write(w, []string{""}); err != nil {
-					return nil, err
-				}
-				if err = f.write(w, []string{"Invalid Package(s)"}); err != nil {
-					return nil, err
-				}
-				if err = f.write(w, invalidHeader); err != nil {
-					return nil, err
-				}
-				for i := 1; i <= invalidCount; i++ {
-					invalidEntry := invalidEntries[i-1]
-					if err = f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(invalidCount) + "]", invalidEntry.Coordinates, "Does not use SemVer"}); err != nil {
-						return nil, err
-					}
-				}
-			}
-		}
-
-		if !f.Quiet || numVulnerable > 0 {
-			if err = f.write(w, []string{""}); err != nil {
-				return nil, err
-			}
-			if err = f.write(w, []string{"Audited Package(s)"}); err != nil {
-				return nil, err
-			}
-			if err = f.write(w, auditedHeader); err != nil {
-				return nil, err
-			}
-		}
-		for i := 1; i <= len(auditedEntries); i++ {
-			auditEntry := auditedEntries[i-1]
-			if auditEntry.IsVulnerable() || !f.Quiet {
-				jsonVulns, _ := json.Marshal(auditEntry.Vulnerabilities)
-				if err = f.write(w, []string{"[" + strconv.Itoa(i) + "/" + strconv.Itoa(packageCount) + "]", auditEntry.Coordinates, strconv.FormatBool(auditEntry.IsVulnerable()), strconv.Itoa(len(auditEntry.Vulnerabilities)), string(jsonVulns)}); err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		w.Flush()
-
-		return buf.Bytes(), nil
+	if !isEntryValid(auditedEntries, invalidEntries, packageCount, numVulnerable, excludedCount, buildVersion) {
+		return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
 	}
-	return nil, errors.New("fields passed did not match the expected values for an audit log. You should probably look at setting the formatter to something else")
+
+	audited := entry.Data["audited"].([]ossindex.Coordinate)
+	invalid := entry.Data["invalid"].([]ossindex.Coordinate)
+	pkgCount := entry.Data["num_audited"].(int)
+	numVuln := entry.Data["num_vulnerable"].(int)
+	excCount := entry.Data["num_exclusions"].(int)
+	version := entry.Data["version"].(string)
+
+	var buf bytes.Buffer
+	w := csv.NewWriter(&buf)
+
+	if err := f.writeSummarySection(w, pkgCount, numVuln, excCount, version); err != nil {
+		return nil, err
+	}
+	if err := f.writeInvalidSection(w, invalid); err != nil {
+		return nil, err
+	}
+	if err := f.writeAuditedSection(w, audited, pkgCount, numVuln); err != nil {
+		return nil, err
+	}
+
+	w.Flush()
+	return buf.Bytes(), nil
+}
+
+func (f CsvFormatter) writeSummarySection(w *csv.Writer, pkgCount, numVuln, excCount int, version string) error {
+	summaryHeader := []string{"Audited Count", "Vulnerable Count", "Ignored Vulnerabilities", "Build Version"}
+	summaryRow := []string{strconv.Itoa(pkgCount), strconv.Itoa(numVuln), strconv.Itoa(excCount), version}
+	if err := f.write(w, []string{"Summary"}); err != nil {
+		return err
+	}
+	if err := f.write(w, summaryHeader); err != nil {
+		return err
+	}
+	return f.write(w, summaryRow)
+}
+
+func (f CsvFormatter) writeInvalidSection(w *csv.Writer, invalid []ossindex.Coordinate) error {
+	if f.Quiet || len(invalid) == 0 {
+		return nil
+	}
+	count := len(invalid)
+	if err := f.write(w, []string{""}); err != nil {
+		return err
+	}
+	if err := f.write(w, []string{"Invalid Package(s)"}); err != nil {
+		return err
+	}
+	if err := f.write(w, []string{"Count", "Package", "Reason"}); err != nil {
+		return err
+	}
+	for i, e := range invalid {
+		row := []string{"[" + strconv.Itoa(i+1) + "/" + strconv.Itoa(count) + "]", e.Coordinates, "Does not use SemVer"}
+		if err := f.write(w, row); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (f CsvFormatter) writeAuditedSection(w *csv.Writer, audited []ossindex.Coordinate, pkgCount, numVuln int) error {
+	if !f.Quiet || numVuln > 0 {
+		if err := f.write(w, []string{""}); err != nil {
+			return err
+		}
+		if err := f.write(w, []string{"Audited Package(s)"}); err != nil {
+			return err
+		}
+		if err := f.write(w, []string{"Count", "Package", "Is Vulnerable", "Num Vulnerabilities", "Vulnerabilities"}); err != nil {
+			return err
+		}
+	}
+	for i, e := range audited {
+		if !e.IsVulnerable() && f.Quiet {
+			continue
+		}
+		jsonVulns, _ := json.Marshal(e.Vulnerabilities)
+		row := []string{
+			"[" + strconv.Itoa(i+1) + "/" + strconv.Itoa(pkgCount) + "]",
+			e.Coordinates,
+			strconv.FormatBool(e.IsVulnerable()),
+			strconv.Itoa(len(e.Vulnerabilities)),
+			string(jsonVulns),
+		}
+		if err := f.write(w, row); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (f CsvFormatter) write(w *csv.Writer, line []string) error {

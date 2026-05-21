@@ -33,10 +33,11 @@ jobs:
             TEST_RESULTS: /tmp/test-results
 
         steps:
-            - uses: actions/checkout@v6
+            - name: Checkout
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
             - name: Setup Go
-              uses: actions/setup-go@v6
+              uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
               with:
                   go-version-file: 'go.mod'
                   cache: true
@@ -44,50 +45,77 @@ jobs:
             - name: Create test results directory
               run: mkdir -p $TEST_RESULTS/gotest
 
-            - name: Install go-junit-report
-              run: go install github.com/jstemmer/go-junit-report@latest
-
-            - name: Install addlicense
-              run: go install github.com/google/addlicense@latest
-
             - name: Check headers
-              run: make headers
+              run: |
+                  go install github.com/google/addlicense@latest
+                  addlicense -check -f ./header.txt ./*.go
 
             - name: Download dependencies
-              run: make deps
+              run: |
+                  go mod download
+                  go mod verify
+                  go mod tidy
 
             - name: Lint
-              run: make ci-lint
+              uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
+              with:
+                  version: v2.12.1
 
             - name: Run tests
-              run: make test
+              run: |
+                  go build ./...
+                  go test -v ./... 2>&1 | tee /tmp/gotest.out
 
             - name: Generate JUnit report
-              run: make test 2>&1 | go-junit-report > $TEST_RESULTS/gotest/report.xml
+              run: |
+                  go install github.com/jstemmer/go-junit-report@latest
+                  go-junit-report < /tmp/gotest.out > $TEST_RESULTS/gotest/report.xml
               if: always()
 
             - name: Run integration tests
-              run: make integration-test
+              env:
+                  GUIDE_TOKEN: ${{ secrets.SONATYPE_GUIDE_TOKEN }}
+                  IT_EXCLUDED_VULNS: CVE-2021-3121,CVE-2022-21698,CVE-2022-29153,sonatype-2021-1401,CVE-2023-32731,CVE-2023-45142,CVE-2024-10086,CVE-2023-29407,CVE-2023-29408,CVE-2022-41727
+              run: |
+                  go build -o nancy .
+                  mkdir -p dist
+                  go list -json -deps ./...      | ./nancy sleuth
+                  go list -json -deps            | ./nancy sleuth
+                  go list -json -m all           | ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS"
+                  go list -m all                 | ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS"
+                  go list -json -deps ./... > dist/deps.out && ./nancy sleuth < dist/deps.out
+                  go list -json -deps       > dist/deps.out && ./nancy sleuth < dist/deps.out
+                  go list -json -m all      > dist/deps.out && ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
+                  go list -m all            > dist/deps.out && ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
+
+            - name: Run OSS Index compat integration tests
               env:
                   OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
                   OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
+                  IT_EXCLUDED_VULNS: CVE-2021-3121,CVE-2022-21698,CVE-2022-29153,sonatype-2021-1401,CVE-2023-32731,CVE-2023-45142,CVE-2024-10086,CVE-2023-29407,CVE-2023-29408,CVE-2022-41727
+              run: |
+                  go list -json -deps ./... | ./nancy sleuth
+                  go list -json -m all      | ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS"
 
-            # Removed these test temporarily as can't get OSSI secrets to them easily
-            # - name: Run docker integration tests
-            #   run: make docker-integration-tests
-            #   env:
-            #       OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
-            #       OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
+            - name: Run Lifecycle integration tests
+              env:
+                  IQ_USERNAME: ${{ secrets.SONATYPE_LIFECYCLE_USERNAME }}
+                  IQ_TOKEN: ${{ secrets.SONATYPE_LIFECYCLE_PASSWORD }}
+                  IQ_SERVER: ${{ vars.SONATYPE_PLATFORM_URL }}
+              run: |
+                  go list -json -deps ./... | ./nancy lifecycle \
+                    --lifecycle-application "$LC_APPLICATION_ID" \
+                    --lifecycle-stage develop
 
             - name: Upload test results
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
               if: always()
               with:
                   name: test-results
                   path: /tmp/test-results/
 
             - name: Publish test results
-              uses: EnricoMi/publish-unit-test-result-action@v2
+              uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2.23.0
               if: always()
               with:
                   files: /tmp/test-results/**/report.xml
@@ -98,11 +126,11 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 5
         steps:
-            - name: Checkout Code
-              uses: actions/checkout@v6
+            - name: Checkout
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
             - name: Setup Go
-              uses: actions/setup-go@v6
+              uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
               with:
                   go-version-file: 'go.mod'
                   cache: true
