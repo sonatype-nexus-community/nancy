@@ -73,6 +73,7 @@ jobs:
               if: always()
 
             - name: Run integration tests
+              if: ${{ !github.event.pull_request.head.repo.fork }}
               env:
                   GUIDE_TOKEN: ${{ secrets.SONATYPE_GUIDE_TOKEN }}
                   IT_EXCLUDED_VULNS: CVE-2021-3121,CVE-2022-21698,CVE-2022-29153,sonatype-2021-1401,CVE-2023-32731,CVE-2023-45142,CVE-2024-10086,CVE-2023-29407,CVE-2023-29408,CVE-2022-41727
@@ -89,6 +90,7 @@ jobs:
                   go list -m all            > dist/deps.out && ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS" < dist/deps.out
 
             - name: Run OSS Index compat integration tests
+              if: ${{ !github.event.pull_request.head.repo.fork }}
               env:
                   OSSI_USERNAME: ${{ secrets.OSSI_USERNAME }}
                   OSSI_TOKEN: ${{ secrets.OSSI_TOKEN }}
@@ -98,6 +100,7 @@ jobs:
                   go list -json -m all      | ./nancy sleuth --exclude-vulnerability "$IT_EXCLUDED_VULNS"
 
             - name: Run Lifecycle integration tests
+              if: ${{ !github.event.pull_request.head.repo.fork }}
               env:
                   IQ_USERNAME: ${{ secrets.SONATYPE_LIFECYCLE_USERNAME }}
                   IQ_TOKEN: ${{ secrets.SONATYPE_LIFECYCLE_PASSWORD }}
@@ -125,6 +128,7 @@ jobs:
         name: Sonatype Lifecycle
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         steps:
             - name: Checkout
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
