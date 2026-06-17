@@ -38,15 +38,22 @@ func GoList(stdIn *bufio.Scanner) (deps types.ProjectList, err error) {
 	return deps, nil
 }
 
+// DefaultMaxStdInBytes is the default cap on the amount of 'go list' output
+// read from stdin when no explicit limit is provided.
+const DefaultMaxStdInBytes int64 = 100 * 1024 * 1024 // 100 MB
+
 // GoListAgnostic will take an io.Reader that is likely the os.StdIn, and parse it as
 // a map of string keys to interfaces. If a "Module" key exists, I know I'm in
 // 'go list -json -deps' town. If it doesn't, I look for a "Path" key, which is 'go list -json -m all' town.
 // If I find nothing, then I try and parse it like I'm parsing a non json output
 // It returns either an error, or a deps of types.ProjectList
-func GoListAgnostic(stdIn io.Reader) (deps types.ProjectList, err error) {
+func GoListAgnostic(stdIn io.Reader, maxStdinBytes int64) (deps types.ProjectList, err error) {
+	if maxStdinBytes <= 0 {
+		maxStdinBytes = DefaultMaxStdInBytes
+	}
+
 	// stdIn should never be massive, so taking this approach over reading from a stream
 	// multiple times
-	const maxStdinBytes = 10 * 1024 * 1024 // 10 MB
 
 	limited := io.LimitReader(stdIn, maxStdinBytes+1)
 	johnnyFiveNeedInput, err := io.ReadAll(limited)

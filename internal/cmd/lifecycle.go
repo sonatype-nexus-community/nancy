@@ -175,7 +175,7 @@ func getPurls() (purls []string, err error) {
 	}
 
 	mod := packages.Mod{}
-	mod.ProjectList, err = parse.GoListAgnostic(reader)
+	mod.ProjectList, err = parse.GoListAgnostic(reader, maxStdInBytes())
 	if err != nil {
 		logLady.WithError(err).Error(unexpectedLifecycleErr)
 		panic(err)
