@@ -184,7 +184,7 @@ const (
 	flagNameOssiToken          = "token"
 	flagNameOssiURL            = "ossindex-url"
 	flagNameGuideToken         = "guide-token"
-	flagNameMaxGoListInputSize = "max-input-size"
+	flagNameMaxGoListInputSize = "max-go-list-input-size"
 
 	viperKeyOSSIndexURL  = "ossi.OSSIndexURL"
 	viperKeyOssiUsername = "ossi.Username"
