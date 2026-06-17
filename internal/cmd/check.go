@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/settings"
-	"github.com/sonatype-nexus-community/nancy/update"
+	"github.com/sonatype-nexus-community/nancy/v2/buildversion"
+	"github.com/sonatype-nexus-community/nancy/v2/settings"
+	"github.com/sonatype-nexus-community/nancy/v2/update"
 )
 
 // For use in checking for newer release version during app startup (not during explicit command to check for update)

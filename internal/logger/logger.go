@@ -22,7 +22,7 @@ import (
 	"path"
 
 	"github.com/sirupsen/logrus"
-	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
+	localossindex "github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
 )
 
 const defaultLogFilename = "nancy.combined.log"

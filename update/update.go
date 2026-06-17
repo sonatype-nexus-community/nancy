@@ -20,7 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/settings"
+	"github.com/sonatype-nexus-community/nancy/v2/settings"
 	"os/exec"
 	"strings"
 	"time"

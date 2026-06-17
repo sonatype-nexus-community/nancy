@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/nancy/v2/types"
 )
 
 func TestGoListJson(t *testing.T) {

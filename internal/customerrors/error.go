@@ -19,8 +19,8 @@ package customerrors
 import (
 	"fmt"
 
-	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/internal/logger"
+	"github.com/sonatype-nexus-community/nancy/v2/buildversion"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/logger"
 )
 
 type ErrorShowLogPath struct {

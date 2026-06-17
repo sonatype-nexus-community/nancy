@@ -25,16 +25,16 @@ import (
 	"strings"
 	"testing"
 
-	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
-	"github.com/sonatype-nexus-community/nancy/types"
+	localossindex "github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
+	"github.com/sonatype-nexus-community/nancy/v2/types"
 
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/sonatype-nexus-community/nancy/internal/audit"
-	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/audit"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/customerrors"
 	"github.com/stretchr/testify/assert"
 )
 

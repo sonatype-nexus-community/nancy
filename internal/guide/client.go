@@ -24,8 +24,8 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/sirupsen/logrus"
 	sonatypeguide "github.com/sonatype-nexus-community/sonatype-guide-api-client-go"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
+	"github.com/sonatype-nexus-community/nancy/v2/buildversion"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
 )
 
 const (

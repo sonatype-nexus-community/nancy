@@ -21,8 +21,8 @@ import (
 
 	selfupdate "github.com/creativeprojects/go-selfupdate"
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/update"
+	"github.com/sonatype-nexus-community/nancy/v2/buildversion"
+	"github.com/sonatype-nexus-community/nancy/v2/update"
 	"github.com/spf13/cobra"
 )
 

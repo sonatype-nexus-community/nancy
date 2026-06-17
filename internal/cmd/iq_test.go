@@ -28,9 +28,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
-	internaliq "github.com/sonatype-nexus-community/nancy/internal/iq"
-	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
-	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
+	internaliq "github.com/sonatype-nexus-community/nancy/v2/internal/iq"
+	localossindex "github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/customerrors"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )

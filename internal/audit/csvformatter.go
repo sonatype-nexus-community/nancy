@@ -23,10 +23,10 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/customerrors"
 
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
 )
 
 type CsvFormatter struct {

@@ -17,7 +17,7 @@
 package settings
 
 import (
-	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
+	localossindex "github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path"

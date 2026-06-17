@@ -26,7 +26,7 @@ import (
 
 	sonatypeiq "github.com/sonatype-nexus-community/nexus-iq-api-client-go"
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
+	"github.com/sonatype-nexus-community/nancy/v2/buildversion"
 )
 
 // Valid policy action values returned by Lifecycle.

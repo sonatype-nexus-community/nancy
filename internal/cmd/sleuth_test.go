@@ -18,8 +18,8 @@ package cmd
 
 import (
 	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/sonatype-nexus-community/nancy/internal/audit"
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/audit"
+	"github.com/sonatype-nexus-community/nancy/v2/types"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
