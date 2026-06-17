@@ -44,6 +44,7 @@
 - [Sonatype Guide Options](#sonatype-guide-options)
   - [Using a custom server URL](#using-a-custom-server-url)
   - [Loud mode](#loud-mode)
+  - [Maximum input size](#maximum-input-size)
   - [Exclude vulnerabilities](#exclude-vulnerabilities)
   - [Output](#output)
 - [Sonatype Lifecycle Options](#sonatype-lifecycle-options)
@@ -171,16 +172,17 @@ Available Commands:
   update      Check if there are any updates available
 
 Flags:
-  -v, -- count                 Set log level, multiple v's is more verbose
-  -c, --clean-cache            Deletes local cache directory
-  -d, --db-cache-path string   Specify an alternate path for caching responses from Sonatype Guide, example: /tmp
-  -h, --help                   help for nancy
-      --loud                   indicate output should include non-vulnerable packages
-  -q, --quiet                  indicate output should contain only packages with vulnerabilities (default true)
-      --skip-update-check      Skip the check for updates.
-  -t, --token string           Specify OSS Index API token for request (deprecated, use --guide-token)
-  -u, --username string        Specify OSS Index username for request (deprecated, use --guide-token)
-  -V, --version                Get the version
+  -v, -- count                        Set log level, multiple v's is more verbose
+  -c, --clean-cache                   Deletes local cache directory
+  -d, --db-cache-path string          Specify an alternate path for caching responses from Sonatype Guide, example: /tmp
+  -h, --help                          help for nancy
+      --loud                          indicate output should include non-vulnerable packages
+      --max-go-list-input-size int    Maximum size, in MB, of 'go list' output to read from stdin (default 100)
+  -q, --quiet                         indicate output should contain only packages with vulnerabilities (default true)
+      --skip-update-check             Skip the check for updates.
+  -t, --token string                  Specify OSS Index API token for request (deprecated, use --guide-token)
+  -u, --username string               Specify OSS Index username for request (deprecated, use --guide-token)
+  -V, --version                       Get the version
 
 Use "nancy [command] --help" for more information about a command.
 
@@ -205,14 +207,15 @@ Flags:
   -o, --output string                                    Styling for output format. json, json-pretty, text, csv (default "text")
 
 Global Flags:
-  -v, -- count                 Set log level, multiple v's is more verbose
-  -d, --db-cache-path string   Specify an alternate path for caching responses from Sonatype Guide, example: /tmp
-      --loud                   indicate output should include non-vulnerable packages
-  -q, --quiet                  indicate output should contain only packages with vulnerabilities (default true)
-      --skip-update-check      Skip the check for updates.
-  -t, --token string           Specify OSS Index API token for request (deprecated, use --guide-token)
-  -u, --username string        Specify OSS Index username for request (deprecated, use --guide-token)
-  -V, --version                Get the version
+  -v, -- count                        Set log level, multiple v's is more verbose
+  -d, --db-cache-path string          Specify an alternate path for caching responses from Sonatype Guide, example: /tmp
+      --loud                          indicate output should include non-vulnerable packages
+      --max-go-list-input-size int    Maximum size, in MB, of 'go list' output to read from stdin (default 100)
+  -q, --quiet                         indicate output should contain only packages with vulnerabilities (default true)
+      --skip-update-check             Skip the check for updates.
+  -t, --token string                  Specify OSS Index API token for request (deprecated, use --guide-token)
+  -u, --username string               Specify OSS Index username for request (deprecated, use --guide-token)
+  -V, --version                       Get the version
 
 $ > nancy lifecycle --help
 'nancy lifecycle' is a command to check for vulnerabilities in your Golang dependencies using Sonatype Lifecycle.
@@ -234,14 +237,15 @@ Flags:
   -l, --lifecycle-username string         Specify Sonatype Lifecycle username for request (default "admin")
 
 Global Flags:
-  -v, -- count                 Set log level, multiple v's is more verbose
-  -d, --db-cache-path string   Specify an alternate path for caching responses from Sonatype Guide, example: /tmp
-      --loud                   indicate output should include non-vulnerable packages
-  -q, --quiet                  indicate output should contain only packages with vulnerabilities (default true)
-      --skip-update-check      Skip the check for updates.
-  -t, --token string           Specify OSS Index API token for request (deprecated, use --guide-token)
-  -u, --username string        Specify OSS Index username for request (deprecated, use --guide-token)
-  -V, --version                Get the version
+  -v, -- count                        Set log level, multiple v's is more verbose
+  -d, --db-cache-path string          Specify an alternate path for caching responses from Sonatype Guide, example: /tmp
+      --loud                          indicate output should include non-vulnerable packages
+      --max-go-list-input-size int    Maximum size, in MB, of 'go list' output to read from stdin (default 100)
+  -q, --quiet                         indicate output should contain only packages with vulnerabilities (default true)
+      --skip-update-check             Skip the check for updates.
+  -t, --token string                  Specify OSS Index API token for request (deprecated, use --guide-token)
+  -u, --username string               Specify OSS Index username for request (deprecated, use --guide-token)
+  -V, --version                       Get the version
 ```
 
 > **Gopkg.lock support removed in v2.0.0**
@@ -389,6 +393,14 @@ By default, `nancy` runs in a "quiet" mode, only displaying a list of vulnerable
 You can run `nancy` in a loud manner, showing all components by running:
 
 - `go list -json -deps ./... | nancy sleuth --loud`
+
+### Maximum input size
+
+By default, `nancy` accepts up to 100 MB of `go list` output from stdin. This limit can be raised (or lowered) with `--max-go-list-input-size`, specified in megabytes:
+
+```shell
+go list -json -deps ./... | nancy sleuth --max-go-list-input-size 250
+```
 
 ### Exclude vulnerabilities
 

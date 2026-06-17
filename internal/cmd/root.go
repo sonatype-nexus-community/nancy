@@ -100,13 +100,14 @@ var (
 	excludeVulnerabilityFilePath            string
 	additionalExcludeVulnerabilityFilePaths []string
 	outputFormat                            string
+	maxInputSizeMB                          int64
 	logLady                                 *logrus.Logger
 	ossiCreator                             serverCreator = ossiFactory{}
-	unixComments                                              = regexp.MustCompile(`#.*$`)
-	untilComment                                              = regexp.MustCompile(`(until=)(.*)`)
+	unixComments                                          = regexp.MustCompile(`#.*$`)
+	untilComment                                          = regexp.MustCompile(`(until=)(.*)`)
 )
 
-//Substitute the _ to .
+// Substitute the _ to .
 var viperKeyReplacer = strings.NewReplacer(".", "_")
 
 func setupViperAutomaticEnv() {
@@ -179,10 +180,11 @@ func Execute() (err error) {
 
 const defaultExcludeFilePath = "./.nancy-ignore"
 const (
-	flagNameOssiUsername = "username"
-	flagNameOssiToken    = "token"
-	flagNameOssiURL      = "ossindex-url"
-	flagNameGuideToken   = "guide-token"
+	flagNameOssiUsername       = "username"
+	flagNameOssiToken          = "token"
+	flagNameOssiURL            = "ossindex-url"
+	flagNameGuideToken         = "guide-token"
+	flagNameMaxGoListInputSize = "max-go-list-input-size"
 
 	viperKeyOSSIndexURL  = "ossi.OSSIndexURL"
 	viperKeyOssiUsername = "ossi.Username"
@@ -203,8 +205,20 @@ func init() {
 	persistentFlags.StringVarP(&configOssi.Username, flagNameOssiUsername, "u", "", "Specify OSS Index username for request (Deprecated: use --guide-token)")
 	persistentFlags.StringVarP(&configOssi.Token, flagNameOssiToken, "t", "", "Specify OSS Index API token for request (Deprecated: use --guide-token)")
 	persistentFlags.StringVar(&configOssi.OSSIndexURL, flagNameOssiURL, "", "Specify an alternate OSS Index URL/host")
-persistentFlags.StringVarP(&configOssi.DBCachePath, "db-cache-path", "d", "", "Specify an alternate path for caching responses from OSS Inde, example: /tmp")
+	persistentFlags.StringVarP(&configOssi.DBCachePath, "db-cache-path", "d", "", "Specify an alternate path for caching responses from OSS Index, example: /tmp")
 	persistentFlags.BoolVar(&configOssi.SkipUpdateCheck, "skip-update-check", false, "Skip the check for updates.")
+	persistentFlags.Int64Var(&maxInputSizeMB, flagNameMaxGoListInputSize, parse.DefaultMaxStdInBytes/(1024*1024),
+		"Maximum size, in MB, of 'go list' output to read from stdin")
+}
+
+// maxStdInBytes converts the configured --max-input-size flag (in MB) to bytes
+// for use when parsing 'go list' output. If the configured value is <= 0, it
+// falls back to the default so the parse layer never receives an invalid cap.
+func maxStdInBytes() int64 {
+	if maxInputSizeMB <= 0 {
+		return parse.DefaultMaxStdInBytes
+	}
+	return maxInputSizeMB * 1024 * 1024
 }
 
 func bindViperRootCmd() {
@@ -442,7 +456,7 @@ func doStdInAndParse(ossIndex localossindex.IServer) (err error) {
 
 	mod := packages.Mod{}
 
-	mod.ProjectList, err = parse.GoListAgnostic(reader)
+	mod.ProjectList, err = parse.GoListAgnostic(reader, maxStdInBytes())
 	if err != nil {
 		logLady.Error(err)
 		return
@@ -487,4 +501,3 @@ func convertInvalidPurlsToCoordinates(invalidPurls []string) []localossindex.Coo
 	}
 	return invalidCoordinates
 }
-

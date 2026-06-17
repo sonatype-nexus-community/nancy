@@ -33,7 +33,7 @@ func TestGoListJson(t *testing.T) {
 		t.Error(err)
 	}
 
-	deps, err := GoListAgnostic(goListJSONFile)
+	deps, err := GoListAgnostic(goListJSONFile, DefaultMaxStdInBytes)
 	if err != nil {
 		t.Error(err)
 	}
@@ -48,7 +48,7 @@ func TestGoListDepsJson(t *testing.T) {
 		t.Error(err)
 	}
 
-	deps, err := GoListAgnostic(goListFile)
+	deps, err := GoListAgnostic(goListFile, DefaultMaxStdInBytes)
 	if err != nil {
 		t.Error(err)
 	}
@@ -63,7 +63,7 @@ func TestGoListDepsJsonReplace(t *testing.T) {
 		t.Error(err)
 	}
 
-	deps, err := GoListAgnostic(goListFile)
+	deps, err := GoListAgnostic(goListFile, DefaultMaxStdInBytes)
 	if err != nil {
 		t.Error(err)
 	}
@@ -81,7 +81,7 @@ func TestGoListDepsJsonReplacePath(t *testing.T) {
 		t.Error(err)
 	}
 
-	deps, err := GoListAgnostic(goListFile)
+	deps, err := GoListAgnostic(goListFile, DefaultMaxStdInBytes)
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,7 +102,7 @@ func TestGoListAgnostic(t *testing.T) {
 		t.Error(err)
 	}
 
-	deps, err := GoListAgnostic(goListFile)
+	deps, err := GoListAgnostic(goListFile, DefaultMaxStdInBytes)
 	if err != nil {
 		t.Error(err)
 	}
@@ -117,7 +117,7 @@ func TestGoListJsonReplace(t *testing.T) {
 		t.Error(err)
 	}
 
-	deps, err := GoListAgnostic(goListJSONReplaceFile)
+	deps, err := GoListAgnostic(goListJSONReplaceFile, DefaultMaxStdInBytes)
 	if err != nil {
 		t.Error(err)
 	}
@@ -136,7 +136,7 @@ func TestGoListJsonReplacePath(t *testing.T) {
 		t.Error(err)
 	}
 
-	deps, err := GoListAgnostic(goListJSONReplaceFile)
+	deps, err := GoListAgnostic(goListJSONReplaceFile, DefaultMaxStdInBytes)
 	if err != nil {
 		t.Error(err)
 	}
@@ -158,7 +158,7 @@ func TestGoListReplace(t *testing.T) {
 		t.Error(err)
 	}
 
-	deps, err := GoListAgnostic(goListReplaceFile)
+	deps, err := GoListAgnostic(goListReplaceFile, DefaultMaxStdInBytes)
 	if err != nil {
 		t.Error(err)
 	}
@@ -228,14 +228,40 @@ golang.org/x/sys v0.0.0-20181228144115-9a3f9b0469bb`
 }
 
 func TestGoListAgnosticRejectsOversizedInput(t *testing.T) {
-	// Generate input slightly over 10 MB
-	oversized := bytes.Repeat([]byte("x"), 10*1024*1024+1)
-	_, err := GoListAgnostic(bytes.NewReader(oversized))
+	// Generate input slightly over an explicit small cap to keep the test fast.
+	const maxBytes = 1024
+	oversized := bytes.Repeat([]byte("x"), maxBytes+1)
+	_, err := GoListAgnostic(bytes.NewReader(oversized), maxBytes)
 	if err == nil {
 		t.Error("Expected an error for oversized stdin input, but got nil")
 	}
 	if err != nil && !strings.Contains(err.Error(), "exceeded") {
 		t.Errorf("Expected error message to contain 'exceeded', but got: %s", err.Error())
+	}
+}
+
+func TestGoListAgnosticDefaultsToDefaultMaxWhenNonPositive(t *testing.T) {
+	// A value <= 0 should fall back to the default.
+	// Use 2 KB of input with a max of 0 — this proves the fallback accepts input under the default cap.
+	input := bytes.Repeat([]byte("x"), 2*1024)
+	_, err := GoListAgnostic(bytes.NewReader(input), 0)
+	if err != nil {
+		t.Errorf("Expected input under the default cap to be accepted, but got error: %s", err.Error())
+	}
+}
+
+func TestGoListAgnosticHonorsConfigurableLimit(t *testing.T) {
+	// 2 KB input exceeds a 1 KB cap but fits under a 4 KB cap.
+	input := bytes.Repeat([]byte("x"), 2*1024)
+
+	_, err := GoListAgnostic(bytes.NewReader(input), 1024)
+	if err == nil {
+		t.Error("Expected error when input exceeds configured limit, but got nil")
+	}
+
+	_, err = GoListAgnostic(bytes.NewReader(input), 4*1024)
+	if err != nil {
+		t.Errorf("Expected input under the configured cap to be accepted, but got error: %s", err.Error())
 	}
 }
 
