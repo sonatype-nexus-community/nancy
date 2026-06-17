@@ -19,7 +19,7 @@ package packages
 import (
 	"strings"
 
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/nancy/v2/types"
 )
 
 type Mod struct {

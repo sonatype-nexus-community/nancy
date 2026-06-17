@@ -27,3 +27,5 @@ dist/
 [._]sw[a-p]
 
 go.list
+
+.claude

@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 
-	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/nancy/v2/types"
 )
 
 const versionFormatDateHash = "v0.0.0-20201221181555-eec23a3978ad"

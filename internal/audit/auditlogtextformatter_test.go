@@ -24,7 +24,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	. "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
 	"github.com/stretchr/testify/assert"
 )
 

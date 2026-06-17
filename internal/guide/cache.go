@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
 )
 
 const cacheTTLHours = 12

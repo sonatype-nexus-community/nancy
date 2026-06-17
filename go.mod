@@ -1,6 +1,9 @@
-module github.com/sonatype-nexus-community/nancy
+module github.com/sonatype-nexus-community/nancy/v2
 
 go 1.25.0
+
+// Retract v2.0.0 as the module path was missing the /v2 suffix, making it uninstallable.
+retract v2.0.0
 
 require (
 	github.com/blang/semver/v4 v4.0.0

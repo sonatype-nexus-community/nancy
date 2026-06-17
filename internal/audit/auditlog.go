@@ -20,8 +20,8 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/nancy/buildversion"
-	"github.com/sonatype-nexus-community/nancy/internal/ossindex"
+	"github.com/sonatype-nexus-community/nancy/v2/buildversion"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
 )
 
 func isEntryValid(params ...interface{}) bool {

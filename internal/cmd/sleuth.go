@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
-	"github.com/sonatype-nexus-community/nancy/internal/logger"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/customerrors"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/logger"
 	"github.com/spf13/cobra"
 )
 

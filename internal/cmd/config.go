@@ -24,9 +24,9 @@ import (
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/sonatype-nexus-community/nancy/internal/customerrors"
-	"github.com/sonatype-nexus-community/nancy/internal/logger"
-	localossindex "github.com/sonatype-nexus-community/nancy/internal/ossindex"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/customerrors"
+	"github.com/sonatype-nexus-community/nancy/v2/internal/logger"
+	localossindex "github.com/sonatype-nexus-community/nancy/v2/internal/ossindex"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
