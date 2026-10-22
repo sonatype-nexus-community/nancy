@@ -1,7 +1,10 @@
-FROM alpine:3.21
+FROM alpine:3.23
 
-RUN apk add --no-cache ca-certificates jq \
-    && update-ca-certificates 2>/dev/null || true \
+# ca-certificates 20261020-r0 or later distrusts the compromised eMudhra intermediates.
+# Do not mask failures here: a build that cannot install the fixed bundle must fail.
+RUN apk upgrade --no-cache \
+    && apk add --no-cache "ca-certificates>=20261020" jq \
+    && update-ca-certificates \
     && rm -rf /var/cache/apk/*
 
 COPY nancy /usr/local/bin/nancy
